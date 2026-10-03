@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: my-bank
+  # Datas em UTC na API (rules/datetime-pipeline.md)
+  jackson:
+    time-zone: UTC
+  jpa:
+    # Evita consultas ao banco durante a renderização da resposta
+    open-in-view: false
