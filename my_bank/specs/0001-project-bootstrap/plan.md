@@ -65,7 +65,7 @@ nginx e o do `ng serve` repassam `/api` **sem remover o prefixo**.
 |---|---|---|
 | `java-spring.md`: `ddl-auto: update` **só em `dev`** | `update` no profile `docker` (não existe profile `dev` nem de produção) | Aceito: o profile `docker` é de estudo local. Quando houver ambiente real, trocar por Flyway e `validate` |
 | `security.md`: versionar um `.env.example` com valores falsos | `.env.example` versionado (PR #2) | Resolvido |
-| `.claude/settings.json` negava `Read(./.env.*)`, que também casava com `.env.example` | a regra ainda existe | **Pendente, decisão do dono do repo:** trocar por `Read(./.env.local)`. O assistente não consegue editar o próprio arquivo de permissões |
+| `.claude/settings.json` negava `Read(./.env.*)`, que também casava com `.env.example` | trocada por `Read(./.env.local)` (edição manual da dona do repo) | Resolvido. O assistente não conseguiu editar o próprio arquivo de permissões (negado como automodificação) |
 | `frontend.md`: componentes `OnPush` e `HttpClient` | `App` com `OnPush`; `provideHttpClient` ainda não configurado | `HttpClient` entra na primeira feature que chamar a API |
 
 O teste `should render title` do frontend deixou de verificar o placeholder do CLI: o template

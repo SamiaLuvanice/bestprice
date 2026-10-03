@@ -99,7 +99,7 @@ critérios foram demonstrados pelo autor; houve revisão estática do `arch-revi
 - **Persistência dos dados.** Quando a primeira entidade existir, vale um critério: dados
   gravados continuam lá depois de parar e subir o sistema de novo.
 - **Arquivo de exemplo de configuração.** Resolvido: o `.env.example` está versionado.
-  Ainda pendente: a regra de permissão do assistente que o bloqueia (ver `plan.md`).
+  A regra de permissão que o bloqueava foi ajustada.
 - **Escolhas de versão e tecnologia** (linguagem, frameworks, banco) estão registradas em
   `plan.md`, pois são decisões de como, não de o quê.
 - **Cabeçalho divergente.** O template (`specs/0000-template`) e `po-intake/reference.md`
