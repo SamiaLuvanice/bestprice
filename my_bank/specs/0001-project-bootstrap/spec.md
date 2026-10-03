@@ -3,10 +3,10 @@ numero: 0001
 titulo: Esqueleto executável do projeto (backend, frontend e banco)
 tipo: feature
 prioridade: P1
-status: rascunho
+status: implementada
 toca: [backend, frontend]
 depende_de: []
-retroativa: true   # escrita depois da implementação; ver "Perguntas em aberto"
+retroativa: true   # escrita depois da implementação
 ---
 
 # 0001 — Esqueleto executável do projeto
@@ -74,9 +74,9 @@ sensíveis, como a senha do banco, não ficam no repositório.
 | Testes | API: 1 teste, 0 falhas (H2, sem Docker, sem variáveis); interface: 2 testes passando |
 | Sem segredo literal | busca por `password/senha/secret/token = valor` sem ocorrências |
 
-Limite desta evidência: os testes rodaram na cópia de trabalho, não num clone limpo; um dos testes
-da interface verifica o texto placeholder do CLI (ver `plan.md`). Os
-critérios foram demonstrados pelo autor da implementação, sem revisão independente.
+Limite desta evidência: os testes rodaram na cópia de trabalho, não num clone limpo. O teste de interface
+agora confere o título "My Bank" (e foi visto falhar quando quebrado de propósito). Os
+critérios foram demonstrados pelo autor; houve revisão estática do `arch-reviewer` (sem executar nada).
 
 ## Fora de escopo
 
@@ -95,14 +95,12 @@ critérios foram demonstrados pelo autor da implementação, sem revisão indepe
 ## Perguntas em aberto
 
 - **Spec retroativa.** Foi escrita depois de o esqueleto existir. Os critérios descrevem o que já foi
-  entregue; confirmar que são os critérios que se quer, e não só o que por acaso funcionou.
-  Por isso o `status` continua `rascunho`.
+  entregue. A dona do repositório autorizou promover o `status` para `implementada` (2026-10-03).
 - **Persistência dos dados.** Quando a primeira entidade existir, vale um critério: dados
   gravados continuam lá depois de parar e subir o sistema de novo.
-- **Arquivo de exemplo de configuração.** Quem clona precisa saber quais informações definir
-  (senha do banco etc.). Hoje isso está só no README, porque a política de permissões do
-  projeto bloqueia criar um arquivo de exemplo. Decidir se a política deve mudar.
+- **Arquivo de exemplo de configuração.** Resolvido: o `.env.example` está versionado.
+  Ainda pendente: a regra de permissão do assistente que o bloqueia (ver `plan.md`).
 - **Escolhas de versão e tecnologia** (linguagem, frameworks, banco) estão registradas em
   `plan.md`, pois são decisões de como, não de o quê.
 - **Cabeçalho divergente.** O template (`specs/0000-template`) e `po-intake/reference.md`
-  definem cabeçalhos e valores de `status` diferentes. Esta spec segue o da referência.
+  definiam cabeçalhos e valores de `status` diferentes. Resolvido: o template agora segue a referência.
