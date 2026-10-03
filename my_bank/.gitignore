@@ -1,0 +1,33 @@
+# Segredos e config local
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.properties
+
+# Java / Maven / Gradle
+target/
+build/
+.gradle/
+*.class
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# IDE / SO
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Claude Code: configuração pessoal local
+.claude/settings.local.json
+
+# Projeções geradas por .agents/sync.sh (links para .agents/)
+.claude/agents
+.claude/skills
+.claude/commands
+.opencode/
+.cursor/

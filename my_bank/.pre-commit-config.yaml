@@ -1,0 +1,15 @@
+# Hooks mínimos e genéricos (https://pre-commit.com). Opcional: `pip install pre-commit && pre-commit install`.
+# Formatação/lint de Java e Angular ficam por conta do build (mvnw/gradlew e ng) — ver skill quality-gates.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        # .claude/ são links para .agents/ e CLAUDE.md contém só "@AGENTS.md"
+        exclude: ^(\.claude/|CLAUDE\.md$)
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: detect-private-key

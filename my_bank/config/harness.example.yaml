@@ -1,0 +1,42 @@
+version: 0.2.0
+project:
+  name: replace-me
+  root: .
+
+# Ferramentas de IA alimentadas por .agents/ (ver .agents/sync.sh)
+tools:
+  claude: true        # via CLAUDE.md + links em .claude/
+  codex: true         # nativo: lê AGENTS.md e .agents/skills (sem sync)
+  opencode: false
+  cursor: false
+
+# Perfil técnico: stack do projeto de estudos
+profile:
+  name: java-springboot-angular
+  backend_dir: backend
+  frontend_dir: frontend
+  specs_dir: specs
+
+modules:
+  core:
+    - evidence
+    - spec-driven
+    - quality-gates
+  technical:
+    - java-springboot-angular
+  integrations: []   # nenhuma: sem ClickUp, Drive ou Railway (ver .agents/archive/)
+
+git:
+  protected_branches:
+    - main
+  default_base: main
+
+# Comandos de verificação (use mvnw/gradlew do projeto; no PowerShell: .\mvnw.cmd)
+quality:
+  backend_test_command: ./mvnw test            # Gradle: ./gradlew test
+  backend_verify_command: ./mvnw verify        # Gradle: ./gradlew build
+  frontend_build_command: ng build
+  frontend_test_command: ng test --watch=false
+
+customization:
+  project_sources_file: .agents/sources.md

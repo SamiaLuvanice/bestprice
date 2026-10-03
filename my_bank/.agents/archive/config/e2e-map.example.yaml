@@ -1,0 +1,19 @@
+# Substitua as áreas abaixo pelas rotas e specs reais do projeto consumidor.
+shared_paths:
+  - frontend/src/app/
+  - frontend/src/data/
+  - frontend/src/domain/
+  - backend/src/app/config/
+  - contract/openapi.yaml
+  - e2e/apoio/
+
+areas:
+  example:
+    match:
+      - frontend/src/features/example/
+      - backend/src/app/use_cases/example/
+    specs:
+      - e2e/specs/example.spec.ts
+
+smoke:
+  - e2e/specs/jornada.spec.ts

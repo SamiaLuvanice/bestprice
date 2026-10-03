@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw *)",
+      "Bash(./gradlew *)",
+      "Bash(mvn *)",
+      "Bash(gradle *)",
+      "Bash(ng *)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npm install)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/application-local.yml)",
+      "Bash(git push --force*)",
+      "Bash(git commit --no-verify*)"
+    ]
+  }
+}

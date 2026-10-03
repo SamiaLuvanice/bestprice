@@ -1,0 +1,40 @@
+version: 0.2.0
+
+# Núcleo: vale para qualquer stack
+core:
+  rules:
+    - evidencia.md
+    - git.md
+    - naming.md
+    - security.md
+    - task-done-criteria.md
+    - testing.md
+    - workspace.md
+  skills:
+    - spec-driven
+    - quality-gates
+    - bug-resolve
+    - learnings
+    - po-intake
+    - solid-principles
+
+# Perfil técnico deste projeto
+profiles:
+  java-springboot-angular:
+    rules:
+      - architecture.md
+      - java-spring.md
+      - errors.md
+      - frontend.md
+      - datetime-pipeline.md
+    skills:
+      - java-springboot          # externa: github/awesome-copilot
+      - angular-developer        # externa: angular/skills (oficial)
+      - angular-new-app          # externa: angular/skills (oficial)
+      - spring-boot-feature
+      - spring-boot-testing
+      - api-contract
+      - monorepo-navigation
+
+# Integrações opcionais: nenhuma ativa. O material antigo está em .agents/archive/.
+integrations: {}
