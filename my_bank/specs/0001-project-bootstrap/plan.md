@@ -59,16 +59,17 @@ nginx e o do `ng serve` repassam `/api` **sem remover o prefixo**.
 - **Dockerfile do backend depende de `mvnw` com fim de linha LF.** O `.gitattributes` do Initializr
   garante isso no checkout; um arquivo copiado com CRLF quebraria o build.
 
-## Desvios das regras do harness (conhecidos)
+## Desvios das regras do harness
 
-| Regra | O que existe | Decisão pendente |
+| Regra | O que existe | Situação |
 |---|---|---|
-| `java-spring.md`: `ddl-auto: update` **só em `dev`** | `update` no profile `docker` (não existe profile `dev` nem de produção) | Aceito por ora: o profile `docker` é de estudo local. Quando houver ambiente real, trocar por Flyway e `validate` |
-| `security.md`: versionar um `.env.example` com valores falsos | não existe; o `.claude/settings.json` nega `Read(./.env.*)`, que também casa com `.env.example` | **A regra de permissão e a regra de segurança se contradizem.** Decisão do dono do repo: restringir a permissão a `.env` e `.env.local`, ou abrir mão do arquivo de exemplo |
-| `frontend.md`: componentes `OnPush` e `HttpClient` | componente gerado do CLI, sem OnPush nem `provideHttpClient` | Ajustar na primeira feature de interface |
+| `java-spring.md`: `ddl-auto: update` **só em `dev`** | `update` no profile `docker` (não existe profile `dev` nem de produção) | Aceito: o profile `docker` é de estudo local. Quando houver ambiente real, trocar por Flyway e `validate` |
+| `security.md`: versionar um `.env.example` com valores falsos | `.env.example` versionado (PR #2) | Resolvido |
+| `.claude/settings.json` negava `Read(./.env.*)`, que também casava com `.env.example` | trocada por `Read(./.env.local)` (edição manual da dona do repo) | Resolvido. O assistente não conseguiu editar o próprio arquivo de permissões (negado como automodificação) |
+| `frontend.md`: componentes `OnPush` e `HttpClient` | `App` com `OnPush`; `provideHttpClient` ainda não configurado | `HttpClient` entra na primeira feature que chamar a API |
 
-Conhecido: o teste `should render title` do frontend verifica o texto placeholder do CLI
-(`Hello, frontend`). Ele mede o placeholder, não comportamento; deve ser substituído na
-primeira feature de interface.
+O teste `should render title` do frontend deixou de verificar o placeholder do CLI: o template
+agora é mínimo (`<h1>` + `<router-outlet />`) e o teste confere o título "My Bank". Confirmado
+que ele guarda o código: com o texto esperado trocado, o teste ficou vermelho.
 
 Mudança de configuração de `.properties` para `.yml` foi feita para seguir `java-spring.md`.
