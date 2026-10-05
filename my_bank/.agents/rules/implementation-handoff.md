@@ -23,6 +23,9 @@ Ao terminar a implementação:
 5. Na resposta de handoff, informe “implementação entregue; aguarda revisão”, o link do PR
    (quando criado), checks executados e o próximo passo. Se não puder abrir/pushar o PR,
    diga isso claramente e deixe a branch pronta para revisão.
+6. Depois que a PR estiver integrada em `develop` e não houver feedback ou commits pendentes,
+   conclua a limpeza dos recursos exclusivos da tarefa seguindo a skill
+   `.agents/skills/task-cleanup/SKILL.md`. Não remova worktree ou branch durante revisão.
 
 Promoção de release é um fluxo separado: PR `develop` → `stage`, validação local e depois
 PR `stage` → `main`. Não atualize boards externos nem exija deploy. Se deploy/CI for

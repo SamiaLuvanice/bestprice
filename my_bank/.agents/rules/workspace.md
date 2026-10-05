@@ -22,6 +22,7 @@ Projeto de estudos: prefira o caminho mais simples e didático e explique o porq
 - **Nomes:** `naming.md` · **Testes:** `testing.md` · **Segurança:** `security.md`
 - **Datas e dinheiro:** `datetime-pipeline.md` · **Commits e branches:** `git.md` · **Worktrees:** `git-worktree-required.md`
 - **Entrega de implementação:** `implementation-handoff.md` · **Pronto significa:** `task-done-criteria.md`
+- **Limpeza pós-merge:** skill `task-cleanup` (Compose isolado, worktree e branches da tarefa).
 - Onde mexer no repositório: skill `monorepo-navigation`.
 
 ## Como o trabalho anda
