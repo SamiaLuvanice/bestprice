@@ -16,8 +16,8 @@
 ## Checagens executadas
 
 - `git diff --check` — código de saída 0; sem erros de whitespace (Git exibiu somente avisos de conversão LF/CRLF do checkout Windows).
-- `pwsh -NoProfile -File my_bank/scripts/diagnose-harness.ps1 -Root (Resolve-Path my_bank).Path` — falhou ao ler o arquivo vazio já existente `frontend/src/app/app.scss`: `Get-Content -Raw` retorna `$null` e o scanner chama `.Contains()` na linha 41. Não alterei esse arquivo nem ampliei o escopo da spec.
-- `pre-commit run --config my_bank/.pre-commit-config.yaml --all-files` — todos os hooks passaram: trailing whitespace, EOF, YAML, JSON, merge conflicts, large files e private key.
+- `pwsh -NoProfile -File scripts/diagnose-harness.ps1 -Root (Resolve-Path .).Path` — falhou ao ler o arquivo vazio já existente `frontend/src/app/app.scss`: `Get-Content -Raw` retorna `$null` e o scanner chama `.Contains()` na linha 41. Não alterei esse arquivo nem ampliei o escopo da spec.
+- `pre-commit run --config .pre-commit-config.yaml --all-files` — todos os hooks passaram: trailing whitespace, EOF, YAML, JSON, merge conflicts, large files e private key.
 - Sincronização oficial `bash .agents/sync.sh` — passou; criou junctions `.claude/agents`, `.claude/skills` e `.claude/commands` para `.agents/`.
 
 ## Limites

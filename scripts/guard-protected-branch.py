@@ -36,7 +36,7 @@ def main() -> int:
         f"\nCommit recusado na branch protegida '{branch}'.\n"
         "Crie/entre na worktree da feature e abra um PR para develop;\n"
         "promoções para stage e main também devem ocorrer via PR.\n"
-        "Veja my_bank/.agents/rules/git-worktree-required.md.\n",
+        "Veja .agents/rules/git-worktree-required.md.\n",
         file=sys.stderr,
     )
     return 1

@@ -14,9 +14,9 @@
 
 - `git diff --check` — código de saída 0; sem erros de whitespace (Git exibiu apenas avisos de conversão LF/CRLF do checkout Windows).
 - Parser PowerShell via `[System.Management.Automation.Language.Parser]::ParseFile(...)` — `PowerShell parser: OK`.
-- `$env:POSTGRES_PASSWORD='validation-only'; .\my_bank\scripts\compose-worktree.ps1 config --quiet` — saída 0; projeto/portas da worktree resolvidos.
+- `$env:POSTGRES_PASSWORD='validation-only'; .\scripts\compose-worktree.ps1 config --quiet` — saída 0; projeto/portas da worktree resolvidos.
 - Mesmo comando com `BACKEND_PORT=23001` e `FRONTEND_PORT=33001` — saída 0; overrides reportados e aceitos pelo Compose.
-- `C:\Program Files\Git\bin\bash.exe my_bank/.agents/sync.sh` — sincronização concluída; junctions de agents, skills e commands criados para Claude Code.
+- `C:\Program Files\Git\bin\bash.exe .agents/sync.sh` — sincronização concluída; junctions de agents, skills e commands criados para Claude Code.
 
 ## Limites
 
@@ -26,5 +26,5 @@ continuam sem demonstração. A revisão independente foi concluída sem achados
 
 ## Handoff
 
-- PR [#4](https://github.com/SamiaLuvanice/mentory_pa13/pull/4), integrada em `develop` pelo
+- PR [#4](https://github.com/SamiaLuvanice/bestprice/pull/4), integrada em `develop` pelo
   merge commit `7091dd1` após revisão independente.
