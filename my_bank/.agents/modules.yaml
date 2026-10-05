@@ -20,6 +20,7 @@ core:
     - po-intake
     - solid-principles
     - task-cleanup
+    - tdd
 
 # Perfil técnico deste projeto
 profiles:

@@ -14,10 +14,11 @@ Execute as tarefas **na ordem do `tasks.md`**. A ordem evita retrabalho.
 Regras de execução:
 
 - Uma tarefa por vez. Marque `[x]` em `tasks.md` ao concluir cada uma.
-- Teste junto da camada, não no fim: um service novo sai com seu teste.
+- Em mudanças de comportamento, aplique TDD (skill `tdd` — Red → Green → Refactor) por fatia
+  vertical, escrevendo primeiro o teste que falha pela razão esperada.
 - Se a spec toca a API: contrato primeiro, depois backend, depois frontend.
 - Rode o build/teste da parte tocada ao terminar cada camada, não acumule.
-- Backend: skill `spring-boot-feature`. Frontend: skill `angular-developer`.
+- Backend: skills `spring-boot-feature` e `tdd`. Frontend: skills `angular-developer` e `tdd`.
 
 Se durante a implementação o plano se mostrar errado, **pare**. Atualize `plan.md`
 explicando o que mudou e por quê, e siga. Não implemente contra um plano que você já

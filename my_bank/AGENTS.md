@@ -8,7 +8,7 @@ agents, skills, commands e rules (ver `.agents/AGENTS.md`).
 
 - Papéis: `.agents/agents/` · Skills: `.agents/skills/` · Comandos: `.agents/commands/`
 - Regras: `.agents/rules/`
-- Fluxo: `/spec` → `/plan` → `/implement` → `/verify`
+- Fluxo: `/spec` → `/plan` → `/implement` (TDD para comportamento) → `/verify`
 - Após integrar uma spec em `develop`, finalize recursos locais da tarefa conforme a skill
   `.agents/skills/task-cleanup/SKILL.md`.
 - Material de outras stacks e integrações (ClickUp, Railway...) fica em `.agents/archive/` e **não** é usado.
