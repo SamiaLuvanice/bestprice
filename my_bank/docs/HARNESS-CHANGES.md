@@ -40,10 +40,18 @@ O CLI (`npx skills add`) grava em `.claude/skills/`; as pastas foram **movidas**
 ### Arquivadas
 
 `clickup`, `drive-artefatos`, `stage-to-main` (integrações/Railway — pedido), `agent-orchestration`
-(23 KB de pipeline multi-agente), `task-handoff`, `pr-review-merge` (handoff/worktree/deploy),
-`fastapi-*`, `react-feature`, `vue-feature`, `angular-feature`, `frontend-parity` (outras stacks),
-`clean-architecture` (ports/adapters Python; trocada por arquitetura em camadas por feature),
-`i18n`, `datetime` (domínio específico), `qa-visual` (precisa de staging).
+(pipeline multiagente), `task-handoff`, `pr-review-merge` (handoff antigo e deploy), `fastapi-*`,
+`react-feature`, `vue-feature`, `frontend-parity` (outras stacks), `clean-architecture`
+(ports/adapters Python; não corresponde à arquitetura simples por feature), `i18n` (idiomas fora
+do escopo), `qa-visual` (precisa de roteiro e ambiente configurados). As ideias reutilizáveis de
+`angular-feature` e `datetime` foram reescritas nas skills de projeto
+`.agents/skills/angular-feature/` e `.agents/skills/java-datetime/`.
+
+Os scripts antigos de proteção de branch e isolamento de containers também foram adaptados:
+`scripts/guard-protected-branch.py` protege as branches integradoras do fluxo atual, e
+`scripts/compose-worktree.ps1` separa nome/portas do Docker Compose por worktree. E2E visual e
+validação Schemathesis continuam arquivados porque não há Playwright, specs E2E nem contrato
+OpenAPI configurados neste projeto.
 
 ## 2. Agents
 

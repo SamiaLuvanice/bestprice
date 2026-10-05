@@ -38,7 +38,7 @@ Técnicas — `architecture`, `java-spring`, `errors`, `frontend`, `naming`, `te
 | Origem | Skills |
 |---|---|
 | Externas (instaladas por `npx skills add`) | `java-springboot` (github/awesome-copilot), `angular-developer` e `angular-new-app` (angular/skills, oficiais) |
-| Do projeto — stack | `spring-boot-feature`, `spring-boot-testing`, `api-contract`, `monorepo-navigation`, `solid-principles` |
+| Do projeto — stack | `spring-boot-feature`, `spring-boot-testing`, `api-contract`, `monorepo-navigation`, `solid-principles`, `angular-feature`, `java-datetime` |
 | Do projeto — processo | `spec-driven`, `po-intake`, `quality-gates`, `bug-resolve`, `learnings` |
 
 ## Skills externas: como instalar sem quebrar a fonte única

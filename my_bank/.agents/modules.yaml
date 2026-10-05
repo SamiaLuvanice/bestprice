@@ -37,6 +37,8 @@ profiles:
       - spring-boot-testing
       - api-contract
       - monorepo-navigation
+      - angular-feature
+      - java-datetime
 
 # Integrações opcionais: nenhuma ativa. O material antigo está em .agents/archive/.
 integrations: {}
