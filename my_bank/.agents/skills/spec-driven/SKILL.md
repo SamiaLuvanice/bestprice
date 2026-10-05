@@ -19,7 +19,7 @@ Na dúvida, escreva a spec. Ela é barata; refazer a implementação, não.
 ```
 /spec <nome>    →  specs/NNNN-<slug>/spec.md      o quê e por quê
 /plan NNNN      →  plan.md + tasks.md             como
-/implement NNNN →  código, camada por camada
+/implement NNNN →  código com TDD (skill tdd)     red → green → refactor camada por camada
 /verify NNNN    →  aceite + portões
 ```
 
@@ -51,9 +51,9 @@ Numa mudança que atravessa backend e frontend, a ordem não é negociável:
 
 ```
 1. contrato da API (no plan.md)   rotas, DTOs, erros
-2. backend                       DTO → service → controller (+ repository/entity)
-3. frontend                      model → service → componente → rota
-4. testes em cada passo, não no fim
+2. backend                       DTO → service → controller (+ repository/entity) com TDD (skill tdd)
+3. frontend                      model → service → componente → rota com TDD (skill tdd)
+4. testes em cada passo (ciclo Red → Green → Refactor), não no fim
 ```
 
 Começar pela UI produz um backend moldado por acidentes da tela.
