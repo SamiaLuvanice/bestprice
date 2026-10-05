@@ -74,5 +74,7 @@ pois a configuração do servidor é arredondada para minutos. Concorrência bac
 automática do navegador permanece fora de escopo.
 
 O fluxo ponta a ponta usou H2 local. Configuração Compose validada; a stack
-Docker/PostgreSQL da spec 0001 não foi recriada. Não houve commit, push, PR, merge
-ou deploy remoto. Não há lint configurado no frontend.
+Docker/PostgreSQL da spec 0001 não foi recriada. A implementação foi commitada em
+`fd23459` e integrada pela PR [#8](https://github.com/SamiaLuvanice/mentory_pa13/pull/8)
+em `develop` após revisão independente sem bloqueios. Não houve deploy remoto.
+Não há lint configurado no frontend.

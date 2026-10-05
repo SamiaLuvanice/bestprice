@@ -6,7 +6,8 @@
 | B | 0002-login-e-redirecionamento | Revisão documental | develop | review_0002 | Spec, plano e tarefas, somente leitura | Aprovado sem bloqueios; claim liberado |
 
 Uma única pessoa/agente escreve cada artefato. Revisões são somente leitura.
-Implementação local autorizada pelo usuário; nenhuma operação remota iniciada.
+Implementação inicialmente autorizada para execução local; entrega posteriormente isolada em
+`feature/0002-login-e-redirecionamento` e integrada pela PR #8 após revisão independente.
 
 | Slot | Spec | Etapa | Branch | Agente | Escopo | Estado |
 |---|---|---|---|---|---|---|

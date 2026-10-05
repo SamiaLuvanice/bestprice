@@ -3,7 +3,7 @@ numero: 0002
 titulo: Autenticação de usuário com tela de login e redirecionamento para página principal
 tipo: feature
 prioridade: P1
-status: pronta
+status: implementada
 toca: [backend, frontend, contrato]
 depende_de: [0001]
 ---
