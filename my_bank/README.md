@@ -55,6 +55,36 @@ cd frontend && npx ng build && npx ng test --watch=false
 
 (No PowerShell, use `.\mvnw.cmd`. O `ng` global é opcional: `npx ng` usa o do projeto.)
 
+Antes de executar a API, configure `BANK_AUTH_EMAIL` e `BANK_AUTH_PASSWORD` no ambiente.
+A conta local é reconstruída em memória com BCrypt em cada inicialização; não existe cadastro.
+A senha é obrigatória, não pode ser só espaços e aceita até 72 bytes UTF-8. E-mails são
+normalizados com espaços externos removidos e minúsculas. A API falha indicando o nome da
+configuração ausente/inválida, sem mostrar o valor. Os testes geram credenciais próprias.
+O arquivo `.env` é carregado pelo Compose; Maven não o lê automaticamente.
+
+```powershell
+$env:BANK_AUTH_EMAIL = Read-Host 'E-mail da conta local'
+$localPassword = Read-Host 'Senha da conta local' -AsSecureString
+$env:BANK_AUTH_PASSWORD = [System.Net.NetworkCredential]::new('', $localPassword).Password
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+Abra `http://localhost:4200`: `/login` permite entrar e `/dashboard` confirma o acesso e
+oferece logout. A autenticação usa sessão no servidor com cookie `JSESSIONID` HttpOnly,
+SameSite=Lax e sem persistência. F5 recupera a identificação por `/api/auth/me`.
+Após 30 minutos sem requisição autenticada aceita, a sessão expira; health, bootstrap CSRF
+e requisições rejeitadas não renovam esse prazo. Logout e reinício da API invalidam a sessão.
+Fechar o navegador exige novo login quando não há restauração de sessão habilitada.
+`Secure=false` permite HTTP local; qualquer futura execução com HTTPS deve usar
+`server.servlet.session.cookie.secure=true`.
+
+`/api/**` exige autenticação, inclusive rotas inexistentes (401 sem sessão, 404 autenticado).
+São públicos apenas `POST /api/auth/login`, `GET /api/auth/csrf` e `GET /actuator/health`.
+Para clientes diretos, consulte `/api/auth/csrf`, preserve os cookies e envie o valor de
+`XSRF-TOKEN` no header `X-XSRF-TOKEN` nos POSTs. Consulte novamente após login/logout.
+O proxy Angular/nginx mantém a mesma origem para sessão e CSRF.
+
 ## Docker
 
 Sobe Postgres 17, a API (profile `docker`) e a SPA servida pelo nginx:
@@ -64,6 +94,8 @@ Sobe Postgres 17, a API (profile `docker`) e a SPA servida pelo nginx:
 #   POSTGRES_DB=mybank
 #   POSTGRES_USER=mybank
 #   POSTGRES_PASSWORD=<escolha uma senha>
+#   BANK_AUTH_EMAIL=<e-mail da conta local>
+#   BANK_AUTH_PASSWORD=<senha da conta local, até 72 bytes UTF-8>
 docker compose up --build        # SPA em :4200, API em :8080, health em /actuator/health
 docker compose down              # para; o banco persiste no volume db-data (-v apaga)
 ```
