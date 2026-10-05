@@ -18,9 +18,11 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
         # .claude/ são links para .agents/ e CLAUDE.md contém só "@AGENTS.md"
-        exclude: ^(\.claude/|CLAUDE\.md$)
+        exclude: ^my_bank/(\.claude/|CLAUDE\.md$)
       - id: check-yaml
       - id: check-json
+        # Angular tsconfig files use JSONC comments and are not strict JSON.
+        exclude: ^my_bank/frontend/tsconfig.*\.json$
       - id: check-merge-conflict
       - id: check-added-large-files
       - id: detect-private-key
