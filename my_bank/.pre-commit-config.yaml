@@ -1,6 +1,17 @@
 # Hooks mínimos e genéricos (https://pre-commit.com). Opcional: `pip install pre-commit && pre-commit install`.
 # Formatação/lint de Java e Angular ficam por conta do build (mvnw/gradlew e ng) — ver skill quality-gates.
+default_install_hook_types: [pre-commit, commit-msg]
+
 repos:
+  - repo: local
+    hooks:
+      - id: guard-protected-branch
+        name: bloqueia commit direto em branch integradora
+        entry: python my_bank/scripts/guard-protected-branch.py
+        language: system
+        stages: [commit-msg]
+        pass_filenames: true
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:

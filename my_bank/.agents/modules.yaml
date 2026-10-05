@@ -5,6 +5,8 @@ core:
   rules:
     - evidencia.md
     - git.md
+    - git-worktree-required.md
+    - implementation-handoff.md
     - naming.md
     - security.md
     - task-done-criteria.md
