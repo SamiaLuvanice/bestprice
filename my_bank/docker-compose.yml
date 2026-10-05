@@ -19,6 +19,8 @@ services:
     build: ./backend
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      BANK_AUTH_EMAIL: ${BANK_AUTH_EMAIL:?defina BANK_AUTH_EMAIL no .env}
+      BANK_AUTH_PASSWORD: ${BANK_AUTH_PASSWORD:?defina BANK_AUTH_PASSWORD no .env}
       POSTGRES_DB: ${POSTGRES_DB:-mybank}
       POSTGRES_USER: ${POSTGRES_USER:-mybank}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

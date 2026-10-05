@@ -1,0 +1,53 @@
+<section class="panel" aria-labelledby="login-title">
+  <span class="eyebrow">Bem-vindo ao seu banco</span>
+  <h2 id="login-title">Entre na sua conta</h2>
+  <p class="intro">Use seu e-mail e senha para acessar o My Bank.</p>
+  @if (auth.state().status === 'unavailable') {
+    <div role="alert" class="notice">Não foi possível recuperar sua sessão. Tente novamente.</div>
+    <div class="actions">
+      <button type="button" (click)="retrySession()">Tentar recuperar sessão</button>
+      <button type="button" class="secondary" (click)="auth.chooseNewLogin()">
+        Entrar novamente
+      </button>
+    </div>
+  } @else if (auth.state().status === 'checking') {
+    <p role="status">Verificando sua sessão…</p>
+  } @else {
+    @if (sessionMessage(); as message) {
+      <p class="notice" role="alert">{{ message }}</p>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate [attr.aria-busy]="auth.pending()">
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="username"
+          maxlength="254"
+          [attr.aria-invalid]="!!fieldError('email')"
+          aria-describedby="email-error"
+        />
+        <span id="email-error" class="field-error">{{ fieldError('email') }}</span>
+      </div>
+      <div class="field">
+        <label for="password">Senha</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          [attr.aria-invalid]="!!fieldError('password')"
+          aria-describedby="password-error"
+        />
+        <span id="password-error" class="field-error">{{ fieldError('password') }}</span>
+      </div>
+      @if (failure(); as failure) {
+        <p class="notice" role="alert">{{ failure.message }}</p>
+      }
+      <button type="submit" [disabled]="auth.pending()">
+        {{ auth.pending() ? 'Entrando…' : 'Entrar' }}
+      </button>
+    </form>
+  }
+</section>
