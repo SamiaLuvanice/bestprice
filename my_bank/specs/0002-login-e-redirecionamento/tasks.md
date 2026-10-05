@@ -1,6 +1,6 @@
 # Tarefas — 0002 Login e redirecionamento
 
-Checklist da implementação autorizada pelo usuário. Tarefas concluídas e demonstradas em `verification.md`; `spec.md` está pronta para revisão e integração. Ordem executada: contrato → backend com testes → frontend com testes → integração → portões.
+Checklist da implementação autorizada pelo usuário. Tarefas concluídas e demonstradas em `verification.md`; `spec.md` está implementada após revisão independente e merge da PR #8. Ordem executada: contrato → backend com testes → frontend com testes → integração → portões.
 
 - [x] **T01 — Consolidar contrato e decisão arquitetural.** Relê-lo contra os 18 critérios de aceite; registrar `docs/adr/0002-autenticacao-por-sessao.md`, incluindo evolução de `/api/**` de público para protegido. **Concluída quando:** DTOs, códigos, cookies, CSRF, prioridade 401/403, limites de entrada e ausência de entity/repository não deixam decisões divergentes para backend/frontend; revisão documental registrada, sem promover silenciosamente a spec.
 
