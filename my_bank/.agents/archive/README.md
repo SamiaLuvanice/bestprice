@@ -7,6 +7,23 @@ Fica aqui, fora de `skills/`, `agents/`, `rules/` e `commands/`, portanto **nenh
 o carrega**. Serve de referência; não mova uma pasta inteira de volta sem revisar as
 dependências, branches, ferramentas e arquitetura que ela pressupõe.
 
+## Conceitos reaproveitados
+
+Alguns princípios foram reescritos para a stack atual; os originais continuam aqui para
+rastreabilidade, não para ativação direta:
+
+- `skills/datetime` → `.agents/skills/java-datetime/`: casos Java de horário local, fusos e
+  testes com `Clock`, complementando `rules/datetime-pipeline.md`.
+- `skills/angular-feature` → `.agents/skills/angular-feature/`: estrutura e fluxo de feature
+  Angular alinhados às regras atuais e à versão instalada.
+- `scripts/guard-stage-branch.sh` → `scripts/guard-protected-branch.py`: proteção de
+  `develop`, `stage` e `main` via hook de commit.
+- `scripts/worktree-stack.sh` → `scripts/compose-worktree.ps1`: nome de projeto e portas
+  isolados por branch de worktree, usando o Compose deste projeto.
+
+Não foram ativados E2E visual nem teste Schemathesis: este repositório ainda não tem os
+roteiros, contrato OpenAPI e credenciais de teste que aqueles scripts pressupõem.
+
 | Pasta | Conteúdo | Por que saiu |
 |---|---|---|
 | `skills/clickup`, `drive-artefatos` | integração com board e Google Drive | serviços externos desnecessários |
