@@ -1,4 +1,4 @@
-# my_bank — projeto de estudos (Java + Spring Boot + Angular)
+# bestprice — projeto de estudos (Java + Spring Boot + Angular)
 
 Esta pasta contém o **harness** (agents, skills, rules, commands) que acelera o desenvolvimento
 de um projeto com **backend Java/Spring Boot** e **frontend Angular**, para uso com qualquer ferramenta de IA (Codex, Claude Code, Cursor, OpenCode).

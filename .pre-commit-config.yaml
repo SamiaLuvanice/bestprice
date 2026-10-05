@@ -7,7 +7,7 @@ repos:
     hooks:
       - id: guard-protected-branch
         name: bloqueia commit direto em branch integradora
-        entry: python my_bank/scripts/guard-protected-branch.py
+        entry: python scripts/guard-protected-branch.py
         language: system
         stages: [commit-msg]
         pass_filenames: true
@@ -18,11 +18,11 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
         # .claude/ são links para .agents/ e CLAUDE.md contém só "@AGENTS.md"
-        exclude: ^my_bank/(\.claude/|CLAUDE\.md$)
+        exclude: ^(\.claude/|CLAUDE\.md$)
       - id: check-yaml
       - id: check-json
         # Angular tsconfig files use JSONC comments and are not strict JSON.
-        exclude: ^my_bank/frontend/tsconfig.*\.json$
+        exclude: ^frontend/tsconfig.*\.json$
       - id: check-merge-conflict
       - id: check-added-large-files
       - id: detect-private-key
