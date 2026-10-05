@@ -19,6 +19,7 @@ core:
     - learnings
     - po-intake
     - solid-principles
+    - task-cleanup
 
 # Perfil técnico deste projeto
 profiles:

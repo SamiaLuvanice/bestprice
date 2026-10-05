@@ -22,11 +22,9 @@
 
 Não subi containers nem rodei testes/build Java ou Angular: nenhum código da aplicação foi
 alterado. A inicialização e encerramento de uma stack real em paralelo com outra worktree
-continuam sem demonstração. A revisão independente e integração da branch também estão pendentes.
+continuam sem demonstração. A revisão independente foi concluída sem achados e a branch foi integrada.
 
 ## Handoff
 
-- PR [#4](https://github.com/SamiaLuvanice/mentory_pa13/pull/4), aberta de
-  `chore/archive-reuse-review` para `develop`.
-- Próximo passo: revisão independente da PR; não marcar a spec como implementada até a revisão
-  e a integração em `develop`.
+- PR [#4](https://github.com/SamiaLuvanice/mentory_pa13/pull/4), integrada em `develop` pelo
+  merge commit `7091dd1` após revisão independente.
