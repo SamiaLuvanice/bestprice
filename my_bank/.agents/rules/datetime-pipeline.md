@@ -5,6 +5,9 @@ alwaysApply: true
 
 # Datas e dinheiro
 
+Casos com horário local, agendamento e transições de fuso: skill
+`.agents/skills/java-datetime/SKILL.md`.
+
 ## Datas e horas
 
 1. **Instantes** (quando algo aconteceu) usam `java.time.Instant` e são gravados em UTC

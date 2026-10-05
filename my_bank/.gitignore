@@ -16,6 +16,9 @@ node_modules/
 dist/
 .angular/
 
+# Worktrees locais para desenvolvimento de features
+.worktrees/
+
 # IDE / SO
 .idea/
 .vscode/

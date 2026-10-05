@@ -28,16 +28,26 @@ salvo se o dono do repositório pedir. A autoria é de quem versiona.
 
 ## Branches
 
-`main` é sempre verde. Trabalhe em branch curta e integre por PR (ou merge local, se estiver sozinho).
+`main` é a linha estável de release; `develop` recebe a integração diária de features;
+`stage` recebe a candidata a release para validação. Proteja as três contra commits diretos
+de feature e integre mudanças por PR. O trabalho de feature parte de `origin/develop` e
+abre PR para `develop` (ver `git-worktree-required.md`).
 
 ```
-feat/0003-accounts-crud     ← referencia o número da spec, se houver
+feature/0003-accounts-crud  ← referencia o número da spec, se houver
 fix/transfer-rounding
 chore/bump-spring-boot
 ```
 
-Rebase/atualize a partir da `main` antes de integrar. Commit direto na `main` só para docs triviais.
+Promoção de release: PR `develop` → `stage` e, após validação/aceite, PR `stage` → `main`.
+Atualize a branch de feature a partir de `develop` antes de integrar, conforme a política
+do repositório. Não faça commit direto em `main`, `stage` ou `develop`.
 Não use `--no-verify` para contornar hooks: conserte a causa.
+
+O hook `guard-protected-branch` bloqueia commits diretos em `develop`, `stage` e `main`
+quando os hooks estiverem instalados. Instale/atualize ambos com
+`pre-commit install --hook-type pre-commit --hook-type commit-msg`. O hook é uma proteção
+local contra acidentes, não substitui as regras de proteção de branch do GitHub.
 
 ## Pull requests (quando usar)
 

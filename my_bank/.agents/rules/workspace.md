@@ -20,8 +20,8 @@ Projeto de estudos: prefira o caminho mais simples e didático e explique o porq
 - **REST e erros:** `errors.md` · **Validação:** `errors.md` + `java-spring.md`
 - **Angular e TypeScript:** `frontend.md`
 - **Nomes:** `naming.md` · **Testes:** `testing.md` · **Segurança:** `security.md`
-- **Datas e dinheiro:** `datetime-pipeline.md` · **Commits e branches:** `git.md`
-- **Pronto significa:** `task-done-criteria.md`
+- **Datas e dinheiro:** `datetime-pipeline.md` · **Commits e branches:** `git.md` · **Worktrees:** `git-worktree-required.md`
+- **Entrega de implementação:** `implementation-handoff.md` · **Pronto significa:** `task-done-criteria.md`
 - Onde mexer no repositório: skill `monorepo-navigation`.
 
 ## Como o trabalho anda
@@ -44,5 +44,5 @@ cite no prompt o caminho do papel e das skills que ele deve ler.
 - **Idioma:** identificadores em inglês; documentação, comentários e texto ao usuário em português.
 - **Sem segredo no repositório.** Configuração sensível vem de variável de ambiente.
 - **Testes e build verdes** antes de entregar.
-- **Ferramentas de gestão e deploy (ClickUp, Railway, CI/CD) não fazem parte do fluxo.**
-  Ficam em `.agents/archive/` caso um dia sejam úteis.
+- **Sem deploy configurado:** conclusão de spec não depende de deploy nem de ferramentas
+  externas de gestão. O fluxo de branches e PRs está em `git.md` e `implementation-handoff.md`.

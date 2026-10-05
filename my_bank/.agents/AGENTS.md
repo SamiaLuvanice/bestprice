@@ -29,7 +29,8 @@ skills-lock.json     (raiz) versões das skills externas instaladas via `npx ski
 **Agents:** `backend` (Spring Boot), `frontend` (Angular), `fullstack`, `qa` (testes e aceite),
 `arch-reviewer` (arquitetura e qualidade), `debugger` (causa raiz), `product-owner`, `spec-reviewer`.
 
-**Rules:** processo — `workspace` (índice), `evidencia`, `task-done-criteria`, `git`.
+**Rules:** processo — `workspace` (índice), `evidencia`, `task-done-criteria`, `git`,
+`git-worktree-required` (branches/worktrees) e `implementation-handoff` (entrega/revisão).
 Técnicas — `architecture`, `java-spring`, `errors`, `frontend`, `naming`, `testing`, `security`, `datetime-pipeline`.
 
 **Skills:**
@@ -37,7 +38,7 @@ Técnicas — `architecture`, `java-spring`, `errors`, `frontend`, `naming`, `te
 | Origem | Skills |
 |---|---|
 | Externas (instaladas por `npx skills add`) | `java-springboot` (github/awesome-copilot), `angular-developer` e `angular-new-app` (angular/skills, oficiais) |
-| Do projeto — stack | `spring-boot-feature`, `spring-boot-testing`, `api-contract`, `monorepo-navigation`, `solid-principles` |
+| Do projeto — stack | `spring-boot-feature`, `spring-boot-testing`, `api-contract`, `monorepo-navigation`, `solid-principles`, `angular-feature`, `java-datetime` |
 | Do projeto — processo | `spec-driven`, `po-intake`, `quality-gates`, `bug-resolve`, `learnings` |
 
 ## Skills externas: como instalar sem quebrar a fonte única
@@ -69,7 +70,8 @@ bash .agents/sync.sh        # após clonar, ou ao adicionar skill/agent
 
 ## Como editar
 
-1. Regra de código → `rules/<tema>.md` (e, se for sempre ativa, a lista no `AGENTS.md` da raiz e o `@import` no `CLAUDE.md`)
+1. Regra → `rules/<tema>.md` (e, se for sempre ativa, a lista no `AGENTS.md` da raiz,
+   a lista de rules em `modules.yaml` e o `@import` no `CLAUDE.md`)
 2. Procedimento reutilizável → `skills/<nome>/SKILL.md`
 3. Papel de agente → `agents/<papel>.md`
 4. Endereço externo → `sources.md`

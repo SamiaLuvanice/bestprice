@@ -15,6 +15,7 @@ de um projeto com **backend Java/Spring Boot** e **frontend Angular**, para uso 
 - `specs/`: especificações das features.
 - `docs/`: documentação do harness e, depois, ADRs e aprendizados.
 - `scripts/diagnose-harness.ps1`: valida o harness.
+- `scripts/compose-worktree.ps1`: sobe o Compose com nome e portas próprios em uma worktree.
 - `config/` e `harness.yaml`: stack, comandos de qualidade.
 
 ## Primeiros passos
@@ -66,6 +67,17 @@ Sobe Postgres 17, a API (profile `docker`) e a SPA servida pelo nginx:
 docker compose up --build        # SPA em :4200, API em :8080, health em /actuator/health
 docker compose down              # para; o banco persiste no volume db-data (-v apaga)
 ```
+
+Para dar à worktree containers/volume próprios e não disputar as portas fixas do checkout
+principal, use o auxiliar abaixo dentro dela; ele deriva nome do projeto e portas de forma
+estável da branch e do caminho local da worktree (e aceita `BACKEND_PORT`/`FRONTEND_PORT` como overrides):
+
+```powershell
+.\scripts\compose-worktree.ps1 up --build
+.\scripts\compose-worktree.ps1 down
+```
+
+No checkout principal, continue usando `docker compose up --build` e `docker compose down`.
 
 No Docker o nginx repassa `/api` para o backend; fora dele, é o proxy do `ng serve`.
 Em ambos, a API deve expor as rotas sob o prefixo `/api`.

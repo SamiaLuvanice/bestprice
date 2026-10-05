@@ -17,12 +17,15 @@ agents, skills, commands e rules (ver `.agents/AGENTS.md`).
 - `.agents/rules/evidencia.md`
 - `.agents/rules/task-done-criteria.md`
 - `.agents/rules/datetime-pipeline.md`
+- `.agents/rules/git.md`
+- `.agents/rules/git-worktree-required.md`
+- `.agents/rules/implementation-handoff.md`
 
 ## Regras por tema (leia sob demanda, conforme o arquivo que for editar)
 
 - Backend Java/Spring: `.agents/rules/architecture.md`, `java-spring.md`, `errors.md`
 - Frontend Angular/TypeScript: `.agents/rules/frontend.md`
-- Transversais: `naming.md`, `testing.md`, `security.md`, `git.md`
+- Transversais: `naming.md`, `testing.md`, `security.md`
 
 ## Skills, agents e comandos em qualquer ferramenta
 

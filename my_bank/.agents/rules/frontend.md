@@ -5,6 +5,7 @@ description: Convenções de Angular e TypeScript — componentes, services, rot
 # Frontend (Angular + TypeScript)
 
 Guia completo e atualizado: skill `angular-developer` (oficial do time do Angular).
+Para organizar uma feature neste monorepo, use também `.agents/skills/angular-feature/SKILL.md`.
 **Antes de gerar código, confira a versão do Angular do projeto** (`package.json`) — as práticas variam por versão.
 Esta regra fixa as decisões do projeto.
 
