@@ -1,8 +1,9 @@
 # Verificação — 0007
 
-Estado: em andamento. Evidências abaixo pertencem à branch
-`feature/0007-issue-15-reinicio-fastapi-react`; PR, CI remoto e aprovação
-independente ainda não concluídos.
+Estado: implementação entregue para revisão GitHub. Evidências abaixo pertencem
+à branch `feature/0007-issue-15-reinicio-fastapi-react` e à
+[PR #16](https://github.com/SamiaLuvanice/bestprice/pull/16). O CI remoto
+passou; aprovação independente e merge em `develop` ainda não ocorreram.
 
 ## Gates executados
 
@@ -14,7 +15,9 @@ independente ainda não concluídos.
 | Frontend | `npm test -- --run`; `npm run lint`; `npm run build` | 7 testes passaram após ajuste do timeout; lint e build passaram |
 | Harness | `scripts/diagnose-harness.ps1`, `.agents/sync.ps1`, `docker compose config --quiet`, `pre-commit check-yaml`, `pre-commit check-json` | Passaram na verificação do responsável pela área |
 | Automações | `node --test .github/scripts/*.test.cjs` | 11 testes passaram |
-| Workflows | `actionlint` | Não executado localmente; ferramenta indisponível. CI executa o gate |
+| Workflows | `actionlint` | Não executado localmente; ferramenta indisponível. O job remoto `quality / Automation`, que executa o gate, passou na PR #16 |
+| CI remoto | Jobs `CI`, `quality / Backend`, `quality / Frontend`, `quality / Automation` e `PR policy` da PR #16 | Todos `SUCCESS` na execução consultada da PR #16 |
+| Falha controlada do agregador | Bash com `QUALITY_RESULT=failure` executando a condição `test "$QUALITY_RESULT" = success` de `ci.yml` | Exit 1 esperado; a condição rejeitou o gate vermelho |
 
 ## Fluxo integrado observado
 
@@ -89,10 +92,10 @@ worktree temporários foram removidos após a prova, sem tocar no volume antigo.
 | 8 | Demonstrado | 200 `ok/ok` com banco e 503 `unavailable/unavailable` com banco parado. |
 | 9 | Demonstrado | Chrome headless exibiu `Serviço indisponível` com banco ou API parados; testes de rede/timeout verdes. |
 | 10 | Demonstrado | 5 testes backend, 7 frontend, 11 automações; comandos nesta página e no README. |
-| 11 | Pendente de PR | `quality.yml` e check agregador `CI` preparados; execução remota e bloqueio por falha ainda não observados. |
+| 11 | Demonstrado | PR #16: `CI`, backend, frontend, automações e política de PR verdes; condição do agregador falhou com resultado obrigatório simulado como `failure`. |
 | 12 | Demonstrado localmente | Duas imagens construídas pelo Compose; workflow de release preserva tags/digests, sem publicação nesta spec. |
 | 13 | Demonstrado | README e docs de harness/GitHub distinguem base atual, histórico e pendências externas. |
-| 14 | Demonstrado localmente | Deleções antigas entraram nos commits da feature; `designsystem/`, `.env` principal e volume anterior preservados. Integração aguarda PR/revisão GitHub. |
+| 14 | Demonstrado localmente | Deleções antigas entraram nos commits da feature e na PR #16; `designsystem/`, `.env` principal e volume anterior preservados. Merge aguarda aprovação independente no GitHub. |
 
 ## Percurso de orquestração
 
