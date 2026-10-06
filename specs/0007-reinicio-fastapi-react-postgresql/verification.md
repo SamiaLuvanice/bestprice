@@ -1,6 +1,7 @@
 # Verificação — 0007
 
-Estado: implementação integrada em `develop`. As evidências abaixo pertencem
+Estado: implementação integrada em `develop`; a limpeza histórica está em revisão
+na [PR #22](https://github.com/SamiaLuvanice/bestprice/pull/22). As evidências abaixo pertencem
 à branch `feature/0007-issue-15-reinicio-fastapi-react` e à
 [PR #16](https://github.com/SamiaLuvanice/bestprice/pull/16), que foi aprovada
 e integrada; esta revisão apenas reorganiza o histórico documental e não altera
@@ -19,6 +20,27 @@ o comportamento da aplicação.
 | Workflows | `actionlint` | Não executado localmente; ferramenta indisponível. O job remoto `quality / Automation`, que executa o gate, passou na PR #16 |
 | CI remoto | Jobs `CI`, `quality / Backend`, `quality / Frontend`, `quality / Automation` e `PR policy` da PR #16 | Todos `SUCCESS` na execução consultada da PR #16 |
 | Falha controlada do agregador | Bash com `QUALITY_RESULT=failure` executando a condição `test "$QUALITY_RESULT" = success` de `ci.yml` | Exit 1 esperado; a condição rejeitou o gate vermelho |
+
+## Gates da PR #22
+
+Os gates abaixo foram executados sobre o commit `8924a5f` e confirmados nos
+checks remotos da PR #22:
+
+| Verificação | Resultado observado |
+|---|---|
+| `uv sync --locked --extra dev`; `uv run ruff check .`; `uv run pytest -q` | Ruff passou; 3 testes passaram e 2 foram pulados porque não havia PostgreSQL local |
+| `npm ci --no-audit --no-fund`; `npm run lint`; `npm test -- --run`; `npm run build` | Lint e build passaram; 7 testes passaram |
+| `node --test .github/scripts/*.test.cjs` | 15 testes passaram |
+| `git diff --check` e validação JSON de `skills-lock.json` | Passaram |
+| Busca de `Java`, `Spring`, `Angular` e `Maven` fora de arquivos arquivados | Nenhuma referência ativa encontrada |
+| `.agents/sync.ps1` | Projeções `.claude/` regeneradas a partir de `.agents/` |
+| `actionlint` local | Não executado: ferramenta indisponível; job remoto `quality / Automation` passou |
+| Checks remotos da PR #22 | `CI`, `PR policy`, backend, frontend, automações e `sync` passaram |
+| Revisão independente pelo `arch-reviewer` | Sem bloqueio técnico; foi solicitada atualização documental, registrada nesta seção |
+
+As specs 0001–0006 foram confirmadas em `specs/archive/legacy-java-angular/`;
+o diretório ativo mantém as specs 0007 e 0008. O ADR e os aprendizados antigos
+estão em `docs/archive/legacy-java-angular/`.
 
 ## Fluxo integrado observado
 
@@ -56,7 +78,9 @@ localhost e passa a senha ao driver por campo separado, sem concatená-la numa U
 - Harness: a skill ativa `agent-orchestration` orienta Issue, spec, plano,
   worktree, evidência, revisão, QA e PR para `develop`; as orientações da stack anterior
   foram arquivadas. A revisão final confirmou que as instruções ativas não prescrevem
-  tecnologias legadas.
+  tecnologias legadas. A revisão independente confirmou que as specs 0001–0006
+  estão fora do diretório ativo e que os links de progresso apontam para os
+  caminhos atuais.
 - Interface: testes de componente cobrem carregamento, sucesso, 503, resposta
   inválida, falha de rede e timeout. Proxy de produção limita a espera a 2–5
   segundos. Resultado observado também em Chrome headless nos três cenários.
@@ -67,9 +91,9 @@ localhost e passa a senha ao driver por campo separado, sem concatená-la numa U
   realizadas nesta etapa. O workflow de entrega permanece para promoção futura.
 - Project/implantação externa: sem evidência de sincronização ou configuração;
   não declaradas concluídas.
-- Revisão independente de arquitetura: concluída sem bloqueios remanescentes
-  após corrigir porta local do banco, instalação do driver no host, senha do
-  Compose e instrução antiga de implementação na skill `spec-driven`.
+- Revisão independente de arquitetura: concluída sem bloqueios técnicos na PR
+  #22. A revisão solicitou evidência documental específica da limpeza; os gates,
+  caminhos arquivados e estado da PR foram registrados nesta atualização.
 
 ## Checkout limpo
 
