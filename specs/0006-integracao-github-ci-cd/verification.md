@@ -28,7 +28,7 @@ e cobertos/documentados nesta atualização.
 
 ## Evidências no GitHub
 
-- CI do commit final `7cb4533`: [execução 37472810287](https://github.com/SamiaLuvanice/bestprice/actions/runs/37472810287),
+- CI do commit final de implementação `7cb4533`: [execução 37472810287](https://github.com/SamiaLuvanice/bestprice/actions/runs/37472810287),
   concluída com sucesso. Passaram PR policy, quality / Automation, quality /
   Frontend, quality / Backend e o agregador CI.
 - `gh issue develop 12 --list` confirmou a branch vinculada à Issue.
@@ -73,3 +73,5 @@ e cobertos/documentados nesta atualização.
 - A revisão independente foi concluída com os achados P2/P3 corrigidos: cercas
   Markdown alternativas, limite de commits da API, corrida de tag e recuperação
   de divergência entre branches estão tratados e documentados.
+- Após o registro desta verificação, o commit documental `f89275a` também passou no
+  CI: [execução 37473127086](https://github.com/SamiaLuvanice/bestprice/actions/runs/37473127086).
