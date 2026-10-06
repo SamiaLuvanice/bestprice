@@ -45,5 +45,6 @@ cite no prompt o caminho do papel e das skills que ele deve ler.
 - **Idioma:** identificadores em inglês; documentação, comentários e texto ao usuário em português.
 - **Sem segredo no repositório.** Configuração sensível vem de variável de ambiente.
 - **Testes e build verdes** antes de entregar.
-- **Sem deploy configurado:** conclusão de spec não depende de deploy nem de ferramentas
-  externas de gestão. O fluxo de branches e PRs está em `git.md` e `implementation-handoff.md`.
+- **GitHub integrado:** Issues, Projects, PRs, CI e entrega de artefatos seguem
+  `docs/github-workflow.md`. Implantação externa não configurada; pendências de
+  credenciais devem ser explicitadas. Branches e handoff: `git.md` e `implementation-handoff.md`.

@@ -42,5 +42,7 @@ profiles:
       - angular-feature
       - java-datetime
 
-# Integrações opcionais: nenhuma ativa. O material antigo está em .agents/archive/.
-integrations: {}
+# A credencial de Project é opcional; CI e entrega usam GITHUB_TOKEN.
+integrations:
+  github:
+    documentation: docs/github-workflow.md

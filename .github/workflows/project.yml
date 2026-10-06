@@ -1,0 +1,53 @@
+name: Project sync
+on:
+  issues:
+    types: [opened, reopened, closed, assigned, unassigned]
+  pull_request_target:
+    types: [opened, reopened, closed, ready_for_review, converted_to_draft]
+  workflow_dispatch:
+    inputs:
+      kind:
+        type: choice
+        options: [issue, pr]
+        required: true
+      number:
+        description: Número da Issue ou PR para reconciliar
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: project-${{ github.event.issue.number || github.event.pull_request.number || inputs.number }}
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Conferir configuração
+        id: config
+        env:
+          PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+        run: |
+          if [ -z "$PROJECT_TOKEN" ]; then
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+            echo '::warning::Project pendente: configure PROJECT_TOKEN, PROJECT_OWNER e PROJECT_NUMBER. Consulte docs/github-workflow.md.'
+            echo 'Project não sincronizado: credencial ausente. Configuração manual em docs/github-workflow.md.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          fi
+      # Nunca executar código da cabeça da PR com PROJECT_TOKEN.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.config.outputs.enabled == 'true'
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          PROJECT_OWNER: ${{ vars.PROJECT_OWNER }}
+          PROJECT_NUMBER: ${{ vars.PROJECT_NUMBER }}
+        with:
+          github-token: ${{ secrets.PROJECT_TOKEN }}
+          script: |
+            await require('./.github/scripts/sync-project.cjs')({ github, context, core });

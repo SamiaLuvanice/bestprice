@@ -6,8 +6,9 @@ alwaysApply: true
 # Worktree e fluxo de branches
 
 O repositório é um monorepo. `main` é a linha estável de release, `develop` é a integração
-diária de features e `stage` é a linha de validação de release candidate. Não há deploy
-configurado; validações de release são locais até que isso mude explicitamente.
+diária de features e `stage` é a linha de validação de release candidate. CI valida
+as três; entrega de imagens e releases ocorre na main. Implantação externa ainda
+não está configurada. Veja `docs/github-workflow.md`.
 
 ## Regra
 
@@ -15,8 +16,8 @@ configurado; validações de release são locais até que isso mude explicitamen
    monorepo. Correções solicitadas em review continuam na mesma worktree/branch.
 2. Não crie nem faça commits de feature no checkout principal. Código, testes e comandos
    da aplicação rodam dentro da worktree.
-3. Cada feature usa branch `feature/<spec>-<slug>` (ex.: `feature/0004-transferencias`).
-   Correções fora de uma spec usam `fix/<slug>`; outros tipos seguem `.agents/rules/git.md`.
+3. Cada feature usa branch `feature/<spec>-issue-<numero>-<slug>`.
+   Correções fora de uma spec usam `fix/issue-<numero>-<slug>`; outros tipos seguem `.agents/rules/git.md`.
 4. A base da feature e o destino do PR são `develop`. Antes, execute `git fetch origin`
    e confirme que `refs/remotes/origin/develop` existe. Se não existir, pare e reporte;
    não use `stage` nem `main` como fallback.
@@ -30,19 +31,20 @@ configurado; validações de release são locais até que isso mude explicitamen
 | Papel | Caminho | Branch |
 |---|---|---|
 | Checkout principal | raiz do monorepo | `develop` |
-| Feature | `.worktrees/<slug>/` | `feature/<spec>-<slug>` |
+| Feature | `.worktrees/<slug>/` | `feature/<spec>-issue-<numero>-<slug>` |
 
-`<slug>` é o nome da branch sem `/` (ex.: `feature/0004-transferencias` →
-`feature-0004-transferencias`). A pasta `.worktrees/` é ignorada pelo Git.
+`<slug>` é o nome da branch com `/` substituído por `-`. A pasta `.worktrees/` é ignorada pelo Git.
 
 ## Criar worktree (PowerShell)
 
 ```powershell
 git fetch origin
 git show-ref --verify refs/remotes/origin/develop
-$branch = "feature/0004-transferencias"
+$branch = "feature/0007-issue-123-transferencias"
 $slug = $branch.Replace('/', '-')
-git worktree add ".worktrees/$slug" -b $branch origin/develop
+gh issue develop 123 --base develop --name $branch
+git fetch origin
+git worktree add ".worktrees/$slug" --track -b $branch "origin/$branch"
 Set-Location ".worktrees/$slug"
 ```
 
@@ -51,5 +53,5 @@ Confirme que o diretório atual termina em `.worktrees/<slug>` antes de editar.
 ## Promoção de release
 
 Quando uma release for solicitada, promova por PR `develop` → `stage` para validação
-local e, após aceite, `stage` → `main`. Isso é separado da conclusão de uma spec e não
-implica deploy.
+e, após aceite, `stage` → `main`. Isso dispara a entrega de imagens/release após os
+gates. A implantação externa depende de uma configuração futura explícita.

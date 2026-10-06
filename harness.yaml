@@ -24,7 +24,7 @@ modules:
     - quality-gates
   technical:
     - java-springboot-angular
-  integrations: []   # nenhuma: sem ClickUp, Drive ou Railway (ver .agents/archive/)
+  integrations: [github] # setup de Project e entrega: docs/github-workflow.md
 
 git:
   protected_branches:

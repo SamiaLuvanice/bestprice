@@ -120,6 +120,9 @@ Em ambos, a API deve expor as rotas sob o prefixo `/api`.
 ## Princípios
 
 Simples primeiro; uma regra por assunto; evidência antes de hipótese; teste junto do código.
-Sem ClickUp, Railway, CI/CD ou nuvem neste momento — o que existia ficou em `.agents/archive/`.
+Issues, Projects, PRs, CI e entrega de imagens/releases seguem o
+[fluxo integrado do GitHub](docs/github-workflow.md). CI é obrigatório nas branches
+integradoras; Project depende de credencial adicional. Implantação externa ainda
+não está configurada. ClickUp/Railway permanecem em `.agents/archive/`.
 
 Nunca versione `.env`, `application-local.yml`, credenciais, `target/`, `node_modules/`.
