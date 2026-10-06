@@ -5,7 +5,7 @@
 Sequencial, quatro dígitos, imutável, nunca reaproveitada.
 
 ```
-specs/0001-health/    specs/0002-auth/    specs/0003-users/    specs/0004-…
+specs/0007-reinicio-fastapi-react-postgresql/
 ```
 
 O número não carrega significado de área. Categoria, prioridade e lados tocados são
