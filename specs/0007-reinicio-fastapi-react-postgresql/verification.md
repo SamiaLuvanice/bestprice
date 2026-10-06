@@ -65,6 +65,35 @@ localhost e passa a senha ao driver por campo separado, sem concatená-la numa U
   após corrigir porta local do banco, instalação do driver no host, senha do
   Compose e instrução antiga de implementação na skill `spec-driven`.
 
+## Checkout limpo
+
+Uma worktree temporária destacada no commit `f87256d` instalou dependências
+sem arquivos da área de desenvolvimento: `uv sync --locked --extra dev` instalou
+27 pacotes e `npm ci` instalou 256 pacotes. Seu Compose isolado construiu as
+duas imagens, iniciou API, interface e PostgreSQL com volume próprio e retornou
+HTTP 200 `ok/ok` tanto em `:25808/api/health` quanto pelo proxy em
+`:32808/api/health`; a raiz da SPA retornou HTTP 200. Os containers, volume e
+worktree temporários foram removidos após a prova, sem tocar no volume antigo.
+
+## Matriz dos critérios de aceite
+
+| Nº | Situação | Evidência ou pendência |
+|---|---|---|
+| 1 | Demonstrado | Mesmo histórico Git e specs 0000–0007 preservados; commits em branch nova. |
+| 2 | Demonstrado | Índices, papéis, regras, comandos e skills ativos migrados; busca contextual não encontrou obrigação Java/Angular. |
+| 3 | Demonstrado | Spec, plano, TDD Red/Green, worktree, revisão e limpeza documentados e exercidos até a etapa anterior ao merge. |
+| 4 | Demonstrado | Skill ativa `agent-orchestration`, claims, percurso de mesa abaixo e evidência por transição. |
+| 5 | Demonstrado | Regras de segurança, erros, datas, `Decimal`, testes e configuração por ambiente adaptadas. |
+| 6 | Demonstrado | Checkout limpo instalou dependências por lock e iniciou três serviços via Compose. |
+| 7 | Demonstrado | API/proxy 200 após `SELECT 1`; Chrome headless exibiu `Tudo conectado`. |
+| 8 | Demonstrado | 200 `ok/ok` com banco e 503 `unavailable/unavailable` com banco parado. |
+| 9 | Demonstrado | Chrome headless exibiu `Serviço indisponível` com banco ou API parados; testes de rede/timeout verdes. |
+| 10 | Demonstrado | 5 testes backend, 7 frontend, 11 automações; comandos nesta página e no README. |
+| 11 | Pendente de PR | `quality.yml` e check agregador `CI` preparados; execução remota e bloqueio por falha ainda não observados. |
+| 12 | Demonstrado localmente | Duas imagens construídas pelo Compose; workflow de release preserva tags/digests, sem publicação nesta spec. |
+| 13 | Demonstrado | README e docs de harness/GitHub distinguem base atual, histórico e pendências externas. |
+| 14 | Demonstrado localmente | Deleções antigas entraram nos commits da feature; `designsystem/`, `.env` principal e volume anterior preservados. Integração aguarda PR/revisão GitHub. |
+
 ## Percurso de orquestração
 
 1. Intake e revisão: Issue #15 e spec 0007 com contrato e aceite; revisor de

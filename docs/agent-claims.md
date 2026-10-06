@@ -10,9 +10,9 @@ apenas sua área. Nenhum agente faz merge ou publicação.
 
 | Slot | Papel | Arquivos sob responsabilidade | Estado |
 |---|---|---|---|
-| A | backend_impl | `backend/` | Implementação em andamento |
-| B | frontend_impl | `frontend/` | Implementação em andamento |
-| C | harness_impl | `.agents/`, raiz, CI e docs operacionais (exceto este registro e `docs/PROGRESS.md`) | Implementação em andamento |
+| A | backend_impl | `backend/` | Entregue; 5 testes com PostgreSQL |
+| B | frontend_impl | `frontend/` | Entregue; 7 testes e build |
+| C | harness_impl | `.agents/`, raiz, CI e docs operacionais (exceto este registro e `docs/PROGRESS.md`) | Entregue; 11 testes das automações |
 | R | spec_review | Spec 0007, somente leitura | Revisão concluída; correções incorporadas |
 
 O material de `designsystem/` e as remoções locais no checkout principal são
