@@ -1,40 +1,7 @@
-# Arquivo (não usado)
+# Arquivo histórico
 
-Material do harness original (stack FastAPI + React/Vue, board ClickUp, deploy Railway,
-orquestração de vários agentes) que **não faz parte** do fluxo de estudo Java + Spring Boot + Angular.
+O perfil ativo é FastAPI, React e PostgreSQL (spec 0007). Nada nesta pasta é carregado pelo fluxo atual. legacy-java-angular/ preserva as instruções que guiavam a aplicação anterior; outros arquivos registram experiências anteriores com ClickUp, Railway, Vue e orquestração diferente.
 
-Fica aqui, fora de `skills/`, `agents/`, `rules/` e `commands/`, portanto **nenhuma ferramenta
-o carrega**. Serve de referência; não mova uma pasta inteira de volta sem revisar as
-dependências, branches, ferramentas e arquitetura que ela pressupõe.
+Princípios úteis foram reescritos nas regras e skills ativas em .agents/. Em particular, .agents/skills/agent-orchestration/SKILL.md usa Issue GitHub, spec local, worktree de develop, gates, revisão e PR. Não copie a versão antiga desta skill: ela pressupõe board e implantação que não fazem parte da base atual.
 
-## Conceitos reaproveitados
-
-`agent-claims.md` preserva os registros concluídos da spec 0002. O fluxo atual
-não usa um registro de claims ativo.
-
-Alguns princípios foram reescritos para a stack atual; os originais continuam aqui para
-rastreabilidade, não para ativação direta:
-
-- `skills/datetime` → `.agents/skills/java-datetime/`: casos Java de horário local, fusos e
-  testes com `Clock`, complementando `rules/datetime-pipeline.md`.
-- `skills/angular-feature` → `.agents/skills/angular-feature/`: estrutura e fluxo de feature
-  Angular alinhados às regras atuais e à versão instalada.
-- `scripts/guard-stage-branch.sh` → `scripts/guard-protected-branch.py`: proteção de
-  `develop`, `stage` e `main` via hook de commit.
-- `scripts/worktree-stack.sh` → `scripts/compose-worktree.ps1`: nome de projeto e portas
-  isolados por branch de worktree, usando o Compose deste projeto.
-
-Não foram ativados E2E visual nem teste Schemathesis: este repositório ainda não tem os
-roteiros, contrato OpenAPI e credenciais de teste que aqueles scripts pressupõem.
-
-| Pasta | Conteúdo | Por que saiu |
-|---|---|---|
-| `skills/clickup`, `drive-artefatos` | integração com board e Google Drive | serviços externos desnecessários |
-| `skills/stage-to-main` | promoção stage → produção (Railway) | sem deploy em nuvem |
-| `skills/agent-orchestration`, `agents/orchestrator.md`, `config/orquestracao.yml` | pipeline com vários subagentes em paralelo | complexidade além do necessário |
-| `skills/task-handoff`, `pr-review-merge`, `rules/implementation-handoff.md`, `rules/git-worktree-required.md` | handoff, branches, worktrees e deploy Railway | fluxo atual usa `develop`, PR e handoff local, sem deploy obrigatório |
-| `skills/fastapi-*`, `react-feature`, `vue-feature`, `frontend-parity`, `clean-architecture` | stack Python, três SPAs e Clean Architecture com ports | não correspondem à stack/arquitetura simples deste projeto |
-| `skills/angular-feature` | orientação de feature Angular do harness anterior | reescrita para este monorepo em `.agents/skills/angular-feature/` |
-| `skills/i18n`, `rules/i18n.md`, `skills/datetime` | i18n pt/en/es e casos de fuso do domínio anterior | i18n continua fora do escopo; casos Java de data/hora foram adaptados em `.agents/skills/java-datetime/` |
-| `skills/qa-visual`, `config/e2e-map.example.yaml` | QA visual em staging com Playwright | sem ambiente de staging |
-| `scripts/` | worktree-stack, guard-stage-branch, e2e, contract-test, qa-capture | worktree-stack e guard foram adaptados; E2E/contrato ainda dependem de infraestrutura ausente |
+Git e specs/ preservam o histórico das decisões. Consulte o contrato e as regras ativas antes de reaproveitar qualquer ideia arquivada.

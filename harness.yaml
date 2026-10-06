@@ -1,44 +1,31 @@
-version: 0.2.0
+version: 0.3.0
 project:
-  name: my-bank
+  name: bestprice
   root: .
-
-# Ferramentas de IA alimentadas por .agents/ (ver .agents/sync.sh)
 tools:
-  claude: true        # via CLAUDE.md + links em .claude/
-  codex: true         # nativo: lê AGENTS.md e .agents/skills (sem sync)
+  claude: true
+  codex: true
   opencode: false
   cursor: false
-
-# Perfil técnico: stack do projeto de estudos
 profile:
-  name: java-springboot-angular
+  name: fastapi-react-postgresql
   backend_dir: backend
   frontend_dir: frontend
   specs_dir: specs
-
 modules:
-  core:
-    - evidence
-    - spec-driven
-    - quality-gates
-  technical:
-    - java-springboot-angular
-  integrations: [github] # setup de Project e entrega: docs/github-workflow.md
-
+  core: [evidence, spec-driven, quality-gates, agent-orchestration]
+  technical: [fastapi-react-postgresql]
+  integrations: [github]
 git:
-  protected_branches:
-    - develop
-    - stage
-    - main
+  protected_branches: [develop, stage, main]
   default_base: develop
-
-# Comandos de verificação (use mvnw/gradlew do projeto; no PowerShell: .\mvnw.cmd)
 quality:
-  backend_test_command: ./mvnw test            # Gradle: ./gradlew test
-  backend_verify_command: ./mvnw verify        # Gradle: ./gradlew build
-  frontend_build_command: ng build
-  frontend_test_command: ng test --watch=false
-
+  backend_install_command: uv sync --locked --extra dev
+  backend_lint_command: uv run ruff check .
+  backend_test_command: uv run pytest -q
+  frontend_install_command: npm ci
+  frontend_lint_command: npm run lint
+  frontend_test_command: npm test -- --run
+  frontend_build_command: npm run build
 customization:
   project_sources_file: .agents/sources.md

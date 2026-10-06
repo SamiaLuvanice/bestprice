@@ -1,5 +1,7 @@
 # Aprendizados
 
+As entradas anteriores à spec 0007 documentam a aplicação Java/Angular e permanecem como histórico. Para a stack ativa, consulte .agents/ e README.md.
+
 ## 2026-10-06 — Separar CI de automações com permissão de escrita
 
 **Contexto:** integração GitHub da spec 0006. O token padrão não acessa Projects,

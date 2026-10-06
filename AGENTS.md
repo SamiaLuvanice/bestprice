@@ -1,46 +1,26 @@
 # Harness do projeto
 
-Projeto de estudos: **Java + Spring Boot** (`backend/`) e **Angular** (`frontend/`).
-Priorize simplicidade, boas práticas e explicar o porquê das decisões.
+Projeto de estudos: FastAPI (Python 3.13) em backend/, React + TypeScript em frontend/ e PostgreSQL. Priorize simplicidade, boas práticas e explique o porquê.
 
-Toda configuração de agentes vive em `.agents/`, a fonte única de verdade para
-agents, skills, commands e rules (ver `.agents/AGENTS.md`).
+Toda configuração de agentes vive em .agents/, a fonte única de verdade (ver .agents/AGENTS.md).
 
-- Papéis: `.agents/agents/` · Skills: `.agents/skills/` · Comandos: `.agents/commands/`
-- Regras: `.agents/rules/`
-- Fluxo: `/spec` → `/plan` → `/implement` (TDD para comportamento) → `/verify`
-- Após integrar uma spec em `develop`, finalize recursos locais da tarefa conforme a skill
-  `.agents/skills/task-cleanup/SKILL.md`.
-- Material de outras stacks e integrações (ClickUp, Railway...) fica em `.agents/archive/` e **não** é usado.
+- Papéis: .agents/agents/ · Skills: .agents/skills/ · Comandos: .agents/commands/
+- Regras: .agents/rules/
+- Fluxo: /spec → /plan → /implement (TDD para comportamento) → /verify
+- Orquestração de trabalho delegado: .agents/skills/agent-orchestration/SKILL.md
+- Após integrar em develop, aplique .agents/skills/task-cleanup/SKILL.md.
+- Orientações da stack antiga e integrações não ativas ficam em .agents/archive/.
 
-## Regras sempre ativas (leia **antes de qualquer tarefa**)
+## Regras sempre ativas
 
-- `.agents/rules/workspace.md` (índice: cada assunto tem um dono)
-- `.agents/rules/evidencia.md`
-- `.agents/rules/task-done-criteria.md`
-- `.agents/rules/datetime-pipeline.md`
-- `.agents/rules/git.md`
-- `.agents/rules/git-worktree-required.md`
-- `.agents/rules/implementation-handoff.md`
+Leia antes de qualquer tarefa: .agents/rules/workspace.md, evidencia.md, task-done-criteria.md, datetime-pipeline.md, git.md, git-worktree-required.md e implementation-handoff.md.
 
-## Regras por tema (leia sob demanda, conforme o arquivo que for editar)
+## Regras por tema
 
-- Backend Java/Spring: `.agents/rules/architecture.md`, `java-spring.md`, `errors.md`
-- Frontend Angular/TypeScript: `.agents/rules/frontend.md`
-- Transversais: `naming.md`, `testing.md`, `security.md`
+Backend: .agents/rules/architecture.md, backend.md, errors.md. Frontend: frontend.md. Transversais: naming.md, testing.md, security.md.
 
-## Skills, agents e comandos em qualquer ferramenta
+## Skills, agents e comandos
 
-- **Skills:** `.agents/skills/<nome>/SKILL.md`. Se a ferramenta não as carrega sozinha,
-  abra o `SKILL.md` quando a descrição (frontmatter) combinar com a tarefa.
-- **Agents:** `.agents/agents/<papel>.md`. Sem suporte a subagentes, assuma o papel
-  lendo o arquivo; com suporte, cite o caminho no prompt do subagente.
-- **Comandos** (`/spec`, `/plan`, `/implement`, `/verify`): `.agents/commands/<nome>.md`.
-  Sem slash-command na ferramenta, leia o arquivo e execute os passos; `$ARGUMENTS` é o
-  que o usuário informou junto do pedido.
+Leia .agents/skills/<nome>/SKILL.md quando a descrição combinar com a tarefa; cite .agents/agents/<papel>.md ao delegar. Para /spec, /plan, /implement e /verify, leia .agents/commands/<nome>.md quando a ferramenta não tiver slash-command. $ARGUMENTS é o argumento do pedido.
 
-## Ferramentas
-
-Este arquivo é lido direto por Codex, Cursor, OpenCode e outros; o Claude Code o importa via
-`CLAUDE.md`. As pastas `.claude/`, `.opencode/` e `.cursor/` são projeções geradas. Não edite
-o conteúdo dos links; altere `.agents/` e execute `bash .agents/sync.sh`.
+Este arquivo é lido por Codex, Cursor e OpenCode; Claude importa via CLAUDE.md. Pastas .claude/, .opencode/ e .cursor/ são projeções. Edite .agents/ e execute .agents/sync.ps1 no Windows ou bash .agents/sync.sh em sistemas Unix.

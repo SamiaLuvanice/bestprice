@@ -19,7 +19,7 @@ Na dúvida, escreva a spec. Ela é barata; refazer a implementação, não.
 ```
 /spec <nome>    →  specs/NNNN-<slug>/spec.md      o quê e por quê
 /plan NNNN      →  plan.md + tasks.md             como
-/implement NNNN →  código com TDD (skill tdd)     red → green → refactor camada por camada
+/implement NNNN →  código com TDD (skill tdd)     Red → Green → Refactor por comportamento
 /verify NNNN    →  aceite + portões
 ```
 
@@ -47,13 +47,13 @@ Número não é reaproveitado. Spec abandonada vira `status: descartada` no cabe
 
 ## A ordem da implementação
 
-Numa mudança que atravessa backend e frontend, a ordem não é negociável:
+Numa mudança que atravessa backend e frontend, fixe o contrato antes dos dois lados:
 
 ```
 1. contrato da API (no plan.md)   rotas, DTOs, erros
-2. backend                       DTO → service → controller (+ repository/entity) com TDD (skill tdd)
-3. frontend                      model → service → componente → rota com TDD (skill tdd)
-4. testes em cada passo (ciclo Red → Green → Refactor), não no fim
+2. backend                       teste → rota FastAPI → regra/persistência necessária
+3. frontend                      teste → cliente tipado → tela React
+4. teste de integração           API, interface e PostgreSQL quando o fluxo atravessar os três
 ```
 
 Começar pela UI produz um backend moldado por acidentes da tela.

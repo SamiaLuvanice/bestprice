@@ -38,7 +38,7 @@ P0 fura a fila; qualquer outra coisa entra na ordem da lista de specs.
 
 | A mudança | Agente |
 |---|---|
-| só backend — endpoint, service, entidade JPA, sem tela | `backend` |
+| só backend — endpoint FastAPI, regra ou persistência PostgreSQL, sem tela | `backend` |
 | só frontend — tela, componente, sem rota nova | `frontend` |
 | toca contrato, ou os dois lados | `fullstack` |
 | só testes e evidência | `qa` |

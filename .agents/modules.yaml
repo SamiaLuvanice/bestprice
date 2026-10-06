@@ -1,6 +1,4 @@
-version: 0.2.0
-
-# Núcleo: vale para qualquer stack
+version: 0.3.0
 core:
   rules:
     - evidencia.md
@@ -18,31 +16,25 @@ core:
     - bug-resolve
     - learnings
     - po-intake
+    - agent-orchestration
     - solid-principles
     - task-cleanup
     - tdd
-
-# Perfil técnico deste projeto
 profiles:
-  java-springboot-angular:
+  fastapi-react-postgresql:
     rules:
       - architecture.md
-      - java-spring.md
+      - backend.md
       - errors.md
       - frontend.md
       - datetime-pipeline.md
     skills:
-      - java-springboot          # externa: github/awesome-copilot
-      - angular-developer        # externa: angular/skills (oficial)
-      - angular-new-app          # externa: angular/skills (oficial)
-      - spring-boot-feature
-      - spring-boot-testing
+      - fastapi-feature
+      - fastapi-persistence
+      - fastapi-testing
+      - react-feature
       - api-contract
       - monorepo-navigation
-      - angular-feature
-      - java-datetime
-
-# A credencial de Project é opcional; CI e entrega usam GITHUB_TOKEN.
 integrations:
   github:
     documentation: docs/github-workflow.md

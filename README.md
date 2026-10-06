@@ -1,128 +1,30 @@
-# bestprice — projeto de estudos (Java + Spring Boot + Angular)
+# bestprice — base de estudos
 
-Esta pasta contém o **harness** (agents, skills, rules, commands) que acelera o desenvolvimento
-de um projeto com **backend Java/Spring Boot** e **frontend Angular**, para uso com qualquer ferramenta de IA (Codex, Claude Code, Cursor, OpenCode).
+Este repositório reinicia a aplicação em FastAPI (Python 3.13), React + TypeScript (Vite) e PostgreSQL 17. O histórico Git, as specs anteriores e os ADRs continuam como contexto histórico; a base atual implementa apenas a verificação de disponibilidade, sem funcionalidades de negócio. O harness em .agents/ coordena spec, TDD, revisão e verificação.
 
-> O que mudou em relação ao harness original e por quê: [docs/HARNESS-CHANGES.md](docs/HARNESS-CHANGES.md)
+## Pré-requisitos
 
-## Estrutura
+Python 3.13, uv, Node.js 22, npm, Docker com Compose para o PostgreSQL e Git. No Windows, PowerShell executa os auxiliares. Nenhum JDK ou CLI Angular é necessário.
 
-- `.agents/`: fonte única das configurações (agents, skills, rules, commands).
-- `AGENTS.md`: ponto de entrada agnóstico (Codex, Cursor e OpenCode leem direto).
-- `.claude/`: projeção gerada por `bash .agents/sync.sh` + `settings.json` (permissões).
-- `backend/`: API Spring Boot 4.1 (Java 25, Maven, Postgres/H2). `frontend/`: Angular 21 (SCSS, rotas).
-- `docker-compose.yml`: sobe banco + API + SPA juntos.
-- `specs/`: especificações das features.
-- `docs/`: documentação do harness e, depois, ADRs e aprendizados.
-- `scripts/diagnose-harness.ps1`: valida o harness.
-- `scripts/compose-worktree.ps1`: sobe o Compose com nome e portas próprios em uma worktree.
-- `config/` e `harness.yaml`: stack, comandos de qualidade.
+## Desenvolvimento local
 
-## Primeiros passos
+1. Copie .env.example para .env na raiz e troque POSTGRES_PASSWORD. O Compose lê .env automaticamente. Para iniciar só o banco: docker compose up -d db. A porta local padrão do banco é 5433, configurável por DB_PORT.
+2. Em backend/, rode uv sync --locked --extra dev. Defina DATABASE_URL para postgresql://bestprice:<senha>@localhost:5433/bestprice e inicie uv run uvicorn app.main:app --reload --port 8000.
+3. Em frontend/, rode npm ci e npm run dev. Abra http://localhost:5173. O Vite repassa /api para localhost:8000.
+4. Consulte http://localhost:8000/api/health. Com o banco disponível, retorna HTTP 200 e JSON {"status":"ok","database":"ok"}. Sem banco, retorna 503 e ambos os campos unavailable. A interface só mostra sucesso após esse contrato. Não há autenticação ou esquema de domínio.
 
-1. Sincronize as ferramentas (cria os links de `.claude/` → `.agents/`):
+No PowerShell, uma URL local pode ser definida com $env:DATABASE_URL = 'postgresql://bestprice:senha@localhost:5433/bestprice'. No Bash, use export DATABASE_URL='...'. Se a senha tiver caracteres especiais em URL, faça o escape de URL apropriado.
 
-   ```bash
-   bash .agents/sync.sh
-   ```
+## Stack inteira no Compose
 
-   No Windows, use `.\.agents\sync.ps1` para criar junctions nativas acessíveis
-   pelo PowerShell e pelo Git Bash, sem precisar de administrador.
+Com .env criado, rode docker compose up --build. A SPA fica em http://localhost:5173 e a API em http://localhost:8000. O serviço frontend usa proxy /api para backend. docker compose down para os containers e preserva o volume db-data; não use -v se quiser preservar dados.
 
-2. Instale as dependências do frontend (o `.npmrc` já traz o contorno de um bug do npm 10):
+Em uma worktree, use .\scripts\compose-worktree.ps1 up --build e depois .\scripts\compose-worktree.ps1 down. O auxiliar deriva projeto, portas e volume isolados da branch. O volume anterior do checkout principal pode conter credenciais/esquema antigos; preserve-o e use uma worktree isolada para comprovar a base nova. Não pressuponha migração automática.
 
-   ```bash
-   cd frontend && npm install
-   ```
+## Verificação e processo
 
-3. Faça a primeira feature seguindo o fluxo:
+Em backend/: uv run ruff check . e uv run pytest -q com TEST_DATABASE_URL de banco isolado. Em frontend/: npm run lint, npm test -- --run e npm run build. Automação: node --test .github/scripts/*.test.cjs; workflows: actionlint. O CI executa esses gates e agrega no check obrigatório CI.
 
-   ```
-   /spec <nome>  →  /plan NNNN  →  /implement NNNN  →  /verify NNNN
-   ```
+Siga /spec → /plan → /implement → /verify. Uma feature usa Issue, worktree de origin/develop, PR para develop, check CI e revisão independente. A skill .agents/skills/agent-orchestration/SKILL.md coordena papéis. Veja docs/github-workflow.md. GitHub Project depende de acesso e configuração; release GHCR depende da promoção até main; implantação externa ainda não está configurada.
 
-4. Verifique o harness a qualquer momento:
-
-   ```powershell
-   .\scripts\diagnose-harness.ps1
-   ```
-
-## Comandos do dia a dia
-
-```bash
-cd backend  && ./mvnw spring-boot:run     # API em :8080 com H2 em memória
-cd backend  && ./mvnw test
-cd frontend && npx ng serve               # SPA em :4200, /api -> localhost:8080 (proxy.conf.json)
-cd frontend && npx ng build && npx ng test --watch=false
-```
-
-(No PowerShell, use `.\mvnw.cmd`. O `ng` global é opcional: `npx ng` usa o do projeto.)
-
-Antes de executar a API, configure `BANK_AUTH_EMAIL` e `BANK_AUTH_PASSWORD` no ambiente.
-A conta local é reconstruída em memória com BCrypt em cada inicialização; não existe cadastro.
-A senha é obrigatória, não pode ser só espaços e aceita até 72 bytes UTF-8. E-mails são
-normalizados com espaços externos removidos e minúsculas. A API falha indicando o nome da
-configuração ausente/inválida, sem mostrar o valor. Os testes geram credenciais próprias.
-O arquivo `.env` é carregado pelo Compose; Maven não o lê automaticamente.
-
-```powershell
-$env:BANK_AUTH_EMAIL = Read-Host 'E-mail da conta local'
-$localPassword = Read-Host 'Senha da conta local' -AsSecureString
-$env:BANK_AUTH_PASSWORD = [System.Net.NetworkCredential]::new('', $localPassword).Password
-cd backend
-.\mvnw.cmd spring-boot:run
-```
-
-Abra `http://localhost:4200`: `/login` permite entrar e `/dashboard` confirma o acesso e
-oferece logout. A autenticação usa sessão no servidor com cookie `JSESSIONID` HttpOnly,
-SameSite=Lax e sem persistência. F5 recupera a identificação por `/api/auth/me`.
-Após 30 minutos sem requisição autenticada aceita, a sessão expira; health, bootstrap CSRF
-e requisições rejeitadas não renovam esse prazo. Logout e reinício da API invalidam a sessão.
-Fechar o navegador exige novo login quando não há restauração de sessão habilitada.
-`Secure=false` permite HTTP local; qualquer futura execução com HTTPS deve usar
-`server.servlet.session.cookie.secure=true`.
-
-`/api/**` exige autenticação, inclusive rotas inexistentes (401 sem sessão, 404 autenticado).
-São públicos apenas `POST /api/auth/login`, `GET /api/auth/csrf` e `GET /actuator/health`.
-Para clientes diretos, consulte `/api/auth/csrf`, preserve os cookies e envie o valor de
-`XSRF-TOKEN` no header `X-XSRF-TOKEN` nos POSTs. Consulte novamente após login/logout.
-O proxy Angular/nginx mantém a mesma origem para sessão e CSRF.
-
-## Docker
-
-Sobe Postgres 17, a API (profile `docker`) e a SPA servida pelo nginx:
-
-```bash
-# crie um .env na raiz (não é versionado) com:
-#   POSTGRES_DB=mybank
-#   POSTGRES_USER=mybank
-#   POSTGRES_PASSWORD=<escolha uma senha>
-#   BANK_AUTH_EMAIL=<e-mail da conta local>
-#   BANK_AUTH_PASSWORD=<senha da conta local, até 72 bytes UTF-8>
-docker compose up --build        # SPA em :4200, API em :8080, health em /actuator/health
-docker compose down              # para; o banco persiste no volume db-data (-v apaga)
-```
-
-Para dar à worktree containers/volume próprios e não disputar as portas fixas do checkout
-principal, use o auxiliar abaixo dentro dela; ele deriva nome do projeto e portas de forma
-estável da branch e do caminho local da worktree (e aceita `BACKEND_PORT`/`FRONTEND_PORT` como overrides):
-
-```powershell
-.\scripts\compose-worktree.ps1 up --build
-.\scripts\compose-worktree.ps1 down
-```
-
-No checkout principal, continue usando `docker compose up --build` e `docker compose down`.
-
-No Docker o nginx repassa `/api` para o backend; fora dele, é o proxy do `ng serve`.
-Em ambos, a API deve expor as rotas sob o prefixo `/api`.
-
-## Princípios
-
-Simples primeiro; uma regra por assunto; evidência antes de hipótese; teste junto do código.
-Issues, Projects, PRs, CI e entrega de imagens/releases seguem o
-[fluxo integrado do GitHub](docs/github-workflow.md). CI é obrigatório nas branches
-integradoras; Project depende de credencial adicional. Implantação externa ainda
-não está configurada. ClickUp/Railway permanecem em `.agents/archive/`.
-
-Nunca versione `.env`, `application-local.yml`, credenciais, `target/`, `node_modules/`.
+Para sincronizar projeções do harness, execute .\.agents\sync.ps1 no Windows ou bash .agents/sync.sh no Unix. Diagnóstico: .\scripts\diagnose-harness.ps1. Nunca versione .env, credenciais ou dumps de banco.

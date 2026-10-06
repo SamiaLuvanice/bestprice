@@ -1,18 +1,14 @@
-# Estágio 1: compila com o JDK. As dependências vêm numa camada própria,
-# então só baixam de novo quando o pom.xml muda.
-FROM eclipse-temurin:25-jdk AS build
-WORKDIR /app
-COPY .mvn .mvn
-COPY mvnw pom.xml ./
-RUN chmod +x mvnw && ./mvnw -q dependency:go-offline
-COPY src src
-RUN ./mvnw -q package -DskipTests
+FROM python:3.13-slim
 
-# Estágio 2: imagem final só com o JRE e o jar, rodando sem root.
-FROM eclipse-temurin:25-jre
 WORKDIR /app
-RUN useradd --system --uid 1001 app
-COPY --from=build /app/target/*.jar app.jar
-USER app
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+RUN pip install --no-cache-dir uv==0.12.9
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project
+
+COPY app ./app
+
+ENV PATH="/app/.venv/bin:$PATH"
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
