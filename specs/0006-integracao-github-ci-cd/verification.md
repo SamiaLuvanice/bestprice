@@ -12,7 +12,7 @@ PR: https://github.com/SamiaLuvanice/bestprice/pull/13.
 | `frontend/npm ci` | 469 pacotes instalados; lockfile preservado |
 | `frontend/npm run build` | Build de produção concluído |
 | `frontend/npm test -- --watch=false` | 31 testes, cinco arquivos, todos passaram |
-| `node --test .github/scripts/*.test.cjs` | 10 testes; política, sincronização reversa, transições e fronteira API com dublê |
+| `node --test .github/scripts/*.test.cjs` | 11 testes; política, cercas Markdown, limite de commits, sincronização reversa, transições e fronteira API com dublê |
 | `actionlint` 1.7.12 | Quatro workflows válidos; binário oficial com SHA256 conferido |
 
 TDD: três testes de política falharam contra a implementação vazia (retorno
@@ -22,6 +22,9 @@ A primeira tentativa Node foi bloqueada por EPERM do sandbox; essa falha de
 ambiente não foi considerada evidência Red.
 O teste adicional de sincronização reversa falhou pela rejeição indevida de
 main → stage; a política foi corrigida antes da entrega final.
+A revisão independente também encontrou a aceitação de cercas `~~~`, o limite
+de 250 commits da API e a corrida de tag na release; os três foram corrigidos
+e cobertos/documentados nesta atualização.
 
 ## Evidências no GitHub
 
@@ -43,7 +46,7 @@ main → stage; a política foi corrigida antes da entrega final.
 | Critério | Situação | Evidência |
 |---|---|---|
 | Formulário/template | Implementado; ativação após merge | Arquivos .github/ISSUE_TEMPLATE e pull_request_template.md |
-| Rastreabilidade e rejeições | Demonstrado | Branch vinculada, 6 testes de política e PR policy remoto |
+| Rastreabilidade e rejeições | Demonstrado | Branch vinculada, 7 testes de política e PR policy remoto |
 | CI de backend/frontend/automações | Demonstrado em PR | Execução 37467567220 |
 | Agregação de falhas | Implementado e revisado | CI exige resultado success de Quality e política; casos inválidos rejeitados nos testes |
 | Proteções/revisão | Ativo e demonstrado | Ruleset 24581959; REVIEW_REQUIRED mesmo com CI verde |
@@ -65,3 +68,6 @@ main → stage; a política foi corrigida antes da entrega final.
 - Spec permanece pronta, aguardando revisão independente, merge e comprovação
   dos critérios dependentes de configuração externa. CI verde não equivale a CD
   ou sincronização Project demonstrados.
+- A atualização final de segurança ainda precisa de um novo CI remoto antes da
+  aprovação. O ruleset `delivery-tags` deve ser aplicado com
+  `scripts/configure-github.ps1 -Apply` após revisar o JSON gerado.

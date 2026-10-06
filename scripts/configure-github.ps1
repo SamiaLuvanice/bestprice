@@ -29,7 +29,16 @@ $ruleset = @{
     )
 }
 $json = $ruleset | ConvertTo-Json -Depth 10
-if (-not $Apply) { $json; return }
+$tagRuleset = @{
+    name = 'delivery-tags'
+    target = 'tag'
+    enforcement = 'active'
+    bypass_actors = @()
+    conditions = @{ ref_name = @{ include = @('refs/tags/v*', 'refs/tags/build-*'); exclude = @() } }
+    rules = @(@{ type = 'deletion' }, @{ type = 'non_fast_forward' })
+}
+$tagJson = $tagRuleset | ConvertTo-Json -Depth 10
+if (-not $Apply) { $json; $tagJson; return }
 
 $repoJson = gh api "repos/$Repository"
 if ($LASTEXITCODE -ne 0) { throw 'Não foi possível consultar o repositório.' }
@@ -44,4 +53,12 @@ $method = 'POST'
 if ($existing.Count -eq 1) { $endpoint += "/$($existing[0].id)"; $method = 'PUT' }
 $json | gh api --method $method $endpoint --input - --silent
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao aplicar ruleset. Confira plano, permissões e API.' }
-Write-Output 'Ruleset ativo: PR, uma aprovação independente, conversas resolvidas e check CI atualizado.'
+$tagExistingJson = gh api "repos/$Repository/rulesets?per_page=100"
+$tagExisting = @($tagExistingJson | ConvertFrom-Json | Where-Object name -eq $tagRuleset.name)
+if ($tagExisting.Count -gt 1) { throw 'Há mais de um ruleset delivery-tags; revise manualmente.' }
+$tagEndpoint = "repos/$Repository/rulesets"
+$tagMethod = 'POST'
+if ($tagExisting.Count -eq 1) { $tagEndpoint += "/$($tagExisting[0].id)"; $tagMethod = 'PUT' }
+$tagJson | gh api --method $tagMethod $tagEndpoint --input - --silent
+if ($LASTEXITCODE -ne 0) { throw 'Falha ao aplicar proteção das tags de entrega.' }
+Write-Output 'Rulesets ativos: branches exigem PR/revisão/CI; tags de entrega não podem ser apagadas ou movidas.'

@@ -1,5 +1,18 @@
 function closingIssue(body = '') {
-  const text = body.replace(/<!--[\s\S]*?-->/g, '').replace(/```[\s\S]*?```/g, '');
+  const lines = body.replace(/<!--[\s\S]*?-->/g, '').split(/\r?\n/);
+  const visible = [];
+  let fence = null;
+  for (const line of lines) {
+    const marker = line.trim().match(/^(`{3,}|~{3,})/);
+    if (marker) {
+      const kind = marker[1][0];
+      if (fence === null) fence = kind;
+      else if (fence === kind) fence = null;
+      continue;
+    }
+    if (fence === null) visible.push(line);
+  }
+  const text = visible.join('\n');
   const matches = [...text.matchAll(/^(?:Closes|Fixes|Resolves) #([1-9]\d*)\s*$/gim)];
   if (matches.length !== 1) throw new Error('Declare exatamente uma Issue em linha própria: Closes #123.');
   return Number(matches[0][1]);
@@ -28,6 +41,8 @@ async function checkPullRequest({ github, context }) {
   if (issueNumber === null) return;
   const { data: issue } = await github.rest.issues.get({ ...context.repo, issue_number: issueNumber });
   if (issue.pull_request || issue.state !== 'open') throw new Error('A referência deve ser uma Issue aberta deste repositório.');
+  const { data: details } = await github.rest.pulls.get({ ...context.repo, pull_number: pr.number });
+  if (details.commits > 250) throw new Error('PR com mais de 250 commits não pode ser validada automaticamente; divida a PR.');
   const commits = await github.paginate(github.rest.pulls.listCommits, { ...context.repo, pull_number: pr.number, per_page: 100 });
   const reference = new RegExp(`(?:Refs|Closes|Fixes|Resolves) #${issueNumber}(?![0-9])`, 'i');
   for (const commit of commits) {

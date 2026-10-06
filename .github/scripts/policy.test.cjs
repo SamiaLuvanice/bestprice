@@ -18,6 +18,7 @@ test('uma tarefa exige fechamento explícito da Issue indicada na branch', () =>
 test('referência em comentário ou bloco de código não fecha tarefa', () => {
   assert.throws(() => validatePullRequest(pull({ body: '<!-- Closes #12 -->' })), /Closes/);
   assert.throws(() => validatePullRequest(pull({ body: '```\nCloses #12\n```' })), /Closes/);
+  assert.throws(() => validatePullRequest(pull({ body: '~~~text\nCloses #12\n~~~' })), /Closes/);
 });
 
 test('promoções só aceitam a branch anterior do mesmo repositório', () => {
@@ -41,7 +42,9 @@ test('sincronização reversa preserva a ancestralidade das branches protegidas'
 function apiFixture(issue, messages) {
   return {
     context: { repo: { owner: 'owner', repo: 'repo' }, payload: { pull_request: { ...pull(), number: 13 } } },
-    github: { rest: { issues: { get: async () => ({ data: issue }) }, pulls: { listCommits: () => {} } },
+    github: { rest: { issues: { get: async () => ({ data: issue }) }, pulls: {
+      get: async () => ({ data: { commits: issue.commits || messages.length } }), listCommits: () => {},
+    } },
       paginate: async () => messages.map(message => ({ sha: 'abc1234', parents: [{}], commit: { message } })) },
   };
 }
@@ -54,4 +57,8 @@ test('API rejeita PR usada como Issue e Issue já fechada', async () => {
 test('todos os commits de tarefa precisam referenciar a Issue exata', async () => {
   await checkPullRequest(apiFixture({ state: 'open' }, ['feat(ci): configura\n\nRefs #12']));
   await assert.rejects(checkPullRequest(apiFixture({ state: 'open' }, ['Refs #12', 'Refs #123'])), /precisa de Refs #12/);
+});
+
+test('PRs maiores que o limite da API não passam como rastreáveis', async () => {
+  await assert.rejects(checkPullRequest(apiFixture({ state: 'open', commits: 251 }, [])), /mais de 250/);
 });

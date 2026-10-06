@@ -57,6 +57,23 @@ reversas necessárias para a origem conter o commit atual da base antes da próx
 promoção. Elas exigem os mesmos checks e aprovação; não faça push direto. Isso
 evita que a exigência de branch atualizada impeça a próxima release. Não há merge automático.
 
+Se uma nova feature entrar em develop antes de uma promoção ou sincronização terminar,
+use este procedimento de recuperação, sempre em uma branch temporária e com merge commit:
+
+```powershell
+gh issue develop 123 --base develop --name chore/issue-123-sync-stage
+git fetch origin
+git worktree add .worktrees/chore-issue-123-sync-stage --track -b chore/issue-123-sync-stage origin/chore/issue-123-sync-stage
+git -C .worktrees/chore-issue-123-sync-stage merge --no-ff origin/stage
+git -C .worktrees/chore-issue-123-sync-stage push origin HEAD
+gh pr create --base develop --head chore/issue-123-sync-stage --title 'chore(ci): sincroniza stage com develop' --body 'Refs #123'
+```
+
+Depois do merge dessa PR, repita develop → stage. Para divergência envolvendo main,
+incorpore também `origin/main` na branch temporária antes de abrir a PR para develop.
+Esse procedimento promove o develop atual, incluindo features novas; se a release
+precisar ser congelada, crie uma decisão explícita de produto antes de prosseguir.
+
 ## O que roda automaticamente
 
 | Workflow | Evento | Resultado e permissões |
@@ -167,7 +184,12 @@ Opcionalmente, execute na main para uma versão escolhida:
 gh workflow run release.yml --ref main -f version=v1.0.0
 ```
 
-Versões existentes não são sobrescritas. Tags de imagem são conveniências mutáveis;
+Versões existentes não são sobrescritas. O job `prepare` cria a tag no SHA testado,
+o job final a consulta novamente antes de criar a release e o ruleset `delivery-tags`
+impede apagar ou mover tags `v*`/`build-*`. Se a tag mudar entre a consulta final e
+o POST da release, o GitHub pode ainda rejeitar a operação; a release deve então ser
+considerada falha e a tag precisa ser investigada por um administrador.
+Tags de imagem são conveniências mutáveis;
 use `imagem@sha256:...` da release para entrega/rollback reproduzível. Se só uma
 imagem foi publicada, não há release concluída: corrija a falha e rerode todos os
 jobs para o mesmo commit/versão. Uma falha parcial pode deixar imagens sem release.

@@ -18,6 +18,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     outputs:
       tag: ${{ steps.release.outputs.tag }}
       prefix: ${{ steps.release.outputs.prefix }}
@@ -39,7 +41,10 @@ jobs:
             try {
               const { data } = await github.rest.git.getRef({ ...context.repo, ref: `tags/${version}` });
               if (data.object.sha !== context.sha) throw new Error('Tag existente aponta para outro commit.');
-            } catch (error) { if (error.status !== 404) throw error; }
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              await github.rest.git.createRef({ ...context.repo, ref: `refs/tags/${version}`, sha: context.sha });
+            }
             core.setOutput('tag', version);
             core.setOutput('prefix', `ghcr.io/${context.repo.owner}/${context.repo.repo}`.toLowerCase());
   quality:
@@ -114,6 +119,8 @@ jobs:
             for (const image of images) {
               if (!/^sha256:[a-f0-9]{64}$/.test(image.digest)) throw new Error('Digest inválido.');
             }
+            const { data: tag } = await github.rest.git.getRef({ ...context.repo, ref: `tags/${process.env.RELEASE_TAG}` });
+            if (tag.object.sha !== context.sha) throw new Error('A tag de release mudou depois dos gates; publicação cancelada.');
             const body = [`Commit: ${context.sha}`, '', 'Imagens publicadas (use o digest para implantação e rollback):', '',
               ...images.map(image => `- \`${image.image}@${image.digest}\``), '',
               'Backend, frontend e automações passaram nos gates desta execução.',
