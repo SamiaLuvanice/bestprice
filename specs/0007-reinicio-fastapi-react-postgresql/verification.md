@@ -59,7 +59,8 @@ localhost e passa a senha ao driver por campo separado, sem concatená-la numa U
   inválida, falha de rede e timeout. Proxy de produção limita a espera a 2–5
   segundos. Resultado observado também em Chrome headless nos três cenários.
 - CI: `quality.yml` usa Python 3.13/uv, PostgreSQL real, React e automações.
-  O job agregado `CI` permanece. Resultado remoto da PR pendente.
+  O job agregado `CI` permanece. A execução remota da PR #16 passou em todos os
+  checks obrigatórios.
 - Entrega: Dockerfiles locais construídos; publicação GHCR e release não
   realizadas nesta etapa. O workflow de entrega permanece para promoção futura.
 - Project/implantação externa: sem evidência de sincronização ou configuração;
