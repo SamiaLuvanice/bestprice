@@ -2,7 +2,7 @@
 
 Data: 2026-10-06. Branch: `fix/issue-17-project-status-branch`.
 Issue: https://github.com/SamiaLuvanice/bestprice/issues/17.
-PR: pendente de abertura; CI remoto ainda não executado.
+PR: https://github.com/SamiaLuvanice/bestprice/pull/18.
 
 ## Red → Green
 
@@ -25,6 +25,13 @@ PR: pendente de abertura; CI remoto ainda não executado.
 - `git diff --check`: passou.
 - `actionlint -color`: não executado; `actionlint` não está instalado localmente. O
   workflow de qualidade roda actionlint no CI da PR.
+
+## Evidências remotas
+
+- PR #18: checks `PR policy`, `quality / Backend`, `quality / Frontend`,
+  `quality / Automation`, `sync` e o agregador `CI` concluídos com sucesso.
+- Execução CI: https://github.com/SamiaLuvanice/bestprice/actions/runs/37535443869.
+- Execução Project sync: https://github.com/SamiaLuvanice/bestprice/actions/runs/37535443542.
 
 ## Critérios de aceite
 
@@ -57,5 +64,5 @@ PR: pendente de abertura; CI remoto ainda não executado.
   `Canceled`. O workflow existente preserva aviso e resumo **não sincronizado** quando
   `PROJECT_TOKEN` está ausente.
 - CI e aprovação independente ainda dependem da PR aberta; não foram presumidos.
-- A revisão independente ainda não foi concluída; a PR será aberta para solicitar
-  revisão e executar o CI remoto.
+- A revisão independente ainda não foi concluída; o CI remoto está verde e a PR
+  aguarda aprovação independente antes do merge.
