@@ -5,6 +5,11 @@ description: Rodar e interpretar os portões de qualidade do projeto — compila
 
 # Portões de qualidade
 
+O workflow reutilizável `.github/workflows/quality.yml` executa os gates no GitHub.
+O check obrigatório `CI` também valida Issue/branch/commits da PR. Mudanças nas
+automações exigem `node --test .github/scripts/*.test.cjs` e `actionlint`.
+Setup e limitações de Projects/entrega: `docs/github-workflow.md`.
+
 Mantidos **simples**: o que já vem nas ferramentas oficiais. Não adicione verificadores sem motivo.
 
 ## Os comandos

@@ -1,0 +1,51 @@
+name: CI
+on:
+  pull_request:
+    branches: [develop, stage, main]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  push:
+    branches: [develop, stage, main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+  policy:
+    name: PR policy
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { checkPullRequest } = require('./.github/scripts/policy.cjs');
+            await checkPullRequest({ github, context });
+  ci:
+    name: CI
+    if: always()
+    needs: [quality, policy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Exigir todos os gates
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          POLICY_RESULT: ${{ needs.policy.result }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          test "$QUALITY_RESULT" = success
+          if [ "$EVENT_NAME" = pull_request ]; then
+            test "$POLICY_RESULT" = success
+          fi

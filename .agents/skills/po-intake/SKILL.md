@@ -11,5 +11,7 @@ severidade, partes tocadas (backend/frontend) e dependências.
 Crie `specs/NNNN-<slug>/spec.md` com critérios de aceite verificáveis. O número é sequencial,
 não é reutilizado, e o texto de produto fica separado das decisões de implementação (`plan.md`).
 
-O arquivo local em `specs/` é a fonte de verdade — não há board externo no fluxo.
+O arquivo local em `specs/` descreve o comportamento. Registre/vincule uma GitHub Issue
+para a tarefa; o GitHub Project organiza prioridade e andamento conforme
+`docs/github-workflow.md`. Não presuma sincronização se faltar permissão/credencial.
 Detalhes de numeração, prioridade e cabeçalho: [reference.md](reference.md).

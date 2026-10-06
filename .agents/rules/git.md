@@ -11,7 +11,7 @@ description: Commits (Conventional Commits), branches e o que nunca entra no rep
 ```
 
 Tipos: `feat` `fix` `refactor` `test` `docs` `chore` `perf` `build`
-Escopos: `backend` `frontend` `api` `docs` `agents`
+Escopos: `backend` `frontend` `api` `docs` `agents` `ci`
 
 ```
 feat(backend): adiciona endpoint de transferência entre contas
@@ -20,6 +20,8 @@ chore(agents): ajusta regras para a stack java + angular
 ```
 
 Um commit é uma mudança coesa. Se o resumo precisa de "e", provavelmente são dois commits.
+Commits de tarefa incluem `Refs #<issue>` no corpo; a PR declara `Closes #<issue>`.
+Veja o fluxo e suas exceções de promoção em `docs/github-workflow.md`.
 
 ## Atribuição
 
@@ -34,9 +36,9 @@ de feature e integre mudanças por PR. O trabalho de feature parte de `origin/de
 abre PR para `develop` (ver `git-worktree-required.md`).
 
 ```
-feature/0003-accounts-crud  ← referencia o número da spec, se houver
-fix/transfer-rounding
-chore/bump-spring-boot
+feature/0007-issue-123-accounts-crud
+fix/issue-124-transfer-rounding
+chore/issue-125-bump-spring-boot
 ```
 
 Promoção de release: PR `develop` → `stage` e, após validação/aceite, PR `stage` → `main`.
@@ -53,6 +55,10 @@ local contra acidentes, não substitui as regras de proteção de branch do GitH
 
 Um tema por PR. O corpo traz: o que mudou (uma frase), como verificar, e o que ficou de fora.
 Para estudo solo, o PR serve de revisão e de registro — vale o hábito.
+As branches integradoras exigem o check `CI` e uma aprovação independente no GitHub.
+A branch padrão é `develop`; `main` mantém a linha de release. Merge em develop
+fecha a Issue vinculada; publicação ocorre após promoção para main. Não faça
+autoaprovação nem bypass para contornar a falta de revisor.
 
 ## O que nunca entra
 

@@ -1,5 +1,21 @@
 # Aprendizados
 
+## 2026-10-06 — Separar CI de automações com permissão de escrita
+
+**Contexto:** integração GitHub da spec 0006. O token padrão não acessa Projects,
+e o fechamento nativo de Issues depende da branch padrão. Eventos de PR podem
+trazer código e texto de contribuidores externos.
+
+**Princípio:** CI de PR usa permissões de leitura e nenhum secret. Sincronização
+de Project usa apenas metadados atuais e código da branch padrão; publicação
+ocorre na main após gates. Testar regras de rastreabilidade e transições e
+documentar a ativação/permissão pendente separadamente de YAML válido.
+
+**Anti-pattern:** executar checkout da cabeça de PR em pull_request_target com
+token de escrita, ou considerar Project/deploy ativos só porque há um workflow.
+
+**Referências:** `docs/github-workflow.md`; `.github/workflows/`.
+
 ## 2026-10-06 — Revisar projeções e configurações ao mover a raiz
 
 **Contexto:** após mover `my_bank/` para a raiz, as projeções de `.claude/`
