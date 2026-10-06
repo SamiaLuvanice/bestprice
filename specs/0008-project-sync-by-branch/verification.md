@@ -27,7 +27,8 @@
   `Develop`, `Stage` ou `Main`. Base mergeada não suportada falha antes de consultar
   ou modificar o Project.
 - O fechamento de Issue é identificado pelo `ClosedEvent.closer` da timeline GraphQL
-  cujo `createdAt` coincide com o `closed_at` consultado. A conexão é paginada em
+  cujo `createdAt` coincide com o `closed_at` consultado; a PR causal precisa ter
+  `mergedAt` preenchido, sem exigir igualdade entre os dois instantes. A conexão é paginada em
   blocos de 100 para Issues com histórico longo. O teste simula múltiplos eventos e
   uma PR anterior; não fez mutação em um Project real, pois isso exige `PROJECT_TOKEN`
   e acesso de escrita externos.

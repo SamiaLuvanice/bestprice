@@ -169,7 +169,9 @@ Issues e PRs aparecem como itens separados. O status de uma PR mergeada vem de s
 antes de alterar o Project. Para uma Issue fechada, a reconciliação consulta os
 `ClosedEvent` da timeline GraphQL e o campo `closer`, que identifica diretamente a PR
 que causou cada fechamento. Ela usa `Develop` somente quando o evento que coincide
-com o `closed_at` atual tem uma PR mergeada em `develop`. Assim, outras PRs vinculadas
+com o `closed_at` atual tem uma PR mergeada (`mergedAt` preenchido) em `develop`.
+Não se exige igualdade dos horários do merge e do evento de fechamento, que a API não
+garante. Assim, outras PRs vinculadas
 ou merges antigos não são confundidos com a causa do fechamento. A API permite
 consultar eventos anteriores paginados; Issues com mais de 100 fechamentos são
 percorridas em páginas de 100 até localizar o evento atual. Se o GitHub não retornar
