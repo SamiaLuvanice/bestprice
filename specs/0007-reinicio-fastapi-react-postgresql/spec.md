@@ -16,7 +16,7 @@ Issue: https://github.com/SamiaLuvanice/bestprice/issues/15
 
 A pessoa mantenedora decidiu reiniciar a aplicação de estudos com FastAPI,
 React e PostgreSQL, reaproveitando o repositório e o harness construído até aqui.
-O código Java/Spring Boot e Angular já aparece como removido no checkout local,
+O código da stack anterior já aparece como removido no checkout local,
 mas as instruções dos agentes, verificações, automações e documentação ainda
 orientam o desenvolvimento pela stack anterior.
 
@@ -47,7 +47,7 @@ Essa base permite iniciar novas features sem reconstruir funcionalidades antigas
 ## Critérios de aceite
 
 - [ ] O projeto continua no mesmo repositório, com histórico Git e registros anteriores consultáveis, sem reescrita de histórico nem reutilização de números de specs.
-- [ ] As instruções ativas de entrada, papéis, regras, skills e comandos orientam FastAPI, React e PostgreSQL, sem exigir Java, Spring Boot, Maven ou Angular para desenvolver a aplicação nova.
+- [ ] As instruções ativas de entrada, papéis, regras, skills e comandos orientam FastAPI, React e PostgreSQL, sem exigir ferramentas da stack anterior para desenvolver a aplicação nova.
 - [ ] O processo preserva especificação antes da implementação, TDD para comportamento, evidências, worktrees, revisão e limpeza após integração; as orientações equivalentes continuam acessíveis às ferramentas já configuradas.
 - [ ] Uma skill ativa de orquestração atribui papéis adequados a backend, frontend, revisão e QA, registra o andamento e só avança após evidência da etapa; opera com GitHub e `develop` sem depender de board ou deploy externo.
 - [ ] As regras técnicas preservam configuração por ambiente sem segredos versionados, validação e erros de API, precisão monetária, distinção entre datas e instantes e testes determinísticos, adaptadas à nova stack.
