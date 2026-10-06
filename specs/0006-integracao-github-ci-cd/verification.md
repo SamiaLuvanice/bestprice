@@ -28,13 +28,15 @@ e cobertos/documentados nesta atualização.
 
 ## Evidências no GitHub
 
-- CI do commit `146117f`: [execução 37467567220](https://github.com/SamiaLuvanice/bestprice/actions/runs/37467567220),
+- CI do commit final `7cb4533`: [execução 37472810287](https://github.com/SamiaLuvanice/bestprice/actions/runs/37472810287),
   concluída com sucesso. Passaram PR policy, quality / Automation, quality /
   Frontend, quality / Backend e o agregador CI.
 - `gh issue develop 12 --list` confirmou a branch vinculada à Issue.
 - `gh repo view --json defaultBranchRef` confirmou develop como padrão.
 - `scripts/configure-github.ps1 -Apply` criou o ruleset **integration-branches**,
   ID **24581959**, enforcement **active**, nas três branches.
+- O mesmo script ativou **delivery-tags**, ID **24584593**, enforcement **active**,
+  protegendo tags `v*` e `build-*` contra remoção e force move.
 - `gh pr view 13 --json reviewDecision,mergeStateStatus,statusCheckRollup` confirmou
   todos os checks SUCCESS e merge **BLOCKED / REVIEW_REQUIRED**. Essa é a evidência
   de que checks verdes não dispensam aprovação independente.
@@ -68,6 +70,6 @@ e cobertos/documentados nesta atualização.
 - Spec permanece pronta, aguardando revisão independente, merge e comprovação
   dos critérios dependentes de configuração externa. CI verde não equivale a CD
   ou sincronização Project demonstrados.
-- A atualização final de segurança ainda precisa de um novo CI remoto antes da
-  aprovação. O ruleset `delivery-tags` deve ser aplicado com
-  `scripts/configure-github.ps1 -Apply` após revisar o JSON gerado.
+- A revisão independente foi concluída com os achados P2/P3 corrigidos: cercas
+  Markdown alternativas, limite de commits da API, corrida de tag e recuperação
+  de divergência entre branches estão tratados e documentados.

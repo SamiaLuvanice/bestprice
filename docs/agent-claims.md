@@ -8,7 +8,7 @@ reativar ferramentas ou convenções da stack arquivada.
 |---|---|---|---|---|
 | A | 0006 | review_security / arch-reviewer | Workflows, permissões e segurança; somente leitura | Veredito: ajuste P2 corrigido |
 | B | 0006 | review_flow / revisor fullstack | Rastreabilidade, Project, promoções e documentação; somente leitura | Veredito: ajustes P2/P3 corrigidos |
-| C | 0006 | QA | Aceites e verificação após retorno dos revisores | Aguardando |
+| C | 0006 | QA | Aceites e verificação após retorno dos revisores | Aguardando aprovação/merge |
 
 PR #13, branch `feature/0006-issue-12-github-workflow`, base `develop`.
 Snapshot inicial: `e8fef783f6f305ed5400c8b5eeee01d9ebf6160f`.
