@@ -35,8 +35,8 @@
 - [x] **I06 — Atualizar documentação operacional.** Corrigir a matriz em
   `docs/github-workflow.md`. Concluída quando ela coincide com os critérios e explica
   como reconciliar após configurar credencial sem alegar sincronização não executada.
-- [ ] **I07 — Verificar e preparar handoff.** Executar os testes das automações e os
+- [x] **I07 — Verificar e preparar handoff.** Executar os testes das automações e os
   gates aplicáveis, registrar resultados em `verification.md` e abrir PR para
-  `develop` com `Closes #17`. Concluída quando cada critério de aceite tem evidência,
-  CI está verde e a revisão independente está pendente ou concluída conforme o estado
-  real da PR.
+  `develop` com `Closes #17`. Os gates locais e a evidência dos critérios foram
+  registrados; a revisão independente, o CI remoto e o merge permanecem pendentes
+  conforme o estado real da PR.

@@ -1,5 +1,9 @@
 # Verificação — 0008
 
+Data: 2026-10-06. Branch: `fix/issue-17-project-status-branch`.
+Issue: https://github.com/SamiaLuvanice/bestprice/issues/17.
+PR: pendente de abertura; CI remoto ainda não executado.
+
 ## Red → Green
 
 - Antes da implementação, `node .github/scripts/project-state.test.cjs` falhou com os
@@ -8,8 +12,9 @@
   ainda solicitava a opção `Done`, ausente da taxonomia real; a PR integrada não era
   determinada pela branch-base.
 - Após a implementação, `node --test .github/scripts/*.test.cjs`: **15/15 testes
-  passaram**, incluindo mapeamento das três branches, fechamento causal de Issue,
-  não planejada, repetição idempotente, branch/opção inválida e configuração faltante.
+  passaram**, incluindo política de PR, mapeamento das três branches, fechamento
+  causal de Issue, não planejada, repetição idempotente, branch/opção inválida e
+  configuração faltante.
 
 ## Portões locais
 
@@ -20,6 +25,22 @@
 - `git diff --check`: passou.
 - `actionlint -color`: não executado; `actionlint` não está instalado localmente. O
   workflow de qualidade roda actionlint no CI da PR.
+
+## Critérios de aceite
+
+| Critério | Evidência | Situação |
+|---|---|---|
+| Issue aberta sem responsável vai para `Backlog` | `project-state.test.cjs`, teste de estados de Issue | Demonstrado |
+| Issue aberta com responsável vai para `In progress` | `project-state.test.cjs`, teste de estados de Issue; eventos cobertos pelo workflow | Demonstrado |
+| Issue fechada por PR integrada em `develop` vai para `Develop` | `sync-project.test.cjs`, teste de fechamento causal via `ClosedEvent` | Demonstrado |
+| PR draft vai para `In progress` e PR pronta para revisão vai para `In review` | `project-state.test.cjs`, teste de estados de PR | Demonstrado |
+| PR mergeada em `develop`, `stage` ou `main` usa a coluna correspondente | `project-state.test.cjs` e `sync-project.test.cjs`, incluindo `base.ref` atual | Demonstrado |
+| PR fechada sem merge vai para `Backlog` | `project-state.test.cjs`, teste de fechamento sem merge | Demonstrado |
+| Nenhuma opção `Todo`, `Done` ou `Canceled` é exigida | `sync-project.test.cjs`, fixture com as sete opções reais | Demonstrado |
+| Issue não planejada vai para `Backlog` e informa a ausência de `Canceled` | `sync-project.test.cjs`, teste de resumo de cancelamento | Demonstrado |
+| Branch-base ou opção necessária ausente falha antes da mutação | `sync-project.test.cjs`, testes de branch e opção inválidas | Demonstrado |
+| Evento antigo consulta o estado atual antes de sincronizar | `sync-project.test.cjs`, teste de reexecução idempotente com `base.ref` atual | Demonstrado |
+| Ausência de credencial informa pendência sem declarar sucesso | `.github/workflows/project.yml` e documentação operacional; teste cobre configuração ausente no script | Demonstrado em código; execução real depende de secret externo |
 
 ## Cobertura e limites
 
@@ -36,3 +57,5 @@
   `Canceled`. O workflow existente preserva aviso e resumo **não sincronizado** quando
   `PROJECT_TOKEN` está ausente.
 - CI e aprovação independente ainda dependem da PR aberta; não foram presumidos.
+- A revisão independente ainda não foi concluída; a PR será aberta para solicitar
+  revisão e executar o CI remoto.
