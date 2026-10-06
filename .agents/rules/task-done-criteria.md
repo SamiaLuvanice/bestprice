@@ -11,10 +11,12 @@ Uma tarefa só está pronta quando **todos** os itens abaixo valem, com evidênc
 2. **Backend:** testes passam (`./mvnw test` ou `./gradlew test`).
 3. **Frontend:** `ng build` compila sem erro e `ng test` passa (se houver testes).
 4. **Testes novos** cobrem o comportamento novo e o caminho de erro principal.
-5. **Revisão feita** — pelo agent `arch-reviewer` ou por você mesmo relendo o diff com a
-   regra `architecture.md` ao lado.
-6. **Fluxo ponta a ponta** conferido localmente quando a mudança atravessa backend e frontend
-   (subir os dois e exercitar a tela ou um `curl`).
+5. **Revisão independente por outra sessão/agente (nunca pelo implementador):**
+   - **`arch-reviewer` (subagente):** revisão de arquitetura (camadas, dependências, ports/adapters, erros, nomenclatura).
+   - **Revisor da faixa (`backend`/`frontend`/`fullstack`):** sessão despachada pelo orquestrador na abertura da PR (skills da faixa + `pr-review-merge`).
+6. **Merge e Fechamento:**
+   - Aprovado o review, o merge em `develop` é feito pelo revisor/orquestrador (`merge_apos_review: automatico`).
+   - O **QA** valida e fecha a tarefa definitivamente com evidência dos critérios de aceite.
 
-Quem implementa diz "implementação entregue; falta revisar" — "pronta" só depois dos itens acima.
+Quem implementa entrega a PR e declara "implementação entregue; aguarda revisão e merge". O fechamento final da tarefa cabe ao QA.
 Item pulado deve ser **dito explicitamente**, nunca omitido.

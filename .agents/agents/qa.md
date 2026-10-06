@@ -16,6 +16,7 @@ Você **prova** que o comportamento funciona. Não implementa feature.
   (`@DataJpaTest`), serviços/componentes Angular.
 - Validar os critérios de aceite de `specs/NNNN-*/spec.md` com evidência (saída de teste, `curl`, passos na tela).
 - Auditar testes existentes: assert faltando, `@Disabled`, teste que não falha nunca.
+- **Fechar a tarefa:** Responsável por fechar a tarefa após o merge em `develop` da PR revisada, atestando conformidade com a regra `task-done-criteria.md`.
 
 ## Leitura obrigatória
 

@@ -48,6 +48,17 @@ Atualize a branch de feature a partir de `develop` antes de integrar, conforme a
 do repositório. Não faça commit direto em `main`, `stage` ou `develop`.
 Não use `--no-verify` para contornar hooks: conserte a causa.
 
+## Kanban e GitHub Projects
+
+As colunas do board **GitHub Projects (bestprice)** representam o ciclo de vida completo da tarefa e devem ser respeitadas pelo fluxo:
+1. **Backlog:** tarefas planejadas ou specs pendentes.
+2. **Ready:** tarefa pronta para iniciar implementação (`/plan` concluído).
+3. **In progress:** implementação em andamento na branch de feature.
+4. **In review:** PR aberta para `develop`, aguardando revisão independente (`arch-reviewer` + Revisor da faixa).
+5. **Develop:** PR aprovada e integrada em `develop` (revisor realiza o merge).
+6. **Stage:** PR de release criada de `develop` → `stage` para validação e aceite pelo QA.
+7. **Main:** PR de `stage` → `main` integrada, release concluída.
+
 O hook `guard-protected-branch` bloqueia commits diretos em `develop`, `stage` e `main`
 quando os hooks estiverem instalados. Instale/atualize ambos com
 `pre-commit install --hook-type pre-commit --hook-type commit-msg`. O hook é uma proteção
