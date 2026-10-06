@@ -30,8 +30,8 @@ PR: https://github.com/SamiaLuvanice/bestprice/pull/18.
 
 - PR #18: checks `PR policy`, `quality / Backend`, `quality / Frontend`,
   `quality / Automation`, `sync` e o agregador `CI` concluídos com sucesso.
-- Execução CI: https://github.com/SamiaLuvanice/bestprice/actions/runs/37535443869.
-- Execução Project sync: https://github.com/SamiaLuvanice/bestprice/actions/runs/37535443542.
+- Execução CI da revisão documental final: https://github.com/SamiaLuvanice/bestprice/actions/runs/37535640272.
+- Execução Project sync anterior: https://github.com/SamiaLuvanice/bestprice/actions/runs/37535443542.
 
 ## Critérios de aceite
 
