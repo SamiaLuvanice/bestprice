@@ -130,8 +130,10 @@ até que o responsável conceda acesso; nenhum token de sessão é copiado para 
    a autorização no navegador. Crie um Project pelo GitHub ou
    `gh project create --owner SamiaLuvanice --title bestprice --format json`.
    Guarde seu número, associe o repositório pela interface ou `gh project link`.
-2. No campo **Status**, configure exatamente: **Todo**, **In progress**, **In review**,
-   **Done**, **Canceled**. Crie **Priority** com P0/P1/P2/P3 e uma visão Board por Status.
+2. O campo **Status** usa as opções existentes **Backlog**, **Ready**, **In progress**,
+   **In review**, **Develop**, **Stage** e **Main**. A sincronização não cria opções;
+   `Ready` continua disponível para triagem manual. Crie **Priority** com P0/P1/P2/P3
+   e uma visão Board por Status.
    Priorização e ordenação são manuais. Desative automações nativas que também
    alterem Status (especialmente fechamento/merge), evitando disputa com este workflow.
 3. Para um Project de usuário, crie um PAT dedicado com expiração e escopo `project`
@@ -151,23 +153,38 @@ até que o responsável conceda acesso; nenhum token de sessão é copiado para 
 
 | Item | Estado no GitHub | Status no Project |
 |---|---|---|
-| Issue | Aberta sem responsável | Todo |
+| Issue | Aberta sem responsável | Backlog |
 | Issue | Aberta com responsável | In progress |
-| Issue | Fechada como concluída | Done |
-| Issue | Fechada como não planejada | Canceled |
+| Issue | Fechada pelo `Closes #...` após merge em develop | Develop |
+| Issue | Fechada como não planejada | Backlog (não há opção Canceled) |
 | PR | Draft aberto | In progress |
-| PR | Aberta para revisão | In review |
-| PR | Merge concluído | Done |
-| PR | Fechada sem merge | Canceled |
+| PR | Aberta pronta para revisão | In review |
+| PR | Merge em develop | Develop |
+| PR | Merge em stage | Stage |
+| PR | Merge em main | Main |
+| PR | Fechada sem merge | Backlog |
 
-Issues e PRs aparecem como itens separados. A Issue continua In progress durante
-a revisão da PR e vai a Done com o fechamento nativo; a PR representa a etapa de
-revisão. A API adiciona itens de forma idempotente, consulta o estado atual e
-preserva prioridade/ordenação. Eventos são serializados por número. Workflow sem
-token gera aviso e resumo **não sincronizado**; erro de token/campo com token
-presente falha visivelmente. Corrija a configuração e execute novamente. Eventos
-criados por outro workflow usando GITHUB_TOKEN podem não gerar novo workflow;
-reconcilie explicitamente esses casos. Não há sincronização retroativa automática.
+Issues e PRs aparecem como itens separados. O status de uma PR mergeada vem de sua
+`base.ref`, e bases diferentes de `develop`, `stage` ou `main` causam erro explícito
+antes de alterar o Project. Para uma Issue fechada, a reconciliação consulta os
+`ClosedEvent` da timeline GraphQL e o campo `closer`, que identifica diretamente a PR
+que causou cada fechamento. Ela usa `Develop` somente quando o evento que coincide
+com o `closed_at` atual tem uma PR mergeada em `develop`. Assim, outras PRs vinculadas
+ou merges antigos não são confundidos com a causa do fechamento. A API permite
+consultar eventos anteriores paginados; Issues com mais de 100 fechamentos são
+percorridas em páginas de 100 até localizar o evento atual. Se o GitHub não retornar
+uma PR causal correspondente, a Issue fechada volta para `Backlog`, sem inferir
+`Main` ou atribuir um fechamento manual a uma PR antiga. Referência: [tipo
+ClosedEvent na API GraphQL](https://docs.github.com/en/graphql/reference/issues#closedevent).
+
+Uma Issue fechada como não planejada volta a `Backlog`; o resumo da execução informa
+que o Project não tem opção `Canceled`. A API adiciona itens de forma idempotente,
+consulta o estado atual e preserva prioridade/ordenação. Eventos são serializados
+por número. Workflow sem token gera aviso e resumo **não sincronizado**; erro de
+token/campo com token presente falha visivelmente. Corrija a configuração e execute
+novamente. Eventos criados por outro workflow usando GITHUB_TOKEN podem não gerar
+novo workflow; reconcilie explicitamente esses casos. Não há sincronização
+retroativa automática.
 
 ## Entrega e implantação
 
