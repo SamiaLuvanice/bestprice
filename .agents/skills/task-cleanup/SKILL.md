@@ -31,7 +31,7 @@ Inspecione também os arquivos ignorados, porque `git worktree remove` apaga tod
 worktree, inclusive `.env`, configuração local e outros arquivos que `git status --short` omite.
 Não apague segredos, dados locais nem arquivos ignorados de finalidade desconhecida; peça ao
 usuário um destino de preservação ou deixe a worktree no lugar. Só aceite perder artefatos
-claramente regeneráveis (por exemplo, `node_modules/`, `target/`, `build/`, `.angular/` e os
+claramente regeneráveis (por exemplo, `.venv/`, `__pycache__/`, `.pytest_cache/`, `node_modules/`, `dist/` e os
 links gerados `.claude/agents`, `.claude/skills` e `.claude/commands`). Se um diretório ignorado
 contiver dados mistos, inspecione seu conteúdo antes de prosseguir; `.env` e
 `.claude/settings.local.json` são dados locais, nunca artefatos descartáveis.

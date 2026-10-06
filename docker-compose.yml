@@ -1,14 +1,14 @@
-# Sobe o sistema inteiro: banco + API + SPA.   docker compose up --build
-# Antes da primeira vez: crie um .env na raiz com POSTGRES_PASSWORD (ver README, seção Docker).
 services:
   db:
     image: postgres:17-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-mybank}
-      POSTGRES_USER: ${POSTGRES_USER:-mybank}
+      POSTGRES_DB: ${POSTGRES_DB:-bestprice}
+      POSTGRES_USER: ${POSTGRES_USER:-bestprice}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
     volumes:
       - db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -18,24 +18,23 @@ services:
   backend:
     build: ./backend
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      BANK_AUTH_EMAIL: ${BANK_AUTH_EMAIL:?defina BANK_AUTH_EMAIL no .env}
-      BANK_AUTH_PASSWORD: ${BANK_AUTH_PASSWORD:?defina BANK_AUTH_PASSWORD no .env}
-      POSTGRES_DB: ${POSTGRES_DB:-mybank}
-      POSTGRES_USER: ${POSTGRES_USER:-mybank}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-bestprice}
+      DB_USER: ${POSTGRES_USER:-bestprice}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
 
   frontend:
     build: ./frontend
     depends_on:
       - backend
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-4200}:80"
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:80"
 
 volumes:
   db-data:

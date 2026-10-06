@@ -1,54 +1,15 @@
 ---
 name: quality-gates
-description: Rodar e interpretar os portões de qualidade do projeto — compilação, testes e lint do backend Spring Boot e do frontend Angular. Use antes de commitar, quando o build ficar vermelho, ou ao decidir se uma mudança está pronta.
+description: Rodar e interpretar lint, testes, build e automações da stack FastAPI/React.
 ---
 
 # Portões de qualidade
 
-O workflow reutilizável `.github/workflows/quality.yml` executa os gates no GitHub.
-O check obrigatório `CI` também valida Issue/branch/commits da PR. Mudanças nas
-automações exigem `node --test .github/scripts/*.test.cjs` e `actionlint`.
-Setup e limitações de Projects/entrega: `docs/github-workflow.md`.
+Na worktree, após instalar dependências:
 
-Mantidos **simples**: o que já vem nas ferramentas oficiais. Não adicione verificadores sem motivo.
+- backend/: uv sync --locked --extra dev; uv run ruff check .; uv run pytest -q
+- frontend/: npm ci; npm run lint; npm test -- --run; npm run build
+- raiz: node --test .github/scripts/*.test.cjs; actionlint nos workflows, quando instalado
+- integração: PostgreSQL real via TEST_DATABASE_URL para pytest e Compose para o fluxo ponta a ponta.
 
-## Os comandos
-
-```bash
-# backend (dentro de backend/)
-./mvnw verify            # compila, roda testes (Gradle: ./gradlew build)
-
-# frontend (dentro de frontend/)
-ng build                 # compila e checa tipos dos templates
-ng test --watch=false    # testes unitários
-ng lint                  # só se o projeto adicionou ESLint (angular-eslint)
-```
-
-Se o repositório tiver um `Makefile` ou scripts em `harness.yaml → quality`, prefira-os.
-
-## O que cada portão protege
-
-| Portão | Impede |
-|---|---|
-| compilação (`javac` / `ng build`) | erro de sintaxe e de tipos |
-| testes | regressão de comportamento |
-| lint (opcional) | bug conhecido, estilo inconsistente |
-| formatação | diff poluído por estilo |
-
-## Interpretando falhas
-
-- **Teste vermelho:** leia a causa na stack trace (`Caused by:` mais profundo) antes de mexer. Regra `evidencia.md`.
-- **Falha só no `verify` e não no IDE:** ambiente/JDK diferente ou teste dependente de ordem. Rode `./mvnw -q clean verify`.
-- **`ng build` com erro de template:** o erro aponta o arquivo e a linha do HTML; corrija o tipo, não use `any`/`$any`.
-- **Aviso de depreciação:** leia; se for do seu código, atualize para a API nova.
-- **Cobertura:** use como pista de caminhos sem teste, nunca como meta numérica.
-
-## Antes de commitar
-
-Rode os portões da parte que você tocou. Se está pensando em `--no-verify`, o portão está certo e a pressa é sua.
-
-## Ordem para consertar
-
-```
-compilação → testes → lint/formatação → refinos
-```
+Confirme contagem de testes maior que zero. Registre comando e resultado em verification.md; não marque skip ou teste não executado como verde. No GitHub, check agregador CI deve passar para a PR. Se ferramenta/serviço não estiver disponível, reporte pendência concreta.

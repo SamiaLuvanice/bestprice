@@ -5,16 +5,28 @@
 application-local.yml
 application-local.properties
 
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest-cache-files-*/
+.ruff_cache/
+.mypy_cache/
+.venv/
+*.egg-info/
+coverage.xml
+.coverage
+
 # Java / Maven / Gradle
 target/
 build/
 .gradle/
 *.class
 
-# Angular / Node
+# Node
 node_modules/
+.npm-cache/
 dist/
-.angular/
 
 # Worktrees locais para desenvolvimento de features
 .worktrees/

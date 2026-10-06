@@ -1,21 +1,5 @@
 # Módulos do harness
 
-Definidos em `.agents/modules.yaml`.
+O núcleo em .agents/modules.yaml reúne evidência, segurança, Git/worktree, specs, TDD, revisão, QA, orquestração e gates. O perfil técnico ativo fastapi-react-postgresql reúne architecture/backend/frontend/errors/datetime-pipeline e skills de FastAPI, persistência, testes, React, contrato e navegação. Integração GitHub usa Issue, PR, CI e entrega de imagens na main. Project é opcional; implantação externa não está configurada.
 
-## Core
-
-Vale para qualquer projeto: evidência antes de hipótese, segurança, testes, git, specs,
-portões de qualidade, bug-resolve, learnings.
-
-## Perfil técnico: `java-springboot-angular`
-
-Regras `architecture`, `java-spring`, `errors`, `frontend`, `datetime-pipeline`, e as skills
-`java-springboot`, `angular-developer`, `angular-new-app`, `spring-boot-feature`,
-`spring-boot-testing`, `api-contract`, `monorepo-navigation`.
-
-Outra stack = outro perfil em `modules.yaml`, não uma edição por cima deste.
-
-## Integrações
-
-Nenhuma ativa. ClickUp, Drive e Railway estão em `.agents/archive/`. Se um dia forem úteis,
-restaure a skill, declare-a em `harness.yaml` (`integrations`) e em `modules.yaml`.
+Skills e regras Java/Angular foram preservadas em .agents/archive/legacy-java-angular/ como referência histórica inativa. Outras integrações antigas continuam em .agents/archive/. Não carregue arquivos arquivados para desenvolver a aplicação atual.

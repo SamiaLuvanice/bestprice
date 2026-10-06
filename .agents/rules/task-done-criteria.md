@@ -1,20 +1,16 @@
 ---
-description: Critério para considerar uma tarefa pronta.
+description: Critérios de conclusão de uma tarefa.
 alwaysApply: true
 ---
 
 # Tarefa pronta
 
-Uma tarefa só está pronta quando **todos** os itens abaixo valem, com evidência (comando + resultado):
+Uma tarefa de spec só está pronta com:
+1. Cada critério de aceite demonstrado em /verify.
+2. Backend: lint e pytest verdes, com contagem de testes positiva.
+3. Frontend: lint, teste e build verdes, com contagem positiva se houver testes.
+4. Testes de comportamento cobrem sucesso e erro principal.
+5. Revisão independente ou revisão documentada do diff com architecture.md.
+6. Fluxo local ponta a ponta conferido quando a mudança atravessa API, UI e banco.
 
-1. **Critérios de aceite** da spec demonstrados (`/verify`), quando houver spec.
-2. **Backend:** testes passam (`./mvnw test` ou `./gradlew test`).
-3. **Frontend:** `ng build` compila sem erro e `ng test` passa (se houver testes).
-4. **Testes novos** cobrem o comportamento novo e o caminho de erro principal.
-5. **Revisão feita** — pelo agent `arch-reviewer` ou por você mesmo relendo o diff com a
-   regra `architecture.md` ao lado.
-6. **Fluxo ponta a ponta** conferido localmente quando a mudança atravessa backend e frontend
-   (subir os dois e exercitar a tela ou um `curl`).
-
-Quem implementa diz "implementação entregue; falta revisar" — "pronta" só depois dos itens acima.
-Item pulado deve ser **dito explicitamente**, nunca omitido.
+Registre comandos e resultados reais. Item não executado é pendência explícita. Implementação entregue aguarda revisão até cumprir o handoff.

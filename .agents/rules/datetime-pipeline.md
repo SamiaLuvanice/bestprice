@@ -1,30 +1,10 @@
 ---
-description: Datas, horas e dinheiro — Instant/UTC no backend, BigDecimal para valores, conversão só na tela.
+description: Datas, instantes, fusos e dinheiro em Python, PostgreSQL e TypeScript.
 alwaysApply: true
 ---
 
 # Datas e dinheiro
 
-Casos com horário local, agendamento e transições de fuso: skill
-`.agents/skills/java-datetime/SKILL.md`.
+Instantes de eventos usam datetime com timezone UTC no Python e timestamptz no PostgreSQL. Nunca persista datetime ingênuo como instante. Datas civis usam date e DATE; não as converta à meia-noite. JSON usa ISO 8601 com Z para UTC e YYYY-MM-DD para data. A interface usa Intl apenas para apresentação no fuso do usuário. Injete uma fonte de tempo nas regras que dependem do relógio para testar de forma determinística.
 
-## Datas e horas
-
-1. **Instantes** (quando algo aconteceu) usam `java.time.Instant` e são gravados em UTC
-   (`TIMESTAMP`/`timestamptz`). Configure `spring.jackson.time-zone: UTC`.
-2. **Datas sem hora** (vencimento, aniversário) usam `LocalDate`. Nunca converta para instante "meia-noite".
-3. **Nunca** `java.util.Date`/`Calendar`; nunca `LocalDateTime` para guardar um instante (não tem fuso).
-4. A API trafega **ISO 8601**: `2026-08-30T14:00:00Z` e `2026-08-30`.
-5. O **Angular** converte para o fuso/idioma do usuário **só ao exibir** (`DatePipe`/`Intl`).
-   Lógica de negócio com datas fica no backend.
-6. Relógio injetável: o service recebe um `java.time.Clock` (bean) em vez de chamar `Instant.now()`
-   direto, para o teste controlar o tempo.
-
-## Dinheiro
-
-1. **`BigDecimal`**, nunca `double`/`float`. Persistido como `NUMERIC(19,2)` (`@Column(precision = 19, scale = 2)`).
-2. Crie `BigDecimal` a partir de `String` (`new BigDecimal("10.50")` / `BigDecimal.valueOf`), nunca de `double`.
-3. Arredonde **uma vez**, explícito: `setScale(2, RoundingMode.HALF_EVEN)`. Comparação com `compareTo`, não `equals`.
-4. Na API, valor como número JSON decimal (ou string) e **sempre com a moeda** quando houver mais de uma (`BRL`).
-5. No Angular, não faça aritmética monetária com `number` para decidir regra: exiba com `CurrencyPipe`
-   e deixe o cálculo para o backend.
+Dinheiro usa decimal.Decimal criado de string; nunca float para cálculo. Persista como NUMERIC com escala definida pelo domínio. Arredonde uma vez, explicitamente, na fronteira exigida pela regra. O cliente não decide regras monetárias usando number; mostre moeda e unidade de forma explícita.

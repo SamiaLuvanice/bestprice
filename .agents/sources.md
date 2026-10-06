@@ -1,23 +1,14 @@
 # Fontes do projeto
 
-Arquivo neutro. Preencha só o que existir; nunca credenciais, tokens ou senhas.
-
-## Documentação
+Sem segredos, tokens ou senhas.
 
 - Repositório: https://github.com/SamiaLuvanice/bestprice
-- Especificações: `specs/`
-- Decisões de arquitetura: `docs/adr/`
-- Design/protótipo: (opcional)
-
-## Gestão e entrega
-
+- Especificações: specs/
+- Decisões de arquitetura: docs/adr/ (as anteriores à spec 0007 são históricas)
+- Design/protótipo: designsystem/ local, se presente; não pressupor conteúdo versionado.
 - Issues: https://github.com/SamiaLuvanice/bestprice/issues
 - Actions: https://github.com/SamiaLuvanice/bestprice/actions
-- GitHub Project: pendente de acesso project e configuração; ver `docs/github-workflow.md`.
-- Entrega: imagens GHCR e releases a partir de main; sem implantação externa.
+- Project: configuração e credencial pendentes; integração opcional.
+- Entrega: GHCR e releases após promoção para main; sem implantação externa.
 
-## Referências da stack
-
-- Spring Boot: https://docs.spring.io/spring-boot/
-- Spring Data JPA: https://docs.spring.io/spring-data/jpa/reference/
-- Angular: https://angular.dev
+Referências técnicas: https://fastapi.tiangolo.com/ · https://docs.python.org/3/ · https://www.postgresql.org/docs/ · https://react.dev/ · https://vite.dev/

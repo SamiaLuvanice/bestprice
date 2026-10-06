@@ -4,13 +4,12 @@
 
 ```mermaid
 flowchart LR
-  I[Issue e aceite] --> P[Project: prioridade manual]
-  P --> B[Branch vinculada e commits Refs]
+  I[Issue e aceite] --> B[Branch vinculada e commits Refs]
   B --> R[PR: Closes e spec]
   R --> C[CI: backend, frontend e automações]
   C --> A[Aprovação independente]
   A --> D[Merge em develop]
-  D --> F[Issue fechada e Project atualizado]
+  D --> F[Issue fechada; Project opcional]
   D --> S[PR develop para stage]
   S --> M[PR stage para main]
   M --> Q[Gates de entrega]
@@ -19,14 +18,14 @@ flowchart LR
 
 `develop` é a branch padrão e a base das tarefas. `stage` valida candidatas e
 `main` publica releases. A spec descreve o comportamento; a Issue identifica a
-tarefa e o Project organiza prioridade, responsáveis e progresso. Nenhum desses
+tarefa e, se configurado, o Project organiza prioridade, responsáveis e progresso. Nenhum desses
 registros substitui as evidências de verificação.
 
 ## Iniciar uma tarefa
 
 1. Abra uma Issue pelo formulário **Tarefa**, com resultado esperado e aceite.
-2. No Project, defina prioridade P0–P3 e ordem. Atribua um responsável quando o
-   trabalho começar; isso move a Issue para **In progress** após sincronização.
+2. Se o Project estiver configurado, defina prioridade P0–P3 e ordem. Atribuir responsável
+   move a Issue para **In progress** somente após sincronização comprovada.
 3. Crie a spec quando aplicável e uma branch ligada à Issue:
 
    ```powershell
@@ -79,7 +78,7 @@ precisar ser congelada, crie uma decisão explícita de produto antes de prosseg
 | Workflow | Evento | Resultado e permissões |
 |---|---|---|
 | CI | PR aberta, atualizada, reaberta, editada ou pronta para revisão; push em develop/stage/main | Quality + política de PR; token de leitura; sem secrets |
-| Quality | Chamado por CI e Delivery | Java 25/Maven verify; Node 22/npm ci/build/test; testes Node e actionlint |
+| Quality | Chamado por CI e Delivery | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/build; testes Node e actionlint |
 | Project sync | Issue aberta/reaberta/fechada/atribuída; ciclo de draft/revisão/fechamento de PR | Adiciona item e atualiza Status, com PROJECT_TOKEN |
 | Delivery | Push em main; execução manual na main | Repete Quality, publica duas imagens GHCR e cria release após ambas |
 
@@ -214,7 +213,7 @@ credenciais de estudo em infraestrutura pública.
 
 Actions estão fixadas em commits. Revise atualizações periodicamente; o actionlint
 também tem versão fixa. Mantenha o nome do check CI estável ou atualize o ruleset
-junto. Specs/verification e a aba Actions guardam evidências; relatórios Maven e
+junto. Specs/verification e a aba Actions guardam evidências; resultados pytest e
 metadados de imagens ficam disponíveis por sete dias.
 
 - [Vínculo e fechamento de Issues](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue).
