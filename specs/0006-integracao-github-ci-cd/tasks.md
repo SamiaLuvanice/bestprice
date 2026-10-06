@@ -5,5 +5,5 @@
 - [x] T03 — CI reutilizável e check agregador; lint e testes automáticos.
 - [x] T04 — Project com transições testadas, código confiável e ausência de token explícita. Execução real depende do setup externo.
 - [x] T05 — CD de imagens/release condicionado aos gates e versão válida. Publicação real depende da promoção revisada.
-- [ ] T06 — Documentar setup e alinhar harness; aplicar configurações permitidas no GitHub.
-- [ ] T07 — Executar gates, registrar evidências, abrir PR e conferir CI remoto; entregar para revisão.
+- [x] T06 — Documentar setup e alinhar harness; develop padrão e ruleset 24581959 ativo. Project sem permissão adicional permanece pendente, com setup documentado.
+- [x] T07 — Executar gates, registrar evidências, abrir PR #13 e conferir CI remoto verde; entregue para revisão. Merge e ativação externa não realizados.
