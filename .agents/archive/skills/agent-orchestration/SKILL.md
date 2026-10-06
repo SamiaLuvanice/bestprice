@@ -163,7 +163,8 @@ cabeça de frontend não pega violação de camada.
 
 1. A spec existe e passou por `/plan`? Se não, o card volta para `refinement` — não se
    implementa a partir de conversa.
-2. O card já tem claim ativo? Ler `docs/agent-claims.md`. Duas sessões na mesma spec é
+2. O card já tem claim ativo? O registro histórico fica em `.agents/archive/agent-claims.md`.
+   Ao restaurar este fluxo, crie um registro ativo em `docs/agent-claims.md`. Duas sessões na mesma spec é
    retrabalho garantido.
 3. Registrar o claim: linha no arquivo com slot, spec, branch e agente.
 4. Mover o card para `development` e comentar quem pegou — skill `clickup`.

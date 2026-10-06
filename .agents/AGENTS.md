@@ -14,6 +14,7 @@ Stack do projeto: **Java + Spring Boot** (`backend/`) e **Angular** (`frontend/`
   modules.yaml       o que é núcleo e o que é do perfil java-springboot-angular
   sources.md         links de referência do projeto
   sync.sh            cria os links por ferramenta (symlink, ou junction no Windows)
+  sync.ps1           cria junctions nativas no Windows, sem administrador
   agents/            papéis — frontmatter `name` + `description`
   rules/             regras; as principais entram por @import no AGENTS.md da raiz
   skills/            sob demanda — <nome>/SKILL.md + apoio
@@ -67,6 +68,11 @@ que só o Claude entende) e as demais são lidas sob demanda quando o agente/ski
 ```bash
 bash .agents/sync.sh        # após clonar, ou ao adicionar skill/agent
 ```
+
+No Windows, use `.\.agents\sync.ps1` (opcionais: `-WithOpenCode` e `-WithCursor`).
+Junctions nativas funcionam no PowerShell e no Git Bash. Links criados pelo WSL
+podem ficar inacessíveis no Windows; o script PowerShell substitui apenas esses
+links, preservando os destinos. Pastas reais exigem mover o conteúdo antes.
 
 ## Como editar
 

@@ -26,6 +26,9 @@ de um projeto com **backend Java/Spring Boot** e **frontend Angular**, para uso 
    bash .agents/sync.sh
    ```
 
+   No Windows, use `.\.agents\sync.ps1` para criar junctions nativas acessíveis
+   pelo PowerShell e pelo Git Bash, sem precisar de administrador.
+
 2. Instale as dependências do frontend (o `.npmrc` já traz o contorno de um bug do npm 10):
 
    ```bash
