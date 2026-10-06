@@ -1,5 +1,7 @@
-target/
-.git
-.idea
-*.iml
-HELP.md
+.venv
+.uv-cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+tests

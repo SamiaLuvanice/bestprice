@@ -1,5 +1,5 @@
 # Hooks mínimos e genéricos (https://pre-commit.com). Opcional: `pip install pre-commit && pre-commit install`.
-# Formatação/lint de Java e Angular ficam por conta do build (mvnw/gradlew e ng) — ver skill quality-gates.
+# Ruff, pytest, ESLint, Vitest e build ficam em quality-gates/CI.
 default_install_hook_types: [pre-commit, commit-msg]
 
 repos:
@@ -21,7 +21,7 @@ repos:
         exclude: ^(\.claude/|CLAUDE\.md$)
       - id: check-yaml
       - id: check-json
-        # Angular tsconfig files use JSONC comments and are not strict JSON.
+        # tsconfig pode conter comentários JSONC.
         exclude: ^frontend/tsconfig.*\.json$
       - id: check-merge-conflict
       - id: check-added-large-files
