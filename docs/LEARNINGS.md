@@ -1,5 +1,21 @@
 # Aprendizados
 
+## 2026-10-06 — Revisar projeções e configurações ao mover a raiz
+
+**Contexto:** após mover `my_bank/` para a raiz, as projeções de `.claude/`
+usavam links do WSL inacessíveis pelo PowerShell. O harness também mantinha a
+base `main`, embora o fluxo atual use `develop`, e o contexto Docker incluía
+temporários de navegador ignorados pelo Git.
+
+**Princípio:** ao reorganizar pastas, conferir os links pela ferramenta que os
+consome, alinhar configurações com as regras atuais e revisar o `.dockerignore`
+independentemente do `.gitignore`. No Windows, usar junctions nativas.
+
+**Anti-pattern:** considerar um link válido apenas porque o alvo relativo está
+correto, ou presumir que arquivos ignorados pelo Git ficam fora do build Docker.
+
+**Referências:** `.agents/sync.ps1`, `harness.yaml`, `frontend/.dockerignore`.
+
 ## 2026-10-05 — Testar CSRF pelo fluxo que o navegador usa
 
 **Contexto:** na spec 0002, quatro testes de fatia com o postprocessor genérico

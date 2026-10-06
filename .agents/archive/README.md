@@ -9,6 +9,9 @@ dependências, branches, ferramentas e arquitetura que ela pressupõe.
 
 ## Conceitos reaproveitados
 
+`agent-claims.md` preserva os registros concluídos da spec 0002. O fluxo atual
+não usa um registro de claims ativo.
+
 Alguns princípios foram reescritos para a stack atual; os originais continuam aqui para
 rastreabilidade, não para ativação direta:
 

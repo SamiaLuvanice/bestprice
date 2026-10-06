@@ -28,8 +28,10 @@ modules:
 
 git:
   protected_branches:
+    - develop
+    - stage
     - main
-  default_base: main
+  default_base: develop
 
 # Comandos de verificação (use mvnw/gradlew do projeto; no PowerShell: .\mvnw.cmd)
 quality:
