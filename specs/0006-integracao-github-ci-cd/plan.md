@@ -8,6 +8,11 @@ develop → stage → main. Usar develop como padrão permite fechamento nativo 
 eventos de Issues após integração; se main permanecer padrão, ativação/fechamento
 dependem da promoção. Não implementar um fechador próprio de Issues.
 
+Revisão final: a proteção strict exige que a origem contenha a base atual. Permitir
+também PRs de sincronização main → stage e stage → develop do mesmo repositório,
+com os mesmos gates/aprovações, preserva ancestralidade após merge commits de
+promoção. Essas PRs dispensam nova Issue, como as promoções; usar merge commit.
+
 CI reutilizável (`workflow_call`) executa Maven verify, npm ci/build/test e testes
 Node das automações, mais validação de YAML/workflows. A PR também valida fluxo de
 branches e uma Issue local existente. Um check agregador estável exige sucesso

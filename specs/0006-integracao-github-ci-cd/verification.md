@@ -12,7 +12,7 @@ PR: https://github.com/SamiaLuvanice/bestprice/pull/13.
 | `frontend/npm ci` | 469 pacotes instalados; lockfile preservado |
 | `frontend/npm run build` | Build de produção concluído |
 | `frontend/npm test -- --watch=false` | 31 testes, cinco arquivos, todos passaram |
-| `node --test .github/scripts/*.test.cjs` | 9 testes passaram; política, transições e fronteira API com dublê |
+| `node --test .github/scripts/*.test.cjs` | 10 testes; política, sincronização reversa, transições e fronteira API com dublê |
 | `actionlint` 1.7.12 | Quatro workflows válidos; binário oficial com SHA256 conferido |
 
 TDD: três testes de política falharam contra a implementação vazia (retorno
@@ -20,6 +20,8 @@ incorreto/ausência de rejeição) e passaram após implementação. Dois testes
 status falharam contra o retorno constante Todo e passaram com as transições.
 A primeira tentativa Node foi bloqueada por EPERM do sandbox; essa falha de
 ambiente não foi considerada evidência Red.
+O teste adicional de sincronização reversa falhou pela rejeição indevida de
+main → stage; a política foi corrigida antes da entrega final.
 
 ## Evidências no GitHub
 
@@ -41,7 +43,7 @@ ambiente não foi considerada evidência Red.
 | Critério | Situação | Evidência |
 |---|---|---|
 | Formulário/template | Implementado; ativação após merge | Arquivos .github/ISSUE_TEMPLATE e pull_request_template.md |
-| Rastreabilidade e rejeições | Demonstrado | Branch vinculada, 5 testes de política e PR policy remoto |
+| Rastreabilidade e rejeições | Demonstrado | Branch vinculada, 6 testes de política e PR policy remoto |
 | CI de backend/frontend/automações | Demonstrado em PR | Execução 37467567220 |
 | Agregação de falhas | Implementado e revisado | CI exige resultado success de Quality e política; casos inválidos rejeitados nos testes |
 | Proteções/revisão | Ativo e demonstrado | Ruleset 24581959; REVIEW_REQUIRED mesmo com CI verde |

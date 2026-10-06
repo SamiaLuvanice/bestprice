@@ -28,6 +28,16 @@ test('promoções só aceitam a branch anterior do mesmo repositório', () => {
     head: { ref: 'develop', repo: { full_name: 'fork/repo' } } })), /mesmo repositório/);
 });
 
+test('sincronização reversa preserva a ancestralidade das branches protegidas', () => {
+  const sync = (base, head, repository = 'owner/repo') => pull({
+    base: { ref: base, repo: { full_name: 'owner/repo' } },
+    head: { ref: head, repo: { full_name: repository } }, body: '',
+  });
+  assert.equal(validatePullRequest(sync('stage', 'main')), null);
+  assert.equal(validatePullRequest(sync('develop', 'stage')), null);
+  assert.throws(() => validatePullRequest(sync('develop', 'stage', 'fork/repo')), /mesmo repositório/);
+});
+
 function apiFixture(issue, messages) {
   return {
     context: { repo: { owner: 'owner', repo: 'repo' }, payload: { pull_request: { ...pull(), number: 13 } } },

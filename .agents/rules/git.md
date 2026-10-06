@@ -42,6 +42,8 @@ chore/issue-125-bump-spring-boot
 ```
 
 Promoção de release: PR `develop` → `stage` e, após validação/aceite, PR `stage` → `main`.
+Sincronize commits das promoções por PR `main` → `stage` e `stage` → `develop`,
+com os mesmos gates e revisão. Use merge commit entre branches duradouras.
 Atualize a branch de feature a partir de `develop` antes de integrar, conforme a política
 do repositório. Não faça commit direto em `main`, `stage` ou `develop`.
 Não use `--no-verify` para contornar hooks: conserte a causa.

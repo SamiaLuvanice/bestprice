@@ -48,10 +48,14 @@ registros substitui as evidências de verificação.
 6. Aguarde CI e solicite revisão a outra pessoa com permissão de escrita. Resolva
    conversas e atualize a branch se develop avançar. Faça merge pelo GitHub.
 
-Promoções aceitam somente develop → stage e stage → main do mesmo repositório;
-dispensam Issue nova e rodapés dos commits históricos. Use **merge commit** nas
+Promoções aceitam develop → stage e stage → main do mesmo repositório.
+Sincronizações reversas aceitam main → stage e stage → develop. Esses quatro
+fluxos dispensam Issue nova e rodapés dos commits históricos. Use **merge commit** nas
 promoções para preservar a ancestralidade entre branches duradouras. Uma correção
-de release volta ao fluxo de tarefa em develop. Não há merge automático.
+de release volta ao fluxo de tarefa em develop. Após uma promoção, abra as PRs
+reversas necessárias para a origem conter o commit atual da base antes da próxima
+promoção. Elas exigem os mesmos checks e aprovação; não faça push direto. Isso
+evita que a exigência de branch atualizada impeça a próxima release. Não há merge automático.
 
 ## O que roda automaticamente
 

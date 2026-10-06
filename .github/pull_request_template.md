@@ -8,7 +8,7 @@ Closes #NUMERO
 
 Spec: `specs/NNNN-descricao/spec.md`
 
-<!-- Promoções develop → stage e stage → main dispensam Closes e citam as PRs entregues. -->
+<!-- Promoções develop → stage → main e sincronizações reversas dispensam Closes e citam as PRs relacionadas. -->
 
 ## Validação
 
