@@ -53,7 +53,7 @@ test('Issue fechada resolve PR vinculada pelo instante do fechamento e branch pa
   const closedAt = '2026-01-01T00:00:00Z';
   const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: closedAt, node_id: 'ISSUE_1' }, closingEvents: [
     { createdAt: '2025-12-31T23:59:59Z', closer: { baseRefName: 'develop', mergedAt: '2025-12-31T23:59:59Z' } },
-    { createdAt: closedAt, closer: { baseRefName: 'develop', mergedAt: closedAt } },
+    { createdAt: closedAt, closer: { baseRefName: 'develop', mergedAt: '2025-12-31T23:59:59Z' } },
   ] });
   await sync(args);
   assert.equal(project.status, 'option-4');

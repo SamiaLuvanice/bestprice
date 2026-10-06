@@ -71,7 +71,7 @@ async function wasClosedByDefaultBranchPr(github, issueNodeId, closedAt) {
     const closingEvent = timeline.nodes.find(event => Date.parse(event.createdAt) === closedAtInstant);
     if (closingEvent) {
       const closer = closingEvent.closer;
-      return closer?.baseRefName === 'develop' && Date.parse(closer.mergedAt) === closedAtInstant;
+      return closer?.baseRefName === 'develop' && Boolean(closer.mergedAt);
     }
     before = timeline.pageInfo.hasPreviousPage ? timeline.pageInfo.startCursor : null;
   } while (before);
