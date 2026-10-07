@@ -14,7 +14,15 @@ Data: 2026-10-07. Worktree: `.worktrees/chore-issue-23-curar-skills`, branch `ch
 - `.\\.agents\\sync.ps1` — saída: três junctions `.claude/agents`, `.claude/skills` e `.claude/commands` criadas; projeções ignoradas pelo Git.
 - `python C:\\Users\\luvan\\.codex\\skills\\.system\\skill-creator\\scripts\\quick_validate.py <diretório-da-skill>` — executado separadamente para as três skills; todas retornaram `Skill is valid!` e código 0.
 - `git diff --check` — código 0; apenas aviso de conversão LF/CRLF para `.agents/AGENTS.md`.
+- `git diff --cached --check` — código 0 com todos os arquivos da tarefa preparados.
+- `git commit` — hooks `pre-commit` e `commit-msg` passaram; commit `e202cff`.
+
+## Revisão e PR
+
+Revisão independente por `arch-reviewer` em 2026-10-07: sem achados bloqueantes. Um aviso exigido pela licença Apache foi incorporado em `frontend-design/SKILL.md`; uma frase genérica que pressupunha histórico do cliente foi ajustada. A revisão foi documental e não repetiu os comandos de validação.
+
+PR [#25](https://github.com/SamiaLuvanice/bestprice/pull/25) aberta de `chore/issue-23-curar-skills` para `develop`, vinculada à Issue #23.
 
 ## Limites
 
-Não houve mudança de código da aplicação; lint, pytest, testes React e build não verificam o comportamento destas instruções e não foram executados. A revisão independente, o CI remoto e a integração em `develop` ainda estão pendentes.
+Não houve mudança de código da aplicação; lint, pytest, testes React e build não verificam o comportamento destas instruções e não foram executados localmente. O CI remoto, a aprovação de outra pessoa e a integração em `develop` ainda estão pendentes.
