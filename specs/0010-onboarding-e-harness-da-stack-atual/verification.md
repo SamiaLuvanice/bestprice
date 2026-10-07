@@ -1,6 +1,6 @@
 # Verificação — Spec 0010
 
-Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness`; branch `feature/0010-issue-29-onboarding-harness`, criada de `origin/develop` no commit `8045420`. Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29); PR [#30](https://github.com/SamiaLuvanice/bestprice/pull/30) aberta para `develop`. Nenhum resultado remoto de CI ou integração foi observado até este registro.
+Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness`; branch `feature/0010-issue-29-onboarding-harness`, criada de `origin/develop` no commit `8045420`. Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29); PR [#30](https://github.com/SamiaLuvanice/bestprice/pull/30) aberta para `develop`. O [CI #37645230540](https://github.com/SamiaLuvanice/bestprice/actions/runs/37645230540) passou no SHA `8162835`; a aprovação GitHub e o merge continuam pendentes.
 
 ## Critérios de aceite
 
@@ -12,8 +12,8 @@ Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness
 | Material anterior fora da árvore | Foram excluídos os arquivos históricos de documentação, specs e harness. Busca por identificadores e caminhos antigos nos documentos, specs, scripts e harness ativos não retornou ocorrências. | Demonstrado por diff e busca |
 | Harness e projeções coerentes | `.agents/modules.yaml` inclui as três skills complementares anunciadas; `.agents/sources.md` aponta para a arquitetura existente; `.agents/sync.ps1` criou junctions da worktree; `scripts/diagnose-harness.ps1` retornou `Harness válido` após tratar arquivos vazios. | Demonstrado |
 | Skill React adicional com origem e licença | A cópia local de terceiro não foi transferida para a worktree nem será incluída no pacote: não contém aviso de licença completo e tem regras exclusivas de Next.js. A skill `react-vite-performance` da spec 0009 permanece disponível. | Demonstrado por inspeção e exclusão do diff |
-| Revisão e verificações | Ruff, pytest com PostgreSQL real, lint/test/build do frontend, testes Node e diagnóstico passaram. Revisão independente e QA documental concluídas sem achado bloqueante; `actionlint` não está instalado localmente. | Demonstrado localmente; CI remoto pendente |
-| Issue e PR para `develop` | `origin/develop` foi atualizado e a worktree criada sem tocar no histórico. A criação REST gerou a Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29); a branch foi renomeada, publicada e a PR [#30](https://github.com/SamiaLuvanice/bestprice/pull/30) foi aberta para `develop` com `Closes #29`. CI e aprovação GitHub pendentes. | Parcial |
+| Revisão e verificações | Ruff, pytest com PostgreSQL real, lint/test/build do frontend, testes Node e diagnóstico passaram. Revisão independente e QA documental concluídas sem achado bloqueante. O CI remoto #37645230540 passou no SHA `8162835`, inclusive o actionlint no job de automação; `actionlint` não está instalado localmente. | Demonstrado localmente e no CI do SHA indicado |
+| Issue e PR para `develop` | `origin/develop` foi atualizado e a worktree criada sem tocar no histórico. A criação REST gerou a Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29); a branch foi renomeada, publicada e a PR [#30](https://github.com/SamiaLuvanice/bestprice/pull/30) foi aberta para `develop` com `Closes #29`. CI do SHA `8162835` verde; aprovação GitHub e merge pendentes. | Parcial |
 
 ## Comandos e resultados
 
@@ -36,13 +36,14 @@ Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness
 | `git worktree repair` e `.agents/sync.ps1` | Registro Git reparado após renomear o caminho da worktree; junctions `.claude` recriadas para o novo caminho. |
 | `git commit` e `git push` | Commit `4497793` passou nos hooks `pre-commit` e `commit-msg` e foi publicado na branch da Issue #29. |
 | `gh pr create --base develop ...` | Criou a PR #30 com `Closes #29`, spec, resultados locais e limites. |
+| `gh run view 37645230540` | Run `completed/success` no SHA `8162835`; jobs PR policy, Backend, Frontend, Automation e CI concluíram com sucesso. |
 
 ## Limites e pendências
 
 - Os comandos Vite e Node falharam no sandbox por `spawn EPERM`; repetidos com a permissão de execução necessária, passaram. O uv precisou de acesso ao cache global pelo mesmo motivo.
 - A instância temporária PostgreSQL 18 foi parada e seus dados removidos após os testes. O Compose do projeto usa PostgreSQL 17; Docker Desktop estava parado e seu serviço não pôde ser iniciado nesta sessão. A abertura da interface no navegador e o setup literal de clone limpo não foram demonstrados.
 - `actionlint` não está instalado nesta máquina. Nenhum workflow foi alterado por esta spec.
-- A Issue #29 e a PR #30 existem. CI remoto, aprovação GitHub e merge ainda dependem do fluxo da PR; não foi feito commit direto em `develop`.
+- A Issue #29 e a PR #30 existem. O resultado remoto acima vale para `8162835`; commits documentais posteriores exigem CI novo. A aprovação GitHub e o merge ainda dependem do fluxo da PR; não foi feito commit direto em `develop`.
 
 ## Revisão independente e QA
 
