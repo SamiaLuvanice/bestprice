@@ -3,7 +3,7 @@ numero: 0009
 titulo: Skills compatíveis com a stack ativa
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [harness]
 depende_de: [0007]
 ---
@@ -20,10 +20,10 @@ Ao iniciar uma tarefa de API, interface ou desempenho, o agente encontra instru�
 
 ## Critérios de aceite
 
-- [ ] Dada uma tarefa FastAPI neste projeto, a skill apropriada aponta para PostgreSQL e para as regras locais, sem prescrever SQLite, ORM ou camadas vazias.
-- [ ] Dada uma tarefa React/Vite, as orientações de design e desempenho aplicam-se à SPA e distinguem recursos exclusivos de Next.js.
-- [ ] Dado material de terceiros, a origem e a licença dos trechos incorporados são identificáveis; conteúdo sem licença comprovada não é republicado.
-- [ ] As skills integradas possuem descrições específicas e estrutura válida para descoberta.
+- [x] Dada uma tarefa FastAPI neste projeto, a skill apropriada aponta para PostgreSQL e para as regras locais, sem prescrever SQLite, ORM ou camadas vazias.
+- [x] Dada uma tarefa React/Vite, as orientações de design e desempenho aplicam-se à SPA e distinguem recursos exclusivos de Next.js.
+- [x] Dado material de terceiros, a origem e a licença dos trechos incorporados são identificáveis; conteúdo sem licença comprovada não é republicado.
+- [x] As skills integradas possuem descrições específicas e estrutura válida para descoberta.
 
 ## Fora de escopo
 
