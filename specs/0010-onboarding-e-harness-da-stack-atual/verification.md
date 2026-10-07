@@ -1,6 +1,6 @@
 # Verificação — Spec 0010
 
-Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness`; branch `feature/0010-issue-29-onboarding-harness`, criada de `origin/develop` no commit `8045420`. Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29). Nenhum resultado remoto de CI ou integração foi observado para esta branch.
+Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness`; branch `feature/0010-issue-29-onboarding-harness`, criada de `origin/develop` no commit `8045420`. Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29); PR [#30](https://github.com/SamiaLuvanice/bestprice/pull/30) aberta para `develop`. Nenhum resultado remoto de CI ou integração foi observado até este registro.
 
 ## Critérios de aceite
 
@@ -13,7 +13,7 @@ Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness
 | Harness e projeções coerentes | `.agents/modules.yaml` inclui as três skills complementares anunciadas; `.agents/sources.md` aponta para a arquitetura existente; `.agents/sync.ps1` criou junctions da worktree; `scripts/diagnose-harness.ps1` retornou `Harness válido` após tratar arquivos vazios. | Demonstrado |
 | Skill React adicional com origem e licença | A cópia local de terceiro não foi transferida para a worktree nem será incluída no pacote: não contém aviso de licença completo e tem regras exclusivas de Next.js. A skill `react-vite-performance` da spec 0009 permanece disponível. | Demonstrado por inspeção e exclusão do diff |
 | Revisão e verificações | Ruff, pytest com PostgreSQL real, lint/test/build do frontend, testes Node e diagnóstico passaram. Revisão independente e QA documental concluídas sem achado bloqueante; `actionlint` não está instalado localmente. | Demonstrado localmente; CI remoto pendente |
-| Issue e PR para `develop` | `origin/develop` foi atualizado e a worktree criada sem tocar no histórico. Após duas falhas GraphQL e uma resposta REST incompleta, a criação REST com JSON explícito gerou a Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29). A branch foi renomeada para incluir o número; PR e CI remoto ainda pendentes. | Parcial |
+| Issue e PR para `develop` | `origin/develop` foi atualizado e a worktree criada sem tocar no histórico. A criação REST gerou a Issue [#29](https://github.com/SamiaLuvanice/bestprice/issues/29); a branch foi renomeada, publicada e a PR [#30](https://github.com/SamiaLuvanice/bestprice/pull/30) foi aberta para `develop` com `Closes #29`. CI e aprovação GitHub pendentes. | Parcial |
 
 ## Comandos e resultados
 
@@ -34,13 +34,15 @@ Data: 2026-10-07. Worktree: `.worktrees/feature-0010-issue-29-onboarding-harness
 | `git diff --check` | Código 0; avisos de conversão LF/CRLF sem erro de whitespace. |
 | `gh api -X POST repos/SamiaLuvanice/bestprice/issues --input ...` | Criou a Issue #29 após falhas anteriores da CLI; URL confirmada. |
 | `git worktree repair` e `.agents/sync.ps1` | Registro Git reparado após renomear o caminho da worktree; junctions `.claude` recriadas para o novo caminho. |
+| `git commit` e `git push` | Commit `4497793` passou nos hooks `pre-commit` e `commit-msg` e foi publicado na branch da Issue #29. |
+| `gh pr create --base develop ...` | Criou a PR #30 com `Closes #29`, spec, resultados locais e limites. |
 
 ## Limites e pendências
 
 - Os comandos Vite e Node falharam no sandbox por `spawn EPERM`; repetidos com a permissão de execução necessária, passaram. O uv precisou de acesso ao cache global pelo mesmo motivo.
 - A instância temporária PostgreSQL 18 foi parada e seus dados removidos após os testes. O Compose do projeto usa PostgreSQL 17; Docker Desktop estava parado e seu serviço não pôde ser iniciado nesta sessão. A abertura da interface no navegador e o setup literal de clone limpo não foram demonstrados.
 - `actionlint` não está instalado nesta máquina. Nenhum workflow foi alterado por esta spec.
-- A Issue #29 existe. A PR, o CI remoto e a revisão GitHub ainda dependem de commit e push na branch da feature; não foi feito commit direto em `develop`.
+- A Issue #29 e a PR #30 existem. CI remoto, aprovação GitHub e merge ainda dependem do fluxo da PR; não foi feito commit direto em `develop`.
 
 ## Revisão independente e QA
 
