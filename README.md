@@ -1,8 +1,10 @@
-# BestPrice — base de estudos
+# BestPrice — monitoramento de preços da Amazon
 
 **Documentação de onboarding:** [abra o índice de `docs/`](docs/index.md) para seguir a leitura recomendada, consultar arquitetura, banco e guias dos módulos.
 
-O repositório contém uma base de estudos em **FastAPI (Python 3.13)**, **React + TypeScript (Vite)** e **PostgreSQL 17**. Hoje, a aplicação demonstra apenas que a interface consegue consultar a API e que a API consegue verificar uma conexão real com o banco. Não há funcionalidades de negócio, autenticação ou dados de domínio.
+**O usuário cola o link de um produto da Amazon uma única vez e o BestPrice passa a acompanhar automaticamente seu preço e suas alterações.** Essa é a proposta do produto destinado a usuários reais; veja [contexto e direção do produto](docs/product-context.md) para requisitos, arquitetura pretendida e decisões pendentes.
+
+O repositório contém a base técnica em **FastAPI (Python 3.13)**, **React + TypeScript (Vite)** e **PostgreSQL 17**. Hoje, a aplicação verifica a comunicação entre interface, API e banco. O monitoramento Amazon, histórico, alertas, autenticação e dados de domínio ainda não estão implementados.
 
 ## Pré-requisitos
 

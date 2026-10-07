@@ -4,6 +4,8 @@
 
 Esta parte é a montagem do sistema: o Compose liga banco, API e interface no computador do desenvolvedor; os containers empacotam cada aplicação; e o GitHub Actions verifica as mudanças e publica imagens quando chegam à branch `main`. A publicação termina no registry e não instala a aplicação em um servidor de produção.
 
+A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações independentes e rollback, está no [contexto do produto](../product-context.md). DEV, STAGE e PROD ainda precisam de implantação configurada; branches de promoção não equivalem a ambientes provisionados.
+
 ## Arquivos e responsabilidades
 
 | Arquivo | Papel |

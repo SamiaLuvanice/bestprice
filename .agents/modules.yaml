@@ -1,5 +1,15 @@
 version: 0.3.0
 core:
+  agents:
+    - product-owner
+    - spec-reviewer
+    - backend
+    - frontend
+    - fullstack
+    - qa
+    - arch-reviewer
+    - debugger
+    - doc-sync-onboarding
   rules:
     - evidencia.md
     - git.md
@@ -35,6 +45,7 @@ profiles:
       - react-feature
       - api-contract
       - monorepo-navigation
+      - doc-sync-onboarding
       - fastapi-templates
       - frontend-design
       - react-vite-performance

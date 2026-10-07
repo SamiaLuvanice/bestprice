@@ -1,6 +1,6 @@
 # Harness do projeto
 
-Projeto de estudos: FastAPI (Python 3.13) em backend/, React + TypeScript em frontend/ e PostgreSQL. Priorize simplicidade, boas práticas e explique o porquê.
+BestPrice: monitoramento automático de preços da Amazon, destinado a usuários reais. Stack: FastAPI (Python 3.13) em backend/, React + TypeScript em frontend/ e PostgreSQL. Priorize simplicidade, qualidade de produção e explique o porquê. A visão do produto está em docs/product-context.md; as orientações ativas ficam em .agents/rules/workspace.md.
 
 Toda configuração de agentes vive em .agents/, a fonte única de verdade (ver .agents/AGENTS.md).
 
@@ -8,6 +8,7 @@ Toda configuração de agentes vive em .agents/, a fonte única de verdade (ver 
 - Regras: .agents/rules/
 - Fluxo: /spec → /plan → /implement (TDD para comportamento) → /verify
 - Orquestração de trabalho delegado: .agents/skills/agent-orchestration/SKILL.md
+- Após qualquer alteração de código, execute por último o agente .agents/agents/doc-sync-onboarding.md e confira AGENTS.md, CLAUDE.md e docs/.
 - Após integrar em develop, aplique .agents/skills/task-cleanup/SKILL.md.
 - Use apenas papéis, regras, skills e comandos listados no perfil ativo de .agents/.
 

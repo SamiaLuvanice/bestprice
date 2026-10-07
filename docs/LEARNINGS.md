@@ -1,6 +1,16 @@
 # Aprendizados
 
-As decisões ativas ficam em `.agents/`, `README.md` e nas specs em `specs/`.
+As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
+
+## 2026-10-07 — Distinguir visão de produto de funcionalidades entregues
+
+**Contexto:** o responsável definiu o BestPrice como produto real de monitoramento automático da Amazon por URL; o checkout ainda contém apenas a base de comunicação entre frontend, API e banco.
+
+**Princípio:** preservar o fluxo de entrada apenas por URL nas futuras specs e registrar a visão de produção em uma referência de produto. Documentação técnica deve distinguir explicitamente capacidades existentes, requisitos futuros e decisões pendentes.
+
+**Anti-pattern:** tratar a base atual como produto pronto, exigir cadastro manual de dados obtidos pela integração ou documentar ORM, autenticação e deploy como existentes antes de implementá-los.
+
+**Referências:** [contexto do produto](product-context.md), [arquitetura](architecture.md) e [regra de workspace](../.agents/rules/workspace.md).
 
 ## 2026-10-07 — Manter o índice alinhado aos documentos ativos
 

@@ -2,7 +2,9 @@
 
 ## Visão geral
 
-Pense no sistema como um balcão de atendimento com três partes: a página no navegador pergunta à API se os serviços estão funcionando; a API faz uma pergunta simples ao PostgreSQL; e a página mostra se a resposta voltou. Essa base ainda não calcula preços nem guarda produtos ou usuários.
+A implementação atual verifica a comunicação entre a SPA, a API e o PostgreSQL. Essa base ainda não calcula preços nem guarda produtos ou usuários.
+
+A direção aprovada é evoluir para um **monólito modular** de monitoramento automático da Amazon, com entrada por URL, serviços de aplicação, domínio, repositórios e integração isolada por `AmazonProvider`. Essas partes ainda não existem no código. O [contexto do produto](product-context.md) define os requisitos e as decisões a detalhar em specs; as seções seguintes descrevem o estado implementado.
 
 ```mermaid
 graph LR

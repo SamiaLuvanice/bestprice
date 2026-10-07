@@ -14,6 +14,8 @@ Ao terminar a implementação:
    `git-worktree-required.md`, e rode os gates aplicáveis de `.agents/skills/quality-gates/SKILL.md`.
 2. Registre comandos e resultados de verificação em `specs/<id>/verification.md` e atualize
    `docs/PROGRESS.md` conforme os comandos do projeto. Não invente resultados que não rodou.
+   Após a última alteração de código, execute o agente `doc-sync-onboarding` como etapa final
+   da tarefa e inclua seu resultado no handoff. Se houver novo ajuste de código, repita a etapa.
 3. Prepare um PR por tema, da branch da feature para `develop`. Inclua `Closes #<issue>`, spec relacionada,
    resumo, como verificar, resultados dos testes e pendências. Não faça merge sem revisão
    independente; incorpore feedback na mesma branch/worktree.
