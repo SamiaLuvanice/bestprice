@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BestPrice — Design System (Apple + Liquid Glass)</title>
+<meta name="description" content="Design system da BestPrice na linguagem Apple: tokens SF Pro, cápsulas de ação, ritmo binário de capítulos e componentes Liquid Glass.">
+<style>
+/* OD-LAYOUT-PRIMITIVES v1 — structure only: display, flex/grid, overflow, wrapping, ratio.
+   Put this @layer first; product CSS outside the layer always wins. */
+@layer od-layout {
+  :where(.od-stack,.od-row,.od-row-top,.od-cluster,.od-grid,.od-field,.od-stat,.od-cell,.od-tile) > :where(*) { min-width: 0; }
+
+  /* containers */
+  .od-stack   { display: flex; flex-direction: column; gap: var(--od-gap, 8px); }
+  .od-row     { display: flex; align-items: center; gap: var(--od-gap, 8px); }
+  .od-row-top { display: flex; align-items: flex-start; gap: var(--od-gap, 8px); }
+  .od-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--od-gap, 8px); }
+  .od-fill    { flex: 1 1 0; min-width: 0; }
+  .od-fixed   { flex: none; }
+  .od-grid    { display: grid; gap: var(--od-gap, 12px); grid-template-columns: repeat(var(--od-cols, 3), minmax(0, 1fr)); }
+
+  /* stacked information: each piece is its own line — never sibling inline spans */
+  .od-stat, .od-field, .od-cell { display: grid; gap: var(--od-gap, 2px); }
+  :where(.od-stat,.od-field,.od-cell) > :where(*) { display: block; }
+  .od-tile { display: grid; grid-template-rows: auto 1fr; }
+  :where(.od-tile) > :where(*) { display: block; }
+
+  /* media keeps its intrinsic ratio by default; never a distorted or cropped
+     cover by accident. height:auto lets the ratio win over an <img height="…">
+     attribute. Cropping to a uniform box is an explicit opt-in: set --od-ratio
+     AND add .od-media-cover together (per the core rule, only where a crop is
+     deliberate — tile thumbs, decorative fills — never on full-frame content). */
+  .od-media { display: block; width: 100%; height: auto; aspect-ratio: var(--od-ratio, auto); }
+  .od-media-cover { object-fit: cover; }
+
+  /* data text only — authored copy is rewritten to its budget instead */
+  .od-truncate { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .od-clamp-2, .od-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .od-clamp-2 { -webkit-line-clamp: 2; }
+  .od-clamp-3 { -webkit-line-clamp: 3; }
+  .od-lines-2 { min-height: calc(2 * 1.4em); }
+  .od-nowrap  { white-space: nowrap; }
+  .od-keep    { word-break: keep-all; overflow-wrap: anywhere; }
+
+  /* screen skeleton (optional): bars take their own space, the middle scrolls — no padding guessed for chrome */
+  .od-screen { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; }
+  .od-scroll { overflow-y: auto; overscroll-behavior: contain; min-height: 0; }
+
+  /* horizontal rail: the next item peeks at the edge; trailing room survives overflow */
+  .od-rail { display: flex; gap: var(--od-gap, 8px); overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
+             padding-inline: var(--od-rail-pad, 16px); scroll-padding-inline: var(--od-rail-pad, 16px); }
+  .od-rail::-webkit-scrollbar { display: none; }
+  :where(.od-rail) > :where(*) { flex: none; scroll-snap-align: start; }
+  :where(.od-rail) > :where(:last-child) { margin-inline-end: var(--od-rail-pad, 16px); }
+
+  .od-spacer { flex: none; visibility: hidden; pointer-events: none; }
+  .od-touch  { min-width: 44px; min-height: 44px; }
+}
+/* /OD-LAYOUT-PRIMITIVES v1 */
+
+/* ─── :root paste — estrutura de design-systems/apple/tokens.css,
+       acento ajustado para a paleta neon BestPrice (verde + rosa) ─── */
+:root {
+  --bg: #ffffff;
+  --surface: #f5f5f7;
+  --surface-warm: #fbfbfd;
+
+  --fg: #1d1d1f;
+  --fg-2: #424245;
+  --muted: #6e6e73;
+  --meta: #86868b;
+
+  --border: #d2d2d7;
+  --border-soft: #e8e8ed;
+
+  --accent: #39ff14;
+  --accent-on: #000000;
+  --accent-hover: color-mix(in oklab, #39ff14, #ffffff 16%);
+  --accent-active: color-mix(in oklab, #39ff14, #000000 22%);
+  --accent-ink: #c7005e;
+  --accent-ink-hover: color-mix(in oklab, #c7005e, #000000 15%);
+  --accent-ink-active: color-mix(in oklab, #c7005e, #000000 25%);
+  --danger-on: #ffffff;
+
+  --success: #16a34a;
+  --warn:    #eab308;
+  --danger:  #dc2626;
+
+  --font-display:
+    "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-body:
+    "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono:
+    "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 17px;
+  --text-lg:   21px;
+  --text-xl:   28px;
+  --text-2xl:  40px;
+  --text-3xl:  56px;
+  --text-4xl:  80px;
+
+  --leading-body:  1.47;
+  --leading-tight: 1.05;
+
+  --tracking-display: -0.015em;
+
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+
+  --section-y-desktop: 100px;
+  --section-y-tablet:  64px;
+  --section-y-phone:   40px;
+
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   18px;
+  --radius-pill: 980px;
+
+  --elev-flat:   none;
+  --elev-ring:   0 0 0 1px var(--border);
+  --elev-raised: 0 12px 32px rgba(0, 0, 0, 0.08);
+
+  --focus-ring: 0 0 0 4px color-mix(in oklab, var(--accent-ink), transparent 30%);
+
+  --motion-fast:   150ms;
+  --motion-base:   220ms;
+  --ease-standard: cubic-bezier(0.28, 0, 0.22, 1);
+
+  --container-max:            1024px;
+  --container-gutter-desktop: 22px;
+  --container-gutter-tablet:  18px;
+  --container-gutter-phone:   16px;
+}
+
+/* ─── BestPrice extension tokens — valores documentados no DESIGN.md Apple
+       (Absolute Black, Graphite steps, Neon Green Action + Hot Pink Ink) + camada de
+       vidro. Todo valor vive em bloco de token; componentes usam var(). ─── */
+:root {
+  --chapter: #000000;
+  --accent-bright: #ff3ea5;
+
+  --graphite-a: #272729;
+  --graphite-b: #262629;
+  --graphite-c: #28282b;
+  --graphite-d: #2a2a2c;
+
+  --success-ink: color-mix(in oklab, var(--success), #000000 30%);
+  --warn-ink:    color-mix(in oklab, var(--warn), #000000 60%);
+  --danger-ink:  color-mix(in oklab, var(--danger), #000000 25%);
+
+  /* Liquid Glass */
+  --glass-fill:        color-mix(in oklab, var(--fg) 8%, transparent);
+  --glass-fill-strong: color-mix(in oklab, var(--fg) 14%, transparent);
+  --glass-solid:       color-mix(in oklab, var(--fg) 12%, var(--bg));
+  --glass-edge:        color-mix(in oklab, #ffffff 65%, transparent);
+  --glass-border:      color-mix(in oklab, var(--fg) 16%, transparent);
+  --glass-blur:        24px;
+  --glass-blur-chrome: 40px;
+  --glass-saturate:    180%;
+}
+
+/* ─── Dark mode — escada Graphite e acento neon do BestPrice,
+       auditado de forma independente do modo claro ─── */
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --surface: #1d1d1f;
+  --surface-warm: #272729;
+
+  --fg: #f5f5f7;
+  --fg-2: #d2d2d7;
+  --muted: #86868b;
+  --meta: #86868b;
+
+  --border: #424245;
+  --border-soft: color-mix(in oklab, #424245, transparent 40%);
+
+  --accent: #39ff14;
+  --accent-on: #000000;
+  --accent-hover: color-mix(in oklab, #39ff14, #ffffff 16%);
+  --accent-active: color-mix(in oklab, #39ff14, #000000 22%);
+  --accent-ink: #ff3ea5;
+  --accent-ink-hover: color-mix(in oklab, #ff3ea5, #ffffff 15%);
+  --accent-ink-active: color-mix(in oklab, #ff3ea5, #ffffff 25%);
+  --focus-ring: 0 0 0 4px color-mix(in oklab, var(--accent-ink), transparent 30%);
+
+  --success-ink: #16a34a;
+  --warn-ink:    #eab308;
+  --danger-ink:  color-mix(in oklab, var(--danger), #ffffff 45%);
+
+  --elev-raised: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+/* ─── Reset + base ─── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; color: var(--fg); }
+p { margin: 0; }
+a { color: var(--accent-ink); text-decoration: none; }
+a:hover { color: var(--accent-ink-hover); text-decoration: underline; text-underline-offset: 3px; }
+img, svg { max-width: 100%; }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+::selection { background: color-mix(in oklab, var(--accent-ink), transparent 78%); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: absolute; left: var(--space-4); top: -64px; z-index: 80;
+  background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+  padding: var(--space-2) var(--space-4); border-radius: var(--radius-sm);
+  transition: top var(--motion-fast) var(--ease-standard);
+}
+.skip-link:focus { top: var(--space-3); }
+
+.container {
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-gutter-desktop);
+}
+section { padding-block: var(--section-y-desktop); }
+@media (max-width: 1023px) {
+  .container { padding-inline: var(--container-gutter-tablet); }
+  section { padding-block: var(--section-y-tablet); }
+}
+@media (max-width: 639px) {
+  .container { padding-inline: var(--container-gutter-phone); }
+  section { padding-block: var(--section-y-phone); }
+}
+
+/* Ritmo binário de capítulos */
+.band-light { background: var(--bg); color: var(--fg); }
+.band-soft  { background: var(--surface); color: var(--fg); }
+.band-warm  { background: var(--surface-warm); color: var(--fg); }
+.band-black {
+  background: var(--chapter);
+  color: var(--fg);
+  /* o capítulo preto re-insere a rampa de tinta e o acento neon */
+  --bg: #000000;
+  --fg: #f5f5f7;
+  --fg-2: #d2d2d7;
+  --muted: #86868b;
+  --meta: #86868b;
+  --border: #424245;
+  --border-soft: color-mix(in oklab, #424245, transparent 40%);
+  --accent: #39ff14;
+  --accent-on: #000000;
+  --accent-hover: color-mix(in oklab, #39ff14, #ffffff 16%);
+  --accent-active: color-mix(in oklab, #39ff14, #000000 22%);
+  --accent-ink: #ff3ea5;
+  --accent-ink-hover: color-mix(in oklab, #ff3ea5, #ffffff 15%);
+  --accent-ink-active: color-mix(in oklab, #ff3ea5, #ffffff 25%);
+  --focus-ring: 0 0 0 4px color-mix(in oklab, var(--accent-ink), transparent 30%);
+  --surface: #1d1d1f;
+  --surface-warm: #272729;
+}
+
+/* ─── Tipografia ─── */
+h1 { font-size: var(--text-3xl); font-weight: 600; line-height: var(--leading-tight); letter-spacing: var(--tracking-display); }
+h2 { font-size: var(--text-2xl); font-weight: 600; line-height: 1.1; letter-spacing: var(--tracking-display); }
+h3 { font-size: var(--text-xl); font-weight: 600; line-height: 1.14; letter-spacing: -0.007em; }
+.lead { font-size: var(--text-lg); line-height: 1.38; color: var(--fg-2); letter-spacing: -0.011em; }
+.body-muted { color: var(--fg-2); }
+.body-sm { font-size: var(--text-sm); }
+.body-meta { font-size: var(--text-sm); color: var(--muted); }
+.eyebrow {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accent-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.band-black .eyebrow { color: var(--accent-bright); }
+.stack-3 > * + * { margin-block-start: var(--space-3); }
+.stack-4 > * + * { margin-block-start: var(--space-4); }
+.stack-6 > * + * { margin-block-start: var(--space-6); }
+.measure { max-width: 72ch; }
+kbd {
+  font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 500;
+  padding: 2px 6px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg); color: var(--fg-2);
+}
+
+/* ─── Liquid Glass ─── */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--glass-fill);
+    border-color: var(--glass-border);
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--elev-raised);
+  }
+}
+.glass-chrome {
+  -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-chrome)) !important;
+  backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-chrome)) !important;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background: var(--glass-solid); }
+}
+.glass-strong { background: var(--glass-fill-strong); }
+
+/* ─── Nav de vidro ─── */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in oklab, var(--bg), transparent 20%);
+  border-bottom: 1px solid var(--border-soft);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .nav {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-chrome));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur-chrome));
+    box-shadow: inset 0 -1px 0 var(--glass-edge);
+  }
+}
+.nav-inner {
+  max-width: var(--container-max); margin-inline: auto;
+  padding: var(--space-3) var(--container-gutter-desktop);
+  display: flex; align-items: center; gap: var(--space-4);
+}
+.nav-brand { display: inline-flex; align-items: center; gap: var(--space-2); text-decoration: none; color: var(--fg); }
+.brand-badge {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--fg); color: var(--bg);
+  display: grid; place-items: center; flex: none;
+}
+.brand-name { font-family: var(--font-display); font-size: var(--text-base); font-weight: 600; letter-spacing: -0.011em; }
+.brand-sub { font-size: var(--text-xs); color: var(--muted); letter-spacing: 0.04em; }
+.od-spacer.od-fill { visibility: hidden; }
+
+.icon-btn {
+  min-width: 44px; min-height: 44px;
+  display: inline-grid; place-items: center;
+  background: transparent; color: var(--fg);
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard);
+}
+.icon-btn:hover { background: var(--surface); border-color: var(--meta); }
+
+.header-nav { border-top: 1px solid var(--border-soft); }
+.header-nav .od-rail { --od-rail-pad: var(--container-gutter-desktop); max-width: var(--container-max); margin-inline: auto; padding-block: var(--space-2); }
+.nav-link {
+  display: inline-block; padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm); color: var(--fg); opacity: .78;
+  text-decoration: none; border-radius: var(--radius-pill);
+  transition: opacity var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard);
+}
+.nav-link:hover { opacity: 1; background: var(--surface); text-decoration: none; }
+.nav-link[aria-current="true"] { opacity: 1; background: var(--surface); box-shadow: var(--elev-ring); }
+
+/* ─── Botões ─── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: 44px; padding: 8px 16px;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  font-family: var(--font-body); font-weight: 500; font-size: var(--text-sm); line-height: 1.2;
+  cursor: pointer; text-decoration: none;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard),
+              color var(--motion-fast) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+.btn:active { transform: scale(0.98); }
+.btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.btn-primary { background: var(--accent); color: var(--accent-on); border-color: var(--accent-on); }
+.btn-primary:hover { background: var(--accent-active); }
+.btn-primary:active { background: color-mix(in oklab, var(--accent-active), #000000 18%); }
+.btn-secondary { background: transparent; color: var(--fg); border-color: var(--border); }
+.btn-secondary:hover { background: var(--surface); border-color: var(--meta); }
+.btn-danger { background: var(--danger); color: var(--danger-on); }
+.btn-danger:hover { background: color-mix(in oklab, var(--danger), #000000 14%); }
+.btn-ghost { background: transparent; color: var(--accent-ink); }
+.btn-ghost:hover { background: color-mix(in oklab, var(--accent-ink), transparent 86%); color: var(--accent-ink-hover); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; transform: none; }
+.btn-sm { min-height: 36px; padding: 6px 12px; font-size: var(--text-xs); }
+
+.btn-pill {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 12px 22px; border: 1px solid var(--accent-on); border-radius: var(--radius-pill);
+  font-family: var(--font-body); font-weight: 400; font-size: var(--text-base);
+  line-height: 1.2; letter-spacing: -0.005em;
+  cursor: pointer; text-decoration: none;
+  background: var(--accent); color: var(--accent-on);
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              transform var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+.btn-pill:hover { background: var(--accent-hover); text-decoration: none; }
+.btn-pill:active { background: var(--accent-active); transform: scale(0.98); }
+.btn-pill:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.btn-pill-secondary {
+  background: transparent; color: var(--accent-ink);
+  box-shadow: var(--elev-ring);
+}
+.band-black .btn-pill-secondary { color: var(--accent-bright); box-shadow: 0 0 0 1px var(--border); }
+.btn-pill-secondary:hover { background: var(--surface); color: var(--accent-ink-hover); }
+.btn-pill-secondary:active { color: var(--accent-ink-active); transform: scale(0.98); }
+
+/* ─── Formulários ─── */
+.form-grid { display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.field label { font-size: var(--text-sm); font-weight: 500; color: var(--fg); letter-spacing: -0.016em; display: block; }
+.field-req { color: var(--danger-ink); font-weight: 600; }
+.input {
+  width: 100%; min-height: 44px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body); font-size: var(--text-base); line-height: 1.2;
+  letter-spacing: -0.022em;
+  outline: none;
+  transition: border-color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+.input::placeholder { color: var(--muted); }
+.input:hover { border-color: var(--meta); }
+.input:focus-visible { border-color: var(--accent-ink); box-shadow: var(--focus-ring); outline: none; }
+.input[disabled] { background: var(--surface); color: var(--muted); cursor: not-allowed; }
+.input[aria-invalid="true"] { border-color: var(--danger); }
+.field-help { font-size: var(--text-xs); color: var(--muted); line-height: 1.4; }
+.field-error {
+  display: none; font-size: var(--text-xs); color: var(--danger-ink);
+  align-items: center; gap: 6px; line-height: 1.4;
+}
+.field-error.is-visible { display: flex; }
+.search-wrap { position: relative; }
+.search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.search-wrap .input { padding-left: 40px; }
+
+.switch-row { display: flex; align-items: center; gap: var(--space-3); min-height: 44px; }
+.switch {
+  position: relative; width: 48px; height: 28px; flex: none;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-pill); cursor: pointer; padding: 0;
+  transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard);
+}
+.switch::after {
+  content: ""; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--border);
+  transition: transform var(--motion-base) var(--ease-standard);
+}
+.switch[aria-checked="true"] { background: var(--accent); border-color: var(--accent-on); }
+.switch[aria-checked="true"]::after { transform: translateX(20px); border-color: transparent; background: var(--accent-on); }
+.switch-label { font-size: var(--text-sm); }
+
+/* ─── Chips ─── */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 0 var(--space-3);
+  font-size: var(--text-sm); font-weight: 500;
+  background: var(--bg); color: var(--fg);
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  cursor: pointer; white-space: nowrap;
+  transition: background-color var(--motion-fast) var(--ease-standard),
+              border-color var(--motion-fast) var(--ease-standard),
+              color var(--motion-fast) var(--ease-standard),
+              box-shadow var(--motion-fast) var(--ease-standard);
+}
+.chip:hover { background: var(--surface); border-color: var(--meta); }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chip-static { cursor: default; }
+.chip-static:hover { background: var(--bg); border-color: var(--border); }
+.chip-glass { background: var(--glass-fill); border-color: var(--glass-border); }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .chip-glass {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 var(--glass-edge);
+  }
+}
+.chip-glass:hover { background: var(--glass-fill-strong); }
+.chip-glass[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+
+/* ─── Badges ─── */
+.badge {
+  display: inline-flex; align-items: center; gap: var(--space-2);
+  padding: 4px var(--space-3);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body); font-size: var(--text-xs); font-weight: 500;
+  line-height: 1.4; letter-spacing: -0.01em; white-space: nowrap;
+}
+.badge-success { color: var(--success-ink); background: color-mix(in oklab, var(--success), transparent 90%); }
+.badge-muted { color: var(--muted); background: color-mix(in oklab, var(--muted), transparent 88%); }
+.badge-warn { color: var(--warn-ink); background: color-mix(in oklab, var(--warn), transparent 88%); }
+.badge-up { color: var(--danger-ink); background: color-mix(in oklab, var(--danger), transparent 90%); }
+.badge-down { color: var(--success-ink); background: color-mix(in oklab, var(--success), transparent 90%); }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+
+/* ─── Abas ─── */
+.tablist { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--border); overflow-x: auto; }
+.tab {
+  min-height: 44px; padding: 0 var(--space-4);
+  background: none; border: 0; border-bottom: 2px solid transparent;
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: 600;
+  color: var(--muted); cursor: pointer; white-space: nowrap;
+  transition: color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard);
+}
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent-ink); }
+.tabpanel { padding-top: var(--space-4); font-size: var(--text-sm); color: var(--fg-2); }
+.tabpanel[hidden] { display: none; }
+[hidden] { display: none !important; }
+
+/* ─── Cartões ─── */
+.card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-3);
+  transition: box-shadow var(--motion-base) var(--ease-standard);
+}
+.card:hover { box-shadow: var(--elev-raised); }
+.panel {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: var(--space-5);
+}
+.panel-title { font-family: var(--font-display); font-size: var(--text-base); font-weight: 600; margin-bottom: var(--space-3); }
+
+.demo-block {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: var(--space-6);
+}
+.demo-block + .demo-block { margin-top: var(--space-4); }
+.demo-label {
+  font-size: var(--text-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: var(--space-4);
+}
+.demo-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+
+/* ─── Cores (swatches) ─── */
+.swatch-group + .swatch-group { margin-top: var(--space-8); }
+.swatch-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.swatch { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.swatch-chip { height: 68px; display: flex; align-items: flex-end; padding: var(--space-2); }
+.swatch-chip span {
+  font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 500;
+  background: var(--bg); color: var(--fg);
+  padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+}
+.swatch-body { padding: var(--space-3); display: grid; gap: 2px; }
+.swatch-name { font-size: var(--text-sm); font-weight: 600; }
+.swatch-use { font-size: var(--text-xs); color: var(--muted); line-height: 1.4; }
+
+/* ─── Tipografia demo ─── */
+.type-scale { display: grid; gap: var(--space-4); }
+.type-row {
+  display: grid; grid-template-columns: 140px 1fr; gap: var(--space-4);
+  align-items: baseline; padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-soft);
+}
+.type-row:last-child { border-bottom: 0; }
+.type-label { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); }
+.type-sample { min-width: 0; overflow-wrap: anywhere; }
+.ts-4xl { font-family: var(--font-display); font-size: var(--text-4xl); font-weight: 600; line-height: var(--leading-tight); letter-spacing: var(--tracking-display); }
+.ts-3xl { font-family: var(--font-display); font-size: var(--text-3xl); font-weight: 600; letter-spacing: var(--tracking-display); }
+.ts-2xl { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 600; letter-spacing: var(--tracking-display); }
+.ts-xl  { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 600; }
+.ts-lg  { font-size: var(--text-lg); }
+.ts-base { font-size: var(--text-base); }
+.ts-sm  { font-size: var(--text-sm); color: var(--muted); }
+.ts-xs  { font-size: var(--text-xs); color: var(--muted); }
+
+/* ─── Espaçamento / raios / elevação ─── */
+.space-list { display: grid; gap: var(--space-3); }
+.space-item { display: grid; grid-template-columns: 110px 1fr; gap: var(--space-4); align-items: center; }
+.space-label { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); }
+.space-bar { height: 14px; background: var(--fg); border-radius: 3px; }
+.shape-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); margin-top: var(--space-8); }
+.shape-card { background: var(--bg); border: 1px solid var(--border); padding: var(--space-4); display: grid; gap: var(--space-2); border-radius: var(--radius-md); }
+.shape-box { height: 52px; background: var(--surface); border: 1px solid var(--border); }
+.shape-card .label { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); }
+.shadow-1 { border-radius: var(--radius-md); box-shadow: var(--elev-raised); border: 1px solid var(--border-soft); }
+.ring-1 { border-radius: var(--radius-md); box-shadow: var(--elev-ring); }
+
+/* ─── Ícones ─── */
+.icon-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+.icon-cell {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: var(--space-3); display: grid; justify-items: center; gap: var(--space-2);
+  font-size: var(--text-xs); color: var(--muted); text-align: center;
+}
+.icon-cell svg { color: var(--fg); }
+
+/* ─── Movimento ─── */
+.motion-row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: stretch; }
+.motion-box {
+  flex: 1 1 210px; min-height: 96px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+  display: grid; place-items: center; gap: var(--space-1);
+  font-size: var(--text-sm); color: var(--muted); text-align: center; padding: var(--space-3);
+}
+.motion-box strong { color: var(--fg); font-family: var(--font-display); font-size: var(--text-base); }
+@keyframes pulse-demo { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+.is-pulsing { animation: pulse-demo 900ms var(--ease-standard) infinite; }
+
+/* ─── Vidro: showcase ─── */
+.glass-grid { display: grid; gap: var(--space-5); grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: var(--space-8); }
+.glass-demo {
+  border-radius: var(--radius-lg); padding: var(--space-6);
+  display: flex; flex-direction: column; gap: var(--space-4);
+  min-height: 220px;
+}
+.glass-demo h4 { font-family: var(--font-display); font-size: var(--text-base); font-weight: 600; margin: 0; }
+.glass-demo .cap { font-size: var(--text-xs); color: var(--muted); line-height: 1.5; }
+.glass-stage {
+  background: var(--surface-warm);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  display: grid; gap: var(--space-4);
+}
+.segmented {
+  display: inline-flex; gap: 2px; padding: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .segmented {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 var(--glass-edge);
+  }
+}
+.segmented button {
+  min-height: 36px; padding: 0 var(--space-4);
+  border: 0; border-radius: var(--radius-pill);
+  background: transparent; color: var(--fg);
+  font-family: var(--font-body); font-size: var(--text-sm); font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease-standard);
+}
+.segmented button:hover { background: color-mix(in oklab, var(--fg), transparent 90%); }
+.segmented button[aria-pressed="true"] { background: var(--bg); box-shadow: var(--elev-ring); color: var(--fg); }
+
+/* ─── Produtos ─── */
+.product-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.product-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  display: grid; grid-template-rows: auto 1fr;
+  transition: box-shadow var(--motion-base) var(--ease-standard);
+}
+@media (hover: hover) { .product-card:hover { box-shadow: var(--elev-raised); } }
+.media-ph {
+  --od-ratio: 16 / 10;
+  background: var(--surface);
+  display: grid; place-content: center; justify-items: center; gap: 6px;
+  color: var(--muted); border-bottom: 1px solid var(--border-soft);
+}
+.media-ph span { font-size: var(--text-xs); }
+.product-body { padding: var(--space-5); display: grid; gap: var(--space-3); align-content: start; }
+.product-name { font-family: var(--font-display); font-size: var(--text-base); font-weight: 600; line-height: 1.2; }
+.product-store { font-size: var(--text-xs); color: var(--muted); display: block; }
+.price-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-2); }
+.price { font-family: var(--font-display); font-weight: 600; font-size: var(--text-xl); color: var(--fg); }
+.price-old { font-size: var(--text-sm); color: var(--muted); text-decoration: line-through; }
+.tag {
+  font-size: var(--text-xs); font-weight: 500;
+  background: var(--surface); color: var(--muted);
+  padding: 3px 8px; border-radius: var(--radius-sm);
+}
+
+/* ─── Tabela ─── */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); }
+table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); min-width: 560px; }
+caption { text-align: left; padding: var(--space-3) var(--space-4); color: var(--muted); font-size: var(--text-xs); }
+th, td { padding: var(--space-3) var(--space-4); text-align: left; border-top: 1px solid var(--border-soft); }
+th { font-weight: 600; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ─── Alertas ─── */
+.alert {
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-4); border-radius: var(--radius-md);
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: var(--text-sm); color: var(--fg);
+}
+.alert + .alert { margin-top: var(--space-3); }
+.alert-title { font-weight: 600; display: block; margin-bottom: 2px; }
+.alert-icon { flex: none; margin-top: 2px; }
+.alert-success { background: color-mix(in oklab, var(--success), transparent 92%); border-color: color-mix(in oklab, var(--success), transparent 55%); }
+.alert-success .alert-icon { color: var(--success-ink); }
+.alert-warning { background: color-mix(in oklab, var(--warn), transparent 90%); border-color: color-mix(in oklab, var(--warn), transparent 55%); }
+.alert-warning .alert-icon { color: var(--warn-ink); }
+.alert-error { background: color-mix(in oklab, var(--danger), transparent 92%); border-color: color-mix(in oklab, var(--danger), transparent 55%); }
+.alert-error .alert-icon { color: var(--danger-ink); }
+.alert-info { background: var(--surface); }
+.alert-info .alert-icon { color: var(--fg-2); }
+
+/* ─── Toast de vidro ─── */
+.toast-area { position: fixed; right: var(--space-4); bottom: var(--space-4); z-index: 70; display: grid; gap: var(--space-2); }
+.toast {
+  display: flex; align-items: center; gap: var(--space-3);
+  color: var(--fg); border-radius: var(--radius-pill);
+  padding: var(--space-3) var(--space-4); font-size: var(--text-sm);
+  max-width: 360px;
+  background: var(--glass-solid);
+  border: 1px solid var(--border);
+  box-shadow: var(--elev-raised);
+  animation: toast-in var(--motion-base) var(--ease-standard);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .toast {
+    background: var(--glass-fill-strong);
+    border-color: var(--glass-border);
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--elev-raised);
+  }
+}
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.toast.is-leaving { opacity: 0; transform: translateY(8px); transition: opacity var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard); }
+.toast .icon-btn { min-width: 32px; min-height: 32px; border: 0; }
+
+/* ─── Diálogo (folha de vidro) ─── */
+dialog {
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  background: var(--glass-solid);
+  color: var(--fg);
+  padding: var(--space-6);
+  max-width: 440px; width: calc(100% - 32px);
+  box-shadow: var(--elev-raised);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  dialog {
+    background: var(--glass-fill-strong);
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 var(--glass-edge), var(--elev-raised);
+  }
+}
+dialog::backdrop { background: color-mix(in oklab, var(--chapter), transparent 45%); }
+.dialog-title { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+.dialog-body { font-size: var(--text-sm); color: var(--fg-2); margin-bottom: var(--space-6); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+
+/* ─── Esqueleto ─── */
+.skeleton-list { display: grid; gap: var(--space-3); }
+.skeleton-row {
+  display: flex; gap: var(--space-3); align-items: center;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: var(--space-3);
+}
+.sk-block { background: var(--surface); border-radius: var(--radius-sm); animation: pulse-demo 1200ms ease-in-out infinite; }
+.sk-thumb { width: 56px; height: 42px; flex: none; }
+.sk-line { height: 12px; display: block; }
+
+/* ─── Dashboard demo ─── */
+.demo-shell {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: var(--elev-raised);
+}
+.demo-shell .od-screen { height: clamp(580px, 80vh, 780px); }
+.shell-bar {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in oklab, var(--bg), transparent 18%);
+  border-bottom: 1px solid var(--border-soft);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .shell-bar {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 -1px 0 var(--glass-edge);
+  }
+}
+.shell-title { font-family: var(--font-display); font-weight: 600; font-size: var(--text-base); }
+.shell-body { padding: var(--space-5); background: var(--surface); display: grid; gap: var(--space-4); }
+.greeting h3 { font-size: var(--text-xl); }
+.greeting p { font-size: var(--text-sm); color: var(--fg-2); }
+.stat-strip { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+.stat-card {
+  border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+  background: var(--glass-fill);
+  border: 1px solid var(--glass-border);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .stat-card {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 var(--glass-edge);
+  }
+}
+.stat-card .od-stat .stat-num { font-family: var(--font-display); font-weight: 600; font-size: var(--text-2xl); line-height: 1.1; }
+.stat-card .od-stat .stat-cap { font-size: var(--text-xs); color: var(--muted); }
+.mini-list { display: grid; gap: var(--space-2); }
+.mini-item {
+  display: flex; gap: var(--space-3); align-items: center;
+  padding: var(--space-2) 0; border-bottom: 1px solid var(--border-soft);
+}
+.mini-item:last-child { border-bottom: 0; }
+.mini-icon {
+  width: 36px; height: 36px; flex: none; border-radius: 50%;
+  background: var(--surface); display: grid; place-items: center; color: var(--fg-2);
+  border: 1px solid var(--border-soft);
+}
+.mini-text { flex: 1 1 0; min-width: 0; }
+.mini-text .t1 { font-size: var(--text-sm); font-weight: 500; display: block; }
+.mini-text .t2 { font-size: var(--text-xs); color: var(--muted); display: block; }
+.chart-caption { font-size: var(--text-xs); color: var(--muted); margin-top: var(--space-2); }
+.chart-legend { display: flex; gap: var(--space-4); font-size: var(--text-xs); color: var(--muted); margin-bottom: var(--space-2); flex-wrap: wrap; }
+.legend-key { display: inline-flex; align-items: center; gap: 6px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-ink); flex: none; }
+.demo-two-col { display: grid; gap: var(--space-4); grid-template-columns: 1fr; }
+@media (min-width: 900px) { .demo-two-col { grid-template-columns: 3fr 2fr; } }
+.shell-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-soft);
+  background: color-mix(in oklab, var(--bg), transparent 18%);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .shell-foot {
+    -webkit-backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    backdrop-filter: saturate(var(--glass-saturate)) blur(var(--glass-blur));
+    box-shadow: inset 0 1px 0 var(--glass-edge);
+  }
+}
+.stagger > * { animation: row-in var(--motion-base) var(--ease-standard) both; animation-delay: calc(var(--i, 0) * 40ms); }
+@keyframes row-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ─── Hero ─── */
+.hero { padding-block: var(--section-y-desktop); }
+.hero-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--space-12); align-items: end; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-block-start: var(--space-6); }
+.hero-meta {
+  display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-5); border-radius: var(--radius-lg);
+}
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.hero-stats { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-top: var(--space-12); }
+.hero-stats .od-stat .stat-num { font-family: var(--font-display); font-weight: 600; font-size: var(--text-2xl); line-height: 1.1; }
+.hero-stats .od-stat .stat-cap { font-size: var(--text-sm); color: var(--muted); }
+@media (max-width: 1023px) {
+  .hero-grid { grid-template-columns: 1fr; gap: var(--space-8); align-items: start; }
+}
+
+/* ─── Rodapé ─── */
+.site-footer { padding-block: var(--space-8); }
+.footer-grid { display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.footer-grid h3 { font-size: var(--text-base); margin-bottom: var(--space-1); }
+.footer-grid p { font-size: var(--text-sm); color: var(--muted); }
+
+.demo-note {
+  margin-top: var(--space-4); font-size: var(--text-xs); color: var(--muted);
+  display: flex; gap: 6px; align-items: flex-start; line-height: 1.5;
+}
+.section-head { max-width: 720px; margin-bottom: var(--space-8); display: grid; gap: var(--space-3); }
+.sub-head { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+
+/* ─── Responsivo ─── */
+@media (max-width: 639px) {
+  h1 { font-size: var(--text-2xl); }
+  h2 { font-size: var(--text-xl); }
+  .type-row { grid-template-columns: 1fr; gap: var(--space-1); }
+  .space-item { grid-template-columns: 90px 1fr; }
+  .brand-sub { display: none; }
+  .toast-area { left: var(--space-4); right: var(--space-4); }
+  .toast { max-width: none; }
+  .hero-stats { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 479px) {
+  .demo-shell { border-radius: var(--radius-md); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#topo">
+      <span class="brand-badge" aria-hidden="true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>
+      </span>
+      <span class="od-stack" style="--od-gap:0px">
+        <span class="brand-name">BestPrice</span>
+        <span class="brand-sub">Design System</span>
+      </span>
+    </a>
+    <span class="od-spacer od-fill" aria-hidden="true">espacador</span>
+    <button class="icon-btn od-touch" id="theme-toggle" type="button" aria-pressed="false">
+      <svg id="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      <svg id="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <span class="sr-only" id="theme-toggle-label">Alternar para modo escuro</span>
+    </button>
+  </div>
+  <nav class="header-nav" aria-label="Seções do design system">
+    <div class="od-rail">
+      <a class="nav-link" href="#topo">Visão geral</a>
+      <a class="nav-link" href="#fundamentos">Fundamentos</a>
+      <a class="nav-link" href="#componentes">Componentes</a>
+      <a class="nav-link" href="#vidro">Liquid Glass</a>
+      <a class="nav-link" href="#dashboard">Dashboard</a>
+    </div>
+  </nav>
+</header>
+
+<main id="conteudo">
+
+  <!-- ================= HERO (capítulo preto) ================= -->
+  <section class="hero band-black" id="topo">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="stack-4">
+          <p class="eyebrow">BestPrice · Monitoramento inteligente de preços</p>
+          <h1>Preços sob controle, com a calma de uma vitrine.</h1>
+          <p class="lead" style="max-width: 52ch; color: var(--fg-2)">
+            Design system do BestPrice na linguagem Apple: tríade neutra, SF Pro,
+            cápsulas de ação e uma camada Liquid Glass para o chrome do dashboard de
+            monitoramento de produtos, preços e disponibilidade.
+          </p>
+          <div class="hero-actions">
+            <a href="#vidro" class="btn-pill">
+              Ver o Liquid Glass
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+            <a href="#fundamentos" class="btn-pill btn-pill-secondary">Ler os tokens</a>
+          </div>
+        </div>
+
+        <aside class="hero-meta glass" aria-label="Status do sistema">
+          <div class="row-between">
+            <span class="body-sm">Estado do sistema</span>
+            <span class="badge badge-success"><span class="badge-dot" aria-hidden="true"></span>Estável</span>
+          </div>
+          <p class="body-sm" style="color: var(--muted)">Versão 2.0 · revisado em <time datetime="2026-10-06">06/10/2026</time></p>
+          <p class="body-sm" style="color: var(--muted)">Pressione <kbd>Tab</kbd> para percorrer os controles.</p>
+        </aside>
+      </div>
+
+      <div class="hero-stats">
+        <div class="od-stat"><span class="stat-num">64</span><span class="stat-cap">Tokens no sistema</span></div>
+        <div class="od-stat"><span class="stat-num">6</span><span class="stat-cap">Componentes de vidro ao vivo</span></div>
+        <div class="od-stat"><span class="stat-num">2</span><span class="stat-cap">Modos auditados de forma independente</span></div>
+        <div class="od-stat"><span class="stat-num">980</span><span class="stat-cap">Raio da cápsula de ação</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FUNDAMENTOS ================= -->
+  <section class="section band-soft" id="fundamentos">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Fundamentos</p>
+        <h2>Neutros, verde neon e rosa, em preto e branco, com tipografia SF Pro.</h2>
+        <p class="lead body-muted">A base vem do <code>tokens.css</code> da Apple (neutros e tipografia), com a extensão de vidro — e o acento trocado para verde neon e rosa. Componentes consomem apenas <code>var(--*)</code> — recolore trocando o bloco de token.</p>
+      </div>
+
+      <div class="swatch-group">
+        <h3 class="sub-head">Superfícies e tinta</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-chip" style="background: var(--chapter)"><span>#000000</span></div><div class="swatch-body"><span class="swatch-name">Capítulo preto</span><span class="swatch-use">Heroes cinematográficos e rodapé (Absolute Black)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--surface)"><span>#f5f5f7</span></div><div class="swatch-body"><span class="swatch-name">Cinza pálido</span><span class="swatch-use">Faixas de recurso e transições editoriais</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--surface-warm)"><span>#fbfbfd</span></div><div class="swatch-body"><span class="swatch-name">Quase branco</span><span class="swatch-use">Ponte entre hero e faixa pálida</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--bg)"><span>#ffffff</span></div><div class="swatch-body"><span class="swatch-name">Branco varejo</span><span class="swatch-use">Telas densas e cartões de produto</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--fg)"><span>#1d1d1f</span></div><div class="swatch-body"><span class="swatch-name">Tinta quase preta</span><span class="swatch-use">Texto principal no claro (Near-Black Ink)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--fg-2)"><span>#424245</span></div><div class="swatch-body"><span class="swatch-name">Cinza utilitário</span><span class="swatch-use">Texto secundário em todas as faixas claras</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--muted)"><span>#6e6e73</span></div><div class="swatch-body"><span class="swatch-name">Cinza neutro</span><span class="swatch-use">Apoio em fundos brancos (4,8:1)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--border)"><span>#d2d2d7</span></div><div class="swatch-body"><span class="swatch-name">Borda suave</span><span class="swatch-use">Divisórias e contornos de cartão</span></div></div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <h3 class="sub-head">Acento e semânticos</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-chip" style="background: var(--accent)"><span>#39ff14</span></div><div class="swatch-body"><span class="swatch-name">Verde Neon</span><span class="swatch-use">Ação primária, switch ligado e cápsulas — rótulo preto (15,5:1)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--accent-ink)"><span>#c7005e</span></div><div class="swatch-body"><span class="swatch-name">Rosa tinta</span><span class="swatch-use">Links, foco, seleção e eyebrows (5,85:1 no branco)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--accent-bright)"><span>#ff3ea5</span></div><div class="swatch-body"><span class="swatch-name">Rosa neon</span><span class="swatch-use">Capítulos pretos e modo escuro (6,48:1 sobre preto)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--success)"><span>#16a34a</span></div><div class="swatch-body"><span class="swatch-name">Sucesso</span><span class="swatch-use">Queda de preço e confirmações (texto via --success-ink)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--warn)"><span>#eab308</span></div><div class="swatch-body"><span class="swatch-name">Aviso</span><span class="swatch-use">Estoque e avisos (texto via --warn-ink)</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--danger)"><span>#dc2626</span></div><div class="swatch-body"><span class="swatch-name">Perigo</span><span class="swatch-use">Aumento de preço, erros e ações destrutivas</span></div></div>
+        </div>
+      </div>
+
+      <div class="swatch-group">
+        <h3 class="sub-head">Capítulo preto e Graphite (modo escuro)</h3>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-chip" style="background: var(--graphite-a)"><span>#272729</span></div><div class="swatch-body"><span class="swatch-name">Graphite A</span><span class="swatch-use">Superfície escura principal</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--graphite-b)"><span>#262629</span></div><div class="swatch-body"><span class="swatch-name">Graphite B</span><span class="swatch-use">Camada utilitária mais funda</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--graphite-c)"><span>#28282b</span></div><div class="swatch-body"><span class="swatch-name">Graphite C</span><span class="swatch-use">Apoio elevado</span></div></div>
+          <div class="swatch"><div class="swatch-chip" style="background: var(--graphite-d)"><span>#2a2a2c</span></div><div class="swatch-body"><span class="swatch-name">Graphite D</span><span class="swatch-use">Passo mais escuro de separação</span></div></div>
+        </div>
+        <p class="demo-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:3px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>O modo escuro é auditado de forma independente: tinta vira <code>#f5f5f7</code>, acento vira <code>#39ff14</code> com rótulo preto (15,5:1) e a tinta de links vira <code>#ff3ea5</code> (6,48:1 sobre preto).</p>
+      </div>
+
+      <!-- Tipografia -->
+      <div style="margin-top: var(--space-12)">
+        <h3 class="sub-head">Tipografia — SF Pro</h3>
+        <p class="lead body-muted measure" style="margin-bottom: var(--space-6)">SF Pro Display nos títulos com tracking comprimido (−0,015em), SF Pro Text no corpo a 17px e entrelinha 1,47. Hierarquia por tamanho e peso — nunca por uma terceira fonte.</p>
+        <div class="type-scale">
+          <div class="type-row"><span class="type-label">56 / hero</span><span class="type-sample ts-3xl">Queda confirmada</span></div>
+          <div class="type-row"><span class="type-label">40 / seção</span><span class="type-sample ts-2xl">Histórico de preços</span></div>
+          <div class="type-row"><span class="type-label">28 / cartão</span><span class="type-sample ts-xl">Produtos monitorados</span></div>
+          <div class="type-row"><span class="type-label">21 / link-ação</span><span class="type-sample ts-lg">Ver todas as quedas de hoje</span></div>
+          <div class="type-row"><span class="type-label">17 / corpo</span><span class="type-sample ts-base measure">A BestPrice verifica o preço e a disponibilidade do produto todos os dias e avisa você no momento certo para comprar.</span></div>
+          <div class="type-row"><span class="type-label">14 / controle</span><span class="type-sample ts-sm">Última verificação há 12 minutos</span></div>
+          <div class="type-row"><span class="type-label">12 / micro</span><span class="type-sample ts-xs">Dado de demonstração</span></div>
+        </div>
+      </div>
+
+      <!-- Espaçamento -->
+      <div style="margin-top: var(--space-12)">
+        <h3 class="sub-head">Espaçamento e ritmo de seção</h3>
+        <div class="space-list">
+          <div class="space-item"><span class="space-label">4 / 8</span><span class="space-bar" style="width: 8px"></span></div>
+          <div class="space-item"><span class="space-label">12 / 16</span><span class="space-bar" style="width: 16px"></span></div>
+          <div class="space-item"><span class="space-label">24</span><span class="space-bar" style="width: 24px"></span></div>
+          <div class="space-item"><span class="space-label">32</span><span class="space-bar" style="width: 32px"></span></div>
+          <div class="space-item"><span class="space-label">48</span><span class="space-bar" style="width: 48px"></span></div>
+          <div class="space-item"><span class="space-label">seção 100/64/40</span><span class="space-bar" style="width: 100px"></span></div>
+        </div>
+
+        <div class="shape-grid">
+          <div class="shape-card"><div class="shape-box" style="border-radius: 8px"></div><span class="label">--radius-sm · 8px · campos</span></div>
+          <div class="shape-card"><div class="shape-box" style="border-radius: 12px"></div><span class="label">--radius-md · 12px · botões</span></div>
+          <div class="shape-card"><div class="shape-box" style="border-radius: 18px"></div><span class="label">--radius-lg · 18px · cartões</span></div>
+          <div class="shape-card"><div class="shape-box" style="border-radius: 980px"></div><span class="label">--radius-pill · 980px · cápsula</span></div>
+          <div class="shape-card"><div class="shape-box ring-1"></div><span class="label">--elev-ring · contenção</span></div>
+          <div class="shape-card"><div class="shape-box shadow-1"></div><span class="label">--elev-raised · elevação</span></div>
+        </div>
+      </div>
+
+      <!-- Ícones -->
+      <div style="margin-top: var(--space-12)">
+        <h3 class="sub-head">Ícones — Lucide, contorno, stroke 1.75</h3>
+        <div class="icon-grid">
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>Queda</div>
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>Alerta</div>
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Buscar</div>
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>Monitorar</div>
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Confirmado</div>
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Erro</div>
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>Loja</div>
+          <div class="icon-cell"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>Navegar</div>
+        </div>
+      </div>
+
+      <!-- Movimento -->
+      <div style="margin-top: var(--space-12)">
+        <h3 class="sub-head">Movimento — desacelera e assenta, nunca quica</h3>
+        <div class="motion-row">
+          <div class="motion-box"><strong>150 ms</strong>micro-estados: hover, foco, pressão</div>
+          <div class="motion-box"><strong>220 ms</strong>base do sistema: entradas e elevação</div>
+          <div class="motion-box"><strong>400 ms</strong>teto para transições maiores</div>
+          <div class="motion-box">
+            <button class="btn btn-secondary btn-sm" type="button" id="motion-demo-btn">Demonstrar pulso</button>
+            <span id="motion-demo-state">Estado ocioso</span>
+          </div>
+        </div>
+        <p class="demo-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:3px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Curva do sistema: <code>cubic-bezier(0.28, 0, 0.22, 1)</code>. Com <em>prefers-reduced-motion</em>, animações e transições são desligadas e o layout permanece íntegro.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPONENTES ================= -->
+  <section class="section band-light" id="componentes">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Componentes</p>
+        <h2>Cápsulas, campos e controles ao vivo.</h2>
+        <p class="lead body-muted">A linguagem de ação é a cápsula de 980px nas superfícies de marketing e o botão compacto de 8px no varejo. Tudo responde a clique, teclado e foco.</p>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Botões</p>
+        <div class="demo-row">
+          <button class="btn-pill" type="button" data-toast="Alerta de preço criado para o produto monitorado.">Criar alerta</button>
+          <button class="btn-pill btn-pill-secondary" type="button" data-toast="Histórico de preços carregado (demonstração).">Ver histórico</button>
+        </div>
+        <div class="demo-row" style="margin-top: var(--space-4)">
+          <button class="btn btn-primary" type="button" data-toast="Produto adicionado ao monitoramento.">Monitorar</button>
+          <button class="btn btn-secondary" type="button" data-toast="Comparação aberta (demonstração).">Comparar</button>
+          <button class="btn btn-ghost" type="button" data-toast="Produto removido da lista.">Remover</button>
+          <button class="btn btn-danger" type="button" id="delete-btn">Excluir alerta</button>
+          <button class="btn btn-secondary" type="button" disabled>Indisponível</button>
+          <button class="btn btn-secondary btn-sm" type="button" data-toast="Ação em tamanho compacto.">Compacto</button>
+        </div>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Formulários</p>
+        <div class="form-grid">
+          <div class="field">
+            <label for="demo-email">E-mail para alertas <span class="field-req" aria-hidden="true">*</span></label>
+            <input class="input" id="demo-email" type="email" placeholder="nome@exemplo.com" required aria-describedby="demo-email-help demo-email-error">
+            <p class="field-help" id="demo-email-help">Só usamos o endereço para avisar sobre quedas de preço.</p>
+            <p class="field-error" id="demo-email-error" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>Informe um e-mail válido, como nome@exemplo.com.</span>
+            </p>
+          </div>
+          <div class="field">
+            <label for="demo-price">Preço desejado (R$) <span class="field-req" aria-hidden="true">*</span></label>
+            <input class="input" id="demo-price" type="text" inputmode="decimal" placeholder="199,90" required aria-describedby="demo-price-help demo-price-error">
+            <p class="field-help" id="demo-price-help">Avisamos quando o produto chegar a esse valor.</p>
+            <p class="field-error" id="demo-price-error" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>Use apenas números, separando os centavos com vírgula.</span>
+            </p>
+          </div>
+          <div class="field">
+            <label for="demo-store">Loja monitorada</label>
+            <select class="input" id="demo-store">
+              <option>Amazon</option>
+              <option>Mercado Livre</option>
+              <option>Magalu</option>
+            </select>
+            <p class="field-help">A arquitetura inicial acompanha a Amazon; novas lojas entram pelo modelo Store.</p>
+          </div>
+          <div class="field">
+            <label for="demo-disabled">Chave de monitoramento</label>
+            <input class="input" id="demo-disabled" type="text" value="auto-monitorar" disabled aria-describedby="demo-disabled-help">
+            <p class="field-help" id="demo-disabled-help">Gerada pelo sistema, editável apenas pela API.</p>
+          </div>
+        </div>
+        <div class="switch-row" style="margin-top: var(--space-4)">
+          <button class="switch" id="demo-switch" type="button" role="switch" aria-checked="true" aria-labelledby="demo-switch-label"></button>
+          <span class="switch-label" id="demo-switch-label">Notificações de queda de preço</span>
+        </div>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Filtros — chips de vidro</p>
+        <div class="od-rail" style="--od-rail-pad: 0px; padding-inline: 0; gap: var(--space-2)" role="group" aria-label="Filtrar produtos">
+          <button class="chip chip-glass" type="button" aria-pressed="true">Todos</button>
+          <button class="chip chip-glass" type="button" aria-pressed="false">Em queda</button>
+          <button class="chip chip-glass" type="button" aria-pressed="false">Estável</button>
+          <button class="chip chip-glass" type="button" aria-pressed="false">Em alta</button>
+          <button class="chip chip-glass" type="button" aria-pressed="false">Sem estoque</button>
+          <button class="chip chip-glass" type="button" aria-pressed="false">Com alerta</button>
+        </div>
+        <div class="od-cluster" style="margin-top: var(--space-4)">
+          <span class="chip chip-static">Amazon</span>
+          <span class="chip chip-static">R$ 100–300</span>
+          <span class="chip chip-static">30 dias</span>
+        </div>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Badges de variação — cor sempre com texto e ícone</p>
+        <div class="od-cluster">
+          <span class="badge badge-down"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>12% menor</span>
+          <span class="badge badge-up"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate(180deg)"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>8% maior</span>
+          <span class="badge badge-muted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg>Sem variação</span>
+          <span class="badge badge-warn"><span class="badge-dot" aria-hidden="true"></span>Fora de estoque</span>
+          <span class="badge badge-success"><span class="badge-dot" aria-hidden="true"></span>Alerta ativo</span>
+        </div>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Abas</p>
+        <div class="tablist" role="tablist" aria-label="Visões do monitoramento">
+          <button class="tab" type="button" role="tab" id="tab-1" aria-selected="true" aria-controls="panel-1">Monitorando</button>
+          <button class="tab" type="button" role="tab" id="tab-2" aria-selected="false" aria-controls="panel-2" tabindex="-1">Alertas</button>
+          <button class="tab" type="button" role="tab" id="tab-3" aria-selected="false" aria-controls="panel-3" tabindex="-1">Histórico</button>
+        </div>
+        <div class="tabpanel" id="panel-1" role="tabpanel" aria-labelledby="tab-1">24 produtos sob monitoramento. A verificação roda por agendamento e registra cada variação no histórico.</div>
+        <div class="tabpanel" id="panel-2" role="tabpanel" aria-labelledby="tab-2" hidden>3 alertas ativos. Quando o preço desejado é atingido, o aviso sai imediatamente.</div>
+        <div class="tabpanel" id="panel-3" role="tabpanel" aria-labelledby="tab-3" hidden>Histórico de preços e disponibilidade de cada produto, pronto para gráfico e comparação.</div>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Cartões de produto — conteúdo de demonstração</p>
+        <div class="product-grid">
+          <article class="product-card od-tile">
+            <div class="od-media media-ph">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span>Imagem do produto</span>
+            </div>
+            <div class="product-body">
+              <div class="od-stack" style="--od-gap: 2px">
+                <h4 class="product-name">Echo Dot (5ª geração)</h4>
+                <span class="product-store">Amazon · monitorado há 18 dias</span>
+              </div>
+              <div class="od-cluster" style="--od-gap: 6px"><span class="tag">Assistente</span><span class="tag">Áudio</span><span class="tag">Casa</span></div>
+              <div class="price-line">
+                <span class="price od-nowrap">R$ 219,90</span>
+                <span class="badge badge-down"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>14% menor</span>
+              </div>
+              <span class="price-old od-nowrap">Antes R$ 254,90</span>
+              <div><button class="btn btn-secondary btn-sm" type="button" data-toast="Abrindo o histórico de preços do produto.">Ver histórico</button></div>
+            </div>
+          </article>
+
+          <article class="product-card od-tile">
+            <div class="od-media media-ph">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span>Imagem do produto</span>
+            </div>
+            <div class="product-body">
+              <div class="od-stack" style="--od-gap: 2px">
+                <h4 class="product-name">Kindle Paperwhite 16 GB</h4>
+                <span class="product-store">Amazon · monitorado há 7 dias</span>
+              </div>
+              <div class="od-cluster" style="--od-gap: 6px"><span class="tag">Leitura</span><span class="tag">Eletrônico</span></div>
+              <div class="price-line">
+                <span class="price od-nowrap">R$ 499,00</span>
+                <span class="badge badge-muted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg>Sem variação</span>
+              </div>
+              <span class="price-old od-nowrap">Antes R$ 499,00</span>
+              <div><button class="btn btn-secondary btn-sm" type="button" data-toast="Abrindo o histórico de preços do produto.">Ver histórico</button></div>
+            </div>
+          </article>
+
+          <article class="product-card od-tile">
+            <div class="od-media media-ph">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              <span>Imagem do produto</span>
+            </div>
+            <div class="product-body">
+              <div class="od-stack" style="--od-gap: 2px">
+                <h4 class="product-name">JBL Flip 6</h4>
+                <span class="product-store">Amazon · monitorado há 32 dias</span>
+              </div>
+              <div class="od-cluster" style="--od-gap: 6px"><span class="tag">Som</span><span class="tag">Bluetooth</span><span class="tag">Portátil</span></div>
+              <div class="price-line">
+                <span class="price od-nowrap">R$ 549,90</span>
+                <span class="badge badge-up"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate(180deg)"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>5% maior</span>
+              </div>
+              <span class="price-old od-nowrap">Antes R$ 521,00</span>
+              <div><button class="btn btn-secondary btn-sm" type="button" data-toast="Abrindo o histórico de preços do produto.">Ver histórico</button></div>
+            </div>
+          </article>
+        </div>
+        <p class="demo-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:3px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Nomes de produto são exemplos conhecidos; preços e variações são dados de demonstração, não cotações reais da Amazon. Imagens são placeholders desenhados — em produção entra a foto real do item.</p>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Tabela — histórico de preços</p>
+        <div class="table-wrap">
+          <table>
+            <caption>Histórico de exemplo — dados de demonstração, não leituras reais da loja.</caption>
+            <thead>
+              <tr><th scope="col">Data</th><th scope="col">Preço</th><th scope="col">Variação</th><th scope="col">Disponibilidade</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num">06/10/2026</td>
+                <td class="num">R$ 219,90</td>
+                <td class="num"><span class="badge badge-down"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>R$ 35,00 a menos</span></td>
+                <td>Em estoque</td>
+              </tr>
+              <tr>
+                <td class="num">29/09/2026</td>
+                <td class="num">R$ 254,90</td>
+                <td class="num"><span class="badge badge-muted"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg>Sem variação</span></td>
+                <td>Em estoque</td>
+              </tr>
+              <tr>
+                <td class="num">22/09/2026</td>
+                <td class="num">R$ 269,00</td>
+                <td class="num"><span class="badge badge-up"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate(180deg)"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>R$ 14,10 a mais</span></td>
+                <td><span class="badge badge-warn">Últimas unidades</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LIQUID GLASS (capítulo preto) ================= -->
+  <section class="section band-black" id="vidro">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Liquid Glass</p>
+        <h2>Vidro com foco, saturação e borda de luz.</h2>
+        <p class="lead" style="color: var(--fg-2)">Cada peça é um <code>.glass</code> real: fundo translúcido por token, <code>backdrop-filter</code> com saturação 180%, fio de luz no topo e contorno por tinta a 16%. Sem suporte à propriedade, o vidro cai para uma superfície sólida legível.</p>
+      </div>
+
+      <div class="glass-grid">
+        <div class="glass-demo glass">
+          <h4>Cartão de vidro</h4>
+          <div class="glass-stage">
+            <div class="od-stat"><span class="stat-num" style="font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 600; color: var(--fg)">R$ 219,90</span><span class="stat-cap" style="font-size: var(--text-xs); color: var(--muted); display: block">Echo Dot · menor preço em 30 dias</span></div>
+            <div class="od-cluster" style="--od-gap: 8px">
+              <button class="btn btn-primary btn-sm" type="button" data-toast="Alerta salvo para R$ 199,90.">Criar alerta</button>
+              <button class="btn btn-secondary btn-sm" type="button" data-toast="Histórico aberto (demonstração).">Detalhes</button>
+            </div>
+          </div>
+          <p class="cap">.glass + .od-stat · chrome de leitura rápida sobre qualquer capítulo.</p>
+        </div>
+
+        <div class="glass-demo glass">
+          <h4>Toolbar segmentada</h4>
+          <div class="glass-stage">
+            <div class="segmented" role="group" aria-label="Período do gráfico">
+              <button type="button" aria-pressed="true">7 dias</button>
+              <button type="button" aria-pressed="false">30 dias</button>
+              <button type="button" aria-pressed="false">1 ano</button>
+            </div>
+            <p class="body-sm" style="color: var(--fg-2)">Seleção ativa vira superfície sólida dentro do pote de vidro — o verde neon fica reservado à ação e o rosa a foco e seleção.</p>
+          </div>
+          <p class="cap">.segmented · controle de seleção com alvo de 44px.</p>
+        </div>
+
+        <div class="glass-demo glass">
+          <h4>Busca de vidro</h4>
+          <div class="glass-stage">
+            <div class="search-wrap">
+              <label class="sr-only" for="glass-search">Buscar produto monitorado</label>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input class="input" id="glass-search" type="search" placeholder="Buscar produto" style="background: var(--glass-fill); border-color: var(--glass-border)">
+            </div>
+            <div class="od-cluster" style="--od-gap: 8px">
+              <button class="chip chip-glass" type="button" aria-pressed="true">Em queda</button>
+              <button class="chip chip-glass" type="button" aria-pressed="false">Com alerta</button>
+            </div>
+          </div>
+          <p class="cap">.search-wrap + .chip-glass · campo e filtros herdam o mesmo vidro.</p>
+        </div>
+
+        <div class="glass-demo glass">
+          <h4>Stat tiles</h4>
+          <div class="glass-stage">
+            <div class="stat-strip">
+              <div class="stat-card"><div class="od-stat"><span class="stat-num" style="color: var(--fg)">24</span><span class="stat-cap">monitorados</span></div></div>
+              <div class="stat-card"><div class="od-stat"><span class="stat-num" style="color: var(--fg)">5</span><span class="stat-cap">quedas hoje</span></div></div>
+            </div>
+            <p class="body-sm" style="color: var(--fg-2)">Números do dashboard em vidro — o painel de fundo decide o quanto o vidro aparece.</p>
+          </div>
+          <p class="cap">.stat-card · usados no dashboard abaixo.</p>
+        </div>
+
+        <div class="glass-demo glass">
+          <h4>Aviso em flutuação</h4>
+          <div class="glass-stage">
+            <div class="od-cluster" style="--od-gap: 8px">
+              <button class="btn btn-secondary btn-sm" type="button" data-toast="Preço alvo salvo. Avisaremos quando chegar a R$ 199,90.">Mostrar toast</button>
+              <button class="btn btn-danger btn-sm" type="button" id="delete-btn-3">Excluir alerta</button>
+            </div>
+            <p class="body-sm" style="color: var(--fg-2)">O toast é uma cápsula de vidro; a exclusão abre a folha de vidro de confirmação.</p>
+          </div>
+          <p class="cap">.toast e dialog · superfícies transitórias sempre têm fechamento.</p>
+        </div>
+
+        <div class="glass-demo glass">
+          <h4>Transparência em camadas</h4>
+          <div class="glass-stage">
+            <div class="glass" style="padding: var(--space-4); border-radius: var(--radius-md)">
+              <div class="glass" style="padding: var(--space-4); border-radius: var(--radius-sm)">
+                <p class="body-sm" style="color: var(--fg)">Vidro sobre vidro: cada camada soma 8% de tinta e 24px de desfoque.</p>
+              </div>
+            </div>
+            <p class="body-sm" style="color: var(--muted)">Camadas empilhadas continuam legíveis porque a tinta do texto é sólida.</p>
+          </div>
+          <p class="cap">Tokens: --glass-fill, --glass-blur, --glass-edge, --glass-border.</p>
+        </div>
+      </div>
+
+      <p class="demo-note" style="color: var(--muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:3px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Sem <code>backdrop-filter</code>, o vidro vira superfície sólida (<code>--glass-solid</code>) sem perda de contraste. O texto sobre vidro nunca depende do desfoque para ser lido.</p>
+    </div>
+  </section>
+
+  <!-- ================= FEEDBACK ================= -->
+  <section class="section band-warm" id="feedback">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Feedback</p>
+        <h2>Sucesso, aviso, erro e confirmação.</h2>
+        <p class="lead body-muted">Cada estado com mensagem própria, ícone e caminho de fechamento — nenhum status comunicado só por cor.</p>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Alertas em contexto</p>
+        <div class="alert alert-success">
+          <span class="alert-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span><strong class="alert-title">Alerta ativado</strong>Você será avisado quando o produto chegar a R$ 199,90.</span>
+        </div>
+        <div class="alert alert-warning">
+          <span class="alert-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span>
+          <span><strong class="alert-title">Produto fora de estoque</strong>A verificação continua ativa e avisaremos quando voltar.</span>
+        </div>
+        <div class="alert alert-error">
+          <span class="alert-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span>
+          <span><strong class="alert-title">Falha na última verificação</strong>Não foi possível ler a página da loja. Tente novamente em alguns minutos.</span>
+        </div>
+        <div class="alert alert-info">
+          <span class="alert-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>
+          <span><strong class="alert-title">Próxima verificação em 12 minutos</strong>O agendamento roda em segundo plano, sem ação da sua parte.</span>
+        </div>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Toast e carregamento</p>
+        <div class="demo-row">
+          <button class="btn btn-primary" type="button" data-toast="Preço alvo salvo. Avisaremos quando o produto chegar a R$ 199,90.">Mostrar toast</button>
+          <button class="btn btn-secondary" type="button" id="skeleton-btn">Recarregar lista</button>
+        </div>
+        <div class="skeleton-list" id="skeleton-demo" style="margin-top: var(--space-4)" aria-live="polite" aria-busy="false">
+          <div class="skeleton-row" data-skeleton hidden>
+            <span class="sk-block sk-thumb"></span>
+            <span class="od-stack od-fill" style="--od-gap: 6px">
+              <span class="sk-block sk-line" style="width: 60%"></span>
+              <span class="sk-block sk-line" style="width: 35%"></span>
+            </span>
+          </div>
+          <div class="skeleton-row" data-content>
+            <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg></span>
+            <span class="mini-text"><span class="t1 od-truncate">Echo Dot (5ª geração)</span><span class="t2">Verificado há 12 minutos</span></span>
+            <span class="badge badge-down od-fixed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>14% menor</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-block">
+        <p class="demo-label">Confirmação destrutiva (folha de vidro)</p>
+        <div class="demo-row">
+          <button class="btn btn-danger" type="button" id="delete-btn-2">Excluir alerta</button>
+          <span class="field-help">Ações destrutivas sempre pedem confirmação explícita.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DASHBOARD ================= -->
+  <section class="section band-light" id="dashboard">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">Composição</p>
+        <h2>Dashboard BestPrice com chrome de vidro.</h2>
+        <p class="lead body-muted">Barras de vidro no topo e na base, stat tiles translúcidos, conteúdo rolável no meio — os mesmos componentes das seções acima.</p>
+      </div>
+
+      <div class="demo-shell">
+        <div class="od-screen">
+          <header class="shell-bar">
+            <span class="brand-badge" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>
+            </span>
+            <span class="shell-title">Dashboard</span>
+            <div class="segmented od-fixed" role="group" aria-label="Visão do dashboard">
+              <button type="button" aria-pressed="true">Preços</button>
+              <button type="button" aria-pressed="false">Alertas</button>
+            </div>
+            <span class="od-spacer od-fill" aria-hidden="true">espacador</span>
+            <span class="search-wrap od-fixed" style="width: min(240px, 40vw)">
+              <label class="sr-only" for="shell-search">Buscar produto monitorado</label>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input class="input" id="shell-search" type="search" placeholder="Buscar produto" style="background: color-mix(in oklab, var(--bg), transparent 25%); border-color: var(--border)">
+            </span>
+            <button class="icon-btn od-touch" type="button" data-toast="Você tem 3 alertas ativos.">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+              <span class="sr-only">Ver alertas</span>
+            </button>
+          </header>
+
+          <div class="od-scroll">
+            <div class="shell-body">
+              <div class="greeting od-stack" style="--od-gap: 4px">
+                <h3>Olá, Marina</h3>
+                <p>5 produtos tiveram queda de preço nas últimas 24 horas.</p>
+              </div>
+
+              <div class="stat-strip">
+                <div class="stat-card"><div class="od-stat"><span class="stat-num">24</span><span class="stat-cap">Produtos monitorados</span></div></div>
+                <div class="stat-card"><div class="od-stat"><span class="stat-num">5</span><span class="stat-cap">Quedas hoje</span></div></div>
+                <div class="stat-card"><div class="od-stat"><span class="stat-num">3</span><span class="stat-cap">Alertas ativos</span></div></div>
+                <div class="stat-card"><div class="od-stat"><span class="stat-num">2</span><span class="stat-cap">Fora de estoque</span></div></div>
+              </div>
+
+              <div class="od-rail" style="--od-rail-pad: 0px; padding-inline: 0" role="group" aria-label="Filtrar lista do dashboard">
+                <button class="chip chip-glass" type="button" aria-pressed="true">Todos</button>
+                <button class="chip chip-glass" type="button" aria-pressed="false">Em queda</button>
+                <button class="chip chip-glass" type="button" aria-pressed="false">Com alerta</button>
+                <button class="chip chip-glass" type="button" aria-pressed="false">Sem estoque</button>
+                <button class="chip chip-glass" type="button" aria-pressed="false">7 dias</button>
+              </div>
+
+              <div class="demo-two-col">
+                <div class="panel">
+                  <p class="panel-title">Maiores quedas</p>
+                  <div class="mini-list stagger" id="dash-list">
+                    <div class="mini-item" style="--i: 0">
+                      <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>
+                      <span class="mini-text"><span class="t1 od-truncate">Echo Dot (5ª geração)</span><span class="t2 od-nowrap">R$ 219,90 · há 12 min</span></span>
+                      <span class="badge badge-down od-fixed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>14%</span>
+                    </div>
+                    <div class="mini-item" style="--i: 1">
+                      <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>
+                      <span class="mini-text"><span class="t1 od-truncate">Kindle Paperwhite 16 GB</span><span class="t2 od-nowrap">R$ 499,00 · há 40 min</span></span>
+                      <span class="badge badge-down od-fixed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>9%</span>
+                    </div>
+                    <div class="mini-item" style="--i: 2">
+                      <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>
+                      <span class="mini-text"><span class="t1 od-truncate">JBL Flip 6</span><span class="t2 od-nowrap">R$ 549,90 · ontem</span></span>
+                      <span class="badge badge-up od-fixed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform: rotate(180deg)"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>5%</span>
+                    </div>
+                    <div class="mini-item" style="--i: 3">
+                      <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></span>
+                      <span class="mini-text"><span class="t1 od-truncate">Teclado mecânico Keychron K8</span><span class="t2 od-nowrap">R$ 389,00 · há 2 h</span></span>
+                      <span class="badge badge-down od-fixed"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 17h6v-6"/><path d="m22 17-8.5-8.5-5 5L2 7"/></svg>7%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="panel">
+                  <p class="panel-title">Preço — últimos 30 dias</p>
+                  <div class="chart-legend">
+                    <span class="legend-key"><span class="legend-dot" aria-hidden="true"></span>Preço observado</span>
+                    <span class="legend-key">Meta: R$ 199,90</span>
+                  </div>
+                  <svg viewBox="0 0 320 130" width="100%" height="auto" role="img" aria-label="Gráfico de linha: o preço caiu de cerca de R$ 269 no início do período para R$ 219,90 hoje, com pequena oscilação no meio. Dado de demonstração." style="display: block">
+                    <line x1="0" y1="104" x2="320" y2="104" stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>
+                    <text x="4" y="118" fill="var(--muted)" font-size="10" font-family="SF Pro Text, sans-serif">meta R$ 199,90</text>
+                    <polyline points="8,28 44,34 80,30 116,48 152,44 188,62 224,58 260,80 296,92" fill="none" stroke="var(--accent-ink)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="296" cy="92" r="4.5" fill="var(--accent-ink)"/>
+                    <circle cx="296" cy="92" r="9" fill="var(--accent-ink)" opacity="0.2"/>
+                  </svg>
+                  <p class="chart-caption">De R$ 269,00 para R$ 219,90 em 30 dias — queda de 18% (dado de demonstração).</p>
+                </div>
+              </div>
+
+              <div class="panel">
+                <p class="panel-title">Alertas ativos</p>
+                <div class="mini-list">
+                  <div class="mini-item">
+                    <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+                    <span class="mini-text"><span class="t1 od-truncate">Echo Dot abaixo de R$ 199,90</span><span class="t2">E-mail e notificação no navegador</span></span>
+                    <span class="badge badge-success od-fixed">Ativo</span>
+                  </div>
+                  <div class="mini-item">
+                    <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+                    <span class="mini-text"><span class="t1 od-truncate">Kindle Paperwhite abaixo de R$ 449,00</span><span class="t2">Somente e-mail</span></span>
+                    <span class="badge badge-success od-fixed">Ativo</span>
+                  </div>
+                  <div class="mini-item">
+                    <span class="mini-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg></span>
+                    <span class="mini-text"><span class="t1 od-truncate">JBL Flip 6 volta ao estoque</span><span class="t2">Produto fora de estoque agora</span></span>
+                    <span class="badge badge-warn od-fixed">Pausado</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer class="shell-foot">
+            <span class="field-help" style="margin: 0">BestPrice · dados de demonstração</span>
+            <button class="btn-pill" type="button" style="padding: 8px 18px; font-size: var(--text-sm)" data-toast="Novo produto adicionado ao monitoramento.">Monitorar produto</button>
+          </footer>
+        </div>
+      </div>
+
+      <p class="demo-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:3px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>Todos os números desta tela são exemplos de demonstração. A arquitetura prevista (agendamento, leitura da loja, cache, banco e dashboard) aparece aqui apenas como interface.</p>
+    </div>
+  </section>
+
+  <!-- ================= RODAPÉ ================= -->
+  <footer class="site-footer band-black">
+    <div class="container footer-grid">
+      <div>
+        <h3>Onde editar</h3>
+        <p>Tokens no bloco <code>:root</code> (Apple, verbatim), na extensão de vidro logo abaixo e em <code>:root[data-theme="dark"]</code>. Componentes só usam <code>var(--*)</code>.</p>
+      </div>
+      <div>
+        <h3>Acessibilidade</h3>
+        <p>Contraste ≥ 4,5:1 auditado nos dois modos, foco com anel Apple de 4px, alvos de 44px, status sempre com ícone ou texto e <em>prefers-reduced-motion</em> respeitado.</p>
+      </div>
+      <div>
+        <h3>Conteúdo</h3>
+        <p>Produtos citados são exemplos conhecidos; preços, variações e métricas são dados de demonstração, não leituras reais de lojas.</p>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<div class="toast-area" id="toast-area" role="status" aria-live="polite"></div>
+
+<dialog id="confirm-dialog" aria-labelledby="dialog-title">
+  <h2 class="dialog-title" id="dialog-title">Excluir este alerta?</h2>
+  <p class="dialog-body">O monitoramento do produto continua ativo, mas você deixará de receber avisos sobre o preço desejado. Esta ação pode ser desfeita criando um novo alerta.</p>
+  <div class="dialog-actions">
+    <button class="btn btn-secondary" type="button" id="dialog-cancel">Cancelar</button>
+    <button class="btn btn-danger" type="button" id="dialog-confirm">Excluir alerta</button>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  /* Tema claro/escuro */
+  var root = document.documentElement;
+  var toggle = document.getElementById("theme-toggle");
+  var toggleLabel = document.getElementById("theme-toggle-label");
+  var iconSun = document.getElementById("icon-sun");
+  var iconMoon = document.getElementById("icon-moon");
+  var stored = null;
+  try { stored = localStorage.getItem("bp-theme"); } catch (e) {}
+  var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  var theme = stored || (prefersDark ? "dark" : "light");
+
+  function applyTheme(next) {
+    theme = next;
+    root.setAttribute("data-theme", theme);
+    var dark = theme === "dark";
+    toggle.setAttribute("aria-pressed", dark ? "true" : "false");
+    toggleLabel.textContent = dark ? "Alternar para modo claro" : "Alternar para modo escuro";
+    iconSun.hidden = dark;
+    iconMoon.hidden = !dark;
+    try { localStorage.setItem("bp-theme", theme); } catch (e) {}
+  }
+  applyTheme(theme);
+  toggle.addEventListener("click", function () { applyTheme(theme === "dark" ? "light" : "dark"); });
+
+  /* Toast de vidro */
+  var toastArea = document.getElementById("toast-area");
+  function showToast(message) {
+    var el = document.createElement("div");
+    el.className = "toast";
+    var check = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    check.setAttribute("width", "18");
+    check.setAttribute("height", "18");
+    check.setAttribute("viewBox", "0 0 24 24");
+    check.setAttribute("fill", "none");
+    check.setAttribute("stroke", "currentColor");
+    check.setAttribute("stroke-width", "1.75");
+    check.setAttribute("stroke-linecap", "round");
+    check.setAttribute("stroke-linejoin", "round");
+    check.setAttribute("aria-hidden", "true");
+    check.setAttribute("style", "flex:none;color:var(--success-ink)");
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M20 6 9 17l-5-5");
+    check.appendChild(path);
+    el.appendChild(check);
+    var text = document.createElement("span");
+    text.textContent = message;
+    el.appendChild(text);
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "icon-btn";
+    close.setAttribute("aria-label", "Fechar aviso");
+    var x = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    x.setAttribute("width", "14");
+    x.setAttribute("height", "14");
+    x.setAttribute("viewBox", "0 0 24 24");
+    x.setAttribute("fill", "none");
+    x.setAttribute("stroke", "currentColor");
+    x.setAttribute("stroke-width", "1.75");
+    x.setAttribute("stroke-linecap", "round");
+    x.setAttribute("stroke-linejoin", "round");
+    x.setAttribute("aria-hidden", "true");
+    var xPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    xPath.setAttribute("d", "M18 6 6 18M6 6l12 12");
+    x.appendChild(xPath);
+    close.appendChild(x);
+    close.addEventListener("click", function () { remove(); });
+    el.appendChild(close);
+    toastArea.appendChild(el);
+    var timer = setTimeout(remove, 4200);
+    function remove() {
+      clearTimeout(timer);
+      el.classList.add("is-leaving");
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 200);
+    }
+  }
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("[data-toast]");
+    if (btn) showToast(btn.getAttribute("data-toast"));
+  });
+
+  /* Seleção única em cada grupo: chips, segmentados e filtros */
+  var GROUP_SELECTOR = ".od-rail, .segmented, .od-cluster, [role=\"group\"]";
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[aria-pressed]");
+    if (!btn || btn.id === "theme-toggle") return;
+    var group = btn.closest(GROUP_SELECTOR);
+    if (!group || !group.contains(btn)) return;
+    group.querySelectorAll("button[aria-pressed]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+    });
+  });
+
+  /* Switch */
+  var sw = document.getElementById("demo-switch");
+  sw.addEventListener("click", function () {
+    var on = sw.getAttribute("aria-checked") === "true";
+    sw.setAttribute("aria-checked", on ? "false" : "true");
+    showToast(on ? "Notificações pausadas." : "Notificações reativadas.");
+  });
+
+  /* Abas com navegação por setas */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll("[role=\"tab\"]"));
+  function selectTab(tab) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+  }
+  tabs.forEach(function (tab, i) {
+    tab.addEventListener("click", function () { selectTab(tab); });
+    tab.addEventListener("keydown", function (ev) {
+      var next = null;
+      if (ev.key === "ArrowRight") next = tabs[(i + 1) % tabs.length];
+      if (ev.key === "ArrowLeft") next = tabs[(i - 1 + tabs.length) % tabs.length];
+      if (ev.key === "Home") next = tabs[0];
+      if (ev.key === "End") next = tabs[tabs.length - 1];
+      if (next) { ev.preventDefault(); selectTab(next); next.focus(); }
+    });
+  });
+
+  /* Validação em blur */
+  function bindValidation(inputId, errorId, validate) {
+    var input = document.getElementById(inputId);
+    var error = document.getElementById(errorId);
+    function check() {
+      var ok = validate(input.value.trim());
+      error.classList.toggle("is-visible", !ok);
+      input.setAttribute("aria-invalid", ok ? "false" : "true");
+      return ok;
+    }
+    input.addEventListener("blur", check);
+    input.addEventListener("input", function () {
+      if (input.getAttribute("aria-invalid") === "true") check();
+    });
+  }
+  bindValidation("demo-email", "demo-email-error", function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); });
+  bindValidation("demo-price", "demo-price-error", function (v) { return /^\d{1,6}(,\d{1,2})?$/.test(v); });
+
+  /* Folha de vidro de confirmação */
+  var dialog = document.getElementById("confirm-dialog");
+  function openDialog() {
+    if (typeof dialog.showModal === "function") { dialog.showModal(); }
+    else { showToast("Confirmação indisponível neste navegador."); }
+  }
+  ["delete-btn", "delete-btn-2", "delete-btn-3"].forEach(function (id) {
+    var b = document.getElementById(id);
+    if (b) b.addEventListener("click", openDialog);
+  });
+  document.getElementById("dialog-cancel").addEventListener("click", function () { dialog.close(); });
+  document.getElementById("dialog-confirm").addEventListener("click", function () {
+    dialog.close();
+    showToast("Alerta excluído.");
+  });
+
+  /* Skeleton de carregamento */
+  var skeletonBtn = document.getElementById("skeleton-btn");
+  var skeletonWrap = document.getElementById("skeleton-demo");
+  skeletonBtn.addEventListener("click", function () {
+    var skels = skeletonWrap.querySelectorAll("[data-skeleton]");
+    var contents = skeletonWrap.querySelectorAll("[data-content]");
+    skeletonBtn.disabled = true;
+    skeletonWrap.setAttribute("aria-busy", "true");
+    skels.forEach(function (s) { s.hidden = false; });
+    contents.forEach(function (c) { c.hidden = true; });
+    setTimeout(function () {
+      skels.forEach(function (s) { s.hidden = true; });
+      contents.forEach(function (c) { c.hidden = false; });
+      skeletonWrap.setAttribute("aria-busy", "false");
+      skeletonBtn.disabled = false;
+      showToast("Lista atualizada.");
+    }, 1300);
+  });
+
+  /* Demonstração de movimento */
+  var motionBtn = document.getElementById("motion-demo-btn");
+  var motionState = document.getElementById("motion-demo-state");
+  motionBtn.addEventListener("click", function () {
+    motionState.classList.add("is-pulsing");
+    motionState.textContent = "Verificando preço…";
+    motionBtn.disabled = true;
+    setTimeout(function () {
+      motionState.classList.remove("is-pulsing");
+      motionState.textContent = "Verificação concluída";
+      motionBtn.disabled = false;
+    }, 1600);
+  });
+
+  /* Busca do dashboard filtra a lista */
+  var shellSearch = document.getElementById("shell-search");
+  var dashList = document.getElementById("dash-list");
+  if (shellSearch && dashList) {
+    shellSearch.addEventListener("input", function () {
+      var q = shellSearch.value.trim().toLowerCase();
+      dashList.querySelectorAll(".mini-item").forEach(function (item) {
+        item.hidden = q !== "" && item.textContent.toLowerCase().indexOf(q) === -1;
+      });
+    });
+  }
+
+  /* Scrollspy da navegação */
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll(".nav-link"));
+  var sections = navLinks.map(function (a) { return document.querySelector(a.getAttribute("href")); }).filter(Boolean);
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach(function (a) {
+          a.setAttribute("aria-current", a.getAttribute("href") === "#" + entry.target.id ? "true" : "false");
+        });
+      });
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    sections.forEach(function (s) { io.observe(s); });
+  }
+})();
+</script>
+</body>
+</html>
