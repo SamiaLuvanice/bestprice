@@ -12,5 +12,6 @@ Uma tarefa de spec só está pronta com:
 4. Testes de comportamento cobrem sucesso e erro principal.
 5. Revisão independente ou revisão documentada do diff com architecture.md.
 6. Fluxo local ponta a ponta conferido quando a mudança atravessa API, UI e banco.
+7. Para qualquer alteração de código, agente `doc-sync-onboarding` executado por último e documentação sincronizada; `AGENTS.md`, `CLAUDE.md` e `docs/` conferidos.
 
 Registre comandos e resultados reais. Item não executado é pendência explícita. Implementação entregue aguarda revisão até cumprir o handoff.

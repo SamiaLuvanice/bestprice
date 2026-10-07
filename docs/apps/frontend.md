@@ -4,6 +4,8 @@
 
 A interface é uma única página de status. Ela pergunta à API se a conexão com o banco funciona e mostra uma mensagem enquanto aguarda, quando dá certo e quando falha. Ela não envia comandos de negócio nem conversa diretamente com o banco.
 
+O fluxo pretendido de entrada por URL, dashboard e página com histórico está no [contexto do produto](../product-context.md). React Router e bibliotecas de componentes e gráficos ainda não estão incorporados; este guia descreve a interface atual.
+
 ## Responsabilidades e arquivos
 
 | Arquivo | Papel |

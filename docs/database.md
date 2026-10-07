@@ -2,7 +2,9 @@
 
 ## Visão geral
 
-Hoje, o banco funciona como uma tomada de teste: a API conecta e pergunta `SELECT 1` para confirmar que há resposta. Nenhum dado de produto é guardado pela aplicação. O container cria um banco PostgreSQL vazio e mantém seu diretório em um volume Docker.
+Hoje, a API executa `SELECT 1` para verificar a conexão. Nenhum dado de produto é guardado pela aplicação. O container cria um banco PostgreSQL vazio e mantém seu diretório em um volume Docker.
+
+O [modelo conceitual pretendido](product-context.md#modelo-conceitual-inicial) contempla usuários, produtos compartilhados, monitoramentos por usuário, históricos, alertas e notificações. SQLAlchemy e Alembic fazem parte da direção técnica, mas ainda não foram incorporados. A modelagem deverá definir identidade por ASIN e escopo de marketplace, unicidade dos vínculos, concorrência, dinheiro com moeda e instantes UTC antes de criar migrations. As seções abaixo descrevem somente o banco atual.
 
 ## Diagrama ER
 

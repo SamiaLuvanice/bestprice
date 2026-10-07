@@ -2,7 +2,7 @@
 
 ## Visão geral
 
-O backend é o balcão que responde se a aplicação está de pé. Quando recebe uma consulta de saúde, ele tenta falar com o PostgreSQL e devolve uma resposta simples para a interface. Hoje, ele não gerencia preços, contas ou qualquer outro dado de negócio.
+O backend verifica a conexão com o PostgreSQL e devolve o estado de saúde para a interface. Hoje, ele não gerencia preços, contas ou qualquer outro dado de negócio. A evolução para monitoramento via `AmazonProvider`, persistência e autenticação está descrita no [contexto do produto](../product-context.md).
 
 ## Responsabilidades e arquivos
 
