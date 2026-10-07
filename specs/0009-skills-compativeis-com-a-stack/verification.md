@@ -23,6 +23,8 @@ Revisão independente por `arch-reviewer` em 2026-10-07: sem achados bloqueantes
 
 PR [#25](https://github.com/SamiaLuvanice/bestprice/pull/25) aberta de `chore/issue-23-curar-skills` para `develop`, vinculada à Issue #23.
 
+O [CI remoto da PR #25](https://github.com/SamiaLuvanice/bestprice/actions/runs/37617098504) concluiu com sucesso no commit `ee211f8`: Backend, Frontend, Automation, PR policy e check agregador `CI` verdes. O workflow Project sync também concluiu com sucesso, sem auditoria do estado do board nesta verificação.
+
 ## Limites
 
-Não houve mudança de código da aplicação; lint, pytest, testes React e build não verificam o comportamento destas instruções e não foram executados localmente. O CI remoto, a aprovação de outra pessoa e a integração em `develop` ainda estão pendentes.
+Não houve mudança de código da aplicação; lint, pytest, testes React e build não verificam o comportamento destas instruções e não foram executados localmente. A aprovação de outra pessoa e a integração em `develop` ainda estão pendentes. Este registro de CI é do commit `ee211f8`; uma atualização documental posterior da branch requer novo check verde.
