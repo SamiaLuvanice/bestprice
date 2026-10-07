@@ -4,7 +4,7 @@ Sem segredos, tokens ou senhas.
 
 - Repositório: https://github.com/SamiaLuvanice/bestprice
 - Especificações: specs/
-- Decisões de arquitetura: docs/adr/ (as anteriores à spec 0007 são históricas)
+- Arquitetura atual: docs/architecture.md; decisões de cada mudança ficam em specs/.
 - Design/protótipo: designsystem/ local, se presente; não pressupor conteúdo versionado.
 - Issues: https://github.com/SamiaLuvanice/bestprice/issues
 - Actions: https://github.com/SamiaLuvanice/bestprice/actions

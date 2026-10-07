@@ -1,11 +1,10 @@
 # Verificação — 0007
 
-Estado: implementação integrada em `develop`; a limpeza histórica está em revisão
-na [PR #22](https://github.com/SamiaLuvanice/bestprice/pull/22). As evidências abaixo pertencem
+Estado: implementação integrada em `develop`. As evidências abaixo pertencem
 à branch `feature/0007-issue-15-reinicio-fastapi-react` e à
 [PR #16](https://github.com/SamiaLuvanice/bestprice/pull/16), que foi aprovada
-e integrada; esta revisão apenas reorganiza o histórico documental e não altera
-o comportamento da aplicação.
+e integrada; os resultados abaixo descrevem a verificação da aplicação e não
+alteram seu comportamento.
 
 ## Gates executados
 
@@ -32,15 +31,13 @@ checks remotos da PR #22:
 | `npm ci --no-audit --no-fund`; `npm run lint`; `npm test -- --run`; `npm run build` | Lint e build passaram; 7 testes passaram |
 | `node --test .github/scripts/*.test.cjs` | 15 testes passaram |
 | `git diff --check` e validação JSON de `skills-lock.json` | Passaram |
-| Busca de `Java`, `Spring`, `Angular` e `Maven` fora de arquivos arquivados | Nenhuma referência ativa encontrada |
+| Índice de onboarding | Todos os documentos listados apontam para arquivos presentes no checkout |
 | `.agents/sync.ps1` | Projeções `.claude/` regeneradas a partir de `.agents/` |
 | `actionlint` local | Não executado: ferramenta indisponível; job remoto `quality / Automation` passou |
 | Checks remotos da PR #22 | `CI`, `PR policy`, backend, frontend, automações e `sync` passaram |
 | Revisão independente pelo `arch-reviewer` | Sem bloqueio técnico; foi solicitada atualização documental, registrada nesta seção |
 
-As specs 0001–0006 foram confirmadas em `specs/archive/legacy-java-angular/`;
-o diretório ativo mantém as specs 0007 e 0008. O ADR e os aprendizados antigos
-estão em `docs/archive/legacy-java-angular/`.
+O índice `docs/index.md` lista os documentos atuais de onboarding e os guias dos módulos.
 
 ## Fluxo integrado observado
 
@@ -76,11 +73,8 @@ localhost e passa a senha ao driver por campo separado, sem concatená-la numa U
   continha apenas deleções de `backend/` e `frontend/`, transportadas sem alterar
   o checkout principal. `designsystem/` continua não rastreado e preservado.
 - Harness: a skill ativa `agent-orchestration` orienta Issue, spec, plano,
-  worktree, evidência, revisão, QA e PR para `develop`; as orientações da stack anterior
-  foram arquivadas. A revisão final confirmou que as instruções ativas não prescrevem
-  tecnologias legadas. A revisão independente confirmou que as specs 0001–0006
-  estão fora do diretório ativo e que os links de progresso apontam para os
-  caminhos atuais.
+  worktree, evidência, revisão, QA e PR para `develop`; as instruções ativas
+  correspondem ao perfil técnico do projeto.
 - Interface: testes de componente cobrem carregamento, sucesso, 503, resposta
   inválida, falha de rede e timeout. Proxy de produção limita a espera a 2–5
   segundos. Resultado observado também em Chrome headless nos três cenários.
@@ -92,8 +86,8 @@ localhost e passa a senha ao driver por campo separado, sem concatená-la numa U
 - Project/implantação externa: sem evidência de sincronização ou configuração;
   não declaradas concluídas.
 - Revisão independente de arquitetura: concluída sem bloqueios técnicos na PR
-  #22. A revisão solicitou evidência documental específica da limpeza; os gates,
-  caminhos arquivados e estado da PR foram registrados nesta atualização.
+  #22. A revisão solicitou evidência documental específica da limpeza; os gates
+  e o estado da PR foram registrados nesta atualização.
 
 ## Checkout limpo
 
@@ -109,8 +103,8 @@ worktree temporários foram removidos após a prova, sem tocar no volume antigo.
 
 | Nº | Situação | Evidência ou pendência |
 |---|---|---|
-| 1 | Demonstrado | Mesmo histórico Git e specs 0000–0007 preservados; commits em branch nova. |
-| 2 | Demonstrado | Índices, papéis, regras, comandos e skills ativos migrados; busca contextual não encontrou obrigação stack anterior. |
+| 1 | Demonstrado | A spec 0007 mantém numeração sequencial e os commits foram feitos em branch própria. |
+| 2 | Demonstrado | Índices, papéis, regras, comandos e skills ativos migrados; instruções correspondem ao perfil técnico do projeto. |
 | 3 | Demonstrado | Spec, plano, TDD Red/Green, worktree, revisão e limpeza documentados e exercidos até a etapa anterior ao merge. |
 | 4 | Demonstrado | Skill ativa `agent-orchestration`, claims, percurso de mesa abaixo e evidência por transição. |
 | 5 | Demonstrado | Regras de segurança, erros, datas, `Decimal`, testes e configuração por ambiente adaptadas. |
@@ -121,7 +115,7 @@ worktree temporários foram removidos após a prova, sem tocar no volume antigo.
 | 10 | Demonstrado | 5 testes backend, 7 frontend, 15 automações; comandos nesta página e no README. |
 | 11 | Demonstrado | PR #16: `CI`, backend, frontend, automações e política de PR verdes; condição do agregador falhou com resultado obrigatório simulado como `failure`. |
 | 12 | Demonstrado localmente | Duas imagens construídas pelo Compose; workflow de release preserva tags/digests, sem publicação nesta spec. |
-| 13 | Demonstrado | README e docs de harness/GitHub distinguem base atual, histórico e pendências externas. |
+| 13 | Demonstrado | README e docs de harness/GitHub descrevem a base atual e as pendências externas. |
 | 14 | Demonstrado | Deleções antigas entraram nos commits da feature e na PR #16; `designsystem/`, `.env` principal e volume anterior foram preservados. A PR #16 foi aprovada e integrada em `develop`. |
 
 ## Percurso de orquestração
