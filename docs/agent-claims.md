@@ -22,7 +22,7 @@ preservados. A revisão de código e o QA serão registrados após os gates.
 
 Skill `agent-orchestration` invocada pelo usuário para a spec 0006. Aplicação
 restrita à revisão independente, correções e QA do fluxo GitHub atual; sem
-reativar ferramentas ou convenções da stack arquivada.
+reativar ferramentas ou convenções desativadas.
 
 | Slot | Spec | Papel | Escopo | Estado |
 |---|---|---|---|---|

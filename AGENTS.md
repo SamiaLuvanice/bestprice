@@ -9,7 +9,7 @@ Toda configuração de agentes vive em .agents/, a fonte única de verdade (ver 
 - Fluxo: /spec → /plan → /implement (TDD para comportamento) → /verify
 - Orquestração de trabalho delegado: .agents/skills/agent-orchestration/SKILL.md
 - Após integrar em develop, aplique .agents/skills/task-cleanup/SKILL.md.
-- Orientações da stack antiga e integrações não ativas ficam em .agents/archive/.
+- Use apenas papéis, regras, skills e comandos listados no perfil ativo de .agents/.
 
 ## Regras sempre ativas
 

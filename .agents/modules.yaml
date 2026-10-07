@@ -35,6 +35,9 @@ profiles:
       - react-feature
       - api-contract
       - monorepo-navigation
+      - fastapi-templates
+      - frontend-design
+      - react-vite-performance
 integrations:
   github:
     documentation: docs/github-workflow.md

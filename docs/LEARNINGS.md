@@ -1,8 +1,18 @@
 # Aprendizados
 
-As decisões da stack ativa ficam em `.agents/`, `README.md` e nas specs
-`0007-reinicio-fastapi-react-postgresql` e `0008-project-sync-by-branch`.
-O histórico da aplicação anterior está em `docs/archive/legacy-java-angular/`.
+As decisões ativas ficam em `.agents/`, `README.md` e nas specs em `specs/`.
+
+## 2026-10-07 — Manter o índice alinhado aos documentos ativos
+
+**Contexto:** uma revisão encontrou links de onboarding para documentos que não
+fazem parte da documentação atual do projeto.
+
+**Princípio:** confira se cada destino existe no checkout e atualize o índice na
+mesma mudança que remove ou substitui um documento.
+
+**Anti-pattern:** deixar links para materiais retirados ou fora do escopo atual.
+
+**Referências:** `docs/index.md` e a revisão da documentação de onboarding.
 
 ## 2026-10-06 — Separar CI de automações com permissão de escrita
 
@@ -15,5 +25,5 @@ há evidência de execução real.
 
 Ao trocar a stack, a configuração ativa precisa apontar para FastAPI, React e
 PostgreSQL em todos os pontos: regras, skills, gates, documentação, Compose e
-workflows. Material anterior deve ser arquivado ou removido da navegação ativa,
-sem apagar evidências históricas necessárias para auditoria.
+workflows. As instruções e os links publicados devem corresponder aos arquivos
+e ferramentas que fazem parte do projeto naquele momento.

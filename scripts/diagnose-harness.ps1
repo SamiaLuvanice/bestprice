@@ -34,7 +34,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Não foi possível listar os arquivos do repos
 $files = foreach ($relative in $trackedAndNew) {
     if ($relative -match '(^|/)(archive|node_modules|\.venv|__pycache__|\.pytest_cache|pytest-cache-files-[^/]+)(/|$)') { continue }
     if ($relative -eq 'scripts/diagnose-harness.ps1') { continue }
-    if ($relative -match '^specs/000[0-6]-') { continue } # specs da aplicação anterior são históricas
     if ($relative -notmatch '(\.md|\.yaml|\.yml|\.py|\.ps1|\.sh|\.cjs|\.toml|\.json|\.tsx|\.ts|Dockerfile|\.env\.example)$') { continue }
     $candidate = Join-Path $Root $relative
     if (Test-Path -LiteralPath $candidate -PathType Leaf) { Get-Item -LiteralPath $candidate }
@@ -42,6 +41,7 @@ $files = foreach ($relative in $trackedAndNew) {
 
 foreach ($file in $files) {
     $content = Get-Content -LiteralPath $file.FullName -Raw
+    if ($null -eq $content) { continue }
     foreach ($value in $forbidden) {
         if ($content.Contains($value)) {
             $relative = $file.FullName.Substring($Root.Length + 1)
@@ -58,6 +58,7 @@ $secretPatterns = @(
 
 foreach ($file in $files) {
     $content = Get-Content -LiteralPath $file.FullName -Raw
+    if ($null -eq $content) { continue }
     foreach ($pattern in $secretPatterns) {
         if ($content -match $pattern) {
             $relative = $file.FullName.Substring($Root.Length + 1)
