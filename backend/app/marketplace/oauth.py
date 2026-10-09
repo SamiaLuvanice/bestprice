@@ -13,6 +13,11 @@ from app.products.models import OperatorCredential
 
 REFRESH_MARGIN = timedelta(minutes=5)
 TOKEN_URL = "https://api.mercadolibre.com/oauth/token"
+DEFAULT_RETRY_AFTER_SECONDS = 60
+# Failures raised before the request reached the server: the refresh token was not
+# consumed, so a later retry is safe. Anything else (read/write timeout, broken
+# response) is ambiguous because the server may already have rotated the token.
+NOT_SENT_ERRORS = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout, httpx.UnsupportedProtocol)
 
 
 def _cipher(key: bytes) -> Fernet:
@@ -88,14 +93,17 @@ class OperatorTokenManager:
                     "grant_type": "refresh_token", "client_id": self.client_id,
                     "client_secret": self.client_secret, "refresh_token": refresh_token,
                 })
+        except NOT_SENT_ERRORS as exc:
+            session.rollback()
+            raise IntegrationError("integration_unavailable") from exc
         except httpx.RequestError as exc:
             row.refresh_blocked = True
             session.commit()
             raise IntegrationError("integration_unavailable") from exc
         if response.status_code == 429:
             retry_after = response.headers.get("Retry-After", "")
-            seconds = int(retry_after) if retry_after.isdigit() else None
-            row.refresh_retry_after_at = self.clock() + timedelta(seconds=seconds or 60)
+            seconds = int(retry_after) if retry_after.isdigit() and int(retry_after) > 0 else DEFAULT_RETRY_AFTER_SECONDS
+            row.refresh_retry_after_at = self.clock() + timedelta(seconds=seconds)
             session.commit()
             raise IntegrationError("integration_rate_limited", seconds)
         if response.status_code != 200:

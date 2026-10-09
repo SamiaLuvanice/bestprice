@@ -12,7 +12,7 @@ from app.marketplace.client import IntegrationError, ListingData
 from app.marketplace.url import InvalidProductUrl, parse_product_url
 from app.monitoring.settings import load_monitoring_settings
 from app.products.alerts import alert_response, evaluate_alerts
-from app.products.locking import listing_lock
+from app.products.locking import ListingBusy, listing_lock
 from app.products.models import (
     PriceAlert,
     PriceHistory,
@@ -22,28 +22,114 @@ from app.products.models import (
 )
 from app.products.schemas import ProductResponse, TrackedProductResponse
 
+SOURCE_ERRORS: dict[str, tuple[int, str]] = {
+    "product_not_found": (404, "Anúncio não localizado no Mercado Livre."),
+    "integration_rate_limited": (
+        429, "O Mercado Livre atingiu o limite de consultas no momento. Tente novamente após o tempo indicado.",
+    ),
+    "integration_unavailable": (503, "O Mercado Livre não respondeu agora. Tente novamente em alguns minutos."),
+    "integration_auth_required": (
+        503, "A autorização do BestPrice com o Mercado Livre precisa ser renovada pela operação. Tente novamente mais tarde.",
+    ),
+    "integration_access_denied": (503, "O Mercado Livre não permitiu ao BestPrice consultar este anúncio."),
+    "integration_invalid_response": (
+        502, "O Mercado Livre devolveu dados incompletos ou inválidos para este anúncio. Tente novamente mais tarde.",
+    ),
+    "unsupported_price_context": (
+        502, "Não foi possível obter um preço único e comparável (uma unidade, em reais, no marketplace) para este anúncio.",
+    ),
+    "integration_not_configured": (
+        503, (
+            "O cadastro de novos anúncios está indisponível até a integração oficial com o Mercado Livre "
+            "ser autorizada. As atualizações também ficam suspensas até lá."
+        ),
+    ),
+}
+ATTEMPT_STATUSES = frozenset({
+    "rate_limited", "auth_required", "access_denied", "invalid_response", "unsupported_price_context",
+})
+MANUAL_COOLDOWN = timedelta(seconds=60)
+
 
 def provider_error(error: IntegrationError) -> ApiError:
-    status = {
-        "product_not_found": 404,
-        "integration_rate_limited": 429,
-        "integration_invalid_response": 502,
-        "unsupported_price_context": 502,
-    }.get(error.code, 503)
-    return ApiError(status, error.code, "Não conseguimos consultar este anúncio agora.", retry_after_seconds=error.retry_after_seconds)
+    """Translate a source failure into the contract code and a specific, safe message."""
+    code = error.code if error.code in SOURCE_ERRORS else "integration_unavailable"
+    status, message = SOURCE_ERRORS[code]
+    return ApiError(status, code, message, retry_after_seconds=error.retry_after_seconds)
+
+
+def _utc(value: datetime | None) -> datetime | None:
+    if value is not None and value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value
+
+
+def _seconds_until(moment: datetime, now: datetime) -> int:
+    return max(1, ceil((moment - now).total_seconds()))
+
+
+def ensure_source_due(product: Product, now: datetime) -> None:
+    """Refuse a source query blocked by Retry-After, failure backoff or the manual cooldown."""
+    retry_at = _utc(product.retry_after_at)
+    if retry_at is not None and retry_at > now:
+        raise ApiError(
+            429, "integration_rate_limited",
+            "O Mercado Livre pediu um intervalo entre consultas. Tente novamente após o tempo indicado.",
+            retry_after_seconds=_seconds_until(retry_at, now),
+        )
+    due = _utc(product.next_check_at)
+    if due is not None and due > now and (
+        product.lookup_status == "not_found" or product.last_attempt_status not in {"ok", "missing_price"}
+    ):
+        raise ApiError(429, "refresh_not_due", "Aguarde para atualizar novamente.", retry_after_seconds=_seconds_until(due, now))
+    attempted = _utc(product.last_attempt_at)
+    if attempted is not None and attempted + MANUAL_COOLDOWN > now:
+        raise ApiError(
+            429, "refresh_not_due", "Aguarde para atualizar novamente.",
+            retry_after_seconds=_seconds_until(attempted + MANUAL_COOLDOWN, now),
+        )
+
+
+def record_failed_attempt(product: Product, status: str, now: datetime, retry_after_seconds: int | None = None) -> None:
+    """Persist a failed attempt with exponential backoff and jitter, preserving last known data."""
+    product.last_attempt_at = now
+    product.last_attempt_status = status if status in ATTEMPT_STATUSES else "temporary_error"
+    product.failure_count += 1
+    delay = min(3600 * 2 ** (product.failure_count - 1) * uniform(0.8, 1.2), 86400)
+    if product.lookup_status == "not_found":
+        delay = max(delay, 86400)
+    if retry_after_seconds is not None:
+        delay = max(delay, retry_after_seconds)
+        product.retry_after_at = now + timedelta(seconds=retry_after_seconds)
+    product.next_check_at = now + timedelta(seconds=delay)
 
 
 def add_tracking(session: Session, user_id: UUID, url: str, source: object) -> tuple[TrackedProductResponse, bool]:
     try:
         parsed = parse_product_url(url)
     except InvalidProductUrl as exc:
-        raise ApiError(400, "invalid_url", "Insira um link válido de anúncio do Mercado Livre.") from exc
-    with listing_lock(session, parsed.external_id):
-        try:
-            return _add_tracking_locked(session, user_id, parsed.external_id, source)
-        except Exception:
-            session.rollback()
-            raise
+        raise ApiError(400, exc.code, exc.message) from exc
+    try:
+        with listing_lock(session, parsed.external_id):
+            try:
+                return _add_tracking_locked(session, user_id, parsed.external_id, source)
+            except Exception:
+                session.rollback()
+                raise
+    except ListingBusy:
+        # Lost the race on this listing: a person who already tracks it gets the contract 409.
+        session.rollback()
+        existing = session.scalar(
+            select(TrackedProduct).join(Product, TrackedProduct.product_id == Product.id).where(
+                Product.external_id == parsed.external_id,
+                TrackedProduct.user_id == user_id, TrackedProduct.active.is_(True),
+            )
+        )
+        if existing is not None:
+            raise ApiError(
+                409, "already_tracked", "Você já monitora este anúncio.", tracked_product_id=str(existing.id),
+            ) from None
+        raise
 
 
 def _add_tracking_locked(
@@ -63,6 +149,16 @@ def _add_tracking_locked(
             session.commit()
             return tracked_response(session, tracked, product, now), False
     if product is None or not _is_fresh(product, now):
+        if product is not None:
+            due = _utc(product.next_check_at)
+            if product.lookup_status == "not_found" and due is not None and due > now:
+                # Confirmed missing within the 24-hour window: known domain state, no new query.
+                status, message = SOURCE_ERRORS["product_not_found"]
+                raise ApiError(status, "product_not_found", message)
+            ensure_source_due(product, now)
+        # End the read transaction before the external call; the advisory lock still
+        # serializes writers of this listing.
+        session.commit()
         try:
             listing = source.get_listing(external_id)
         except IntegrationError as exc:
@@ -75,6 +171,8 @@ def _add_tracking_locked(
                 session.add(PriceHistory(product_id=product.id, price=listing.price, currency="BRL", captured_at=now))
         else:
             _update_product(session, product, listing, now)
+            product.failure_count = 0
+            product.retry_after_at = None
     tracked = TrackedProduct(user_id=user_id, product_id=product.id, active=True, active_since=now)
     session.add(tracked)
     session.commit()
@@ -142,7 +240,8 @@ def _update_product(session: Session, product: Product, listing: ListingData, no
 
 
 def refresh_tracking(
-    session: Session, user_id: UUID, tracking_id: UUID, source: object, *, now: datetime | None = None,
+    session: Session, user_id: UUID, tracking_id: UUID, source: object, *,
+    now: datetime | None = None, lock_wait_seconds: float | None = None,
 ) -> TrackedProductResponse:
     tracked = session.scalar(select(TrackedProduct).where(
         TrackedProduct.id == tracking_id, TrackedProduct.user_id == user_id,
@@ -152,35 +251,21 @@ def refresh_tracking(
     if not tracked.active:
         raise ApiError(409, "tracking_inactive", "Monitoramento interrompido.")
     product = session.get(Product, tracked.product_id)
-    with listing_lock(session, product.external_id):
+    with listing_lock(session, product.external_id, wait_seconds=lock_wait_seconds):
         now = now or datetime.now(UTC)
         session.refresh(product)
-        if product.next_check_at is not None and (
-            product.lookup_status == "not_found" or product.last_attempt_status not in {"ok", "missing_price"}
-        ):
-            due = product.next_check_at
-            if due.tzinfo is None:
-                due = due.replace(tzinfo=UTC)
-            if due > now:
-                raise ApiError(429, "refresh_not_due", "Aguarde para atualizar novamente.", retry_after_seconds=ceil((due - now).total_seconds()))
-        if product.last_attempt_at is not None:
-            attempted = product.last_attempt_at
-            if attempted.tzinfo is None:
-                attempted = attempted.replace(tzinfo=UTC)
-            cooldown = attempted + timedelta(seconds=60)
-            if cooldown > now:
-                raise ApiError(429, "refresh_not_due", "Aguarde para atualizar novamente.", retry_after_seconds=ceil((cooldown - now).total_seconds()))
-        if product.retry_after_at is not None:
-            retry_at = product.retry_after_at
-            if retry_at.tzinfo is None:
-                retry_at = retry_at.replace(tzinfo=UTC)
-            if retry_at > now:
-                raise ApiError(429, "integration_rate_limited", "Aguarde o limite da integração.", retry_after_seconds=ceil((retry_at - now).total_seconds()))
+        ensure_source_due(product, now)
+        # No transaction stays open while the external API is called.
+        session.commit()
         try:
             listing = source.get_listing(product.external_id)
         except IntegrationError as exc:
-            product.last_attempt_at = now
+            if exc.code == "integration_not_configured":
+                # The source was never called: there is no attempt to record or back off.
+                session.rollback()
+                raise provider_error(exc) from exc
             if exc.code == "product_not_found":
+                product.last_attempt_at = now
                 product.lookup_status = "not_found"
                 product.last_attempt_status = "not_found"
                 product.next_check_at = now + timedelta(hours=24)
@@ -188,18 +273,7 @@ def refresh_tracking(
                 product.retry_after_at = None
                 session.commit()
                 return tracked_response(session, tracked, product, now)
-            product.last_attempt_status = (
-                "temporary_error" if exc.code in {"integration_unavailable", "integration_not_configured"}
-                else exc.code.removeprefix("integration_")
-            )
-            product.failure_count += 1
-            delay = min(3600 * 2 ** (product.failure_count - 1) * uniform(0.8, 1.2), 86400)
-            if product.lookup_status == "not_found":
-                delay = max(delay, 86400)
-            if exc.retry_after_seconds is not None:
-                delay = max(delay, exc.retry_after_seconds)
-                product.retry_after_at = now + timedelta(seconds=exc.retry_after_seconds)
-            product.next_check_at = now + timedelta(seconds=delay)
+            record_failed_attempt(product, exc.code.removeprefix("integration_"), now, exc.retry_after_seconds)
             session.commit()
             raise provider_error(exc) from exc
         _update_product(session, product, listing, now)

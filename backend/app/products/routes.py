@@ -4,7 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.orm import Session
 
 from app.auth.routes import CurrentUser, SessionDep
@@ -25,10 +25,14 @@ from app.products.pagination import decode_cursor, encode_cursor
 from app.products.schemas import (
     AlertCreateRequest,
     AlertUpdateRequest,
+    DashboardResponse,
+    DashboardSummary,
     NotificationReadRequest,
     NotificationResponse,
     PriceAlertResponse,
     PriceHistoryEntry,
+    ProductEventResponse,
+    TrackedProductPage,
     TrackedProductResponse,
     TrackRequest,
 )
@@ -200,7 +204,7 @@ def create_alert(
     session.flush()
     product = session.get(Product, tracked.product_id)
     now = datetime.now(UTC)
-    evaluate_alerts(session, product, now)
+    evaluate_alerts(session, product, now, alert_id=alert.id)
     session.commit()
     return alert_response(alert, tracked, product, now)
 
@@ -247,7 +251,7 @@ def update_alert(
     product = session.get(Product, tracked.product_id)
     now = datetime.now(UTC)
     if target_changed or payload.enabled is True:
-        evaluate_alerts(session, product, now)
+        evaluate_alerts(session, product, now, alert_id=alert.id)
     session.commit()
     return alert_response(alert, tracked, product, now)
 
@@ -293,14 +297,15 @@ def mark_notification_read(
     notification_id: UUID, _payload: NotificationReadRequest,
     user: CurrentUser, session: SessionDep,
 ) -> NotificationResponse:
-    row = session.scalar(select(Notification).where(
-        Notification.id == notification_id, Notification.user_id == user.id,
-    ))
-    if row is None:
+    owned = (Notification.id == notification_id, Notification.user_id == user.id)
+    if session.scalar(select(Notification.id).where(*owned)) is None:
         raise ApiError(404, "resource_not_found", "Notificação não encontrada.")
-    if row.read_at is None:
-        row.read_at = datetime.now(UTC)
-        session.commit()
+    # Atomic conditional update: concurrent marks keep the first read_at.
+    session.execute(
+        update(Notification).where(*owned, Notification.read_at.is_(None)).values(read_at=datetime.now(UTC))
+    )
+    session.commit()
+    row = session.scalar(select(Notification).where(*owned).execution_options(populate_existing=True))
     return NotificationResponse(
         id=row.id, tracked_product_id=row.tracked_product_id,
         type=row.type, product_title=row.product_title,
@@ -310,15 +315,15 @@ def mark_notification_read(
     )
 
 
-@dashboard_router.get("/dashboard")
-def get_dashboard(user: CurrentUser, session: SessionDep) -> dict[str, object]:
+@dashboard_router.get("/dashboard", response_model=DashboardResponse)
+def get_dashboard(user: CurrentUser, session: SessionDep) -> DashboardResponse:
     now = datetime.now(UTC)
     tracked_rows = session.scalars(select(TrackedProduct).where(
         TrackedProduct.user_id == user.id, TrackedProduct.active.is_(True),
     ).order_by(TrackedProduct.active_since.desc(), TrackedProduct.id.desc())).all()
     products = {row.product_id: session.get(Product, row.product_id) for row in tracked_rows}
     cards = [tracked_response(session, row, products[row.product_id], now) for row in tracked_rows]
-    events: list[dict[str, object]] = []
+    events: list[ProductEventResponse] = []
     opportunities: list[tuple[TrackedProductResponse, datetime]] = []
     for tracked, card in zip(tracked_rows, cards, strict=True):
         product = products[tracked.product_id]
@@ -327,13 +332,13 @@ def get_dashboard(user: CurrentUser, session: SessionDep) -> dict[str, object]:
             ProductEvent.observed_at >= tracked.active_since,
         ).order_by(ProductEvent.observed_at.desc(), ProductEvent.id.desc()).limit(20)).all()
         for event in event_rows:
-            events.append({
-                "id": event.id, "tracked_product_id": tracked.id,
-                "type": event.type, "previous_value": event.previous_value,
-                "current_value": event.current_value,
-                "currency": "BRL" if event.type == "price_changed" else None,
-                "observed_at": event.observed_at,
-            })
+            events.append(ProductEventResponse(
+                id=event.id, tracked_product_id=tracked.id,
+                type=event.type, previous_value=event.previous_value,
+                current_value=event.current_value,
+                currency="BRL" if event.type == "price_changed" else None,
+                observed_at=event.observed_at,
+            ))
         changed_at = product.price_changed_at
         if changed_at is not None and changed_at.tzinfo is None:
             changed_at = changed_at.replace(tzinfo=UTC)
@@ -349,25 +354,25 @@ def get_dashboard(user: CurrentUser, session: SessionDep) -> dict[str, object]:
             and changed_at >= now - timedelta(hours=24)
         ):
             opportunities.append((card, changed_at))
-    events.sort(key=lambda event: (event["observed_at"], event["id"]), reverse=True)
+    events.sort(key=lambda event: (event.observed_at, str(event.id)), reverse=True)
     opportunities.sort(key=lambda entry: (
         entry[0].product.percentage_change,
         -entry[1].timestamp(),
         str(entry[0].product.id),
     ))
-    return {
-        "summary": {
-            "tracked_count": len(tracked_rows),
-            "price_drop_count": len(opportunities),
-            "active_alert_count": sum(card.alert is not None and card.alert.enabled for card in cards),
-            "target_reached_count": sum(
+    return DashboardResponse(
+        summary=DashboardSummary(
+            tracked_count=len(tracked_rows),
+            price_drop_count=len(opportunities),
+            active_alert_count=sum(card.alert is not None and card.alert.enabled for card in cards),
+            target_reached_count=sum(
                 card.alert is not None and card.alert.condition == "target_reached" for card in cards
             ),
-        },
-        "opportunities": [card for card, _changed_at in opportunities[:5]],
-        "tracked_products": {
-            "items": cards[:20],
-            "next_cursor": encode_cursor(tracked_rows[19].active_since, tracked_rows[19].id) if len(cards) > 20 else None,
-        },
-        "recent_updates": events[:20],
-    }
+        ),
+        opportunities=[card for card, _changed_at in opportunities[:5]],
+        tracked_products=TrackedProductPage(
+            items=cards[:20],
+            next_cursor=encode_cursor(tracked_rows[19].active_since, tracked_rows[19].id) if len(cards) > 20 else None,
+        ),
+        recent_updates=events[:20],
+    )

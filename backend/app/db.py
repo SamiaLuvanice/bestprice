@@ -2,7 +2,7 @@ import os
 from collections.abc import Iterator
 from functools import lru_cache
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session
 
 
@@ -26,9 +26,23 @@ def database_url() -> str:
     ).render_as_string(hide_password=False)
 
 
+def _pin_utc_timezone(dbapi_connection, _connection_record) -> None:
+    # Timestamps leave PostgreSQL as UTC regardless of server/PGTZ defaults, so the API
+    # serializes instants with "Z". SET runs in autocommit so a later rollback keeps it.
+    previous = dbapi_connection.autocommit
+    dbapi_connection.autocommit = True
+    try:
+        with dbapi_connection.cursor() as cursor:
+            cursor.execute("SET TIME ZONE 'UTC'")
+    finally:
+        dbapi_connection.autocommit = previous
+
+
 @lru_cache(maxsize=1)
 def create_database_engine():
-    return create_engine(database_url(), pool_pre_ping=True)
+    engine = create_engine(database_url(), pool_pre_ping=True)
+    event.listen(engine, "connect", _pin_utc_timezone)
+    return engine
 
 
 def get_session() -> Iterator[Session]:
