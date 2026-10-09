@@ -1,13 +1,14 @@
 import json
 import re
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from urllib.parse import urlsplit
 
 import httpx
 
 ITEM_ID = re.compile(r"MLB[0-9]+\Z")
 API_BASE_URL = "https://api.mercadolibre.com"
+CENT = Decimal("0.01")
 
 
 class IntegrationError(Exception):
@@ -67,9 +68,16 @@ class MercadoLivreClient:
                     price = Decimal(amount)
                     if not price.is_finite() or price < 0:
                         raise IntegrationError("integration_invalid_response")
-            image_url = item.get("thumbnail")
-            if not self._is_allowed_url(image_url, "mlstatic.com", subdomains=True):
-                image_url = None
+                    # Single rounding at the source boundary: comparisons and NUMERIC(18, 2)
+                    # storage see the same value, so sub-cent noise is never a "change".
+                    price = price.quantize(CENT, rounding=ROUND_HALF_UP)
+            image_url = next(
+                (
+                    candidate for candidate in (item.get("secure_thumbnail"), item.get("thumbnail"))
+                    if self._is_allowed_url(candidate, "mlstatic.com", subdomains=True)
+                ),
+                None,
+            )
             status = item.get("status")
             quantity = item.get("available_quantity")
             if status == "active" and isinstance(quantity, int) and not isinstance(quantity, bool):

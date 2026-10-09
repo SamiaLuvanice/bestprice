@@ -47,8 +47,8 @@ def test_equal_drops_are_ordered_by_latest_change(monkeypatch) -> None:
             ])
         session.commit()
         dashboard = routes.get_dashboard(user, session)
-        assert dashboard["summary"]["price_drop_count"] == 2
-        assert [card.product.title for card in dashboard["opportunities"]] == ["Produto 1", "Produto 2"]
+        assert dashboard.summary.price_drop_count == 2
+        assert [card.product.title for card in dashboard.opportunities] == ["Produto 1", "Produto 2"]
 
 
 def test_history_summary_keeps_global_extremes_when_history_is_paginated() -> None:

@@ -169,3 +169,52 @@ def test_ambiguous_refresh_failure_blocks_token_reuse_until_reprovisioned() -> N
     with Session(engine) as session:
         provision_operator_tokens(session, key, "new-access", "new-refresh", now + timedelta(hours=6))
     assert manager.get_access_token() == "new-access"
+
+
+@pytest.mark.parametrize("unsent", [httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout])
+def test_refresh_failure_before_sending_does_not_block_retry(unsent: type[httpx.RequestError]) -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    key = Fernet.generate_key()
+    now = datetime(2026, 10, 9, 12, tzinfo=UTC)
+    with Session(engine) as session:
+        provision_operator_tokens(session, key, "old-access", "old-refresh", now + timedelta(minutes=1))
+    outcomes = iter(["fail", "ok"])
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if next(outcomes) == "fail":
+            raise unsent("pedido não saiu", request=request)
+        return httpx.Response(200, json={
+            "access_token": "access-rotated", "refresh_token": "refresh-rotated",
+            "token_type": "Bearer", "expires_in": 21600,
+        })
+
+    manager = OperatorTokenManager(
+        engine, key, "client-id", "client-secret", transport=httpx.MockTransport(respond), clock=lambda: now,
+    )
+    with pytest.raises(IntegrationError) as first:
+        manager.get_access_token()
+    assert first.value.code == "integration_unavailable"
+    with Session(engine) as session:
+        assert session.scalar(select(OperatorCredential)).refresh_blocked is False
+    assert manager.get_access_token() == "access-rotated"
+
+
+def test_refresh_rate_limit_without_header_reports_effective_window() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    key = Fernet.generate_key()
+    now = datetime(2026, 10, 9, 12, tzinfo=UTC)
+    with Session(engine) as session:
+        provision_operator_tokens(session, key, "old-access", "old-refresh", now + timedelta(minutes=1))
+
+    manager = OperatorTokenManager(
+        engine, key, "client-id", "client-secret",
+        transport=httpx.MockTransport(lambda _request: httpx.Response(429)), clock=lambda: now,
+    )
+    with pytest.raises(IntegrationError) as failure:
+        manager.get_access_token()
+    assert failure.value.code == "integration_rate_limited"
+    assert failure.value.retry_after_seconds == 60
+    with Session(engine) as session:
+        assert session.scalar(select(OperatorCredential)).refresh_retry_after_at.replace(tzinfo=UTC) == now + timedelta(seconds=60)

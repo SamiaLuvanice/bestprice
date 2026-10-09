@@ -1,6 +1,7 @@
 import re
 from datetime import UTC, datetime
 from decimal import Decimal
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -42,7 +43,13 @@ def alert_response(alert: PriceAlert, tracked: TrackedProduct, product: Product,
     )
 
 
-def evaluate_alerts(session: Session, product: Product, now: datetime) -> None:
+def evaluate_alerts(session: Session, product: Product, now: datetime, *, alert_id: UUID | None = None) -> None:
+    """Evaluate enabled alerts of active trackings for the product's current observation.
+
+    Routes pass ``alert_id`` so a request only touches the alert it already locked; the
+    shared refresh path locks every alert of the product in primary-key order, so two
+    transactions never wait on each other's alert rows in opposite order (deadlock).
+    """
     observed = product.last_price_observed_at
     if observed is not None and observed.tzinfo is None:
         observed = observed.replace(tzinfo=UTC)
@@ -52,10 +59,15 @@ def evaluate_alerts(session: Session, product: Product, now: datetime) -> None:
         or observed is None or observed + load_monitoring_settings().freshness_window <= now
     ):
         return
-    rows = session.execute(
+    statement = (
         select(PriceAlert, TrackedProduct)
         .join(TrackedProduct, PriceAlert.tracked_product_id == TrackedProduct.id)
         .where(TrackedProduct.product_id == product.id, TrackedProduct.active.is_(True), PriceAlert.enabled.is_(True))
+    )
+    if alert_id is not None:
+        statement = statement.where(PriceAlert.id == alert_id)
+    rows = session.execute(
+        statement.order_by(PriceAlert.id)
         .with_for_update(of=PriceAlert)
         .execution_options(populate_existing=True)
     ).all()

@@ -121,3 +121,46 @@ def test_failed_refresh_uses_controlled_clock_and_jitter(monkeypatch) -> None:
         assert product.last_price_observed_at.replace(tzinfo=UTC) < fixed
         assert product.next_check_at.replace(tzinfo=UTC) == fixed + timedelta(minutes=72)
         assert len(session.scalars(select(PriceHistory)).all()) == 1
+
+
+def test_unexpected_failure_on_one_listing_does_not_abort_cycle(monkeypatch, caplog) -> None:
+    from app.products import service
+
+    monkeypatch.setattr(service, "uniform", lambda _lower, _upper: 1.0)
+    engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+
+    class PoisonSource(Source):
+        def get_listing(self, external_id: str) -> ListingData:
+            if external_id == "MLB1111111111" and self.calls >= 2:
+                self.calls += 1
+                raise KeyError("payload-secreto")
+            return super().get_listing(external_id)
+
+    source = PoisonSource()
+    with Session(engine) as session:
+        user = User(email="poison@example.com", password_hash=hash_password("senha-validada-123"))
+        session.add(user)
+        session.commit()
+        for number in ("1111111111", "2222222222"):
+            add_tracking(session, user.id, f"https://produto.mercadolivre.com.br/MLB-{number}-fone-_JM", source)
+        for product in session.scalars(select(Product)).all():
+            product.next_check_at = datetime.now(UTC) - timedelta(seconds=1)
+            product.last_attempt_at = datetime.now(UTC) - timedelta(hours=2)
+        session.commit()
+        source.price = Decimal("70.00")
+
+        with caplog.at_level("WARNING"):
+            assert run_cycle(session, source) == 2
+
+    with Session(engine) as session:
+        poisoned = session.scalar(select(Product).where(Product.external_id == "MLB1111111111"))
+        healthy = session.scalar(select(Product).where(Product.external_id == "MLB2222222222"))
+        assert healthy.current_price == Decimal("70.00")
+        assert poisoned.current_price == Decimal("100.00")
+        assert poisoned.last_attempt_status == "invalid_response"
+        assert poisoned.failure_count == 1
+        assert poisoned.next_check_at.replace(tzinfo=UTC) > datetime.now(UTC) + timedelta(minutes=50)
+    assert str(poisoned.id) in caplog.text
+    assert "KeyError" in caplog.text
+    assert "payload-secreto" not in caplog.text
