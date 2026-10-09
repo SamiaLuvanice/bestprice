@@ -143,3 +143,15 @@ Marcar tarefas completas somente após evidência em `verification.md`. A ausên
   separadas, além de preço anterior, diferença e variação. O teste novo começou
   vermelho no estado stale e passou após a correção; 5 testes de UI, lint e
   build passaram. T10 segue aberta para os demais estados e inspeção visual.
+
+## Revisão independente e correções — 09/10/2026
+
+- Issue #34 criada; branch renomeada para
+  `feature/0013-issue-34-monitoramento-mercado-livre` e enviada ao `origin`.
+- T03, T06–T10: achados da revisão independente e lacunas da QA corrigidos
+  (`810def5`, `898215b`, `a8d4e52`); backend 124 e frontend 19 testes
+  passando. Re-revisão aprovou para PR.
+- T13: gates e fluxo pela stack Compose conferidos; inspeção visual em
+  navegador e ciclo real do worker seguem pendentes.
+- T12 continua bloqueada por credenciais e autorização reais (vale AC-014).
+- T14: revisão concluída; doc-sync-onboarding e PR em andamento.

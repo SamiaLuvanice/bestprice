@@ -730,3 +730,44 @@ distintos; AC-012 parcial, sem acessibilidade e mobile no navegador, e
 ainda citam Amazon; AC-016 parcial, porque moeda diferente está testada, mas
 variante ambígua e benefício pessoal não são detectados. Os demais (004, 006,
 009, 011 e 019) seguem como antes.
+
+## Orquestração, revisão independente e correções — 09/10/2026
+
+- `gh auth status` voltou a autenticar; criada a Issue
+  [#34](https://github.com/SamiaLuvanice/bestprice/issues/34). A branch
+  provisória `feature/0013-mercado-livre` foi renomeada para
+  `feature/0013-issue-34-monitoramento-mercado-livre`, o trabalho até então
+  não versionado foi registrado em commits temáticos e enviado ao `origin`.
+  A pasta da worktree mantém o nome antigo `.worktrees/feature-0013-mercado-livre`.
+- Baseline antes das correções, executado pelo coordenador: backend
+  `uv run ruff check .` **All checks passed!** e pytest com `TEST_DATABASE_URL`
+  no PostgreSQL isolado **55 passed, 1 warning**; frontend lint código 0,
+  **5 passed**, build código 0.
+- Primeira revisão independente (`.agents/agents/arch-reviewer.md`) do diff
+  completo: nenhum achado bloqueante, 6 importantes (deadlock entre alertas de
+  usuários distintos reproduzido como `DeadlockDetected`/500; POST ignorando
+  Retry-After/janela 24h/cooldown; poison pill no worker; códigos e mensagens
+  de erro fora do contrato; `observed_at` sem `Z`; harness ainda citando Amazon)
+  e 9 menores. Auditoria QA (`.agents/agents/qa.md`) registrada na seção
+  própria acima.
+- Correções despachadas em paralelo com arquivos exclusivos: frontend
+  (`810def5`) e backend (`898215b`, depois `a8d4e52` para os pontos menores da
+  re-revisão). Cada item teve teste escrito antes; Red observado e relatado
+  pelos implementadores, exceto testes que já passavam e ficaram como cobertura
+  (registrados como tal, sem contar como Red).
+- Gates conferidos pelo coordenador após cada rodada: frontend lint código 0,
+  `npm test -- --run` **19 passed**, build código 0; backend ruff
+  **All checks passed!**, pytest **116 passed** e, após `a8d4e52`,
+  **124 passed, 1 warning**, 0 skipped.
+- Re-revisão independente de `a290ab3..898215b`: **aprovado para PR**;
+  sonda de deadlock repetida 3 vezes retornou `['ok','ok']`. Pontos menores
+  N1–N3 e o resíduo do achado 2 foram corrigidos em `a8d4e52`.
+- Reverificação QA na stack Compose reconstruída (seção acima) confirmou
+  AC-014, códigos de URL, refresh sem integração sem alterar o produto
+  compartilhado, instantes com `Z` e bundle atualizado.
+- Pendências explícitas: AC-002/AC-013 sem credenciais reais do Mercado Livre;
+  AC-007/AC-012 sem inspeção visual, acessibilidade e mobile no navegador;
+  AC-008 sem ciclo real na stack nem processos worker distintos; AC-016 sem
+  detecção de variante ambígua ou benefício pessoal (depende de AC-013); limite
+  de tentativas de login depende da spec 0011. Status da spec permanece
+  `rascunho`.
