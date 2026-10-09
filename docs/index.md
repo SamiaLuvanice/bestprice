@@ -16,7 +16,7 @@
 | [README](../README.md) | Setup rápido, execução local e Compose |
 | [Contexto do produto](product-context.md) | Visão de produção, monitoramento por URL, requisitos e decisões pendentes |
 | [Arquitetura](architecture.md) | Componentes, dependências, requisição, configuração e operação |
-| [Banco de dados](database.md) | Conexão, tabelas, modelo ER e ausência de esquema de domínio |
+| [Banco de dados](database.md) | Conexão, migration e tabelas de domínio da branch 0013 |
 | [Fluxo GitHub](github-workflow.md) | Processo de contribuição, CI, sincronização opcional e entrega |
 | [Progresso](PROGRESS.md) | Registro de andamento do harness |
 | [Aprendizados](LEARNINGS.md) | Aprendizados documentados do projeto |
@@ -31,11 +31,11 @@
 
 | Módulo | Documento | Responsabilidade |
 |---|---|---|
-| Backend | [apps/backend.md](apps/backend.md) | API FastAPI, configuração do PostgreSQL e verificação de saúde |
-| Frontend | [apps/frontend.md](apps/frontend.md) | SPA React, consulta HTTP e apresentação dos estados |
-| Infraestrutura | [apps/infraestrutura.md](apps/infraestrutura.md) | Compose, imagens, proxy, scripts e automações de entrega |
+| Backend | [apps/backend.md](apps/backend.md) | API FastAPI, sessão, monitoramento MLB e worker |
+| Frontend | [apps/frontend.md](apps/frontend.md) | SPA React, dashboard, histórico, alertas e notificações |
+| Infraestrutura | [apps/infraestrutura.md](apps/infraestrutura.md) | Compose com Alembic e worker, proxy e automações de entrega |
 
-Não há painel administrativo no código atual; portanto não existe `docs/admin.md` nem tarefas operacionais de administração da aplicação para descrever.
+Não há painel administrativo no código atual; o provisionamento de conta é feito por comando no backend.
 
 ## Convenções
 
