@@ -23,11 +23,49 @@ services:
       DB_NAME: ${POSTGRES_DB:-bestprice}
       DB_USER: ${POSTGRES_USER:-bestprice}
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+      MERCADOLIVRE_CLIENT_ID: ${MERCADOLIVRE_CLIENT_ID:-}
+      MERCADOLIVRE_CLIENT_SECRET: ${MERCADOLIVRE_CLIENT_SECRET:-}
+      MERCADOLIVRE_OAUTH_KEY: ${MERCADOLIVRE_OAUTH_KEY:-}
+      MERCADOLIVRE_THIRD_PARTY_VALIDATED: ${MERCADOLIVRE_THIRD_PARTY_VALIDATED:-false}
+      APP_ENV: ${APP_ENV:-development}
+      MONITOR_CHECK_INTERVAL_SECONDS: ${MONITOR_CHECK_INTERVAL_SECONDS:-3600}
+      MONITOR_FRESHNESS_SECONDS: ${MONITOR_FRESHNESS_SECONDS:-3600}
+      MONITOR_BATCH_LIMIT: ${MONITOR_BATCH_LIMIT:-20}
+      MONITOR_MAX_CONCURRENCY: ${MONITOR_MAX_CONCURRENCY:-1}
+      MONITOR_POLL_INTERVAL_SECONDS: ${MONITOR_POLL_INTERVAL_SECONDS:-60}
     depends_on:
       db:
         condition: service_healthy
+    command: ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+
+  worker:
+    build: ./backend
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: ${POSTGRES_DB:-bestprice}
+      DB_USER: ${POSTGRES_USER:-bestprice}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      MERCADOLIVRE_CLIENT_ID: ${MERCADOLIVRE_CLIENT_ID:-}
+      MERCADOLIVRE_CLIENT_SECRET: ${MERCADOLIVRE_CLIENT_SECRET:-}
+      MERCADOLIVRE_OAUTH_KEY: ${MERCADOLIVRE_OAUTH_KEY:-}
+      MERCADOLIVRE_THIRD_PARTY_VALIDATED: ${MERCADOLIVRE_THIRD_PARTY_VALIDATED:-false}
+      MONITOR_CHECK_INTERVAL_SECONDS: ${MONITOR_CHECK_INTERVAL_SECONDS:-3600}
+      MONITOR_FRESHNESS_SECONDS: ${MONITOR_FRESHNESS_SECONDS:-3600}
+      MONITOR_BATCH_LIMIT: ${MONITOR_BATCH_LIMIT:-20}
+      MONITOR_MAX_CONCURRENCY: ${MONITOR_MAX_CONCURRENCY:-1}
+      MONITOR_POLL_INTERVAL_SECONDS: ${MONITOR_POLL_INTERVAL_SECONDS:-60}
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: ["python", "-m", "app.monitoring.worker"]
 
   frontend:
     build: ./frontend
