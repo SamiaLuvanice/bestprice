@@ -4,7 +4,7 @@ description: Estrutura simples de FastAPI, React e PostgreSQL.
 
 # Arquitetura
 
-A direção do BestPrice é um monólito modular, conforme [contexto do produto](../../docs/product-context.md). Toda obtenção de dados da Amazon deve passar por `AmazonProvider`, com retorno normalizado e mecanismo substituível. Produtos e consultas são compartilhados entre monitoramentos; vínculos, alertas e notificações exigem autorização por usuário. Diferencie última consulta de última alteração de preço e trate duplicidade e concorrência nas specs. Não introduza microserviços sem necessidade comprovada.
+A direção do BestPrice é um monólito modular, conforme [contexto do produto](../../docs/product-context.md). Toda obtenção de dados do Mercado Livre Brasil passa pelo cliente oficial isolado em `backend/app/marketplace/`, com destinos HTTP fixos e retorno normalizado; não crie provider genérico multi-marketplace nem use scraping. A premissa anterior (Amazon com `AmazonProvider`) foi substituída pela spec 0013; outro marketplace exige nova spec. Produtos e consultas são compartilhados entre monitoramentos; vínculos, alertas e notificações exigem autorização por usuário. Diferencie última consulta de última alteração de preço e trate duplicidade e concorrência nas specs. Não introduza microserviços sem necessidade comprovada.
 
 Organize backend/app por responsabilidade observável: configuração, rotas, serviços e acesso a dados quando existirem. A rota valida entrada e traduz saída HTTP; regras de negócio ficam em funções ou serviços testáveis; SQL fica em módulo de persistência. Não crie camadas vazias nem ORM para um health check. Dependências externas entram por parâmetros ou Depends do FastAPI para permitir testes focados.
 

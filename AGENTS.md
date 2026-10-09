@@ -1,6 +1,6 @@
 # Harness do projeto
 
-BestPrice: monitoramento automático de preços da Amazon, destinado a usuários reais. Stack: FastAPI (Python 3.13) em backend/, React + TypeScript em frontend/ e PostgreSQL. Priorize simplicidade, qualidade de produção e explique o porquê. A visão do produto está em docs/product-context.md; as orientações ativas ficam em .agents/rules/workspace.md.
+BestPrice: monitoramento automático de preços de anúncios do Mercado Livre Brasil, destinado a usuários reais (marketplace exclusivo desta fase pela spec 0013; a premissa anterior era a Amazon). Stack: FastAPI (Python 3.13) em backend/, React + TypeScript em frontend/ e PostgreSQL. Priorize simplicidade, qualidade de produção e explique o porquê. A visão do produto está em docs/product-context.md; as orientações ativas ficam em .agents/rules/workspace.md.
 
 Toda configuração de agentes vive em .agents/, a fonte única de verdade (ver .agents/AGENTS.md).
 
