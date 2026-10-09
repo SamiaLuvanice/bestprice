@@ -668,3 +668,65 @@ Nenhuma inspeção visual, nenhuma chamada real ao Mercado Livre, nenhum worker 
 processos distintos. pytest e a stack E2E compartilham o mesmo banco (111 contas
 de teste). A fixture `MLB5566778899` e as contas `qa0013-audit*` permanecem no
 volume isolado. CI, Project e PR não foram verificados.
+
+## Reverificação QA após correções `898215b` e `810def5` — 09/10/2026
+
+Sem alteração de código pelo QA. Fonte Mercado Livre não consultada.
+
+### Gates
+
+| Comando | Resultado |
+|---|---|
+| `backend/: uv run ruff check .` | All checks passed |
+| `backend/: TEST_DATABASE_URL=…55413 uv run pytest -q -p no:cacheprovider -rs` | **116 passed**, 0 skipped, 1 warning (Starlette) |
+| `frontend/: npm run lint` | código 0 |
+| `frontend/: npm test -- --run` | **19 passed** |
+| `frontend/: npm run build` | código 0; `index-CmHkZN8t.js` 241.07 kB |
+
+### Stack real (`docker compose -p bestprice0013verify up -d --build`, código 0)
+
+- Bundle servido `index-CmHkZN8t.js` igual ao build local; contém “Ver produto”,
+  “Tentar novamente” e “Preço indisponível”; zero ocorrências de “integração
+  oficial autorizada” e de “Amazon”. `alembic_version` `20261009safe`; health 200.
+- (a) Anúncio novo: **503** `integration_not_configured`, mensagem “O cadastro de
+  novos anúncios está indisponível até a integração oficial com o Mercado Livre
+  ser autorizada. As atualizações também ficam suspensas até lá.”; 0 linhas
+  `MLB4455667788` em `products`.
+- (b) **400** `unsupported_url_format` para catálogo, catálogo com `wid`, busca,
+  `/ofertas` e `meli.la`/`/sec/` (estes com “Links curtos não são aceitos…
+  copie o endereço completo da página.”); `ambiguous_item_id` para ID repetido;
+  `invalid_url` para domínio semelhante, `http`, porta 8443, userinfo e
+  `example.com`.
+- (c) Fixture sintética `MLB5566778899` reposta a estado fresco por SQL. Dois
+  refresh da conta 1 → **503** `integration_not_configured`; `last_attempt_status`,
+  `last_attempt_at`, `last_success_at`, `next_check_at`, `failure_count` e
+  `retry_after_at` idênticos antes/depois. A conta 2 reutilizou a fixture com
+  **201** (mesmo `product.id`).
+- (d) Evento sintético inserido em `product_events`: `recent_updates[0].observed_at`
+  = `2026-10-09T16:28:13.565051Z`. Todos os 27 instantes em dashboard,
+  notificações e listagem das duas contas terminam em `Z`.
+- (e) 409 `already_tracked` com o `tracked_product_id` próprio para cada conta;
+  404 `resource_not_found` para vínculo alheio; 401 `unauthenticated` sem sessão.
+- (f) Worker: apenas “Monitoramento aguardando integração autorizada” (2 linhas);
+  backend sem error/traceback/warning nos logs.
+- Não houve inspeção visual em navegador.
+
+### Situação atualizada
+
+Mudaram para **demonstrado**: AC-001, AC-003 e AC-015 (testes de URL, cliente e
+erros da fonte, mais a stack); AC-010 (`test_unavailable_missing_price_or_stale_neither_fire_nor_rearm`);
+AC-014 (stack e teste UI de bloqueio sem encerrar sessão); AC-017; AC-018
+(`test_not_found_keeps_tracked_count_and_survives_reload_and_timeout`); AC-020
+(`test_previous_zero_has_no_percentage_and_opportunities_exclude_old_stale_or_pre_tracking_drops`);
+AC-021 (`test_resume_does_not_enable_alert_nor_repeat_old_events` e testes concorrentes);
+AC-022 (testes UI de 401, 503, 409 com “Ver produto” e stack). AC-005 passa a
+demonstrado para concorrência (`test_concurrent_registration_by_same_person_returns_conflict_to_loser`).
+
+Continuam: AC-002 e AC-013 bloqueados por credenciais; AC-005 parcial, porque
+falta falha no meio da transação de escrita; AC-007 parcial, porque não houve
+inspeção visual; AC-008 parcial, sem ciclo real na stack e sem processos worker
+distintos; AC-012 parcial, sem acessibilidade e mobile no navegador, e
+`README.md`, `docs/product-context.md`, `AGENTS.md` e `.agents/rules/workspace.md`
+ainda citam Amazon; AC-016 parcial, porque moeda diferente está testada, mas
+variante ambígua e benefício pessoal não são detectados. Os demais (004, 006,
+009, 011 e 019) seguem como antes.
