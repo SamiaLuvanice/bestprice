@@ -580,3 +580,91 @@ código nem reexecutou testes da aplicação.
   `npm run build`: código zero, após executar fora do sandbox porque o Vite
   retornou `spawn EPERM` no ambiente restrito. O teste usa resposta simulada;
   não comprova consulta autorizada à fonte nem inspeção visual no navegador.
+
+## Auditoria QA dos critérios AC-001 a AC-022 — 09/10/2026
+
+Executada pelo papel `.agents/agents/qa.md` em `HEAD 6c0515b`, sem alterar
+código. "Simulado" indica fonte Mercado Livre substituída por dublê em teste;
+"stack real" indica PostgreSQL 17, FastAPI e Nginx/SPA do projeto Compose
+`bestprice0013verify`. Nenhuma consulta à API do Mercado Livre foi feita.
+
+### Gates
+
+| Comando | Resultado |
+|---|---|
+| `backend/: uv run ruff check .` | All checks passed (código 0) |
+| `backend/: TEST_DATABASE_URL=…@127.0.0.1:55413/bestprice uv run pytest -q -p no:cacheprovider -rs` | **55 passed**, 0 skipped, 1 warning (depreciação Starlette); as 11 integrações PostgreSQL executaram |
+| `frontend/: npm run lint` | código 0 |
+| `frontend/: npm test -- --run` | **5 passed** (1 arquivo) |
+| `frontend/: npm run build` | código 0; `index-s4oAgMmZ.js` 239.26 kB |
+
+### Stack Compose (serviços reais)
+
+- `docker compose -p bestprice0013verify up -d --build` (portas 55413/58113/58114,
+  senha de teste local): código 0; backend healthy; worker e frontend recriados.
+  O bundle servido em 58114 tem o mesmo hash do build local.
+- `alembic_version` = `20261009safe`; 9 tabelas de domínio presentes.
+- `GET /api/health` 200 `{"status":"ok","database":"ok"}` no backend e pelo proxy.
+  Com `docker compose stop db`: **503** `{"status":"unavailable","database":"unavailable"}`
+  nos dois caminhos; log `Verificação do banco falhou (OperationalError)` sem
+  credenciais. Após `start db`, voltou a 200.
+- Worker: `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; log repetido
+  “Monitoramento aguardando integração autorizada”.
+- Conta `qa0013-audit@example.invalid` provisionada por
+  `python -m app.auth.provision` (senha via stdin). Sem sessão:
+  `/api/tracked-products` e `/api/dashboard` **401** `unauthenticated`. Senha
+  errada 401 `invalid_credentials`. Login 200 com cookie `HttpOnly; Path=/api;
+  SameSite=lax`; `/api/auth/me` 200; dashboard vazio 200; logout 204 e `me`
+  seguinte 401.
+- `POST /api/tracked-products`: anúncio MLB novo **503**
+  `integration_not_configured` (mensagem “Não conseguimos consultar este anúncio
+  agora.”), sem linha em `products`; `example.com`, `meli.la` e catálogo
+  `/produto/p/` **400** `invalid_url`; `manual_price` e corpo vazio **422**.
+- Fixture **sintética** `MLB5566778899` inserida por SQL no banco isolado com
+  preço observado há 5 min: POST **201**; repetição **409** `already_tracked`
+  com o ID próprio; alerta alvo `120.00` **201** com `target_reached` e uma
+  notificação imediata; DELETE **204** pausou o alerta; nova POST **200** com o
+  mesmo ID, `active_since` renovado e alerta ainda desabilitado; leitura de
+  notificação repetida manteve o primeiro `read_at`. Segunda conta recebeu
+  **404** em detalhe, alerta, histórico, DELETE e PATCH da notificação alheia.
+- Refresh com a integração desligada **503** `integration_not_configured`
+  gravou `last_attempt_status=temporary_error` no produto compartilhado; o
+  refresh seguinte retornou **429** `refresh_not_due` com `retry-after: 2889`,
+  e a segunda conta não conseguiu mais reutilizar o produto (503).
+- UI: não houve inspeção visual em navegador. Foram conferidos o HTML servido
+  (200) e as strings do bundle (título, botão “Monitorar preço”, mensagem de
+  falha de rede; nenhuma ocorrência de “Amazon”).
+
+### Situação por critério
+
+| AC | Situação | Evidência / lacuna |
+|---|---|---|
+| 001 | demonstrado | `test_product_url_identifies_listing_without_network`, `test_product_url_rejects_unsupported_or_unsafe_input`, `test_local_tracking_decisions_precede_unavailable_marketplace`; 400 na stack |
+| 002 | bloqueado por AC-013 | só com dublê (`test_tracking_reuses_listing_across_users_and_blocks_duplicate`, teste UI de anúncio persistido) |
+| 003 | parcial | `test_client_maps_upstream_failures` (401/403/429/503), testes de refresh/ciclo de vida; faltam timeout, item 404 e JSON inválido no cliente, e erros da fonte no POST de cadastro |
+| 004 | demonstrado | `test_tracking_reuses_listing_across_users_and_blocks_duplicate`; 409 na stack |
+| 005 | parcial | `test_concurrent_users_share_one_external_lookup` (PostgreSQL); faltam POST concorrente da mesma pessoa e falha no meio da transação |
+| 006 | demonstrado (simulado) | `test_missing_price_and_attempt_timestamps_follow_controlled_clock`, `test_refresh_records_changes_but_preserves_price_on_rate_limit` |
+| 007 | parcial | `test_history_summary_keeps_global_extremes_when_history_is_paginated` e testes UI; sem teste de UI para métricas nulas nem inspeção visual |
+| 008 | parcial | testes de worker e `test_concurrent_worker_sessions_refresh_due_listing_once`; ciclo real na stack bloqueado e processos distintos não testados |
+| 009 | demonstrado (simulado) | teste do worker com 429, `test_failed_refresh_uses_controlled_clock_and_jitter` |
+| 010 | parcial | `test_alert_notifies_once_per_price_episode_and_requires_ownership`, `test_alert_does_not_fire_when_price_is_stale_for_configured_window`; faltam indisponível, `missing_price` e não rearmar com preço acima enquanto stale/erro |
+| 011 | demonstrado | teste HTTP de tracking e última asserção do teste do worker; stack confirmou |
+| 012 | parcial | textos da UI e bundle sem Amazon; faltam acessibilidade/mobile em navegador; `docs/product-context.md`, `README.md` e `AGENTS.md` ainda citam Amazon |
+| 013 | não demonstrável | sem credenciais nem autorização |
+| 014 | parcial | 503 e worker bloqueado na stack; a mensagem real é genérica, e o teste UI simula outra (“Integração indisponível no momento.”); o hero diz “integração oficial autorizada” |
+| 015 | parcial | 10 entradas rejeitadas em teste; catálogo sem `wid`, `/ofertas`, IP, ponto final e caixa só sondados manualmente (corretos); API não emite `unsupported_url_format`/`ambiguous_item_id` nem orienta link curto |
+| 016 | parcial | contexto `channel_marketplace` e OAuth operadora testados; não há teste de moeda ≠ BRL nem de variante/benefício pessoal |
+| 017 | demonstrado (simulado) | `test_missing_price_and_attempt_timestamps_follow_controlled_clock` |
+| 018 | parcial | `test_not_found_then_timeout_keeps_state_and_24_hour_retry`; faltam total monitorado, GET após recarga e recuperação já com preço diferente |
+| 019 | demonstrado (simulado) | teste de ciclo de vida e teste UI “distingue tentativa falha…” |
+| 020 | parcial | 100→80→90, paginação e desempate testados; faltam anterior zero → `null` e exclusões por `active_since`, stale e >24 h |
+| 021 | parcial | pausa, leitura idempotente, exclusão e concorrência testadas; retomada sem reabilitar alerta e sem repetir eventos só observada manualmente |
+| 022 | parcial | API coberta por testes e stack; a UI não trata 401 durante a sessão, não usa `tracked_product_id` no 409 e não testa que 503 mantém a sessão |
+
+### Limites
+
+Nenhuma inspeção visual, nenhuma chamada real ao Mercado Livre, nenhum worker em
+processos distintos. pytest e a stack E2E compartilham o mesmo banco (111 contas
+de teste). A fixture `MLB5566778899` e as contas `qa0013-audit*` permanecem no
+volume isolado. CI, Project e PR não foram verificados.
