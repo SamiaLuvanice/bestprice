@@ -49,6 +49,8 @@ ATTEMPT_STATUSES = frozenset({
     "rate_limited", "auth_required", "access_denied", "invalid_response", "unsupported_price_context",
 })
 MANUAL_COOLDOWN = timedelta(seconds=60)
+REFRESH_NOT_DUE_MESSAGE = "Aguarde para atualizar novamente."
+REGISTRATION_NOT_DUE_MESSAGE = "Este anúncio foi consultado há pouco. Tente acompanhá-lo novamente em instantes."
 
 
 def provider_error(error: IntegrationError) -> ApiError:
@@ -68,7 +70,7 @@ def _seconds_until(moment: datetime, now: datetime) -> int:
     return max(1, ceil((moment - now).total_seconds()))
 
 
-def ensure_source_due(product: Product, now: datetime) -> None:
+def ensure_source_due(product: Product, now: datetime, *, not_due_message: str = REFRESH_NOT_DUE_MESSAGE) -> None:
     """Refuse a source query blocked by Retry-After, failure backoff or the manual cooldown."""
     retry_at = _utc(product.retry_after_at)
     if retry_at is not None and retry_at > now:
@@ -81,13 +83,34 @@ def ensure_source_due(product: Product, now: datetime) -> None:
     if due is not None and due > now and (
         product.lookup_status == "not_found" or product.last_attempt_status not in {"ok", "missing_price"}
     ):
-        raise ApiError(429, "refresh_not_due", "Aguarde para atualizar novamente.", retry_after_seconds=_seconds_until(due, now))
+        raise ApiError(429, "refresh_not_due", not_due_message, retry_after_seconds=_seconds_until(due, now))
     attempted = _utc(product.last_attempt_at)
     if attempted is not None and attempted + MANUAL_COOLDOWN > now:
         raise ApiError(
-            429, "refresh_not_due", "Aguarde para atualizar novamente.",
+            429, "refresh_not_due", not_due_message,
             retry_after_seconds=_seconds_until(attempted + MANUAL_COOLDOWN, now),
         )
+
+
+def mark_not_found(product: Product, now: datetime) -> None:
+    """Persist the source's unequivocal confirmation that the publication was not located."""
+    product.last_attempt_at = now
+    product.lookup_status = "not_found"
+    product.last_attempt_status = "not_found"
+    product.next_check_at = now + timedelta(hours=24)
+    product.failure_count = 0
+    product.retry_after_at = None
+
+
+def record_source_failure(product: Product, error: IntegrationError, now: datetime) -> bool:
+    """Record a failed source query on the shared product; False when the source was never called."""
+    if error.code == "integration_not_configured":
+        return False
+    if error.code == "product_not_found":
+        mark_not_found(product, now)
+    else:
+        record_failed_attempt(product, error.code.removeprefix("integration_"), now, error.retry_after_seconds)
+    return True
 
 
 def record_failed_attempt(product: Product, status: str, now: datetime, retry_after_seconds: int | None = None) -> None:
@@ -155,13 +178,16 @@ def _add_tracking_locked(
                 # Confirmed missing within the 24-hour window: known domain state, no new query.
                 status, message = SOURCE_ERRORS["product_not_found"]
                 raise ApiError(status, "product_not_found", message)
-            ensure_source_due(product, now)
+            ensure_source_due(product, now, not_due_message=REGISTRATION_NOT_DUE_MESSAGE)
         # End the read transaction before the external call; the advisory lock still
         # serializes writers of this listing.
         session.commit()
         try:
             listing = source.get_listing(external_id)
         except IntegrationError as exc:
+            # A shared listing keeps the attempt (no link is created); a new one leaves no rows.
+            if product is not None and record_source_failure(product, exc, now):
+                session.commit()
             raise provider_error(exc) from exc
         if product is None:
             product = _new_product(listing, now)
@@ -260,21 +286,13 @@ def refresh_tracking(
         try:
             listing = source.get_listing(product.external_id)
         except IntegrationError as exc:
-            if exc.code == "integration_not_configured":
+            if not record_source_failure(product, exc, now):
                 # The source was never called: there is no attempt to record or back off.
                 session.rollback()
                 raise provider_error(exc) from exc
-            if exc.code == "product_not_found":
-                product.last_attempt_at = now
-                product.lookup_status = "not_found"
-                product.last_attempt_status = "not_found"
-                product.next_check_at = now + timedelta(hours=24)
-                product.failure_count = 0
-                product.retry_after_at = None
-                session.commit()
-                return tracked_response(session, tracked, product, now)
-            record_failed_attempt(product, exc.code.removeprefix("integration_"), now, exc.retry_after_seconds)
             session.commit()
+            if exc.code == "product_not_found":
+                return tracked_response(session, tracked, product, now)
             raise provider_error(exc) from exc
         _update_product(session, product, listing, now)
         product.failure_count = 0

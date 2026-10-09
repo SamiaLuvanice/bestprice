@@ -164,3 +164,68 @@ def test_unexpected_failure_on_one_listing_does_not_abort_cycle(monkeypatch, cap
     assert str(poisoned.id) in caplog.text
     assert "KeyError" in caplog.text
     assert "payload-secreto" not in caplog.text
+
+
+def _due_listing(engine, source: Source) -> None:
+    with Session(engine) as session:
+        user = User(email="n1n2@example.com", password_hash=hash_password("senha-validada-123"))
+        session.add(user)
+        session.commit()
+        add_tracking(session, user.id, "https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM", source)
+        product = session.scalar(select(Product))
+        product.next_check_at = datetime.now(UTC) - timedelta(seconds=1)
+        product.last_attempt_at = datetime.now(UTC) - timedelta(hours=2)
+        session.commit()
+
+
+def test_unexpected_failure_after_success_does_not_overwrite_it(monkeypatch) -> None:
+    from app.monitoring import worker
+
+    engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    source = Source()
+    _due_listing(engine, source)
+    real_refresh = worker.refresh_tracking
+
+    def refresh_then_crash(*args, **kwargs):
+        real_refresh(*args, **kwargs)
+        raise RuntimeError("falha após o commit de sucesso")
+
+    monkeypatch.setattr(worker, "refresh_tracking", refresh_then_crash)
+    source.price = Decimal("70.00")
+    with Session(engine) as session:
+        assert run_cycle(session, source) == 1
+
+    with Session(engine) as session:
+        product = session.scalar(select(Product))
+        assert (product.last_attempt_status, product.failure_count, product.current_price) == ("ok", 0, Decimal("70.00"))
+
+
+def test_unexpected_failure_is_not_recorded_while_listing_is_busy(monkeypatch) -> None:
+    import threading
+
+    from app.monitoring import worker
+    from app.products import locking
+
+    engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    source = Source()
+    _due_listing(engine, source)
+    with Session(engine) as session:
+        before = session.scalar(select(Product)).last_attempt_at
+    held = locking._local_locks.setdefault("MLB1234567890", threading.Lock())
+
+    def crash_while_someone_holds_lock(*_args, **_kwargs):
+        held.acquire()
+        raise KeyError("payload")
+
+    monkeypatch.setattr(worker, "refresh_tracking", crash_while_someone_holds_lock)
+    try:
+        with Session(engine) as session:
+            assert run_cycle(session, source) == 1
+    finally:
+        held.release()
+
+    with Session(engine) as session:
+        product = session.scalar(select(Product))
+        assert (product.last_attempt_status, product.failure_count, product.last_attempt_at) == ("ok", 0, before)

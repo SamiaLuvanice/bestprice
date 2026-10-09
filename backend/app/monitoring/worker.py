@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.db import create_database_engine
 from app.errors import ApiError
 from app.monitoring.settings import load_monitoring_settings
-from app.products.locking import ListingBusy
+from app.products.locking import ListingBusy, listing_lock
 from app.products.models import Product, TrackedProduct
 from app.products.routes import build_marketplace_client
 from app.products.service import record_failed_attempt, refresh_tracking
@@ -23,6 +23,7 @@ _DATA_ERRORS = (KeyError, ValueError, TypeError, AttributeError, ArithmeticError
 
 def _attempt(session: Session, source: object, product_id: object, user_id: object, tracking_id: object, now: datetime | None) -> int:
     """Run one listing attempt; any failure is contained so the cycle continues."""
+    started = now or datetime.now(UTC)
     try:
         # Non-blocking lock: a listing busy elsewhere is already being refreshed.
         refresh_tracking(session, user_id, tracking_id, source, now=now, lock_wait_seconds=0)
@@ -38,21 +39,34 @@ def _attempt(session: Session, source: object, product_id: object, user_id: obje
         # Log only identifiers and the exception type: messages may carry upstream payload.
         logger.warning("Falha inesperada ao consultar anúncio: produto=%s tipo=%s", product_id, type(exc).__name__)
         session.rollback()
-        _record_unexpected_failure(session.get_bind(), product_id, exc, now or datetime.now(UTC))
+        _record_unexpected_failure(session.get_bind(), product_id, exc, started)
         return 1
     finally:
         session.rollback()
 
 
-def _record_unexpected_failure(bind: object, product_id: object, error: Exception, now: datetime) -> None:
+def _record_unexpected_failure(bind: object, product_id: object, error: Exception, started: datetime) -> None:
+    """Record the failure under the listing lock, never over an attempt newer than this one."""
     status = "invalid_response" if isinstance(error, _DATA_ERRORS) else "temporary_error"
     try:
         with Session(bind) as clean:
-            product = clean.scalar(select(Product).where(Product.id == product_id).with_for_update())
-            if product is None:
+            external_id = clean.scalar(select(Product.external_id).where(Product.id == product_id))
+            if external_id is None:
                 return
-            record_failed_attempt(product, status, now)
-            clean.commit()
+            with listing_lock(clean, external_id, wait_seconds=0):
+                product = clean.scalar(
+                    select(Product).where(Product.id == product_id).execution_options(populate_existing=True)
+                )
+                attempted = product.last_attempt_at
+                if attempted is not None and attempted.tzinfo is None:
+                    attempted = attempted.replace(tzinfo=UTC)
+                if attempted is not None and attempted >= started:
+                    # A success (or another attempt) already recorded a newer state.
+                    return
+                record_failed_attempt(product, status, started)
+                clean.commit()
+    except ListingBusy:
+        logger.info("Falha não registrada: anúncio em uso por outra consulta: produto=%s", product_id)
     except Exception as exc:  # noqa: BLE001 - isolate each listing; never abort the cycle
         logger.error("Não foi possível registrar a falha: produto=%s tipo=%s", product_id, type(exc).__name__)
 

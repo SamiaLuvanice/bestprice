@@ -231,3 +231,38 @@ def test_application_engine_pins_utc_session_timezone(monkeypatch: pytest.Monkey
         engine.dispose()
     finally:
         db.create_database_engine.cache_clear()
+
+
+@pytest.mark.parametrize("failing_model", ["PriceHistory", "TrackedProduct"])
+def test_failure_inside_registration_write_leaves_no_partial_rows(monkeypatch: pytest.MonkeyPatch, failing_model: str) -> None:
+    from app.products import service
+
+    engine = _engine(monkeypatch)
+    external_id = f"MLB{uuid.uuid4().int % 10**15}"
+    url = f"https://produto.mercadolivre.com.br/MLB-{external_id[3:]}-teste-_JM"
+    user_id = uuid.uuid4()
+    with Session(engine) as session:
+        session.add(User(id=user_id, email=f"{user_id}@example.com", password_hash="teste"))
+        session.commit()
+
+    class Source:
+        def get_listing(self, listing_id: str) -> ListingData:
+            return ListingData(
+                external_id=listing_id, title="Falha no meio", canonical_url=url,
+                image_url=None, price=Decimal("75.00"), currency="BRL", availability="available",
+            )
+
+    def explode(*_args, **_kwargs):
+        raise RuntimeError("falha injetada durante a escrita")
+
+    monkeypatch.setattr(service, failing_model, explode)
+    with Session(engine) as session, pytest.raises(RuntimeError):
+        add_tracking(session, user_id, url, Source())
+
+    with Session(engine) as session:
+        assert session.scalars(select(Product.id).where(Product.external_id == external_id)).all() == []
+        assert session.scalars(select(TrackedProduct).where(TrackedProduct.user_id == user_id)).all() == []
+        assert session.scalar(text(
+            "SELECT count(*) FROM price_history h LEFT JOIN products p ON p.id = h.product_id WHERE p.id IS NULL"
+        )) == 0
+    engine.dispose()
