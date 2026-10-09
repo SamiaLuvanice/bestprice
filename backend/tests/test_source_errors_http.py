@@ -259,3 +259,79 @@ def test_dashboard_events_use_utc_z_and_declared_schema(harness) -> None:
     assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z", event["observed_at"])
     schema = app.openapi()["paths"]["/api/dashboard"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
     assert schema.get("$ref", "").endswith("/DashboardResponse")
+
+
+def _product_state(engine) -> tuple:
+    with Session(engine) as session:
+        product = session.scalar(select(Product))
+        return (
+            product.last_attempt_status, product.lookup_status, product.failure_count,
+            product.retry_after_at is not None, product.last_attempt_at,
+        )
+
+
+def test_registration_failure_on_existing_listing_records_shared_attempt(harness) -> None:
+    engine, source = harness
+    _register_then_age(engine, source)
+    source.error = IntegrationError("integration_rate_limited", 42)
+    second = login("segunda@example.com", "senha-validada-456")
+
+    response = second.post("/api/tracked-products", json={"url": URL})
+
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "42"
+    status, lookup, failures, has_retry_after, attempted = _product_state(engine)
+    assert (status, lookup, failures, has_retry_after) == ("rate_limited", "located", 1, True)
+    assert attempted.replace(tzinfo=UTC) > datetime.now(UTC) - timedelta(minutes=1)
+    assert counts(engine)[1] == 1
+
+
+def test_registration_confirming_existing_listing_missing_records_not_found(harness) -> None:
+    engine, source = harness
+    _register_then_age(engine, source)
+    source.error = IntegrationError("product_not_found")
+    second = login("segunda@example.com", "senha-validada-456")
+
+    response = second.post("/api/tracked-products", json={"url": URL})
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "product_not_found"
+    status, lookup, failures, _has_retry_after, _attempted = _product_state(engine)
+    assert (status, lookup, failures) == ("not_found", "not_found", 0)
+    with Session(engine) as session:
+        product = session.scalar(select(Product))
+        assert product.next_check_at.replace(tzinfo=UTC) > datetime.now(UTC) + timedelta(hours=23)
+        assert product.current_price == Decimal("100.00")
+    assert counts(engine)[1] == 1
+
+
+def test_registration_without_configured_integration_leaves_existing_listing_untouched(harness) -> None:
+    engine, source = harness
+    _register_then_age(engine, source)
+    before = _product_state(engine)
+    source.error = IntegrationError("integration_not_configured")
+    second = login("segunda@example.com", "senha-validada-456")
+
+    response = second.post("/api/tracked-products", json={"url": URL})
+
+    assert response.status_code == 503
+    assert _product_state(engine) == before
+    assert counts(engine)[1] == 1
+
+
+def test_registration_cooldown_message_speaks_about_tracking(harness) -> None:
+    engine, source = harness
+    _register_then_age(engine, source, last_attempt_at=datetime.now(UTC) - timedelta(seconds=10))
+    second = login("segunda@example.com", "senha-validada-456")
+
+    registration = second.post("/api/tracked-products", json={"url": URL})
+
+    assert registration.status_code == 429
+    assert registration.json()["error"]["message"] == (
+        "Este anúncio foi consultado há pouco. Tente acompanhá-lo novamente em instantes."
+    )
+    first = login("primeira@example.com", "senha-validada-123")
+    tracking_id = first.get("/api/tracked-products").json()["items"][0]["id"]
+    refresh = first.post(f"/api/tracked-products/{tracking_id}/refresh")
+    assert refresh.status_code == 429
+    assert refresh.json()["error"]["message"] == "Aguarde para atualizar novamente."
