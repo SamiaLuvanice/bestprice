@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Workspace
 
-Stack: FastAPI (Python 3.13) em backend/, React + TypeScript em frontend/ e PostgreSQL. BestPrice é um produto de monitoramento de preços da Amazon destinado a usuários reais. Priorize simplicidade, qualidade de produção e explicação das decisões.
+Stack: FastAPI (Python 3.13) em backend/, React + TypeScript em frontend/ e PostgreSQL. BestPrice é um produto de monitoramento de preços de anúncios do Mercado Livre Brasil (marketplace exclusivo desta fase, conforme a spec 0013; a premissa anterior era a Amazon) destinado a usuários reais. Priorize simplicidade, qualidade de produção e explicação das decisões.
 
 Leia [docs/product-context.md](../../docs/product-context.md) antes de definir ou implementar comportamento. Preserve a proposta central: o usuário informa apenas o link uma vez e o acompanhamento passa a ser automático. Não exija cadastro manual dos dados obtidos pela integração. O contexto descreve a direção do produto; consulte a documentação técnica e o código para verificar o que já existe. Atue como engenheiro responsável por evolução incremental; prefira serviços gratuitos/free tier quando adequados, sem comprometer segurança e confiabilidade.
 
