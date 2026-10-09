@@ -30,13 +30,28 @@ export type Dashboard = {
   summary: { tracked_count: number; price_drop_count: number; active_alert_count: number; target_reached_count: number }
   opportunities: TrackedProduct[]
   tracked_products: { items: TrackedProduct[]; next_cursor: string | null }
-  recent_updates: { id: string; tracked_product_id: string; type: string; previous_value: string; current_value: string; observed_at: string }[]
+  recent_updates: RecentUpdate[]
+}
+export type RecentUpdate = {
+  id: string
+  tracked_product_id: string
+  type: 'price_changed' | 'availability_changed'
+  previous_value: string
+  current_value: string
+  currency: string | null
+  observed_at: string
 }
 export type HistoryEntry = { id: string; price: string; currency: string; captured_at: string }
 export type Notification = { id: string; tracked_product_id: string; product_title: string; observed_price: string; target_price: string; created_at: string; read_at: string | null }
 
 export class ApiFailure extends Error {
-  constructor(readonly status: number, readonly code: string, message: string) { super(message) }
+  constructor(
+    readonly status: number,
+    readonly code: string,
+    message: string,
+    readonly trackedProductId: string | null = null,
+    readonly retryAfterSeconds: number | null = null,
+  ) { super(message) }
 }
 
 function record(value: unknown): value is Record<string, unknown> {
@@ -75,6 +90,12 @@ function trackedPage(value: unknown): value is { items: TrackedProduct[]; next_c
   return record(value) && Array.isArray(value.items) && value.items.every(tracked) && nullableString(value.next_cursor)
 }
 
+function recentUpdate(value: unknown): value is RecentUpdate {
+  return record(value) && string(value.id) && string(value.tracked_product_id) &&
+    (value.type === 'price_changed' || value.type === 'availability_changed') &&
+    string(value.previous_value) && string(value.current_value) && nullableString(value.currency) && string(value.observed_at)
+}
+
 function dashboard(value: unknown): value is Dashboard {
   if (!record(value) || !record(value.summary) || !record(value.tracked_products)) return false
   const summary = value.summary
@@ -82,37 +103,45 @@ function dashboard(value: unknown): value is Dashboard {
   return ['tracked_count', 'price_drop_count', 'active_alert_count', 'target_reached_count'].every((key) => typeof summary[key] === 'number') &&
     Array.isArray(value.opportunities) && value.opportunities.every(tracked) &&
     Array.isArray(list.items) && list.items.every(tracked) && nullableString(list.next_cursor) &&
-    Array.isArray(value.recent_updates) && value.recent_updates.every((entry: unknown) => record(entry) && string(entry.id) && string(entry.type))
+    Array.isArray(value.recent_updates) && value.recent_updates.every(recentUpdate)
 }
 
-async function request<T>(path: string, valid: (value: unknown) => value is T, init?: RequestInit): Promise<T> {
-  let response: Response
+function failureFrom(status: number, body: unknown): ApiFailure {
+  const error = record(body) && record(body.error) ? body.error : null
+  const retryAfter = error?.retry_after_seconds
+  return new ApiFailure(
+    status,
+    error && string(error.code) ? error.code : 'api_error',
+    error && string(error.message) ? error.message : 'Não foi possível concluir a operação.',
+    error && string(error.tracked_product_id) ? error.tracked_product_id : null,
+    typeof retryAfter === 'number' && Number.isInteger(retryAfter) && retryAfter >= 0 ? retryAfter : null,
+  )
+}
+
+async function send(path: string, init?: RequestInit): Promise<Response> {
   try {
-    response = await fetch(`/api${path}`, { credentials: 'same-origin', ...init })
+    return await fetch(`/api${path}`, { credentials: 'same-origin', ...init })
   } catch {
     throw new ApiFailure(0, 'network_error', 'Não foi possível conectar à API.')
   }
-  let body: unknown
-  try { body = await response.json() } catch { body = null }
-  if (!response.ok) {
-    const error = record(body) && record(body.error) ? body.error : null
-    throw new ApiFailure(response.status, error && string(error.code) ? error.code : 'api_error',
-      error && string(error.message) ? error.message : 'Não foi possível concluir a operação.')
-  }
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  try { return await response.json() } catch { return null }
+}
+
+async function request<T>(path: string, valid: (value: unknown) => value is T, init?: RequestInit): Promise<T> {
+  const response = await send(path, init)
+  const body = await readJson(response)
+  if (!response.ok) throw failureFrom(response.status, body)
   if (!valid(body)) throw new ApiFailure(response.status, 'invalid_response', 'A API respondeu com dados inválidos.')
   return body
 }
 
 async function requestVoid(path: string, init: RequestInit): Promise<void> {
-  let response: Response
-  try { response = await fetch(`/api${path}`, { credentials: 'same-origin', ...init }) }
-  catch { throw new ApiFailure(0, 'network_error', 'Não foi possível conectar à API.') }
+  const response = await send(path, init)
   if (response.status === 204) return
-  let body: unknown
-  try { body = await response.json() } catch { body = null }
-  const error = record(body) && record(body.error) ? body.error : null
-  throw new ApiFailure(response.status, error && string(error.code) ? error.code : 'api_error',
-    error && string(error.message) ? error.message : 'Não foi possível concluir a operação.')
+  throw failureFrom(response.status, await readJson(response))
 }
 
 function json(method: string, body: object): RequestInit {
