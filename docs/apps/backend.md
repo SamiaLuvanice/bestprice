@@ -1,90 +1,39 @@
 # Módulo backend
 
-## Visão geral
+## Implementação atual nesta branch
 
-O backend verifica a conexão com o PostgreSQL e devolve o estado de saúde para a interface. Hoje, ele não gerencia preços, contas ou qualquer outro dado de negócio. A evolução para monitoramento via `AmazonProvider`, persistência e autenticação está descrita no [contexto do produto](../product-context.md).
+O FastAPI mantém `GET /api/health` e acrescenta sessão BestPrice, monitoramentos MLB, histórico, dashboard, alertas e notificações. `backend/app/main.py` registra os roteadores e um formato de erro com `error.code` e `error.message`. SQLAlchemy acessa PostgreSQL pelo `backend/app/db.py`; Alembic mantém o esquema em `backend/alembic/`.
 
-## Responsabilidades e arquivos
-
-| Arquivo | Papel |
+| Área | Rotas |
 |---|---|
-| [`backend/app/main.py#L1-L20`](../../backend/app/main.py) | Cria `FastAPI`, declara o modelo `HealthResponse` e a rota `health` |
-| [`backend/app/config.py#L1-L17`](../../backend/app/config.py) | Lê `DATABASE_URL` ou os campos individuais de conexão |
-| [`backend/app/health.py#L1-L31`](../../backend/app/health.py) | Executa consulta real `SELECT 1`, controla timeout e registra falha sem mensagem sensível |
-| `backend/app/__init__.py` | Marca o pacote Python; não declara comportamento adicional |
-| `backend/pyproject.toml` | Dependências, extras de desenvolvimento, pytest e Ruff |
-| `backend/uv.lock` | Lock de dependências do backend |
-| `backend/Dockerfile` | Constrói imagem Python e inicia Uvicorn |
-| [`backend/tests/test_health.py`](../../backend/tests/test_health.py) | Testes HTTP com dependência substituída e teste de passagem segura de senha |
-| [`backend/tests/test_health_integration.py`](../../backend/tests/test_health_integration.py) | Testes opcionais contra PostgreSQL real via `TEST_DATABASE_URL` |
+| Sessão | `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout` |
+| Monitoramentos | `POST/GET /api/tracked-products`, `GET/DELETE /api/tracked-products/{id}`, `POST /api/tracked-products/{id}/refresh` |
+| Dados e alerta | `GET /api/tracked-products/{id}/history`, `POST/GET/PATCH/DELETE /api/tracked-products/{id}/alert` |
+| Visão geral | `GET /api/dashboard`, `GET /api/notifications`, `PATCH /api/notifications/{id}` |
+| Saúde | `GET /api/health` |
 
-## Modelo e dados
+As rotas de domínio exigem sessão. O login cria um token aleatório, guarda apenas seu hash em `user_sessions` e envia cookie HttpOnly `bestprice_session` com caminho `/api`, SameSite Lax e duração de 24 horas. `APP_ENV=production` ativa a marca Secure. O logout revoga a sessão. Não há cadastro público: `python -m app.auth.provision EMAIL`, executado em `backend/` com banco configurado, solicita a senha no terminal e cria uma conta.
 
-Não há modelos ORM, entidades ou esquema de domínio. `HealthResponse` é um modelo Pydantic de resposta, não uma tabela. Os campos são `status` e `database`, ambos limitados aos literais `ok` e `unavailable`. Veja [database.md](../database.md) para o estado completo do banco.
+`POST /api/tracked-products` aceita URL de publicação MLB e compartilha a publicação entre usuários, mantendo vínculos individuais. O ID é extraído localmente de `produto.mercadolivre.com.br` ou `www.mercadolivre.com.br`; a URL recebida nunca é requisitada. Antes de criar o cliente externo, a rota rejeita URL fora do domínio ou malformada (400 `invalid_url`), link curto (`meli.la`, `/sec/`), busca, categoria ou ofertas (`lista.mercadolivre.com.br`, `/ofertas`) e caminho que não identifica um anúncio (400 `unsupported_url_format`), e caminho com mais de um ID MLB (400 `ambiguous_item_id`); cada código traz mensagem própria em PT-BR. Em seguida informa vínculo ativo duplicado (409 `already_tracked`, com `tracked_product_id`) ou retoma um vínculo interrompido (200). Se outra requisição ou o worker já estiver consultando a mesma publicação, quem já tem vínculo ativo recebe 409 `already_tracked`; os demais recebem 503 `integration_unavailable` com `retry_after_seconds=5`.
 
-## Rotas
+Quando a publicação já existe mas não está fresca, o cadastro aplica as mesmas barreiras da atualização antes de chamar a fonte: `Retry-After` vigente (429 `integration_rate_limited`), backoff de falha ou intervalo manual de 60 segundos (429 `refresh_not_due`, com mensagem de cadastro) e `not_found` confirmado há menos de 24 horas (404 `product_not_found`, sem nova consulta). Uma falha da fonte nessa publicação compartilhada grava a tentativa e o backoff no produto sem criar vínculo; para publicação nova, nenhuma linha é criada. Uma publicação que exige consulta à API oficial retorna 503 `integration_not_configured` por padrão, com a mensagem de que o cadastro de novos anúncios e as atualizações ficam suspensos até a integração oficial ser autorizada. Essa consulta exige `MERCADOLIVRE_THIRD_PARTY_VALIDATED=true`, cliente OAuth configurado e tokens da conta operadora provisionados. Execute `uv run python -m app.marketplace.provision` em `backend/` para inserir os tokens iniciais por prompts no terminal, com banco migrado e `MERCADOLIVRE_OAUTH_KEY` configurada. O comando recebe validade restante em segundos, superior a cinco minutos; não obtém a autorização inicial. Não foi comprovada autorização real para anúncios de terceiros. Mantenha o flag desligado até essa confirmação externa.
 
-| Método e rota | Handler | Nome OpenAPI | Resposta |
-|---|---|---|---|
-| `GET /api/health` | `app.main.health` | `health` | 200 com dois campos `ok`; 503 com dois campos `unavailable` |
-| `GET/HEAD /openapi.json` | Gerada por FastAPI | Fora do esquema | Publica o esquema OpenAPI |
-| `GET/HEAD /docs` | Gerada por FastAPI | Fora do esquema | Interface Swagger UI |
-| `GET/HEAD /docs/oauth2-redirect` | Gerada por FastAPI | Fora do esquema | Redirecionamento usado pela interface de documentação |
-| `GET/HEAD /redoc` | Gerada por FastAPI | Fora do esquema | Interface ReDoc |
+Erros da fonte são traduzidos por `SOURCE_ERRORS` em `backend/app/products/service.py`, cada um com mensagem específica e segura: `product_not_found` (404), `integration_rate_limited` (429, com `retry_after_seconds` quando conhecido), `integration_invalid_response` e `unsupported_price_context` (502), `integration_unavailable`, `integration_auth_required`, `integration_access_denied` e `integration_not_configured` (503). Códigos desconhecidos viram `integration_unavailable`. O código `product_busy` deixou de existir.
 
-`/api/health` é a única rota declarada pela aplicação. Ela não recebe payload. Portanto não há validação de entrada 422 específica. A dependência `database_available` lê a configuração e conecta ao banco antes de montar a resposta. As demais rotas acima são criadas automaticamente pela configuração padrão de `FastAPI()`.
+O cliente `MercadoLivreClient` arredonda o preço uma única vez para centavos com `ROUND_HALF_UP` na fronteira da fonte, de modo que comparação e `NUMERIC(18,2)` vejam o mesmo valor. A imagem usa `secure_thumbnail` e, na falta dele, `thumbnail`, aceitando apenas URLs de `mlstatic.com`.
 
-## Fluxo de verificação
+`OperatorTokenManager` cifra os tokens no banco e renova o access token até cinco minutos antes do vencimento. API e worker travam o registro `operator_credentials` ao obter o token, impedindo duas renovações simultâneas no PostgreSQL. Após 429, o prazo de `Retry-After` é persistido; sem header válido, usa 60 segundos. Falhas em que o pedido de renovação comprovadamente não saiu (erro de conexão, timeout de conexão ou de pool, protocolo não suportado) não bloqueiam o refresh, porque o refresh token não foi consumido; após timeout de leitura ou outra resposta ambígua, o refresh fica bloqueado até novo provisionamento. A rota retorna erro de integração sem revelar tokens. Os testes usam respostas simuladas e não provam renovação real com a API oficial.
 
-```mermaid
-sequenceDiagram
-  participant C as Cliente HTTP
-  participant R as health()
-  participant H as database_available()
-  participant P as psycopg
-  participant DB as PostgreSQL
-  C->>R: GET /api/health
-  R->>H: Depends(database_available)
-  H->>H: database_connection_options()
-  alt Configuração ausente
-    H-->>R: false + warning seguro
-  else Configurada
-    H->>P: connect (timeout 3s)
-    P->>DB: SELECT 1 (statement timeout 3000ms)
-    DB-->>H: (1,) ou erro
-    H-->>R: true/false
-  end
-  R-->>C: 200 ok ou 503 unavailable
-```
+Listagens de monitoramentos, histórico e notificações devolvem `{items, next_cursor}`, aceitam `limit` de 1 a 100 (padrão 20) e `cursor`. O histórico aceita ainda `from` e `to` como instantes UTC. Notificações aceitam `unread_only`. Erros de entrada usam `validation_error`; vínculos de outro usuário retornam 404. Marcar uma notificação como lida é uma atualização condicional atômica: marcações concorrentes preservam o primeiro `read_at`. O dashboard declara `DashboardResponse` (`summary`, `opportunities`, `tracked_products` e `recent_updates` com `ProductEventResponse`), resume apenas vínculos próprios e retorna oportunidades, monitoramentos e atualizações recentes. Todos os instantes das respostas usam `UtcDateTime` e saem em ISO 8601 com `Z`; cada conexão SQLAlchemy executa `SET TIME ZONE 'UTC'` ao ser aberta. As oportunidades exibem até cinco quedas válidas nas últimas 24 horas, ordenadas pela maior queda percentual, pela mudança de preço mais recente e pelo ID do produto. A queda anterior ao início do vínculo não entra nessa lista. O resumo de preço usa todo o histórico compartilhado para obter anterior, mínimo e máximo; pedir uma página do histórico não altera esses valores.
 
-Erros esperados do driver (`psycopg.Error`) e do sistema (`OSError`) são convertidos em indisponibilidade. O log registra o tipo da exceção, não seu texto, porque a mensagem do driver pode expor host, usuário ou senha.
+`POST /api/tracked-products/{id}/refresh` resolve o vínculo e os bloqueios antes de criar o cliente externo: `Retry-After` vigente retorna 429 `integration_rate_limited`; backoff de falha ou intervalo manual de 60 segundos retorna 429 `refresh_not_due`, mesmo com a integração desligada. Com a integração desligada (`integration_not_configured`), a fonte nunca é chamada e nenhuma tentativa é gravada. A transação de leitura é confirmada antes da chamada HTTP externa, de modo que nenhuma transação fica aberta durante a consulta; a serialização por publicação é feita por trava advisory PostgreSQL de sessão, mantida em conexão dedicada em AUTOCOMMIT (até 5 segundos de espera na API).
 
-## Integração com os módulos
+`backend/app/monitoring/worker.py` verifica publicações vencidas com vínculo ativo, usando a mesma atualização da rota de refresh com trava sem espera: publicação já em consulta por outro processo é pulada no ciclo. A pausa entre ciclos, o tamanho do lote e a concorrência são configuráveis; para publicações distintas em paralelo, cada tentativa usa sua própria sessão de banco. O processo verifica a configuração da integração ao iniciar cada ciclo e aguarda quando indisponível. Uma exceção inesperada em uma publicação não interrompe o ciclo: o worker registra apenas ID e tipo da exceção no log e, sob a trava da publicação, grava `invalid_response` (erro de formato dos dados) ou `temporary_error`, sem sobrescrever uma tentativa mais recente, como um sucesso concorrente. O refresh aceita um relógio injetado; falhas temporárias preservam o último preço conhecido e agendam nova tentativa com backoff exponencial, jitter de 20% e respeito a `Retry-After`. Falha ao obter o token OAuth também registra `last_attempt_at` e `last_attempt_status` pela regra do refresh; `integration_unavailable` é persistido como `temporary_error`. Uma confirmação `product_not_found` define `lookup_status=not_found`, limpa contadores de falha e agenda pelo menos 24 horas. Se uma falha transitória vier depois, o anúncio permanece `not_found` e a próxima tentativa continua a pelo menos 24 horas. O agendamento persistido impede reconsulta prematura. Testes PostgreSQL confirmaram uma única atualização da mesma publicação sob duas sessões concorrentes e duas consultas simultâneas a publicações distintas com limite 2; processos worker distintos ainda não foram validados ponta a ponta.
 
-```mermaid
-graph LR
-  Frontend[frontend/src/health.ts] -->|GET /api/health| API[backend/app/main.py]
-  API -->|Depends| Service[backend/app/health.py]
-  Service --> Config[backend/app/config.py]
-  Service -->|psycopg SELECT 1| DB[(PostgreSQL)]
-  Compose[docker-compose.yml] -->|DB_*| Config
-```
+`MONITOR_CHECK_INTERVAL_SECONDS` determina a próxima consulta após sucesso (padrão 3600); `MONITOR_FRESHNESS_SECONDS` define por quanto tempo um preço pode ser reutilizado, quando a resposta marca `stale` e se um alerta pode avaliar o preço (padrão 3600). Um preço fora dessa janela deixa a condição do alerta como `unknown` e não gera notificação até uma observação válida. `MONITOR_BATCH_LIMIT` limita publicações por ciclo (padrão 20), `MONITOR_MAX_CONCURRENCY` limita tentativas paralelas (padrão 1) e `MONITOR_POLL_INTERVAL_SECONDS` controla a pausa (padrão 60). Os valores são inteiros validados; ajuste-os depois de confirmar os limites reais da integração autorizada.
 
-O endpoint síncrono chama psycopg síncrono. Essa escolha combina com uma operação curta e não bloqueia uma rota `async`, pois a rota é definida com `def`. Uma futura operação de negócio precisa decidir entre endpoint síncrono para trabalho curto e driver assíncrono para trabalho não trivial.
+Ao avaliar um preço válido, o backend trava e recarrega as linhas de `price_alerts` em ordem de chave primária antes de verificar se aquele episódio já foi notificado; as rotas de alerta avaliam apenas o alerta que já travaram, evitando deadlock com a atualização compartilhada. A edição do alvo também trava a linha antes de ler a revisão e incrementá-la. Criação, edição e exclusão de alerta, além da interrupção do monitoramento, travam e recarregam o vínculo antes da decisão local. Se a edição habilitar o alerta primeiro, a interrupção seguinte desabilita o alerta junto com o vínculo. Se a interrupção obtiver a trava primeiro, a tentativa posterior de habilitar o alerta retorna `tracking_inactive`. Avaliações simultâneas do mesmo alerta produzem uma notificação por episódio, edições simultâneas preservam as revisões sucessivas e cadastros simultâneos do mesmo alerta deixam um registro e uma notificação; a segunda tentativa retorna `alert_already_exists`. A unicidade de `(alert_id, revision, episode)` em `notifications` continua como proteção no banco. Quatro testes com duas sessões PostgreSQL cobrem essas corridas; demais transições concorrentes e processos distintos ainda precisam de verificação.
 
-## Configuração
+## Verificação e limites
 
-`DATABASE_URL` tem precedência. Sem ela, são necessários `DB_HOST`, `DB_NAME`, `DB_USER` e `DB_PASSWORD`; `DB_PORT` é opcional e assume `5432` quando ausente. A configuração é rejeitada se algum valor resultante estiver vazio. Compose injeta os campos `DB_*` no container e usa host `db`.
-
-## Testes
-
-`test_health.py` verifica os dois status HTTP usando `app.dependency_overrides`, além de confirmar que uma senha contendo `@` é passada como parâmetro e não interpolada em conninfo. O teste de integração é ignorado se `TEST_DATABASE_URL` não estiver presente; com banco real, verifica sucesso e conexão para banco inexistente. Os comandos estão no [README](../../README.md).
-
-## Pegadinhas e dívidas
-
-- Health confirma conexão e `SELECT 1`, não schema ou saúde de dependências além do banco.
-- Cada request abre e fecha uma conexão; não existe pool, retry ou cache.
-- Falta de configuração e falha de banco compartilham a resposta 503.
-- URL malformada configurada tem precedência e pode causar falha mesmo com `DB_*` válidas.
-- Não há migrations, acesso a dados de domínio, autenticação, autorização ou rate limiting.
-- O logger registra warning em toda falha; não há métrica ou alerta integrado.
+Em `backend/`, execute `uv sync --locked --extra dev`, `uv run ruff check .` e `uv run pytest -q`. `TEST_DATABASE_URL` habilita os testes contra PostgreSQL isolado. A [verificação da spec 0013](../../specs/0013-monitoramento-mercado-livre-brasil/verification.md) registra os resultados reais e as lacunas. `GET /api/health` confirma apenas conexão e `SELECT 1`; não prova esquema, credenciais Mercado Livre nem o worker.

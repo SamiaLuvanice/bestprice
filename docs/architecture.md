@@ -1,120 +1,33 @@
 # Arquitetura
 
-## Visão geral
+## Estado desta branch
 
-A implementação atual verifica a comunicação entre a SPA, a API e o PostgreSQL. Essa base ainda não calcula preços nem guarda produtos ou usuários.
-
-A direção aprovada é evoluir para um **monólito modular** de monitoramento automático da Amazon, com entrada por URL, serviços de aplicação, domínio, repositórios e integração isolada por `AmazonProvider`. Essas partes ainda não existem no código. O [contexto do produto](product-context.md) define os requisitos e as decisões a detalhar em specs; as seções seguintes descrevem o estado implementado.
+A aplicação combina SPA React, API FastAPI, PostgreSQL 17 e um processo worker. O fluxo de negócio implementado nesta branch usa publicações do Mercado Livre Brasil (MLB). A [visão do produto](product-context.md) adota o Mercado Livre Brasil como marketplace exclusivo desta fase, substituindo a premissa Amazon anterior; o acesso real a anúncios de terceiros do Mercado Livre ainda depende de validação externa.
 
 ```mermaid
 graph LR
-  User[Desenvolvedor no navegador] --> SPA[React + Vite ou Nginx]
-  SPA -->|GET /api/health| API[FastAPI]
-  API -->|psycopg: SELECT 1| DB[(PostgreSQL 17)]
-  GH[GitHub Actions] -->|CI e publicação GHCR| Artifacts[Imagens backend/frontend]
+  Browser[Navegador React] -->|/api e cookie de sessão| API[FastAPI]
+  API --> DB[(PostgreSQL)]
+  Worker[Worker periódico] --> DB
+  API -->|quando autorizado| ML[API oficial Mercado Livre]
+  Worker -->|quando autorizado| ML
 ```
 
-## Mapa e dependências
+A SPA consome rotas de sessão, dashboard, monitoramentos, histórico, alertas e notificações por `frontend/src/api.ts`. FastAPI isola autenticação em `app/auth`, consulta externa em `app/marketplace`, regras e persistência em `app/products`, e seleção periódica em `app/monitoring`. O produto é compartilhado pelo identificador da publicação; cada usuário tem seu vínculo e alerta. A migration Alembic prepara o esquema antes de iniciar a API no Compose.
 
-| Módulo | Entrada/responsabilidade | Depende de |
-|---|---|---|
-| `backend/app` | Expõe `/api/health` e testa conectividade | PostgreSQL e configuração de ambiente |
-| `frontend/src` | Apresenta os estados da verificação | Endpoint relativo `/api/health` |
-| `infraestrutura` | Executa, conecta e empacota os módulos | Docker Compose, imagens base e GitHub Actions |
-| `.github/scripts` | Aplica política de PR e sincroniza Project quando configurado | API GitHub; token Project apenas na sincronização |
+Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o cliente externo. URL inválida ou de formato não suportado, duplicação, retomada, `Retry-After` vigente, backoff, intervalo mínimo e `not_found` recente são decididos localmente, tanto no cadastro quanto na atualização; só uma consulta necessária à publicação exige a integração. Cada consulta é serializada por publicação com trava advisory PostgreSQL em conexão própria, e a transação de leitura é confirmada antes da chamada HTTP externa. O cliente real requer `MERCADOLIVRE_THIRD_PARTY_VALIDATED=true`, variáveis OAuth configuradas e a conta operadora provisionada no banco. A configuração padrão mantém consultas externas inativas. Access e refresh tokens são cifrados com a chave do ambiente; API e worker usam o mesmo registro e serializam a renovação por trava PostgreSQL. Resposta ambígua de refresh bloqueia nova tentativa até reprovisionamento, e 429 adia nova tentativa conforme `Retry-After`. Nenhum fluxo oficial com credenciais reais ou acesso a anúncios de terceiros foi comprovado. Falhas de consulta, inclusive na obtenção do token OAuth, registram a tentativa sem apagar o preço anterior. O worker verifica a configuração ao iniciar cada ciclo e consulta apenas produtos com vínculo ativo e horário vencido; pula a publicação já em consulta e isola exceções inesperadas de cada publicação, registrando a falha sem interromper o ciclo nem sobrescrever um sucesso mais recente. O lote e a concorrência têm limites configuráveis; publicações diferentes em paralelo usam sessões de banco independentes. Sucesso agenda nova consulta pela cadência configurada; erro temporário preserva a última observação e agenda backoff exponencial com jitter de 20%, respeitando `Retry-After`. Após `not_found`, uma falha transitória mantém esse estado e o intervalo mínimo de 24 horas; uma nova confirmação de `not_found` zera os contadores de falha. A janela configurada de frescor determina reuso do preço, o campo `stale` e a elegibilidade do preço para alertas; preço vencido deixa a condição `unknown` e não gera notificação.
 
-```mermaid
-graph TD
-  Frontend -->|HTTP relativo /api| Backend
-  Backend -->|SQL SELECT 1| PostgreSQL
-  Compose --> Frontend
-  Compose --> Backend
-  Compose --> PostgreSQL
-  CI --> Backend
-  CI --> Frontend
-  CI --> GithubScripts[Scripts de automação]
-  Delivery --> CI
-  Delivery --> GHCR
-```
+| Configuração | Uso |
+|---|---|
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Banco Compose |
+| `DATABASE_URL` ou `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT` | Conexão API, worker e Alembic |
+| `BACKEND_PORT`, `FRONTEND_PORT`, `DB_PORT` | Portas locais do Compose |
+| `MERCADOLIVRE_THIRD_PARTY_VALIDATED` | Liberação explícita após validar acesso a terceiros; padrão `false` |
+| `MERCADOLIVRE_CLIENT_ID`, `MERCADOLIVRE_CLIENT_SECRET`, `MERCADOLIVRE_OAUTH_KEY` | Cliente OAuth e chave Fernet da conta operadora; segredos somente no ambiente |
+| `APP_ENV` | Cookie Secure quando igual a `production` |
+| `MONITOR_CHECK_INTERVAL_SECONDS`, `MONITOR_FRESHNESS_SECONDS` | Cadência após sucesso e janela de frescor, ambas com padrão de 3600 segundos e faixa de 60 a 86400 |
+| `MONITOR_BATCH_LIMIT`, `MONITOR_MAX_CONCURRENCY` | Publicações por ciclo (padrão 20, faixa 1 a 100) e tentativas paralelas (padrão 1, faixa 1 a 16) |
+| `MONITOR_POLL_INTERVAL_SECONDS` | Pausa entre ciclos (padrão 60 segundos, faixa 1 a 3600) |
+| `TEST_DATABASE_URL` | Banco isolado dos testes de integração |
 
-O frontend não acessa o PostgreSQL. O backend não depende do frontend. O Compose injeta os dados de conexão no backend e liga os serviços pela rede interna usando o host `db` (`docker-compose.yml#L18-L25`).
-
-## Ciclo de uma requisição
-
-```mermaid
-sequenceDiagram
-  participant B as Navegador
-  participant F as React / proxy
-  participant A as FastAPI
-  participant D as PostgreSQL
-  B->>F: Abre a SPA
-  F->>A: GET /api/health
-  A->>A: Depends(database_available)
-  A->>D: Conecta e executa SELECT 1
-  alt Banco retorna (1,)
-    D-->>A: conexão válida
-    A-->>F: 200 {status: ok, database: ok}
-    F-->>B: Mostra "Tudo conectado"
-  else Configuração ou conexão falha
-    A-->>F: 503 {status: unavailable, database: unavailable}
-    F-->>B: Mostra indisponibilidade
-  end
-```
-
-No modo local, Vite encaminha `/api` para `http://localhost:8000` (`frontend/vite.config.ts#L6-L10`). No Compose, Nginx encaminha `/api/` para `http://backend:8000` (`frontend/nginx.conf#L7-L14`). Erro de rede entre navegador e API vira um estado separado no frontend (`frontend/src/health.ts#L16-L40`).
-
-## Backend, middleware e processamento assíncrono
-
-`GET /api/health` é a única rota declarada pela aplicação, em `backend/app/main.py#L9-L20`. Ela é uma função síncrona, injeta a dependência `database_available`, e devolve um modelo Pydantic `HealthResponse`. A chamada ao psycopg também é síncrona (`backend/app/health.py#L13-L31`). A configuração padrão de `FastAPI()` também cria `GET/HEAD /openapi.json`, `/docs`, `/docs/oauth2-redirect` e `/redoc` para esquema e interfaces de documentação; veja a [tabela de rotas](apps/backend.md#rotas).
-
-FastAPI instala seu conjunto padrão de middlewares, mas o projeto não registra middleware próprio, CORS, autenticação ou handler global de exceção. A busca no código atual não encontrou signals, filas, agendadores ou tarefas assíncronas. A consulta de saúde ocorre durante a própria requisição.
-
-## Integrações externas
-
-| Integração | Uso atual | Limite |
-|---|---|---|
-| PostgreSQL 17 | `SELECT 1` para verificar conectividade | Sem tabelas, migrações ou ORM |
-| GitHub Actions | CI, política de PR, sincronização opcional de Project e entrega | Project exige `PROJECT_TOKEN`; veja [github-workflow.md](github-workflow.md) |
-| GitHub Container Registry (GHCR) | Publicação de backend e frontend após workflow em `main` | Não implanta os containers em um ambiente externo |
-| Docker Hub | Imagens base de PostgreSQL, Python, Node e Nginx | Requer acesso ao registry para build/pull |
-
-## Configuração por ambiente
-
-| Variável | Consumidor | Padrão/uso | Observação |
-|---|---|---|---|
-| `POSTGRES_DB` | Compose/PostgreSQL | `bestprice` | Nome inicial do banco |
-| `POSTGRES_USER` | Compose/PostgreSQL | `bestprice` | Usuário inicial |
-| `POSTGRES_PASSWORD` | Compose/PostgreSQL e backend | Obrigatória no Compose | `.env.example` traz apenas valor fictício; substitua localmente |
-| `DB_PORT` | Compose, script de worktree e backend | `5433` no checkout principal; `5432` no backend sem variável | Porta publicada em loopback; no backend Compose a porta é `5432` |
-| `BACKEND_PORT` | Compose e script de worktree | `8000` | Porta publicada em loopback |
-| `FRONTEND_PORT` | Compose e script de worktree | `5173` | Porta publicada em loopback; Nginx escuta internamente em `80` |
-| `DATABASE_URL` | `backend/app/config.py` | Sem valor padrão | Tem precedência sobre as variáveis `DB_*`; use URL PostgreSQL |
-| `DB_HOST` | Backend | Sem valor padrão; Compose usa `db` | Necessária junto às demais `DB_*` quando `DATABASE_URL` não existe |
-| `DB_NAME` | Backend | Sem valor padrão; Compose usa `POSTGRES_DB` | Mapeia para `dbname` do psycopg |
-| `DB_USER` | Backend | Sem valor padrão; Compose usa `POSTGRES_USER` | Mapeia para usuário do psycopg |
-| `DB_PASSWORD` | Backend | Sem valor padrão; Compose usa `POSTGRES_PASSWORD` | Evite expor em logs |
-| `TEST_DATABASE_URL` | Teste de integração do backend | Ausente significa skip | Aponte para banco isolado; nunca use dados importantes |
-| `PROJECT_TOKEN` | Workflow Project | Opcional, ausente desativa sincronização | Secret do GitHub com permissão de Project |
-| `PROJECT_OWNER` | Workflow Project | Configuração opcional | Variável do GitHub Actions |
-| `PROJECT_NUMBER` | Workflow Project | Configuração opcional | Variável do GitHub Actions |
-
-O arquivo `.env.example` documenta somente a configuração local do Compose. Os workflows também definem valores de teste, como `TEST_DATABASE_URL`, dentro de CI.
-
-## Topologia e ciclo de vida
-
-`docker-compose.yml#L1-L39` define `db`, `backend` e `frontend`. O banco possui healthcheck `pg_isready`; o backend espera esse healthcheck passar. O frontend depende do backend para inicialização, mas não há healthcheck que prove disponibilidade HTTP da API antes de iniciar Nginx.
-
-O volume nomeado `db-data` persiste dados entre `docker compose down` e nova subida. A aplicação atual não cria esquema nem migra dados. A API e a SPA são publicadas em `127.0.0.1` por padrão.
-
-Em `main`, `.github/workflows/release.yml` valida o commit, constrói imagens Linux para backend e frontend, envia SBOM/proveniência e cria release com digests. O repositório documenta explicitamente que implantação externa, destino, credenciais, HTTPS, migração e rollback operacional ainda não estão configurados (`docs/github-workflow.md`).
-
-## Pegadinhas e dívidas observadas
-
-- O health check confirma apenas que uma conexão curta e `SELECT 1` funcionam naquele instante; não valida schema nem operações de negócio.
-- A rota declara um `response_model` comum aos dois status. O JSON é o mesmo formato em 200 e 503; clientes devem usar status HTTP e validar os dois campos.
-- Configuração ausente é convertida em indisponibilidade 503, não em erro de configuração separado.
-- `DATABASE_URL` prevalece mesmo se variáveis `DB_*` estiverem presentes. Uma URL malformada não cai para os campos individuais.
-- O driver é síncrono em endpoint síncrono. Isso evita bloquear um endpoint `async`, mas consultas futuras longas precisam de estratégia explícita.
-- Não existe política de retry: cada consulta abre uma conexão nova e pode esperar até 3 segundos para conexão e até 3 segundos para statement.
-- O script de worktree deriva portas diferentes, mas colisões de porta ainda são possíveis; suas mensagens de erro mencionam override de portas.
-- A documentação do GitHub descreve Project e publicação de imagens; ela não deve ser interpretada como evidência de implantação externa ativa.
+O Compose inicia DB, executa Alembic no backend, aguarda seu health check e inicia worker e frontend. GitHub Actions valida o código e publica imagens após o fluxo de release; não há implantação externa configurada. Consulte os guias de [backend](apps/backend.md), [frontend](apps/frontend.md), [banco](database.md) e [infraestrutura](apps/infraestrutura.md).

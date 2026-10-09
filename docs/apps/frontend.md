@@ -1,78 +1,25 @@
 # Módulo frontend
 
-## Visão geral
+## Fluxo atual nesta branch
 
-A interface é uma única página de status. Ela pergunta à API se a conexão com o banco funciona e mostra uma mensagem enquanto aguarda, quando dá certo e quando falha. Ela não envia comandos de negócio nem conversa diretamente com o banco.
+A SPA em `frontend/src/App.tsx` consulta `GET /api/auth/me` ao abrir. Somente 401 é tratado como ausência de sessão e apresenta o formulário de entrada; se `/auth/me` falhar por indisponibilidade da API ou da rede, a tela mostra a mensagem de erro e o botão “Tentar novamente”, sem enviar a pessoa ao login. Com sessão, carrega o dashboard e as notificações. A conta precisa ser provisionada no backend antes do login. Não há cadastro público ou roteamento client-side.
 
-O fluxo pretendido de entrada por URL, dashboard e página com histórico está no [contexto do produto](../product-context.md). React Router e bibliotecas de componentes e gráficos ainda não estão incorporados; este guia descreve a interface atual.
+Após entrar, a pessoa pode informar uma URL de anúncio MLB, ver os monitoramentos ativos, abrir o detalhe, solicitar atualização, interromper o vínculo e criar, editar, pausar ou excluir um alerta de preço. O detalhe apresenta o histórico de preços. A área de notificações permite marcar cada item como lido. Os botões “Carregar mais”, “Carregar mais preços” e “Carregar mais notificações” usam `next_cursor` das respectivas respostas e acrescentam itens sem repetir IDs. O dashboard mostra resumo, oportunidades e atualizações recentes. As oportunidades recebidas da API aparecem por maior queda percentual e, em empate, pela mudança mais recente. O detalhe mostra os extremos calculados sobre o histórico completo, mesmo quando a lista de histórico é carregada por páginas.
 
-## Responsabilidades e arquivos
-
-| Arquivo | Papel |
+| Arquivo | Responsabilidade |
 |---|---|
-| `frontend/src/main.tsx` | Monta React, `StrictMode`, `App` e estilos |
-| [`frontend/src/App.tsx#L1-L65`](../../frontend/src/App.tsx) | Controla estado da página e apresenta acessivelmente os estados |
-| [`frontend/src/health.ts#L1-L40`](../../frontend/src/health.ts) | Faz `fetch`, limita tempo, verifica HTTP e valida o JSON como `unknown` |
-| `frontend/src/styles.css` | Estilo visual responsivo da página |
-| `frontend/src/test-setup.ts` | Configuração compartilhada dos testes |
-| [`frontend/src/App.test.tsx`](../../frontend/src/App.test.tsx) | Testes dos estados visíveis usando fetch simulado |
-| `frontend/index.html` | Documento HTML inicial do Vite |
-| `frontend/vite.config.ts` | Plugin React, Vitest/JSDOM e proxy local `/api` |
-| `frontend/tsconfig.json` | Configuração TypeScript |
-| `frontend/eslint.config.js` | Configuração ESLint |
-| `frontend/package.json` / `frontend/package-lock.json` | Scripts e dependências travadas |
-| `frontend/Dockerfile` | Build da SPA e imagem final Nginx |
-| `frontend/nginx.conf` | Proxy de `/api/` e fallback SPA para `index.html` |
+| `frontend/src/App.tsx` | Estado da sessão, formulários, dashboard, detalhe, alertas e paginação |
+| `frontend/src/api.ts` | Cliente HTTP relativo a `/api`, envio do cookie da sessão, validação das respostas (inclusive cada item de `recent_updates`) e erros `ApiFailure` com `status`, `code`, `trackedProductId` e `retryAfterSeconds` |
+| `frontend/src/styles.css` | Apresentação responsiva |
+| `frontend/src/App.test.tsx` | Testes de interface com respostas HTTP simuladas, incluindo páginas seguintes de histórico e notificações |
+| `frontend/src/health.ts` | Cliente legado de `/api/health`, preservado para testes de saúde |
 
-## Entidades e contrato HTTP
-
-Não há entidades de domínio no frontend. `HealthResponse` em `health.ts` representa os dois formatos de JSON publicados pela API; `HealthResult` reduz isso aos estados de apresentação `success`, `unavailable` e `network-error`. Consulte [database.md](../database.md) para os dados persistidos (atualmente nenhum).
-
-| Chamada | Handler | O que faz |
-|---|---|---|
-| `GET /api/health` | `checkHealth(signal?)` | Requisita o contrato de health; não há outros endpoints consumidos |
-
-`checkHealth` só retorna sucesso para HTTP 200 e JSON com `status: "ok"` e `database: "ok"`. HTTP não-200, outro status, JSON inválido ou campos diferentes viram `unavailable`. Rejeição de `fetch` vira `network-error`.
-
-## Fluxo de tela
-
-```mermaid
-stateDiagram-v2
-  [*] --> loading: App monta
-  loading --> success: HTTP 200 e dois campos ok
-  loading --> unavailable: HTTP/JSON inválido ou API 503
-  loading --> network_error: fetch rejeitado ou timeout
-  loading --> [*]: componente desmonta e aborta
-```
-
-`App` inicia em `loading`, dispara `checkHealth` em `useEffect` e aborta a requisição ao desmontar. A checagem estabelece timeout interno de 5 segundos. Na desmontagem, o resultado não atualiza estado. Mensagens de espera usam `role="status"` e falhas `role="alert"`.
-
-## Integração
-
-```mermaid
-graph LR
-  Browser[Navegador] --> SPA[React App]
-  SPA -->|fetch relativo| Proxy[Vite dev ou Nginx Compose]
-  Proxy -->|/api/health| Backend[FastAPI]
-  Backend --> DB[(PostgreSQL)]
-```
-
-O caminho relativo `/api` permite que o proxy local do Vite e o Nginx do Compose resolvam o backend. O navegador não precisa de URL absoluta, CORS ou credencial de banco.
+O cliente consome `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/dashboard`, `/api/tracked-products`, seus subrecursos `history`, `refresh` e `alert`, além de `/api/notifications`. Usa `credentials: 'same-origin'`; o proxy Vite ou Nginx encaminha `/api` ao FastAPI. Valores monetários chegam como strings e são formatados para apresentação; instantes são apresentados no fuso local do navegador.
 
 ## Estados e limites
 
-| Estado | Texto principal | Significado |
-|---|---|---|
-| `loading` | Verificando conexão… | A requisição está pendente |
-| `success` | Tudo conectado | A API respondeu 200 com ambos os campos `ok` |
-| `unavailable` | Serviço indisponível | API respondeu fora do contrato esperado |
-| `network-error` | Não foi possível conectar à API | Falha de transporte, incluindo timeout |
+Falhas de operação são mostradas em `role="alert"` com a mensagem específica devolvida pela API. Apenas 401 encerra a sessão local e volta ao login; 503 da integração, outros erros e falhas de rede mantêm a pessoa no painel. Quando a resposta traz `retry_after_seconds` (por exemplo, 429), a mensagem acrescenta o prazo em segundos ou minutos. No 409 `already_tracked`, aparece o botão “Ver produto”, que abre o monitoramento existente. Se “Atualizar agora” falhar, a SPA recarrega o detalhe e o dashboard para exibir a tentativa registrada pelo backend, mantendo o erro visível. Falha ao carregar notificações aparece na própria seção, sem a mensagem de lista vazia; os textos de vazio do painel só aparecem depois que o dashboard carrega.
 
-## Pegadinhas e dívidas
+O detalhe mostra “Preço indisponível” sem preço atual e “Desconhecido”/“Desconhecida” para anterior, diferença, variação, mínimo, máximo e instantes ainda sem valor, em vez de zero ou de “Ainda não consultado”. A nota do hero informa que os preços vêm das consultas do BestPrice ao Mercado Livre e podem diferir do checkout; não afirma integração oficial autorizada.
 
-- Não existe botão de tentar novamente; nova tentativa ocorre ao remontar/recarregar a página.
-- O timeout interno é 5 segundos, mas o proxy Nginx tem timeout de conexão 2 segundos e envio/leitura 5 segundos; a camada que falhar primeiro determina a experiência.
-- Uma resposta 200 com campos extras é aceita, desde que os dois campos necessários estejam corretos.
-- Falha do endpoint e falha do banco são agregadas como indisponibilidade; a UI não distingue a causa.
-- O indicador “Interface disponível” é estático e não é uma verificação independente do servidor web.
-- A SPA é a única tela atual; não há rotas client-side, autenticação, formulários ou camada de estado global.
+Com a integração Mercado Livre desligada, o backend ainda valida a URL, informa duplicação e retoma vínculos interrompidos; uma publicação que exige consulta externa retorna indisponibilidade com a mensagem de integração não autorizada. As páginas de histórico e notificações usam o cursor da API, mas a UI ainda não expõe filtros de data ou de notificações não lidas. Os testes de interface usam respostas simuladas; inspeção visual, acessibilidade e layout móvel em navegador ainda não foram verificados. Consulte a [evidência da spec 0013](../../specs/0013-monitoramento-mercado-livre-brasil/verification.md).
