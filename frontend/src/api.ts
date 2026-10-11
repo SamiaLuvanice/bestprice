@@ -60,6 +60,10 @@ function record(value: unknown): value is Record<string, unknown> {
 
 function string(value: unknown): value is string { return typeof value === 'string' }
 function nullableString(value: unknown): value is string | null { return value === null || string(value) }
+// Dinheiro e percentuais chegam como strings decimais em notação simples (NUMERIC serializado pelo backend).
+const decimalPattern = /^-?\d+(\.\d+)?$/
+function decimal(value: unknown): value is string { return string(value) && decimalPattern.test(value) }
+function nullableDecimal(value: unknown): value is string | null { return value === null || decimal(value) }
 
 function user(value: unknown): value is User {
   return record(value) && string(value.id) && string(value.email)
@@ -68,9 +72,9 @@ function user(value: unknown): value is User {
 function product(value: unknown): value is Product {
   return record(value) && string(value.id) && string(value.external_id) && string(value.title) &&
     nullableString(value.image_url) && string(value.canonical_url) && string(value.currency) && string(value.price_context) &&
-    nullableString(value.current_price) && nullableString(value.previous_price) &&
-    nullableString(value.min_price) && nullableString(value.max_price) && nullableString(value.absolute_change) &&
-    nullableString(value.percentage_change) && string(value.availability) &&
+    nullableDecimal(value.current_price) && nullableDecimal(value.previous_price) &&
+    nullableDecimal(value.min_price) && nullableDecimal(value.max_price) && nullableDecimal(value.absolute_change) &&
+    nullableDecimal(value.percentage_change) && string(value.availability) &&
     nullableString(value.last_confirmed_availability) && nullableString(value.last_confirmed_availability_at) &&
     string(value.lookup_status) && string(value.last_attempt_status) &&
     nullableString(value.last_attempt_at) && nullableString(value.last_success_at) &&
@@ -78,7 +82,16 @@ function product(value: unknown): value is Product {
 }
 
 function alert(value: unknown): value is Alert {
-  return record(value) && string(value.id) && string(value.target_price) && typeof value.enabled === 'boolean' && string(value.condition)
+  return record(value) && string(value.id) && decimal(value.target_price) && typeof value.enabled === 'boolean' && string(value.condition)
+}
+
+function notification(value: unknown): value is Notification {
+  return record(value) && string(value.id) && string(value.tracked_product_id) && string(value.product_title) &&
+    decimal(value.observed_price) && decimal(value.target_price) && string(value.created_at) && nullableString(value.read_at)
+}
+
+function notificationPage(value: unknown): value is { items: Notification[]; next_cursor: string | null } {
+  return record(value) && Array.isArray(value.items) && value.items.every(notification) && nullableString(value.next_cursor)
 }
 
 function tracked(value: unknown): value is TrackedProduct {
@@ -106,13 +119,16 @@ function dashboard(value: unknown): value is Dashboard {
     Array.isArray(value.recent_updates) && value.recent_updates.every(recentUpdate)
 }
 
+const genericFailureMessage = 'Não foi possível concluir a operação. Tente novamente.'
+const invalidResponseMessage = 'A API respondeu com dados inválidos.'
+
 function failureFrom(status: number, body: unknown): ApiFailure {
   const error = record(body) && record(body.error) ? body.error : null
   const retryAfter = error?.retry_after_seconds
   return new ApiFailure(
     status,
-    error && string(error.code) ? error.code : 'api_error',
-    error && string(error.message) ? error.message : 'Não foi possível concluir a operação.',
+    error && string(error.code) && string(error.message) ? error.code : 'api_error',
+    error && string(error.code) && string(error.message) ? error.message : genericFailureMessage,
     error && string(error.tracked_product_id) ? error.tracked_product_id : null,
     typeof retryAfter === 'number' && Number.isInteger(retryAfter) && retryAfter >= 0 ? retryAfter : null,
   )
@@ -122,7 +138,7 @@ async function send(path: string, init?: RequestInit): Promise<Response> {
   try {
     return await fetch(`/api${path}`, { credentials: 'same-origin', ...init })
   } catch {
-    throw new ApiFailure(0, 'network_error', 'Não foi possível conectar à API.')
+    throw new ApiFailure(0, 'network_error', 'Não foi possível conectar ao BestPrice. Tente novamente.')
   }
 }
 
@@ -130,12 +146,26 @@ async function readJson(response: Response): Promise<unknown> {
   try { return await response.json() } catch { return null }
 }
 
-async function request<T>(path: string, valid: (value: unknown) => value is T, init?: RequestInit): Promise<T> {
+async function requestWithStatus<T>(path: string, valid: (value: unknown) => value is T, init?: RequestInit): Promise<{ status: number; body: T }> {
   const response = await send(path, init)
   const body = await readJson(response)
   if (!response.ok) throw failureFrom(response.status, body)
-  if (!valid(body)) throw new ApiFailure(response.status, 'invalid_response', 'A API respondeu com dados inválidos.')
-  return body
+  if (!valid(body)) throw new ApiFailure(response.status, 'invalid_response', invalidResponseMessage)
+  return { status: response.status, body }
+}
+
+async function request<T>(path: string, valid: (value: unknown) => value is T, init?: RequestInit): Promise<T> {
+  return (await requestWithStatus(path, valid, init)).body
+}
+
+export type TrackOutcome = 'created' | 'resumed'
+
+// 201 = novo monitoramento; 200 = vínculo interrompido retomado. Outro 2xx não é sucesso conhecido do contrato.
+async function track(url: string): Promise<{ tracked: TrackedProduct; outcome: TrackOutcome }> {
+  const { status, body } = await requestWithStatus('/tracked-products', tracked, json('POST', { url }))
+  if (status === 201) return { tracked: body, outcome: 'created' }
+  if (status === 200) return { tracked: body, outcome: 'resumed' }
+  throw new ApiFailure(status, 'invalid_response', invalidResponseMessage)
 }
 
 async function requestVoid(path: string, init: RequestInit): Promise<void> {
@@ -154,7 +184,7 @@ export const api = {
   logout: () => requestVoid('/auth/logout', { method: 'POST' }),
   dashboard: () => request('/dashboard', dashboard),
   tracked: (cursor?: string) => request(`/tracked-products${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, trackedPage),
-  track: (url: string) => request('/tracked-products', tracked, json('POST', { url })),
+  track,
   detail: (id: string) => request(`/tracked-products/${encodeURIComponent(id)}`, tracked),
   refresh: (id: string) => request(`/tracked-products/${encodeURIComponent(id)}/refresh`, tracked, { method: 'POST' }),
   stop: (id: string) => requestVoid(`/tracked-products/${encodeURIComponent(id)}`, { method: 'DELETE' }),
@@ -164,10 +194,8 @@ export const api = {
   createAlert: (id: string, target_price: string) => request(`/tracked-products/${encodeURIComponent(id)}/alert`, alert, json('POST', { target_price })),
   updateAlert: (id: string, update: { target_price?: string; enabled?: boolean }) => request(`/tracked-products/${encodeURIComponent(id)}/alert`, alert, json('PATCH', update)),
   deleteAlert: (id: string) => requestVoid(`/tracked-products/${encodeURIComponent(id)}/alert`, { method: 'DELETE' }),
-  readNotification: (id: string) => request(`/notifications/${encodeURIComponent(id)}`,
-    (value): value is Notification => record(value) && string(value.id) && string(value.product_title) && string(value.observed_price) &&
-      string(value.target_price) && string(value.created_at) && nullableString(value.read_at), json('PATCH', { read: true })),
-  notifications: (cursor?: string) => request(`/notifications${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`,
-    (value): value is { items: Notification[]; next_cursor: string | null } => record(value) && Array.isArray(value.items) &&
-      value.items.every((entry: unknown) => record(entry) && string(entry.id) && string(entry.product_title) && string(entry.observed_price) && string(entry.target_price) && string(entry.created_at) && nullableString(entry.read_at)) && nullableString(value.next_cursor)),
+  readNotification: (id: string) => request(`/notifications/${encodeURIComponent(id)}`, notification, json('PATCH', { read: true })),
+  notifications: (cursor?: string) => request(`/notifications${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, notificationPage),
+  // Não há contagem no contrato (lacuna 2 da 0012): o contador do sino é derivado desta página única.
+  unreadNotifications: () => request('/notifications?unread_only=true&limit=100', notificationPage),
 }

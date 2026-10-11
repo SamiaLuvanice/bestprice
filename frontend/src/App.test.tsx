@@ -113,7 +113,7 @@ it('mostra erro com nova tentativa quando a sessão não pode ser verificada por
   const mockFetch = signedIn(() => undefined)
   mockFetch.mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch')))
   render(<App />)
-  expect(await screen.findByText('Não foi possível conectar à API.')).toBeInTheDocument()
+  expect(await screen.findByText('Não foi possível conectar ao BestPrice. Tente novamente.')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
   expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
@@ -213,7 +213,7 @@ it('mostra mensagem de rede quando o cadastro não alcança a API', async () => 
   render(<App />)
   expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
   submitUrl()
-  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível conectar à API.')
+  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível conectar ao BestPrice. Tente novamente.')
   expect(screen.getByText('pessoa@example.com')).toBeInTheDocument()
 })
 

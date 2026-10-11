@@ -14,7 +14,7 @@ function instant(value: string | null, unknown = 'Ainda não consultado'): strin
 }
 
 function message(error: unknown): string {
-  return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação.'
+  return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
 }
 
 function retryHint(seconds: number): string {
