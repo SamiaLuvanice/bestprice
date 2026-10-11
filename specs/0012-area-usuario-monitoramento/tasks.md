@@ -9,18 +9,18 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
 
 ## Preparação e contrato
 
-- [ ] **T01 — Linha de base e contrato confirmado.** Rodar `npm ci`, `npm run lint`,
+- [x] **T01 — Linha de base e contrato confirmado.** Rodar `npm ci`, `npm run lint`,
   `npm test -- --run` (esperado: 29 passed) e `npm run build` antes de qualquer mudança;
   registrar em `verification.md`. Conferir de novo a tabela de contrato do plano contra
   `backend/app/products/routes.py` e `schemas.py`. *Pronto quando:* linha de base registrada
   e nenhuma divergência de contrato. — AC: todos (pré-condição).
-- [ ] **T02 — Cliente `api.ts` (Red/Green em `src/api.test.ts`).** `track` devolve
+- [x] **T02 — Cliente `api.ts` (Red/Green em `src/api.test.ts`).** `track` devolve
   `outcome` por 201/200; `unreadNotifications()` chama
   `/api/notifications?unread_only=true&limit=100`; mensagens de rede e de corpo instável da
   spec; validação decimal dos campos monetários e de `Notification.tracked_product_id`;
   `invalid_response` preservado. *Pronto quando:* testes de 201, 200, outro 2xx, rede, corpo
   sem `error`, decimal inválido e URL de não lidas passam. — AC07, AC08, AC04.
-- [ ] **T03 — Infra de teste e migração consciente da 0013.** Criar `src/test/fakeApi.ts`
+- [x] **T03 — Infra de teste e migração consciente da 0013.** Criar `src/test/fakeApi.ts`
   (fixtures do contrato, roteador com padrão para `me`, `dashboard`, `notifications` e não
   lidas vazias; promessas adiadas). Adicionar `@testing-library/user-event` como
   `devDependency` (D6) e `test.env.TZ = 'America/Sao_Paulo'` no Vitest. Passar `App.test.tsx`
@@ -31,12 +31,12 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
 
 ## Utilitários puros
 
-- [ ] **T04 — `lib/decimal.ts` (tabela em `decimal.test.ts`).** `parseDecimal`,
+- [x] **T04 — `lib/decimal.ts` (tabela em `decimal.test.ts`).** `parseDecimal`,
   `compareDecimal` (−1/0/1/null), `isDecimal`; casos `"99.90"`<`"100.00"`,
   `"100.10"`>`"100.09"`, `"1079.00"`=`"1079.0"`, `"abc"`→null, sinais, zeros à esquerda,
   `"-0.00"`=`"0"`. Sem `Number`/`parseFloat` (conferido por leitura do diff). Ajustar
   `tsconfig` para `ES2023` se necessário para T05 e conferir com `npm run build`. — AC20.
-- [ ] **T05 — `lib/format.ts` (`format.test.ts`).** `formatRelative` com as 7 linhas da
+- [x] **T05 — `lib/format.ts` (`format.test.ts`).** `formatRelative` com as 7 linhas da
   tabela AC26 (`timeZone` explícito) + bordas (59 s, 60 min, 24 h, virada de dia);
   `retryHint` 0/1/30/59/60/90; `formatMoney` a partir de string (`"1079.00"` → “R$ 1.079,00”,
   inválido → null); `formatPercentage` com sinal e direção; nenhuma saída “R$ 0,00”/“0%”
@@ -44,12 +44,12 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
 
 ## Estado
 
-- [ ] **T06 — `trackedList` reducer e `useDashboard` (`trackedList.test.ts`).** Reducer:
+- [x] **T06 — `trackedList` reducer e `useDashboard` (`trackedList.test.ts`).** Reducer:
   `load`, `append` sem repetir IDs, `replace`, `remove`, `upsert` no topo, `mergeFromDashboard`
   (atualiza só IDs existentes). Hook do painel com número de sequência que descarta resposta
   antiga e guarda `receivedAt` via `clock`. *Pronto quando:* testes do reducer e um teste de
   duas cargas fora de ordem passam. — AC16, AC17, AC18, AC24.
-- [ ] **T07 — `lib/focus.ts`.** Extrair `useModalFocus` do detalhe (sem mudar comportamento:
+- [x] **T07 — `lib/focus.ts`.** Extrair `useModalFocus` do detalhe (sem mudar comportamento:
   os testes de foco do diálogo da 0013 continuam verdes) e criar `useDisclosure`
   (Enter/Espaço nativos, Tab/Shift+Tab nas extremidades fecham, Esc devolve foco, setas
   inertes, clique fora). *Pronto quando:* testes de foco da 0013 verdes e teste de
@@ -57,29 +57,29 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
 
 ## Componentes (TDD por AC, renderizando `<App clock={...}/>` com `fakeApi`)
 
-- [ ] **T08 — Cabeçalho, navegação e menu da conta (`header.test.tsx`).** Marca, Início,
+- [x] **T08 — Cabeçalho, navegação e menu da conta (`header.test.tsx`).** Marca, Início,
   Produtos, Alertas, sino, menu com e-mail; navegação foca/rola as seções e alterna
   `aria-current`; Sair 204 → entrada; Sair 500/rede → mensagem no cabeçalho com área mantida;
   teclado do menu da conta. — AC01, AC02, AC03.
-- [ ] **T09 — Sino (`bell.test.tsx`).** Contador “3” e nome “Notificações, 3 não lidas”; 0
+- [x] **T09 — Sino (`bell.test.tsx`).** Contador “3” e nome “Notificações, 3 não lidas”; 0
   sem contador; 100 itens ou `next_cursor` → “99+”; painel com 5 de 7 e “Ver todas as
   notificações” → seção Alertas; vazio; falha → “Notificações indisponíveis” + “Tentar
   novamente”; marcar a 2ª de 3 → foco no seguinte; última → foco no título do painel; item
   aparece lido na seção; API passa de 3 para 1 → exibe “1”; teclado do painel. — AC03, AC04,
   AC05.
-- [ ] **T10 — Hero e envio (`hero.test.tsx`).** Textos exatos, placeholder, dica, nota de
+- [x] **T10 — Hero e envio (`hero.test.tsx`).** Textos exatos, placeholder, dica, nota de
   preços, sem card/gráfico/estrelas; “Localizando produto...” com só “Monitorar preço”
   desabilitado; 201 → mensagem, campo limpo, produto no topo da lista; 200 → “Você voltou a
   monitorar este produto.”; entrada sem `https://` chega à API e 400 aparece anunciado com
   texto preservado; 404/409/502/503; `already_tracked` → “Ver produto” abre o detalhe do ID;
   429 + 90 s → “Tente novamente em 2 minutos.”; rede; corpo instável; nenhum leva à entrada.
   — AC06, AC07, AC08.
-- [ ] **T11 — Indicadores e oportunidades (`overview.test.tsx`).** Quatro indicadores com
+- [x] **T11 — Indicadores e oportunidades (`overview.test.tsx`).** Quatro indicadores com
   valores e textos complementares exatos, sem deltas; cards com imagem ou marcador neutro,
   título, anterior riscado, atual, selo com seta e percentual, menor preço “desde o primeiro
   registro no BestPrice”, “Preço observado:” relativo, ordem da API, ativar abre detalhe, sem
   “Ver todos”; vazio com produtos → texto AC11. — AC09, AC10, AC11.
-- [ ] **T12 — `AccountArea` e esqueletos.** Montar a página na ordem hero, indicadores,
+- [x] **T12 — `AccountArea` e esqueletos.** Montar a página na ordem hero, indicadores,
   oportunidades, produtos, atualizações, alertas; esqueletos `aria-hidden` com um status
   “Carregando seu painel…” e região `aria-busy`; nenhum número/zero/texto de vazio antes da
   resposta. *Pronto quando:* teste de esqueleto em `states.test.tsx` verde. — AC24.

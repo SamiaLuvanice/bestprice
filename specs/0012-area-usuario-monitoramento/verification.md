@@ -98,3 +98,127 @@ conscientemente (T03), com cada alteração listada aqui.
 
 Nenhum código, teste ou gate foi executado nesta etapa; nenhum critério demonstrado. Status
 da spec segue `rascunho` até a aprovação do plano.
+
+## 2026-10-11 — Implementação — fase 1 (T01–T12)
+
+Papel `frontend`, worktree `.worktrees/feature-0012-issue-33-area-usuario-monitoramento`, branch
+`feature/0012-issue-33-area-usuario-monitoramento`. Comandos em `frontend/`, Node 22.18.0,
+npm 10.9.3. Vitest rodou no sandbox sem `spawn EPERM`. Nenhum arquivo de `backend/` alterado
+(`git diff --stat origin/develop -- backend/` vazio). Commits locais, sem push.
+
+### T01 — Linha de base (antes de qualquer mudança)
+
+| Comando | Resultado |
+|---|---|
+| `npm ci` | 256 pacotes, 0 vulnerabilidades (aviso de depreciação do eslint 9.39.5) |
+| `npm run lint` | sem erros nem avisos |
+| `npm test -- --run` | 1 arquivo, **29 passed (29)** |
+| `npm run build` | concluído; `index-Qf118TkP.css` 7,00 kB, `index-Buyu6JTz.js` 243,45 kB (gzip 74,97 kB) |
+
+Contrato conferido de novo em `backend/app/products/routes.py`, `schemas.py` e
+`auth/routes.py`: `POST /tracked-products` devolve 201/200 (`response.status_code = 201 if
+created else 200`), `/notifications` aceita `unread_only` e `limit` (`le=100`), campos
+monetários são `Decimal`, notificação traz `tracked_product_id`. Nenhuma divergência da tabela
+do plano.
+
+### Red → Green por tarefa
+
+Red observado com módulo/componente ainda sem o comportamento (stubs que compilam, para o Red
+não ser falha de importação). Mensagens reais da saída do Vitest.
+
+| Tarefa | Arquivo | Red observado | Green |
+|---|---|---|---|
+| T02 | `src/api.test.ts` | 12 failed / 2 passed (14): `expected undefined to be 'created'`; `Expected: "Não foi possível conectar ao BestPrice. Tente novamente." Received: "Não foi possível conectar à API."`; `Received: "Não foi possível concluir a operação."`; validação decimal `Error: A chamada deveria ter falhado.`; `TypeError: api.unreadNotifications is not a function` | 14 passed |
+| T04 | `src/lib/decimal.test.ts` | stub → 13 failed / 7 passed (20); os 7 que passaram são casos `null` para entrada inválida, que o stub já devolvia | 20 passed |
+| T05 | `src/lib/format.test.ts` | stub → 24 failed / 3 passed (27); passaram só os casos de `null` (instante inválido, dinheiro e percentual ausentes) | 27 passed |
+| T06 | `src/dashboard/trackedList.test.ts` | 6 failed / 1 passed (7): `expected false to be true`, `expected [] to deeply equal [ 'a', 'b', 'c' ]` (o que passou é “ignora substituição de item não carregado”) | 7 passed |
+| T06 | `src/dashboard/useDashboard.test.ts` | 5 failed (5): `Error: estado inesperado: loading`, `expected 'loading' to be 'ready'`, `expected "vi.fn()" to be called 1 times, but got 0 times` | 5 passed |
+| T06 (refactor da área) | `trackedList.test.ts`, ação `dashboard` | 1 failed: `expected [] to deeply equal [ 'a' ]` | 8 passed |
+| T07 | `src/lib/focus.test.tsx` | 1ª execução: 5 failed / 3 passed — os 3 passavam sem abrir o menu; testes reforçados com asserção de abertura; 2ª: **8 failed (8)** (`aria-expanded` esperado `true`, `Unable to find ... "Primeiro"`) | 8 passed; 29 testes da 0013 (inclusive foco do diálogo) verdes após extrair `useModalFocus` |
+| T08 | `src/dashboard/header.test.tsx` | 6 failed: `Unable to find role="heading" and name "Seus produtos"`; após renomear as seções: `Unable to find ... role "navigation" and name "Principal"` e `... role "button" and name /pessoa@example\.com/` | 6 passed |
+| T09 | `src/dashboard/bell.test.tsx` | 10 failed: `Unable to find role="button" and name /^Notificações/`; `Unable to find an element with the text: Não lida` | 10 passed |
+| T10 | `src/dashboard/hero.test.tsx` | 5 failed / 8 passed (13): `Unable to find ... text: Compre na hora certa.`, `... Localizando produto...`, `... Produto adicionado ao monitoramento.`, `... Você voltou a monitorar este produto.`, `expect(element).not.toHaveAttribute("type", "url")`. Os 8 que passaram cobrem mensagens de erro já entregues pela 0013 (404/409/502/503, 429, rede, corpo instável, Ver produto) e ficam como regressão | 13 passed |
+| T11 | `src/dashboard/overview.test.tsx` | 4 failed: `Unable to find ... role "region" and name "Resumo do monitoramento"`, `... text: Produtos monitorados que tiveram redução de preço recentemente.`, `... role "button" and name "Cafeteira elétrica"`, `... text: Nenhuma oportunidade de queda nas últimas 24 horas.` | 4 passed (o teste passou a esperar o fim do “Carregando seu painel…” antes de consultar os dados) |
+| T12 | `src/dashboard/states.test.tsx` | 1ª execução falhou por asserção errada do próprio teste (`Found multiple elements with the role "status"`), corrigida; Red válido: `expect(element).toHaveAttribute("aria-busy", "true")` | 1 passed |
+
+T03 não tem Red (infra de teste): após a troca de helper, os 29 testes rodaram e passaram
+contra o `api.ts` original (`29 passed (29)`), antes de qualquer mudança de UI.
+
+### Testes da 0013 migrados (T03 e tarefas seguintes)
+
+Troca de helper sem mudar asserção: todos os 29 testes usam `src/test/fakeApi.ts`
+(`signedIn = fakeApi`). Quatro testes que montavam roteador próprio com `vi.stubGlobal`
+passaram ao dublê com fixtures equivalentes: “mostra anúncio persistido, detalhe e histórico
+recebidos da API”, “carrega páginas adicionais de histórico e notificações sem repetir
+entradas”, “distingue tentativa falha, leitura válida, preço observado e mudança no detalhe” e
+“leva o foco ao título da lista quando o card que abriu o detalhe deixa de existir”.
+
+Asserções alteradas (comportamento mudado pela 0012):
+
+| Teste da 0013 | Antes → depois | Justificativa |
+|---|---|---|
+| mostra erro com nova tentativa quando a sessão não pode ser verificada por falha de rede | “Não foi possível conectar à API.” → “Não foi possível conectar ao BestPrice. Tente novamente.” | Convenção de erros / AC08 |
+| mostra mensagem de rede quando o cadastro não alcança a API | idem | AC08 |
+| mostra erro na área de notificações quando elas não carregam | região “Notificações” → “Alertas” | Seção Alertas / AC01 |
+| recarrega o vínculo e mostra o erro quando a atualização falha na fonte | região “Produtos monitorados” → “Seus produtos” | Seção “Seus produtos” / AC01 |
+| leva o foco ao título da lista quando o card que abriu o detalhe deixa de existir | título “Produtos monitorados” → “Seus produtos” | idem |
+
+Nenhum teste da 0013 foi apagado; os 29 continuam executando. Textos da 0013 ainda presentes
+e que a fase 2 migrará: “Você ainda não monitora anúncios.” (AC23), card com “Último preço
+conhecido · preço desatualizado” e métricas em `dl` (AC12–AC14), “As mudanças confirmadas
+aparecerão aqui.” e “Disponibilidade alterada” (AC20/AC21), “Sem notificações por enquanto.” e
+“Aviso … chegou” (AC22), parar sem confirmação no detalhe (AC19).
+
+### Gates ao fim da fase 1
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | sem erros nem avisos |
+| `npm test -- --run` | **12 arquivos, 145 passed (145)**, nenhum skip |
+| `npm run build` | concluído; `index-CVlEkXLe.css` 17,40 kB (gzip 4,33 kB), `index-CeVvIcIA.js` 265,38 kB (gzip 81,07 kB); +21,9 kB de JS bruto em relação à linha de base |
+
+Contagem por arquivo: `App.test.tsx` 29, `api.test.ts` 14, `lib/decimal.test.ts` 20,
+`lib/format.test.ts` 27, `lib/focus.test.tsx` 8, `dashboard/trackedList.test.ts` 8,
+`dashboard/useDashboard.test.ts` 5, `dashboard/header.test.tsx` 6, `dashboard/bell.test.tsx` 10,
+`dashboard/hero.test.tsx` 13, `dashboard/overview.test.tsx` 4, `dashboard/states.test.tsx` 1.
+
+Leitura do diff: `Number(` só aparece em `lib/format.ts` para o número do dia civil (datas, não
+dinheiro); `formatMoney`/`formatPercentage` recebem a string decimal validada; nenhum
+`parseFloat`. `@testing-library/user-event` é a única dependência nova (dev).
+
+### Desvios do plano registrados
+
+- T03 foi commitada antes de T02, porque `api.test.ts` usa as fixtures de `src/test/fakeApi.ts`.
+- A extração de `AccountArea` (estrutura de T12) foi feita como refactor antes de T08, com os 29
+  testes da 0013 verdes; nesse passo entrou a ação `dashboard` do reducer (primeira carga
+  inicializa, as seguintes só atualizam), com Red/Green próprio.
+- O teste das cargas fora de ordem ficou em `useDashboard.test.ts` (o plano citava
+  `trackedList.test.ts`).
+- `useModalFocus` cobre o foco preso, Esc e foco que escapa; o retorno do foco ao elemento que
+  abriu o detalhe continua na `AccountArea`.
+- `useDisclosure`: quando o `focusout` não tem destino (`relatedTarget` nulo — item removido
+  após uma ação, janela sem foco), a decisão de fechar espera o foco assentar; clique fora é
+  tratado por `mousedown` no document.
+- `RelativeTime` é parada de Tab (`tabIndex=0`, risco já previsto no plano): no painel do sino a
+  primeira parada é o instante da notificação e depois “Marcar como lida”. Avaliar no navegador
+  (T22).
+- A entrada (0011) reutiliza o mesmo hero; a mensagem de 401/erro de login passou do hero para o
+  painel de entrada, e a tentativa de monitorar sem sessão aparece junto ao campo.
+- Falha de “Marcar como lida” aparece no próprio painel (a spec não define); falha de recarga do
+  painel depois da primeira carga mantém os dados sem mensagem — revisar em T20 (AC25).
+- `price` do histórico não ganhou validação decimal (fora da lista do plano).
+
+### Observações e pendências
+
+- Instabilidade observada uma vez: “fecha o diálogo com Esc e devolve o foco a Ver detalhes”
+  falhou numa execução completa (1197 ms) logo após T08 e passou em 3 execuções isoladas do
+  arquivo e 3 execuções completas seguidas. Não reproduzida depois; investigar se voltar.
+- A varredura do AC29 (T21) precisa usar limite de palavra para “prime”: `grep -i prime` casa
+  com “primeiro/primeira” em textos legítimos.
+- Fase 2: T13–T27 (tabela “Seus produtos”, menu da linha, Atualizar agora pela linha, parar com
+  confirmação, detalhe, linha do tempo, seção Alertas, estados gerais, responsividade,
+  inspeção em navegador, revisão, documentação e PR). O recálculo do contador após
+  criar/editar/ativar alerta e “Atualizar agora” já está ligado no código, mas os testes do
+  AC04 para esses gatilhos ficam em T15/T17.
+- Nenhum critério de aceite foi dado como demonstrado de ponta a ponta nesta fase; não houve
+  inspeção em navegador.
