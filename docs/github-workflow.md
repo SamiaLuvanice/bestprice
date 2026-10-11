@@ -174,8 +174,8 @@ antes de alterar o Project. Para uma Issue fechada, a reconciliação consulta o
 `ClosedEvent` da timeline GraphQL e o campo `closer`, que identifica diretamente a PR
 que causou cada fechamento. O fechamento atual é o `ClosedEvent` mais recente; ele só
 é aceito se estiver a até 60 s do `closed_at` da Issue, porque o GitHub grava os dois
-separadamente e eles podem diferir em alguns segundos (na Issue #33, 1 s). Ela usa
-`Develop` somente quando esse evento tem uma PR mergeada (`mergedAt` preenchido) em
+separadamente e eles podem diferir em alguns segundos (na Issue #33, 1 s). A
+reconciliação usa `Develop` somente quando esse evento tem uma PR mergeada (`mergedAt` preenchido) em
 `develop`. Não se exige igualdade dos horários do merge e do evento de fechamento, que
 a API não garante. Assim, outras PRs vinculadas ou merges antigos não são confundidos
 com a causa do fechamento: uma Issue reaberta e fechada manualmente não herda a PR de
