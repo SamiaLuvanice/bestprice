@@ -363,3 +363,38 @@ código, e não é usada como evidência.
 - Reinspeção em navegador (QA) de Q1–Q3, das ações lado a lado a 360 px, do `scroll-margin-top`
   e do percurso de Tab sem os instantes; a geometria dos painéis em 320/360 px não foi medida aqui.
 - Coluna lateral de “Atualizações recentes” em 1280 px: fora do escopo (sem AC).
+
+## 2026-10-11 — Correções da re-revisão e da QA (2ª rodada)
+
+Base: HEAD `2f2f348` (já enviado). Mesma worktree e branch; commits locais, sem push; `backend/`
+sem alteração. Contrato conferido em `backend/app/products/routes.py`: `PATCH /alert` responde 404
+“Alerta não encontrado.” (`own_alert`) com o vínculo ativo; `DELETE /alert` responde 204 mesmo sem
+alerta; parar é soft delete (`active=False`, alerta desligado), e o detalhe continua 200 com
+`active: false`.
+
+| Achado | Teste | Red observado | Correção (commit) |
+|---|---|---|---|
+| N1 — 404 de `/alert` não é produto removido | `detail.test.tsx`: “mantém o detalhe aberto e atualizado quando só o alerta foi excluído em outra aba” e “remove o produto quando o alerta some e o detalhe também responde 404”; o caso antigo de DELETE 404 (que o backend nunca devolve) foi removido | `Unable to find … role "dialog" and name "Detalhes de Fone sem fio"` (o detalhe fechava e o produto saía); `expect(element).toHaveTextContent()` no caso de detalhe 404 | `recoverFromAlertFailure` recarrega o detalhe: ativo → fica aberto, sem alerta, com “Alerta não encontrado.”; 404 ou inativo → convenção de produto removido — `45af59e` |
+| N2 — detalhe recarregado inativo | `detail.test.tsx`: Pausar (PATCH 200), Salvar alvo (PATCH 200) e Excluir alerta (DELETE 204) seguidos de detalhe com `active: false` | 3 failed: `expect(element).not.toBeInTheDocument()` (o diálogo seguia aberto) | `reloadSelected` e `reloadTracking` fecham o detalhe com “Monitoramento interrompido.” e aplicam `removeTracked` — `45af59e` |
+| N3 — falha da carga automática (M7) | `products.test.tsx`: “tenta a página seguinte automática uma vez só e mostra o erro com Carregar mais” | Sem Red: passou na primeira execução. Removendo temporariamente `!loadMoreError` da condição o teste continuou verde (1 chamada), então a guarda não é a única barreira contra a repetição; o teste fixa o comportamento exigido (1 chamada, erro e botão) | `b76fa4d` |
+| N4 — seção Alertas presa em “carregando” | `useNotifications.test.ts`: recarga com merge descarta a carga inicial e falha | `expected { status: 'loading', … } to match object { status: 'error', … }` | falha de recarga com merge vira erro quando a seção ainda não estava pronta — `254ef76` |
+| N5 — sinal em dinheiro que arredonda para zero; comentário | `format.test.ts` (`-0.004` → R$ 0,00; `-10.50` mantém o sinal) | `Expected: "R$ 0,00" Received: "-R$ 0,00"` | `signDisplay: 'negative'` em `formatMoney`; comentário de `formatPercentage` corrigido — `0e00050` |
+| D3 — clique fora não devolvia o foco | `stop-tracking.test.tsx` e `detail.test.tsx`: “clique fora” com `userEvent.click` no fundo (reproduz a ação padrão do mousedown) no lugar de `fireEvent.mouseDown` | 2 failed: `expect(element).toHaveFocus()` (foco no body) | `preventDefault` no mousedown do fundo da confirmação e do detalhe — `592ec6e` |
+| D5 — foco perdido após “Carregar mais” na última página | `products.test.tsx` e `alerts.test.tsx` | 2 failed: `expect(element).toHaveFocus()` | foco no primeiro item novo (“Ver detalhes” do produto / “Marcar como lida” da notificação) ou no título da seção; carga automática não move o foco — `ea3e0e1` |
+| D1, D2, D4 — 320/360 px | CSS (jsdom não aplica estilos); reconferência pela QA no navegador | — | `25256f4`: conta só com avatar abaixo de 600 px (e-mail em `sr-only`, mantendo o nome acessível; antes `display:none` o removia), sem chevron e com espaçamentos menores (cálculo: 28 + 8 + 140 + 8 + 44 + 4 + 44 = 276 px ≤ 288 px úteis); painel da linha `min(260px, 100vw − 64px)`; `.alert-main` com `flex: 1 1 100%` em telas estreitas para “Não lida” e o botão quebrarem abaixo |
+
+Fora do escopo, sem alteração: a mensagem do backend no 503 de “Atualizar agora”.
+
+### Gates
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | sem erros nem avisos |
+| `npm test -- --run` (1ª) | 22 arquivos, **236 passed (236)**, 62,50 s |
+| `npm test -- --run` (2ª) | 22 arquivos, **236 passed (236)**, 56,08 s |
+| `npm run build` | concluído; `index-DG5ROKvE.css` 22,27 kB (gzip 5,08 kB), `index-cs99xizx.js` 280,60 kB (gzip 85,12 kB) |
+
+### Pendências
+
+- Reconferência no navegador (QA) de D1, D2 e D4 a 320/360 px: a geometria não foi medida aqui.
+- N3: a causa de a repetição não ocorrer mesmo sem `!loadMoreError` não foi investigada a fundo.
