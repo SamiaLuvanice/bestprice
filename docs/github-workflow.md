@@ -85,7 +85,7 @@ precisar ser congelada, crie uma decisão explícita de produto antes de prosseg
 |---|---|---|
 | CI | PR aberta, atualizada, reaberta, editada ou pronta para revisão; push em develop/stage/main | Quality + política de PR; token de leitura; sem secrets |
 | Quality | Chamado por CI e Delivery | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/build; testes Node e actionlint |
-| Project sync | Issue aberta/reaberta/fechada/atribuída; ciclo de draft/revisão/fechamento de PR; push em `feature/**` que altera `specs/*/spec.md` | Adiciona item e atualiza Status, com PROJECT_TOKEN |
+| Project sync | Issue aberta/reaberta/fechada/atribuída/desatribuída; ciclo de draft/revisão/fechamento de PR; push em `feature/**` que altera `specs/*/spec.md` | Adiciona item e atualiza Status, com PROJECT_TOKEN |
 | Delivery | Push em main; execução manual na main | Repete Quality, publica duas imagens GHCR e cria release após ambas |
 
 O check obrigatório chama-se **CI**. Ele falha se qualquer gate falhar ou for
@@ -175,8 +175,9 @@ configuração; nenhum token de sessão é copiado para Actions.
 
 **Ready pela spec (0014).** A branch `feature/<spec>-issue-<n>-<slug>` liga a Issue
 `#n` à pasta `specs/<spec>-*`. O status vem do campo `status:` do cabeçalho de
-`spec.md`, lido pela API no SHA atual da branch, então execuções fora de ordem
-convergem. A Issue aberta sem responsável vai a **Ready** se ao menos uma de suas
+`spec.md`, lido pela API no SHA atual da branch quando a execução começa; como as
+execuções da mesma Issue são serializadas (ver abaixo), a última reflete o estado
+mais recente. A Issue aberta sem responsável vai a **Ready** se ao menos uma de suas
 branches tiver a spec `pronta`; responsável continua levando a **In progress** e
 Issue fechada ignora a spec. O push só conta quando altera a spec da própria branch
 (atualizar com `develop` não conta). Branch sem a pasta da spec é o estado normal do
