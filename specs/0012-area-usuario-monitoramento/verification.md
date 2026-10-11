@@ -398,3 +398,31 @@ Fora do escopo, sem alteração: a mensagem do backend no 503 de “Atualizar ag
 
 - Reconferência no navegador (QA) de D1, D2 e D4 a 320/360 px: a geometria não foi medida aqui.
 - N3: a causa de a repetição não ocorrer mesmo sem `!loadMoreError` não foi investigada a fundo.
+
+## 2026-10-11 — Ajustes finais (3ª rodada)
+
+Base: HEAD `bad8dbe` (já enviado). Mesma worktree e branch; commits locais, sem push; `backend/`
+sem alteração.
+
+| Item | Teste | Red observado | Correção (commit) |
+|---|---|---|---|
+| D6 — foco após “Carregar mais” em página intermediária | `alerts.test.tsx` e `products.test.tsx`: “leva o foco ao primeiro item novo numa página intermediária” (Enter no botão, próxima página com cursor) | 2 failed: `expect(element).toHaveFocus()` | Critério único nas duas listas: o botão fica desabilitado durante a carga (o que tira o foco dele), então, em qualquer página, o foco vai ao primeiro item novo acionável (“Ver detalhes” / “Marcar como lida”) ou ao título — `3faaa77` |
+| N3 — teste não protegia a guarda `!loadMoreError` | `products.test.tsx` “tenta a página seguinte automática uma vez só…”, com a falha adiada 20 ms | Com a guarda removida temporariamente: `expected [ … ] to have a length of 1 but got 5`; guarda restaurada, teste verde | só teste — `e2d42be` |
+| B — clique fora fecha o detalhe | `detail.test.tsx` “fecha o detalhe e devolve o foco ao Ver detalhes de origem” (`userEvent.click` no fundo) | Passou com o código atual; sem o `preventDefault` (removido temporariamente) falhou com `expect(element).toHaveFocus()`, assim como o teste do cancelamento da confirmação; código restaurado | só teste — `5cbb61a` |
+| C — recarga atrasada fechava o detalhe de outro produto | `detail.test.tsx` “não fecha o detalhe de outro produto quando o anterior volta inativo” | `Unable to find … role "dialog" and name "Detalhes de Cafeteira elétrica"` | `closeAsRemoved` só fecha o diálogo se ele mostra o produto afetado; a linha sai da lista em qualquer caso, e o foco não sai do detalhe de outro produto aberto — `01badc7` |
+| D — detalhe fechado reabria ao fim de ação de alerta | `detail.test.tsx` “não reabre o detalhe fechado durante uma ação de alerta” | `expect(element).not.toBeInTheDocument()` (o diálogo reapareceu) | `reloadSelected` só atualiza o diálogo com `openDetailId.current === id` — `01badc7` |
+
+### Gates
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | sem erros nem avisos |
+| `npm test -- --run` (1ª) | 22 arquivos, **241 passed (241)**, 64,16 s |
+| `npm test -- --run` (2ª) | 22 arquivos, **241 passed (241)**, 53,17 s |
+| `npm run build` | concluído; `index-DG5ROKvE.css` 22,27 kB (gzip 5,08 kB), `index-DHstUqwz.js` 280,66 kB (gzip 85,13 kB) |
+
+### Pendências
+
+- `signDisplay: 'negative'` em `formatMoney` lança RangeError em navegadores antigos (Chrome < 106,
+  Firefox < 116, Safari < 15.4); mantido nesta rodada por decisão da coordenação.
+- D6 em navegador real (foco após Carregar mais em página intermediária) a reconferir pela QA.
