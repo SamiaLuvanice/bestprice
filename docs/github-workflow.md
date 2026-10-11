@@ -25,7 +25,9 @@ registros substitui as evidências de verificação.
 
 1. Abra uma Issue pelo formulário **Tarefa**, com resultado esperado e aceite.
 2. Se o Project estiver configurado, defina prioridade P0–P3 e ordem. Atribuir responsável
-   move a Issue para **In progress** somente após sincronização comprovada.
+   move a Issue para **In progress** somente após sincronização comprovada. Quando a
+   spec fica `pronta` na branch da feature e é publicada, a Issue sem responsável vai
+   para **Ready** (spec 0014); por isso, marque a spec `pronta` antes de atribuir.
 3. Crie a spec quando aplicável e uma branch ligada à Issue:
 
    ```powershell
@@ -83,7 +85,7 @@ precisar ser congelada, crie uma decisão explícita de produto antes de prosseg
 |---|---|---|
 | CI | PR aberta, atualizada, reaberta, editada ou pronta para revisão; push em develop/stage/main | Quality + política de PR; token de leitura; sem secrets |
 | Quality | Chamado por CI e Delivery | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/build; testes Node e actionlint |
-| Project sync | Issue aberta/reaberta/fechada/atribuída; ciclo de draft/revisão/fechamento de PR | Adiciona item e atualiza Status, com PROJECT_TOKEN |
+| Project sync | Issue aberta/reaberta/fechada/atribuída; ciclo de draft/revisão/fechamento de PR; push em `feature/**` que altera `specs/*/spec.md` | Adiciona item e atualiza Status, com PROJECT_TOKEN |
 | Delivery | Push em main; execução manual na main | Repete Quality, publica duas imagens GHCR e cria release após ambas |
 
 O check obrigatório chama-se **CI**. Ele falha se qualquer gate falhar ou for
@@ -126,9 +128,10 @@ explícita e alteração revisada da configuração.
 
 ## Configurar o Project (permissão adicional)
 
-O token de sessão usado na implementação não possui `read:project`/`project`.
-O `GITHUB_TOKEN` também não acessa Projects. Criação e automação ficam pendentes
-até que o responsável conceda acesso; nenhum token de sessão é copiado para Actions.
+O `GITHUB_TOKEN` não acessa Projects; a automação usa um PAT dedicado. Neste
+repositório, `PROJECT_TOKEN`, `PROJECT_OWNER` e `PROJECT_NUMBER` já estão
+configurados (conferido em 11/10/2026). Os passos abaixo valem para recriar a
+configuração; nenhum token de sessão é copiado para Actions.
 
 1. Para configurar interativamente pela CLI: `gh auth refresh -s project` e complete
    a autorização no navegador. Crie um Project pelo GitHub ou
@@ -136,7 +139,8 @@ até que o responsável conceda acesso; nenhum token de sessão é copiado para 
    Guarde seu número, associe o repositório pela interface ou `gh project link`.
 2. O campo **Status** usa as opções existentes **Backlog**, **Ready**, **In progress**,
    **In review**, **Develop**, **Stage** e **Main**. A sincronização não cria opções;
-   `Ready` continua disponível para triagem manual. Crie **Priority** com P0/P1/P2/P3
+   `Ready` é definido pela spec da branch da feature (ver abaixo), e um `Ready`
+   manual é sobrescrito no próximo evento sincronizado. Crie **Priority** com P0/P1/P2/P3
    e uma visão Board por Status.
    Priorização e ordenação são manuais. Desative automações nativas que também
    alterem Status (especialmente fechamento/merge), evitando disputa com este workflow.
@@ -157,7 +161,8 @@ até que o responsável conceda acesso; nenhum token de sessão é copiado para 
 
 | Item | Estado no GitHub | Status no Project |
 |---|---|---|
-| Issue | Aberta sem responsável | Backlog |
+| Issue | Aberta sem responsável, com spec `pronta` em uma branch da feature | Ready |
+| Issue | Aberta sem responsável, sem branch/spec ou com spec em outro status | Backlog |
 | Issue | Aberta com responsável | In progress |
 | Issue | Fechada pelo `Closes #...` após merge em develop | Develop |
 | Issue | Fechada como não planejada | Backlog (não há opção Canceled) |
@@ -167,6 +172,25 @@ até que o responsável conceda acesso; nenhum token de sessão é copiado para 
 | PR | Merge em stage | Stage |
 | PR | Merge em main | Main |
 | PR | Fechada sem merge | Backlog |
+
+**Ready pela spec (0014).** A branch `feature/<spec>-issue-<n>-<slug>` liga a Issue
+`#n` à pasta `specs/<spec>-*`. O status vem do campo `status:` do cabeçalho de
+`spec.md`, lido pela API no SHA atual da branch, então execuções fora de ordem
+convergem. A Issue aberta sem responsável vai a **Ready** se ao menos uma de suas
+branches tiver a spec `pronta`; responsável continua levando a **In progress** e
+Issue fechada ignora a spec. O push só conta quando altera a spec da própria branch
+(atualizar com `develop` não conta). Branch sem a pasta da spec é o estado normal do
+início e fica em Backlog sem aviso; pasta ambígua, cabeçalho ausente ou status fora
+de `rascunho|pronta|implementada|descartada` geram aviso no resumo, sem falhar.
+Branches fora desse padrão (`fix/`, `docs/`, `feature/` sem número de spec) e a linha
+`Issue:` da spec não participam. Remover a branch não dispara sincronização; o
+Status é recalculado no próximo evento da Issue ou pela reconciliação manual.
+
+O gatilho `push` disponibiliza `PROJECT_TOKEN` em execuções de branches de feature.
+Os scripts continuam vindo da branch padrão e a spec é lida como dado, mas o YAML do
+workflow vem da branch publicada; só colaboradores com escrita publicam branches, e
+forks não disparam `push` aqui. O gatilho só existe em branches que já contêm o
+workflow atualizado.
 
 Issues e PRs aparecem como itens separados. O status de uma PR mergeada vem de sua
 `base.ref`, e bases diferentes de `develop`, `stage` ou `main` causam erro explícito
