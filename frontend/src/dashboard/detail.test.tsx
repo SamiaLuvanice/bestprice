@@ -169,18 +169,13 @@ describe('recálculo após ações no detalhe', () => {
 
 describe('produto parado em outra aba', () => {
   it.each([
-    ['Atualizar agora', 409, 'tracking_inactive', `${itemUrl}/refresh`, 'POST'],
-    ['Criar alerta', 409, 'tracking_inactive', `${itemUrl}/alert`, 'POST'],
-    ['Pausar alerta', 404, 'resource_not_found', `${itemUrl}/alert`, 'PATCH'],
-    ['Excluir alerta', 404, 'resource_not_found', `${itemUrl}/alert`, 'DELETE'],
-  ])('fecha o detalhe e remove o produto quando %s responde %i', async (action, status, code, url, method) => {
-    const message = 'Você não monitora mais este produto.'
-    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
-    const start = action === 'Criar alerta' || action === 'Atualizar agora' ? first : withAlert
-    const server = detailServer([start, second], (requested, init) =>
-      requested === url && init?.method === method ? reply(status, apiError(code, message)) : undefined)
-    server.setDetail(start)
-    const { user } = await renderArea(dashboardFixture({ items: [start, second] }), server.route)
+    ['Atualizar agora', `${itemUrl}/refresh`, 'POST'],
+    ['Criar alerta', `${itemUrl}/alert`, 'POST'],
+  ])('fecha o detalhe e remove o produto quando %s responde 409 tracking_inactive', async (action, url, method) => {
+    const message = 'Monitoramento interrompido.'
+    const server = detailServer([first, second], (requested, init) =>
+      requested === url && init?.method === method ? reply(409, apiError('tracking_inactive', message)) : undefined)
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), server.route)
     const dialog = within(await openDetail(user))
     if (action === 'Criar alerta') await user.type(dialog.getByLabelText('Avise quando chegar a'), '70.00')
     await user.click(dialog.getByRole('button', { name: action }))
@@ -189,6 +184,78 @@ describe('produto parado em outra aba', () => {
     expect(productRow('Cafeteira elétrica')).toBeInTheDocument()
     expect(screen.getByTestId('products-status')).toHaveTextContent(message)
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
+  })
+
+  // Resposta real do backend: parar é soft delete; PATCH/DELETE do alerta respondem 200/204 e o
+  // detalhe recarregado volta com active=false.
+  it.each([
+    ['Pausar alerta', 'PATCH', () => reply(200, alertFixture({ enabled: false }))],
+    ['Salvar alvo', 'PATCH', () => reply(200, alertFixture({ target_price: '70.00' }))],
+    ['Excluir alerta', 'DELETE', () => reply(204, null)],
+  ])('fecha o detalhe quando %s conclui e o detalhe recarregado está inativo', async (action, method, outcome) => {
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
+    const stopped = product('1', 'Fone sem fio', {}, { active: false, alert: alertFixture({ enabled: false }) })
+    let current = [withAlert, second]
+    let detail = withAlert
+    const { user } = await renderArea(dashboardFixture({ items: current }), (url, init) => {
+      if (url === `${itemUrl}/alert` && init?.method === method) {
+        current = [second]
+        detail = stopped
+        return outcome()
+      }
+      if (url === itemUrl) return reply(200, detail)
+      if (url === `${itemUrl}/history`) return reply(200, { items: [], next_cursor: null })
+      if (url === '/api/dashboard') return reply(200, dashboardFixture({ items: current }))
+      return undefined
+    })
+    const dialog = within(await openDetail(user))
+    if (action === 'Salvar alvo') await user.type(dialog.getByLabelText('Novo alvo (opcional)'), '70.00')
+    await user.click(dialog.getByRole('button', { name: action }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('products-status')).toHaveTextContent('Monitoramento interrompido.')
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
+  })
+
+  it('mantém o detalhe aberto e atualizado quando só o alerta foi excluído em outra aba', async () => {
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
+    let detail = withAlert
+    const { user } = await renderArea(dashboardFixture({ items: [withAlert, second] }), (url, init) => {
+      if (url === `${itemUrl}/alert` && init?.method === 'PATCH') {
+        detail = first
+        return reply(404, apiError('resource_not_found', 'Alerta não encontrado.'))
+      }
+      if (url === itemUrl) return reply(200, detail)
+      if (url === `${itemUrl}/history`) return reply(200, { items: [], next_cursor: null })
+      if (url === '/api/dashboard') return reply(200, dashboardFixture({ items: [detail, second] }))
+      return undefined
+    })
+    const dialog = within(await openDetail(user))
+    await user.click(dialog.getByRole('button', { name: 'Pausar alerta' }))
+    const current = within(screen.getByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
+    expect(await current.findByRole('alert')).toHaveTextContent('Alerta não encontrado.')
+    expect(current.getByRole('button', { name: 'Criar alerta' })).toBeInTheDocument()
+    expect(productRow('Fone sem fio')).toBeInTheDocument()
+    expect(within(productRow('Fone sem fio')).queryByText(/Alerta em/)).not.toBeInTheDocument()
+  })
+
+  it('remove o produto quando o alerta some e o detalhe também responde 404', async () => {
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
+    let gone = false
+    const { user } = await renderArea(dashboardFixture({ items: [withAlert, second] }), (url, init) => {
+      if (url === `${itemUrl}/alert` && init?.method === 'PATCH') {
+        gone = true
+        return reply(404, apiError('resource_not_found', 'Alerta não encontrado.'))
+      }
+      if (url === itemUrl) return gone ? reply(404, apiError('resource_not_found', 'Produto monitorado não encontrado.')) : reply(200, withAlert)
+      if (url === `${itemUrl}/history`) return reply(200, { items: [], next_cursor: null })
+      return undefined
+    })
+    const dialog = within(await openDetail(user))
+    await user.click(dialog.getByRole('button', { name: 'Pausar alerta' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('products-status')).toHaveTextContent('Produto monitorado não encontrado.')
   })
 })
 

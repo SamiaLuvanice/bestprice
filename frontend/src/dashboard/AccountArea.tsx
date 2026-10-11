@@ -206,22 +206,52 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     finally { setBusy(false) }
   }
 
-  // Detalhe recarregado após uma ação: atualiza o diálogo e a linha correspondente da lista.
-  async function reloadSelected(id: string) {
+  // Fecha o detalhe de um produto que deixou de ser monitorado e aplica a convenção de produto removido.
+  function closeAsRemoved(id: string, text: string) {
+    detailOpener.current = null
+    setSelected(null)
+    removeTracked(id, text)
+    recalculate()
+  }
+
+  // Detalhe recarregado após uma ação: atualiza o diálogo e a linha. Parar é soft delete, então um
+  // detalhe 200 com active=false (parado em outra aba) também fecha o diálogo. Devolve se continua aberto.
+  async function reloadSelected(id: string): Promise<boolean> {
     const detail = await api.detail(id)
+    if (!detail.active) { closeAsRemoved(id, 'Monitoramento interrompido.'); return false }
     setSelected(detail)
     dispatchList({ type: 'replace', tracked: detail, receivedAt: clock() })
+    return true
   }
 
   // Falha de ação no detalhe: produto que deixou de existir fecha o detalhe e segue a convenção
   // de produto removido; as demais falhas aparecem no próprio detalhe.
   function failInDetail(id: string, failure: unknown): boolean {
     if (!trackingGone(failure)) { fail(failure); return false }
-    detailOpener.current = null
-    setSelected(null)
-    removeTracked(id, failure.message)
-    recalculate()
+    closeAsRemoved(id, failure.message)
     return true
+  }
+
+  // 404 vindo de /alert significa “alerta não encontrado” (excluído em outra aba), não produto
+  // removido: o detalhe é recarregado e só sai da tela se o vínculo também tiver deixado de existir.
+  async function recoverFromAlertFailure(id: string, failure: unknown) {
+    if (!(failure instanceof ApiFailure && failure.status === 404)) { failInDetail(id, failure); return }
+    try {
+      if (await reloadSelected(id)) {
+        setError({ message: failure.message, trackedProductId: null })
+        recalculate()
+      }
+    } catch (reloadFailure) { failInDetail(id, reloadFailure) }
+  }
+
+  // Depois de uma ação de alerta concluída: detalhe, indicadores e contador do sino recalculados.
+  async function afterAlertAction(id: string) {
+    try {
+      if (!await reloadSelected(id)) return
+      setTarget('')
+      await reloadDashboard()
+      await notifications.refreshAfterAction()
+    } catch (failure) { failInDetail(id, failure) }
   }
 
   async function createAlert(event: FormEvent<HTMLFormElement>) {
@@ -229,13 +259,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     if (!selected) return
     setBusy(true)
     setError(null)
+    const id = selected.id
     try {
-      await api.createAlert(selected.id, target)
-      await reloadSelected(selected.id)
-      await reloadDashboard()
-      await notifications.refreshAfterAction()
-      setTarget('')
-    } catch (failure) { failInDetail(selected.id, failure) }
+      await api.createAlert(id, target)
+      await afterAlertAction(id)
+    } catch (failure) { failInDetail(id, failure) }
     finally { setBusy(false) }
   }
 
@@ -243,26 +271,32 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     if (!selected?.alert) return
     setBusy(true)
     setError(null)
+    const id = selected.id
     try {
-      await api.updateAlert(selected.id, target ? { target_price: target } : { enabled: !selected.alert.enabled })
-      await reloadSelected(selected.id)
-      await reloadDashboard()
-      await notifications.refreshAfterAction()
-      setTarget('')
-    } catch (failure) { failInDetail(selected.id, failure) }
-    finally { setBusy(false) }
+      await api.updateAlert(id, target ? { target_price: target } : { enabled: !selected.alert.enabled })
+    } catch (failure) {
+      await recoverFromAlertFailure(id, failure)
+      setBusy(false)
+      return
+    }
+    await afterAlertAction(id)
+    setBusy(false)
   }
 
   async function removeAlert() {
     if (!selected) return
     setBusy(true)
     setError(null)
+    const id = selected.id
     try {
-      await api.deleteAlert(selected.id)
-      await reloadSelected(selected.id)
-      await reloadDashboard()
-    } catch (failure) { failInDetail(selected.id, failure) }
-    finally { setBusy(false) }
+      await api.deleteAlert(id)
+    } catch (failure) {
+      await recoverFromAlertFailure(id, failure)
+      setBusy(false)
+      return
+    }
+    await afterAlertAction(id)
+    setBusy(false)
   }
 
   // Confirmação dentro do detalhe: sucesso fecha o detalhe e aplica a convenção de produto removido;
@@ -306,6 +340,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     try {
       if (openDetailId.current === id) {
         const detail = await api.detail(id)
+        if (!detail.active) { closeAsRemoved(id, 'Monitoramento interrompido.'); return }
         if (openDetailId.current === id) setSelected(detail)
         dispatchList({ type: 'replace', tracked: detail, receivedAt: clock() })
       }
