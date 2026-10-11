@@ -75,7 +75,9 @@ export function useNotifications({ clock, onUnauthenticated }: Options) {
     } catch (failure) {
       if (current !== allSequence.current) return
       if (isUnauthenticated(failure)) { callbacks.current.onUnauthenticated(failure); return }
-      if (!merge) setAll((state) => ({ ...state, status: 'error', message: messageOf(failure) }))
+      // Recarga com merge só preserva a seção já carregada; se ela ainda não estava pronta (a carga
+      // inicial foi descartada por esta), a falha vira estado de erro em vez de “carregando” para sempre.
+      setAll((state) => merge && state.status === 'ready' ? state : { ...state, status: 'error', message: messageOf(failure) })
     }
   }, [])
 
