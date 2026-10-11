@@ -771,3 +771,112 @@ variante ambígua e benefício pessoal não são detectados. Os demais (004, 006
   detecção de variante ambígua ou benefício pessoal (depende de AC-013); limite
   de tentativas de login depende da spec 0011. Status da spec permanece
   `rascunho`.
+
+## Continuação — 11/10/2026
+
+Escopo: fechar as pendências não dependentes de credenciais (AC-005, AC-007,
+AC-008, AC-012 e AC-016) sobre o PR #35. Orquestração pela skill
+`agent-orchestration`: papéis `backend`, `frontend`, `qa` e `arch-reviewer`,
+com arquivos exclusivos por papel; o coordenador conferiu gates e fez os commits.
+
+### Ambiente
+
+- PostgreSQL 17 descartável para testes: container `bestprice-0013-testdb`
+  (`postgres:17-alpine`, `127.0.0.1:55433`), `TEST_DATABASE_URL` apontando só a ele.
+- Baseline no HEAD `2ec2c39`: `uv run ruff check .` **All checks passed!**;
+  pytest **124 passed, 1 warning**, 0 skipped.
+- Stack de QA: snapshot `git archive HEAD` fora do repositório, Compose isolado
+  `-p bestprice0013qa`, integração Mercado Livre desabilitada, fixtures sintéticas
+  por SQL (títulos “[QA sintético]”), removida ao final com `down -v`.
+
+### Backend (`986b7b6`, `764cf5a`, `0745d10`, `9302277`)
+
+- AC-005: `test_new_listing_write_failure_leaves_no_rows_and_retry_succeeds` e
+  `test_shared_listing_write_failure_keeps_previous_state_and_retry_succeeds`.
+  Falha injetada por `after_flush` depois que publicação, preço e vínculo chegam ao
+  PostgreSQL; nada fica gravado, o estado compartilhado anterior é preservado,
+  `pg_locks` não mostra advisory lock remanescente e a nova tentativa, por conexão
+  independente (`NullPool`), conclui. Sem Red (o código já estava correto);
+  mutações de sensibilidade: commit intermediário → `assert ... is None` falha;
+  sem `pg_advisory_unlock` → `assert 1 == 0` e `ListingBusy`. Revertidas.
+- AC-008: `test_distinct_worker_processes_query_each_due_listing_once` executa
+  workers em processos de SO distintos (`subprocess`) contra o mesmo banco com
+  fonte dublê. Seis publicações devidas, concorrência 2, cadência 600 s: cada uma
+  consultada exatamente uma vez, pico de 2 chamadas simultâneas por processo,
+  `next_check_at - last_attempt_at = 600 s`, segunda rodada sem chamadas. O teste
+  limpa as próprias linhas antes e depois e segura o lock das publicações alheias,
+  que permanecem intactas. Sem Red; mutação (remover `ensure_source_due`) faz o
+  teste falhar com chamadas extras. Rodado 3x isoladamente: 3 passed.
+- AC-016: o cliente recusa como `unsupported_price_context`, sem gravar preço nem
+  alterar histórico compartilhado, (a) variações com preços distintos, (b) variação
+  cujo preço comum não é igual ao `amount` nem ao `regular_amount` do `sale_price`
+  (promoção sobre o preço cheio das variações é aceita e grava o `amount`) e (c) preço com `conditions.context_restrictions`
+  além de `channel_marketplace` ou `eligible: false`. Red observado:
+  `DID NOT RAISE IntegrationError` (unitários) e `DID NOT RAISE ApiError`
+  (integração, cadastro e refresh). Variação sem `price` segue o preço do item;
+  diferenças abaixo de 1 centavo colapsam; preço de variação malformado vira
+  `integration_invalid_response`, assim como `regular_amount` malformado;
+  `sale_price` ausente deixa o anúncio sem preço. Red da regra de promoção:
+  `IntegrationError: unsupported_price_context` antes do ajuste.
+- Gate final: ruff **All checks passed!**; pytest **149 passed, 1 warning**,
+  0 failed, 0 skipped.
+
+Premissas de AC-016 pendentes de validação com credenciais reais (AC-013):
+`variations[].price` e `conditions` no formato documentado de `/items/{id}/prices`;
+`/sale_price` com `channel_marketplace` sem cupom individual; `price` da variação
+igual ao preço cheio e `regular_amount` igual a esse preço antes do desconto;
+qualquer restrição compartilhada fora da allowlist bloqueia o anúncio (falso
+positivo possível); variantes publicadas como itens irmãos (User Products) e preço
+personalizado sem `conditions` não são detectados (falso negativo).
+
+### Frontend (`6f590be`, `79eb553`)
+
+Primeira inspeção QA em Chromium (Playwright 1.48.2 + axe 4.10.1, 1366x768 e
+390x844) no HEAD `2ec2c39` reprovou: cards ilegíveis no mobile (`.product-info`
+com 15,7 px), logo comprimido, contraste do rodapé (`color-contrast`, serious, em
+todas as telas), diálogo sem mover/prender foco nem fechar com Esc, botão
+“Tentar novamente” sem estilo e métricas de AC-007 só no detalhe.
+
+Correções com teste antes (Red observado em cada comportamento): métricas no card
+(anterior, mínimo, máximo, variação, última consulta e alteração; ausentes como
+“Desconhecido”), foco do diálogo ao abrir, Tab/Shift+Tab presos, Esc fecha e
+devolve o foco, foco preservado quando o botão focado fica desabilitado, foco no
+título da lista quando o card de origem some, diálogo fechado durante “Atualizar
+agora” não reabre (sucesso e falha). CSS: grid no card mobile, logo sem encolher,
+rodapé `#5f6b82` (5,05:1). Gates: `npm run lint` sem erros, `npm test -- --run`
+**29 passed**, `npm run build` concluído.
+
+Reinspeção QA no HEAD `6f590be`: axe **sem violações** nas 10 telas (login,
+dashboard, dois detalhes e falha de rede, nos dois viewports); `.product-info`
+230 px e `.brand-mark` 36 px no mobile; sem overflow horizontal; diálogo com foco
+inicial no fechar, 20 Tab e 20 Shift+Tab dentro, Esc fecha e devolve o foco;
+0 ocorrências de “Amazon”/“ASIN” no DOM e no bundle; nenhum “R$ 0,00”. Os
+comportamentos de `79eb553` estão cobertos por testes de UI, sem nova inspeção
+em navegador.
+
+### Situação atualizada
+
+Passam a **demonstrado**: AC-005; AC-007 e AC-012 (fixtures sintéticas, Chromium);
+AC-008 por processos distintos com fonte dublê; AC-016 com dublês que seguem o
+formato documentado da API. As referências ativas à Amazon em `README.md`,
+`docs/product-context.md`, `AGENTS.md` e `.agents/rules/workspace.md` já tinham
+sido removidas em `08a0225`/`1fb915e`; resta só o registro histórico datado em
+`docs/LEARNINGS.md`.
+
+### Revisão independente
+
+`arch-reviewer` revisou `2ec2c39..6f590be`: aprovado com ressalvas, sem
+bloqueante; 1 importante (foco escapava do diálogo quando o botão focado ficava
+desabilitado) e 4 menores (foco ao parar de monitorar, isolamento do teste
+multiprocesso, prova de liberação do lock, limites de AC-016). Todos corrigidos
+em `79eb553`, `764cf5a` e `0745d10`. A re-revisão de `6f590be..0745d10`
+confirmou as correções (backend 144 passed; frontend 29 passed duas vezes; teste
+multiprocesso 3x verde) e apontou 1 importante novo: a regra de `0745d10`
+recusava promoções legítimas com variações. Corrigido em `9302277`, junto com o
+`wait()` que podia mascarar a falha original. Menor aceito: o teste multiprocesso
+segura um lock por publicação alheia, e o banco de teste compartilhado cresce sem
+limpeza; recomenda-se recriá-lo periodicamente.
+
+Pendências: AC-002 e AC-013 bloqueados por falta de credenciais reais do Mercado
+Livre; ciclo real do worker na stack depende delas; premissas de AC-016 acima;
+Firefox, WebKit, leitor de tela e dispositivo real não testados.
