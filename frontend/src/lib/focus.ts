@@ -88,7 +88,16 @@ export function useDisclosure() {
 
   function onBlur(event: FocusEvent) {
     const next = event.relatedTarget
-    if (!(next instanceof Node) || !containerRef.current?.contains(next)) setOpen(false)
+    if (next instanceof Node) {
+      if (!containerRef.current?.contains(next)) setOpen(false)
+      return
+    }
+    // Sem destino (item removido após uma ação, janela sem foco, clique em área não focável):
+    // decide depois que o foco assentar; clique fora já é tratado pelo mousedown no document.
+    window.setTimeout(() => {
+      const active = document.activeElement
+      if (active instanceof HTMLElement && active !== document.body && !containerRef.current?.contains(active)) setOpen(false)
+    }, 0)
   }
 
   return { open, containerRef, buttonRef, panelRef, toggle, close, onKeyDown, onBlur }

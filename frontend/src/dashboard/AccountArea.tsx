@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useReducer, useRef, useState, type FormEvent } from 'react'
-import { api, ApiFailure, type Dashboard, type HistoryEntry, type Notification, type Product, type TrackedProduct, type User } from '../api'
+import { api, ApiFailure, type Dashboard, type HistoryEntry, type Product, type TrackedProduct, type User } from '../api'
 import { useModalFocus } from '../lib/focus'
 import { formatMoney, formatPercentage, retryHint } from '../lib/format'
 import { AppHeader, type SectionKey } from './AppHeader'
 import { attemptResult, availabilityLabel } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
+import { NotificationBell } from './NotificationBell'
 import { useDashboard } from './useDashboard'
+import { useNotifications } from './useNotifications'
 
 type Feedback = { message: string; trackedProductId: string | null }
 
@@ -86,9 +88,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [historyCursor, setHistoryCursor] = useState<string | null>(null)
   const [target, setTarget] = useState('')
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [notificationCursor, setNotificationCursor] = useState<string | null>(null)
-  const [notificationsError, setNotificationsError] = useState<string | null>(null)
   const detailOpener = useRef<HTMLElement | null>(null)
   const closeDetailButton = useRef<HTMLButtonElement>(null)
   const detailDialog = useRef<HTMLElement>(null)
@@ -109,6 +108,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }, [])
   const { view: dashboardView, reload: reloadDashboard } = useDashboard({ clock, onLoaded: onDashboardLoaded, onUnauthenticated: endSession })
   const dashboard = dashboardView.status === 'ready' ? dashboardView.data : null
+  const notifications = useNotifications({ clock, onUnauthenticated: endSession })
+  const [alertsError, setAlertsError] = useState<string | null>(null)
 
   // Diálogo modal: foco entra ao abrir e volta ao elemento que o abriu ao fechar; se ele saiu da página, vai ao título da lista.
   useEffect(() => {
@@ -128,27 +129,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     if (unauthenticated(failure)) { endSession(failure); return }
     setError(feedback(failure))
   }, [endSession])
-
-  function applyNotifications(page: { items: Notification[]; next_cursor: string | null }) {
-    setNotifications(page.items)
-    setNotificationCursor(page.next_cursor)
-    setNotificationsError(null)
-  }
-
-  useEffect(() => {
-    let active = true
-    api.notifications().then((result) => {
-      if (!active) return
-      setNotifications(result.items)
-      setNotificationCursor(result.next_cursor)
-      setNotificationsError(null)
-    }).catch((failure: unknown) => {
-      if (!active) return
-      if (unauthenticated(failure)) fail(failure)
-      else setNotificationsError(message(failure))
-    })
-    return () => { active = false }
-  }, [fail])
 
   async function loadMore() {
     if (!list.nextCursor) return
@@ -202,19 +182,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     finally { setBusy(false) }
   }
 
-  async function loadMoreNotifications() {
-    if (!notificationCursor) return
-    setBusy(true)
-    setError(null)
-    try {
-      const page = await api.notifications(notificationCursor)
-      setNotifications((current) => [...current, ...page.items.filter((item) => !current.some((existing) => existing.id === item.id))])
-      setNotificationCursor(page.next_cursor)
-      setNotificationsError(null)
-    } catch (failure) { fail(failure) }
-    finally { setBusy(false) }
-  }
-
   // Detalhe recarregado após uma ação: atualiza o diálogo e a linha correspondente da lista.
   async function reloadSelected(id: string) {
     const detail = await api.detail(id)
@@ -231,7 +198,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       await api.createAlert(selected.id, target)
       await reloadSelected(selected.id)
       await reloadDashboard()
-      applyNotifications(await api.notifications())
+      await notifications.refreshAfterAction()
       setTarget('')
     } catch (failure) { fail(failure) }
     finally { setBusy(false) }
@@ -245,7 +212,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       await api.updateAlert(selected.id, target ? { target_price: target } : { enabled: !selected.alert.enabled })
       await reloadSelected(selected.id)
       await reloadDashboard()
-      applyNotifications(await api.notifications())
+      await notifications.refreshAfterAction()
       setTarget('')
     } catch (failure) { fail(failure) }
     finally { setBusy(false) }
@@ -290,7 +257,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       // Só recarrega o detalhe se o diálogo continua aberto no mesmo produto; fechado, ele não deve reabrir.
       if (openDetailId.current === id) await open(id)
       await reloadDashboard()
-      applyNotifications(await api.notifications())
+      await notifications.refreshAfterAction()
     } catch (failure) {
       fail(failure)
       // O backend persiste a tentativa falha; recarregar mostra o resultado atualizado sem apagar o erro exibido.
@@ -313,10 +280,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }
 
   async function readNotification(id: string) {
-    try {
-      await api.readNotification(id)
-      applyNotifications(await api.notifications())
-    } catch (failure) { fail(failure) }
+    const failure = await notifications.markRead(id)
+    setAlertsError(failure)
   }
 
   // Falha ao sair mantém a sessão local e mostra o erro no cabeçalho; só 401 leva à entrada.
@@ -342,6 +307,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
   return <>
     <AppHeader email={user.email} current={currentSection} onNavigate={navigate}
+      bell={<NotificationBell unread={notifications.unread} onRetry={notifications.reloadUnread}
+        onMarkRead={notifications.markRead} onSeeAll={() => navigate('alerts')} />}
       logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
 
     <main id="conteudo" className="page-main">
@@ -398,14 +365,16 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
       <section id="alertas" aria-labelledby="notifications-title">
         <div className="section-heading"><span className="eyebrow">ALERTAS</span><h2 id="notifications-title" ref={alertsHeading} tabIndex={-1}>Alertas</h2></div>
-        {notificationsError && <p role="alert" className="error-box">{notificationsError}</p>}
-        {notifications.length ? <ul className="feed">{notifications.map((notification) =>
+        {notifications.all.status === 'error' && <p role="alert" className="error-box">{notifications.all.message}</p>}
+        {alertsError && <p role="alert" className="error-box">{alertsError}</p>}
+        {notifications.all.items.length ? <ul className="feed">{notifications.all.items.map(({ notification }) =>
           <li key={notification.id} className="notification-row">
             <span>{notification.product_title} chegou a {money(notification.observed_price)} · {instant(notification.created_at)}</span>
-            {!notification.read_at && <button type="button" className="text-button" onClick={() => readNotification(notification.id)}>Marcar como lida</button>}
+            <span className="read-state">{notification.read_at ? 'Lida' : 'Não lida'}</span>
+            {!notification.read_at && <button type="button" className="text-button" onClick={() => void readNotification(notification.id)}>Marcar como lida</button>}
           </li>)}</ul> :
-          !notificationsError && <p className="empty">Sem notificações por enquanto.</p>}
-        {notificationCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMoreNotifications}>Carregar mais notificações</button>}
+          notifications.all.status === 'ready' && <p className="empty">Sem notificações por enquanto.</p>}
+        {notifications.all.nextCursor && <button type="button" disabled={notifications.all.loadingMore} className="text-button" onClick={() => void notifications.loadMoreAll()}>Carregar mais notificações</button>}
       </section>
     </div>
     </main>
