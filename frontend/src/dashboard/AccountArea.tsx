@@ -3,12 +3,14 @@ import { api, ApiFailure, type Dashboard, type HistoryEntry, type Product, type 
 import { useModalFocus } from '../lib/focus'
 import { formatMoney, formatPercentage, retryHint } from '../lib/format'
 import { AppHeader, type SectionKey } from './AppHeader'
+import { ExternalListingLink } from './ExternalListingLink'
 import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
 import { attemptResult, availabilityLabel } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
 import { NotificationBell } from './NotificationBell'
 import { OpportunityList } from './OpportunityList'
 import { IndicatorsSkeleton, OpportunitiesSkeleton, ProductsSkeleton, TimelineSkeleton } from './Skeletons'
+import { RowActionsMenu } from './RowActionsMenu'
 import { SummaryIndicators } from './SummaryIndicators'
 import type { RowState } from './productColumns'
 import { TrackedProductsTable } from './TrackedProductsTable'
@@ -283,6 +285,10 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     setAlertsError(failure)
   }
 
+  // Ações da linha: implementadas em T15 e T16.
+  async function refreshRow(id: string) { void id }
+  function requestStop(id: string) { void id }
+
   // Falha ao sair mantém a sessão local e mostra o erro no cabeçalho; só 401 leva à entrada.
   async function logout() {
     setLoggingOut(true)
@@ -343,6 +349,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
       {showProductSections && <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
         loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore()} onOpen={(id) => void open(id)}
+        renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
+          disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
         message={productsMessage} headingRef={trackedHeading} skeleton={loading ? <ProductsSkeleton /> : undefined} />}
 
       {showProductSections && <section aria-labelledby="updates-title" aria-busy={loading}>
@@ -389,7 +397,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
         <p className="muted">Menor: {money(selected.product.min_price, 'Desconhecido')} · Maior: {money(selected.product.max_price, 'Desconhecido')}</p>
         <div className="detail-links">
           <button type="button" disabled={busy} className="quiet-button" onClick={refreshSelected}>Atualizar agora</button>
-          <a className="external-link" href={selected.product.canonical_url} target="_blank" rel="noopener noreferrer">Ver anúncio no Mercado Livre ↗</a>
+          <ExternalListingLink href={selected.product.canonical_url} />
         </div>
         <h3>Histórico de preços</h3>
         {history.length ? <ul className="feed">{history.map((entry) => <li key={entry.id}>{money(entry.price)} · {instant(entry.captured_at)}</li>)}</ul> : <p className="empty">Ainda não há preço válido registrado.</p>}

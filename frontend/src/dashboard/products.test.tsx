@@ -132,3 +132,70 @@ describe('tabela Seus produtos', () => {
     expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
   })
 })
+
+describe('ações da linha', () => {
+  const item = product('1', 'Fone sem fio')
+  const detailRoutes: Route = (url) => {
+    if (url === '/api/tracked-products/tracking-1') return reply(200, item)
+    if (url === '/api/tracked-products/tracking-1/history') return reply(200, {
+      items: [{ id: 'h-1', price: '80.00', currency: 'BRL', captured_at: '2026-10-11T16:00:00Z' }], next_cursor: null,
+    })
+    return undefined
+  }
+
+  it('abre o detalhe da 0013 por Ver detalhes, com histórico, instantes e alerta', async () => {
+    const { user } = await renderProducts(dashboardFixture({ items: [item] }), detailRoutes)
+    await user.click(screen.getByRole('button', { name: 'Ver detalhes de Fone sem fio' }))
+    const dialog = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
+    expect(dialog.getByRole('heading', { name: 'Histórico de preços' })).toBeInTheDocument()
+    expect(dialog.getByText(/Última tentativa:/)).toBeInTheDocument()
+    expect(dialog.getByRole('heading', { name: 'Alerta de preço' })).toBeInTheDocument()
+    const external = dialog.getByRole('link', { name: 'Ver anúncio no Mercado Livre (abre em nova aba)' })
+    expect(external).toHaveAttribute('href', item.product.canonical_url)
+    expect(external).toHaveAttribute('target', '_blank')
+  })
+
+  it('oferece Atualizar agora, link externo e Parar de monitorar no menu da linha', async () => {
+    const { user } = await renderProducts(dashboardFixture({ items: [item] }))
+    const menuButton = screen.getByRole('button', { name: 'Ações de Fone sem fio' })
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+    await user.click(menuButton)
+    const menu = within(screen.getByRole('group', { name: 'Ações de Fone sem fio' }))
+    expect(menu.getByRole('button', { name: 'Atualizar agora' })).toBeInTheDocument()
+    const external = menu.getByRole('link', { name: 'Ver anúncio no Mercado Livre (abre em nova aba)' })
+    expect(external).toHaveAttribute('href', item.product.canonical_url)
+    expect(external).toHaveAttribute('target', '_blank')
+    expect(external.getAttribute('rel')).toMatch(/noopener/)
+    expect(external.getAttribute('rel')).toMatch(/noreferrer/)
+    expect(menu.getByRole('button', { name: 'Parar de monitorar' })).toBeInTheDocument()
+  })
+
+  it('opera o menu da linha só pelo teclado', async () => {
+    const { user } = await renderProducts(dashboardFixture({ items: [item, product('2', 'Cafeteira elétrica')] }))
+    const menuButton = screen.getByRole('button', { name: 'Ações de Fone sem fio' })
+    menuButton.focus()
+    await user.keyboard('{Enter}')
+    expect(menuButton).toHaveAttribute('aria-expanded', 'true')
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Atualizar agora' })).toHaveFocus()
+    await user.keyboard('{ArrowDown}')
+    expect(screen.getByRole('button', { name: 'Atualizar agora' })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('link', { name: /Ver anúncio no Mercado Livre/ })).toHaveFocus()
+    await user.tab()
+    expect(screen.getByRole('button', { name: 'Parar de monitorar' })).toHaveFocus()
+    await user.tab()
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+    menuButton.focus()
+    await user.keyboard(' ')
+    await user.tab()
+    await user.keyboard('{Escape}')
+    expect(menuButton).toHaveFocus()
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+    await user.keyboard('{Enter}')
+    await user.tab()
+    await user.tab({ shift: true })
+    expect(menuButton).toHaveFocus()
+    expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+  })
+})

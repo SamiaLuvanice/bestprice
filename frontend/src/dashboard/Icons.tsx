@@ -70,3 +70,11 @@ export function ClockIcon(props: IconProps) {
 export function ImagePlaceholderIcon(props: IconProps) {
   return <Svg {...props}><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" /><circle cx="9" cy="10" r="1.75" /><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5" /></Svg>
 }
+
+export function ExternalIcon(props: IconProps) {
+  return <Svg {...props}><path d="M14 5h5v5M19 5l-8 8" /><path d="M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4" /></Svg>
+}
+
+export function MoreIcon(props: IconProps) {
+  return <Svg {...props}><circle cx="12" cy="5.5" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="12" cy="18.5" r="1" /></Svg>
+}
