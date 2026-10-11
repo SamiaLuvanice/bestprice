@@ -318,3 +318,48 @@ origin/develop..HEAD`).
   não foram vistos renderizados. AC12 (em 360 px), AC27 e AC28 dependem dela.
 - Avaliar no navegador as paradas de Tab extras dos instantes relativos (`<time tabIndex=0>`).
 - T23–T27: gates finais, revisão independente, `docs/PROGRESS.md`, `doc-sync-onboarding` e PR.
+
+## 2026-10-11 — Correções da revisão (arch-reviewer) e da QA em navegador
+
+Mesma worktree e branch; commits locais, sem push; `backend/` sem alteração.
+
+### Achados, Red e correção
+
+| Achado | Teste | Red observado | Correção (commit) |
+|---|---|---|---|
+| I2 — rota não prevista virava falha de rede silenciosa | `afterEach` global em `src/test-setup.ts` com `takeUnexpectedCalls()` | Suíte inteira continuou verde (nenhum teste usava rota não prevista); guarda validada com teste temporário: `rotas não previstas no dublê da API: expected [ Array(1) ] … "GET /api/tracked-products?cursor=x"`, removido em seguida | `d413475` |
+| I1 — 404/409 `tracking_inactive` nas ações do detalhe | `detail.test.tsx` “produto parado em outra aba” (Atualizar agora 409, Criar alerta 409, Pausar 404, Excluir 404) e `trackedList.test.ts` (`replace` com `active=false`) | 5 failed: `expect(element).not.toBeInTheDocument()` (detalhe continuava aberto) e reducer mantinha o item | `failInDetail` fecha o detalhe e aplica `removeTracked`; reducer remove vínculo inativo — `471c3fa` |
+| M3 — sinal em zero | `format.test.ts` | `expected '-R$ 0,00' to be 'R$ 0,00'`; `expected { text: '0,00%', direction: 'down' } …` | `2aaeefa` |
+| M9 — só https | `lib/url.test.ts`, `dashboard/links.test.tsx` (`javascript:`) | stub de `safeHttpsUrl` → `expected null to be 'https://…'`; link e `<img>` criados com `javascript:` | `2a846f8` |
+| M2 — card de oportunidade | `overview.test.tsx` | `expected <span class="drop-badge">…</span> to be null` | `8a69123` |
+| M6 — sequência em `reloadAll` | `useNotifications.test.ts` | `expected [ 'antiga' ] to deeply equal [ 'nova' ]` | `63ffc4f` |
+| M5 — sequência em `open` | `detail.test.tsx` “aberturas concorrentes” | `Unable to find … role "dialog" and name "Detalhes de Cafeteira elétrica"` | `96e7058` |
+| M4 — foco pendente do sino | `bell.test.tsx` | foco foi para um item do painel ao reabrir (`toHaveFocus` no sino falhou) | `45068aa` |
+| M8 — linha removida durante a requisição | `refresh-row.test.tsx` | produto retomado herdou `Consulta concluída.` (`Expected /^$/ Received: Consulta concluída.`) | `63d4f56` |
+| M7 — lista vazia com cursor | `products.test.tsx` | `Unable to find role="rowgroup" and name "Cafeteira elétrica"` | decisão: carregar a próxima página automaticamente (falha para e mostra a mensagem com “Carregar mais”) — `98c9f82` |
+| M1 — desempenho | sem Red (refatoração sem mudança de comportamento; suíte verde) | — | valor do campo dentro do `HeroTrackForm`; `Intl.DateTimeFormat` em cache por fuso — `a98a429` |
+| Instabilidade do Esc no detalhe | `App.test.tsx` existente | Falhou 2 vezes seguidas em suíte completa (3696 ms e 3998 ms) e passou isolado; causa: listener de teclado do diálogo registrado em `useEffect`, depois de o diálogo já estar no DOM | `useModalFocus` e foco inicial em `useLayoutEffect` — `df92ce3` |
+| M10 — `<time tabIndex=0>` | `bell.test.tsx` (percurso de teclado) | `expect(element).not.toHaveAttribute("tabindex")` | `5b4165e` |
+| QA — `aria-busy` na linha | `refresh-row.test.tsx` | `expect(element).not.toHaveAttribute("aria-busy")` | `data-busy` no grupo + região `aria-live="polite"` da linha — `5b4165e` |
+| QA — status de carregamento dentro de `aria-busy` | `states.test.tsx` | `expected <section …> to be null` | status movido para fora das regiões ocupadas — `5b4165e` |
+| QA — “Anúncio não localizado” repetido | `products.test.tsx` | `expected [ …(2) ] to have a length of 1 but got 2` | `5b4165e` |
+| Q1, Q2, Q3 e ajustes visuais | CSS, sem teste automatizado (jsdom não aplica estilos); `getByRole('link', { name: 'Produtos' })` já coberto em `header.test.tsx` | — | `b6edcc2`: rótulos da navegação em `sr-only` (em vez de `display:none`); itens lidos sem `opacity` (texto `#5f6b82` sobre branco ≈ 5,6:1); painel do sino `position: fixed` com 16 px de margem abaixo de 768 px e painéis da conta/linha com `min(280px, 100vw − 32px)`; “Ver detalhes” e ⋮ lado a lado na pilha; `scroll-margin-top` em h1 e títulos focáveis; remoção da dica visual duplicada do instante |
+
+Observação: uma execução em laço durante a investigação ficou ~50 minutos parada (durações de
+137 000 ms a 2 994 791 ms e 12 falhas por timeout em cascata); foi travamento da máquina, não do
+código, e não é usada como evidência.
+
+### Gates
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | sem erros nem avisos |
+| `npm test -- --run` (1ª) | 22 arquivos, **231 passed (231)**, 28,09 s |
+| `npm test -- --run` (2ª) | 22 arquivos, **231 passed (231)**, 29,71 s |
+| `npm run build` | concluído; `index-DpxtzwN2.css` 22,04 kB (gzip 5,03 kB), `index-D4FLj_3_.js` 279,62 kB (gzip 84,88 kB) |
+
+### Pendências
+
+- Reinspeção em navegador (QA) de Q1–Q3, das ações lado a lado a 360 px, do `scroll-margin-top`
+  e do percurso de Tab sem os instantes; a geometria dos painéis em 320/360 px não foi medida aqui.
+- Coluna lateral de “Atualizações recentes” em 1280 px: fora do escopo (sem AC).
