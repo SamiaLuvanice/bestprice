@@ -9,6 +9,7 @@ module.exports = async ({ github, context, core }) => {
     const branch = context.ref.replace(/^refs\/heads\//, '');
     const link = parseFeatureBranch(branch);
     if (!link) return report(`Push em ${branch}: fora do padrão feature/<spec>-issue-<n>-<slug>; Project não alterado.`);
+    if (context.payload.deleted) return report(`Branch ${branch} removida; Status recalculado no próximo evento da Issue.`);
     if (!(await pushChangedSpec(github, context, link.spec))) {
       return report(`Push em ${branch}: spec ${link.spec} não alterada; Project não alterado.`);
     }
@@ -93,6 +94,7 @@ module.exports = async ({ github, context, core }) => {
 async function pushChangedSpec(github, context, spec) {
   const { before, after } = context.payload;
   if (/^0+$/.test(before)) return true; // primeiro push da branch
+  if (context.payload.forced) return true; // o diff de três pontos esconde a reversão da spec
   const { data } = await github.rest.repos.compareCommitsWithBasehead({ ...context.repo, basehead: `${before}...${after}` });
   const files = data.files || [];
   return files.length >= 300 || specChanged(files, spec); // a API trunca em 300 arquivos

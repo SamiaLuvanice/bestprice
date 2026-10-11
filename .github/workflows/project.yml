@@ -20,11 +20,38 @@ on:
         required: true
 permissions:
   contents: read
-concurrency:
-  group: project-${{ github.event.issue.number || github.event.pull_request.number || inputs.number || github.ref }}
-  cancel-in-progress: false
 jobs:
+  # Serializa por número: push da branch e eventos da mesma Issue entram no mesmo grupo.
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      key: ${{ steps.key.outputs.key }}
+    steps:
+      - id: key
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          NUMBER: ${{ github.event.issue.number || github.event.pull_request.number || inputs.number }}
+        run: |
+          # Mesmo padrão de parseFeatureBranch em .github/scripts/spec-status.cjs.
+          if [ "$EVENT_NAME" = push ]; then
+            if [[ "$REF" =~ ^refs/heads/feature/[0-9]{4}-issue-([1-9][0-9]*)-.+$ ]]; then
+              key="${BASH_REMATCH[1]}"
+            else
+              key="ref-${REF//[^A-Za-z0-9._-]/-}"
+            fi
+          elif [[ "$NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            key="$NUMBER"
+          else
+            key="invalid-${GITHUB_RUN_ID}"
+          fi
+          echo "key=$key" >> "$GITHUB_OUTPUT"
   sync:
+    needs: resolve
+    concurrency:
+      group: project-${{ needs.resolve.outputs.key }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

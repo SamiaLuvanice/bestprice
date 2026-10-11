@@ -185,6 +185,8 @@ de `rascunho|pronta|implementada|descartada` geram aviso no resumo, sem falhar.
 Branches fora desse padrão (`fix/`, `docs/`, `feature/` sem número de spec) e a linha
 `Issue:` da spec não participam. Remover a branch não dispara sincronização; o
 Status é recalculado no próximo evento da Issue ou pela reconciliação manual.
+Force-push conta como alteração da spec. Pushes e eventos da mesma Issue usam o
+mesmo grupo de concorrência (o número da Issue), então não gravam fora de ordem.
 
 O gatilho `push` disponibiliza `PROJECT_TOKEN` em execuções de branches de feature.
 Os scripts continuam vindo da branch padrão e a spec é lida como dado, mas o YAML do

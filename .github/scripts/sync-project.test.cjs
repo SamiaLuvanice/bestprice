@@ -287,6 +287,25 @@ test('push fora do padrão ou sem alterar a spec da branch não altera o Project
   assert.match(merged.summaries[0], /spec 0014 não alterada/);
 });
 
+test('force-push é tratado como alteração da spec, mesmo com diff vazio', async () => {
+  configure();
+  const { args, project } = fixture({ item: openIssue(), branches: { [branch]: spec('rascunho') },
+    push: { branch, files: [] } });
+  args.context.payload.forced = true;
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+  assert.equal(project.writes, 1);
+});
+
+test('remoção de branch não sincroniza nem falha', async () => {
+  configure();
+  const { args, calls, summaries } = fixture({ item: openIssue(), push: { branch, files: [] } });
+  Object.assign(args.context.payload, { deleted: true, after: '0'.repeat(40) });
+  await sync(args);
+  assert.equal(calls.length, 0);
+  assert.match(summaries[0], /removida/);
+});
+
 test('primeiro push da branch é tratado como alteração da spec', async () => {
   configure();
   const { args, project } = fixture({ item: openIssue(), branches: { [branch]: spec('pronta') },

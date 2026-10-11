@@ -47,8 +47,20 @@ test('somente feature/<spec>-issue-<n>-<slug> vincula spec e Issue', () => {
 
 test('status vem do cabeçalho e ignora comentário', () => {
   assert.deepEqual(parseSpecStatus('---\nnumero: 0014\nstatus: pronta   # comentário\n---\n# Título'), { status: 'pronta' });
-  assert.deepEqual(parseSpecStatus('﻿---\r\nstatus: rascunho\r\n---\r\n'), { status: 'rascunho' });
+  assert.deepEqual(parseSpecStatus('\uFEFF---\r\nstatus: rascunho\r\n---\r\n'), { status: 'rascunho' });
   assert.deepEqual(parseSpecStatus('---\nstatus: implementada\n---'), { status: 'implementada' });
+  assert.deepEqual(parseSpecStatus('---\nstatus: "pronta"\n---'), { status: 'pronta' });
+  assert.deepEqual(parseSpecStatus("---\nstatus: 'pronta' # aspas simples\n---"), { status: 'pronta' });
+});
+
+test('spec.md grande demais para a API de conteúdo é ilegível, sem falhar', async () => {
+  const github = githubFor({ 'feature/0014-issue-39-a': { sha: 'a1', dirs: ['0014-a'], specs: { '0014-a': '' } } });
+  github.rest.repos.getContent = async ({ path }) => ({ data: path === 'specs'
+    ? [{ type: 'dir', name: '0014-a' }]
+    : { content: '', encoding: 'none' } });
+  assert.deepEqual(await issueSpecState(github, repo, 39), {
+    ready: false, warnings: ['feature/0014-issue-39-a: spec.md grande demais para leitura pela API'],
+  });
 });
 
 test('cabeçalho ausente ou status inválido tornam a spec ilegível', () => {

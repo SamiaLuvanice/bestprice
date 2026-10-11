@@ -8,12 +8,12 @@ function parseFeatureBranch(name) {
 }
 
 function parseSpecStatus(text) {
-  const lines = text.replace(/^﻿/, '').split(/\r?\n/);
+  const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/);
   if (lines[0].trim() !== '---') return { error: 'cabeçalho ausente' };
   const end = lines.findIndex((line, index) => index > 0 && line.trim() === '---');
   if (end < 0) return { error: 'cabeçalho sem fechamento' };
   const field = lines.slice(1, end).map(line => /^status:(.*)$/.exec(line)).find(Boolean);
-  const status = field ? field[1].replace(/#.*$/, '').trim() : '';
+  const status = field ? field[1].replace(/#.*$/, '').trim().replace(/^(["'])(.*)\1$/, '$2') : '';
   if (!SPEC_STATUSES.has(status)) return { error: `status '${status || '(ausente)'}' inválido` };
   return { status };
 }
@@ -33,6 +33,8 @@ async function readBranchSpec(github, repo, branch, spec) {
   if (dirs.length > 1) return { branch, error: `mais de uma pasta specs/${spec}-*` };
   const file = await content(github, repo, `specs/${dirs[0].name}/spec.md`, sha);
   if (!file) return { branch, status: null };
+  // Acima de 1 MB a API devolve encoding 'none' sem conteúdo.
+  if (file.encoding !== 'base64') return { branch, error: 'spec.md grande demais para leitura pela API' };
   const parsed = parseSpecStatus(Buffer.from(file.content, file.encoding).toString('utf8'));
   return parsed.error ? { branch, error: parsed.error } : { branch, status: parsed.status };
 }

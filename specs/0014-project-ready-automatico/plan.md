@@ -51,8 +51,12 @@ PRs não consultam specs e continuam como na 0008.
 - Remoção de branch não dispara sincronização (suposição da spec).
 - Issue inexistente (404) ou número que é PR: resumo informa, sem falha, sem alterar
   o Project.
-- `concurrency.group`: fallback `project-${{ github.ref }}` para push, serializando
-  publicações da mesma branch.
+- Concorrência por Issue: um job `resolve` calcula a chave (número da Issue/PR do
+  evento ou extraído do nome da branch no push) e o job `sync` usa
+  `concurrency: project-<chave>`. Push e eventos da mesma Issue, e branches diferentes
+  da mesma Issue, ficam serializados; cada execução lê o estado atual ao começar.
+- `push` com `forced: true` conta como alteração da spec (o diff de três pontos
+  esconderia uma reversão); `deleted: true` só gera resumo.
 
 ## Segurança
 
@@ -113,8 +117,10 @@ PRs não consultam specs e continuam como na 0008.
 - **Gatilho só existe em branches com o YAML novo:** branches criadas antes do merge
   não disparam `push`; suas Issues são atualizadas pelos eventos de Issue ou por
   reconciliação manual.
-- **Corrida** entre push e evento de Issue: grupos de concorrência distintos, mas os
-  dois leem estado atual (Issue e branch) antes de escrever, então convergem.
+- **Corrida** entre push e evento de Issue: resolvida pela chave de concorrência por
+  Issue (revisão independente, achado 2). Com `cancel-in-progress: false`, o GitHub
+  mantém só a execução pendente mais recente por grupo, o que basta porque ela lê o
+  estado atual.
 - **Documentação desatualizada:** `docs/github-workflow.md` ainda descreve o Project
   como pendente de permissão, embora os secrets/variáveis existam; corrigir no mesmo PR.
 - **Custo de API** em eventos de Issue: uma listagem de refs `heads/feature/` paginada
