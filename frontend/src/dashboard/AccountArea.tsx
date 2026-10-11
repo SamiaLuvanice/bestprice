@@ -8,6 +8,7 @@ import { attemptResult, availabilityLabel } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
 import { NotificationBell } from './NotificationBell'
 import { OpportunityList } from './OpportunityList'
+import { IndicatorsSkeleton, OpportunitiesSkeleton, ProductsSkeleton, TimelineSkeleton } from './Skeletons'
 import { SummaryIndicators } from './SummaryIndicators'
 import { useDashboard } from './useDashboard'
 import { useNotifications } from './useNotifications'
@@ -114,6 +115,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }, [])
   const { view: dashboardView, reload: reloadDashboard } = useDashboard({ clock, onLoaded: onDashboardLoaded, onUnauthenticated: endSession })
   const dashboard = dashboardView.status === 'ready' ? dashboardView.data : null
+  const loading = dashboardView.status === 'loading'
   const notifications = useNotifications({ clock, onUnauthenticated: endSession })
   const [alertsError, setAlertsError] = useState<string | null>(null)
 
@@ -327,31 +329,36 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     {error && !selected && <div className="content global-messages"><p role="alert" className="error-box">{error.message}</p></div>}
 
     <div className="content dashboard-content">
-      <section aria-label="Resumo do monitoramento" className="summary-section">
+      <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
         {dashboardView.status === 'error' && <div className="region-error">
           <p role="alert" className="error-box">{dashboardView.message}</p>
           <button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</button>
         </div>}
-        {dashboard ? <SummaryIndicators summary={dashboard.summary} /> : dashboardView.status === 'loading' && <p role="status">Carregando seu painel…</p>}
+        <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
+        {loading && <IndicatorsSkeleton />}
+        {dashboard && <SummaryIndicators summary={dashboard.summary} />}
       </section>
 
-      <section aria-labelledby="opportunities-title" className="card-section">
+      <section aria-labelledby="opportunities-title" className="card-section" aria-busy={loading}>
         <div className="section-heading">
           <h2 id="opportunities-title">Boas oportunidades</h2>
           <p className="section-subtitle">Produtos monitorados que tiveram redução de preço recentemente.</p>
         </div>
+        {loading && <OpportunitiesSkeleton />}
         {dashboardView.status === 'ready' && <OpportunityList items={dashboardView.data.opportunities} receivedAt={dashboardView.receivedAt} onOpen={(id) => void open(id)} />}
       </section>
 
-      <section id="seus-produtos" aria-labelledby="tracked-title">
+      <section id="seus-produtos" aria-labelledby="tracked-title" aria-busy={loading}>
         <div className="section-heading"><span className="eyebrow">ACOMPANHAMENTO</span><h2 id="tracked-title" ref={trackedHeading} tabIndex={-1}>Seus produtos</h2></div>
+        {loading && <ProductsSkeleton />}
         {trackedItems.length ? trackedItems.map((item) => <ProductCard key={item.id} item={item} onOpen={open} />) :
           dashboard && <p className="empty">Você ainda não monitora anúncios.</p>}
         {list.nextCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMore}>Carregar mais</button>}
       </section>
 
-      <section aria-labelledby="updates-title">
+      <section aria-labelledby="updates-title" aria-busy={loading}>
         <div className="section-heading"><span className="eyebrow">HISTÓRICO RECENTE</span><h2 id="updates-title">Atualizações recentes</h2></div>
+        {loading && <TimelineSkeleton />}
         {dashboard?.recent_updates.length ? <ul className="feed">{dashboard.recent_updates.map((event) =>
           <li key={event.id}>{event.type === 'price_changed' ? 'Preço alterado' : 'Disponibilidade alterada'} · {instant(event.observed_at)}</li>)}</ul> :
           dashboard && <p className="empty">As mudanças confirmadas aparecerão aqui.</p>}
