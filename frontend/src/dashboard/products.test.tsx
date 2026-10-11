@@ -106,12 +106,15 @@ describe('tabela Seus produtos', () => {
   })
 
   it('tenta a página seguinte automática uma vez só e mostra o erro com Carregar mais', async () => {
+    // Resposta adiada (20 ms): o render com “Carregar mais” desabilitado acontece antes da falha. Com
+    // resposta imediata, carregando=true/false caem no mesmo lote e o teste não protegia a guarda.
+    const failLater = () => new Promise((resolve) => setTimeout(() => resolve(reply(500, apiError('internal_error', 'Não foi possível carregar mais produtos.'))), 20))
     const { mockFetch } = await renderProducts(dashboardFixture({ items: [], nextCursor: 'page-2', summary: { tracked_count: 1 } }), (url) =>
-      url === '/api/tracked-products?cursor=page-2' ? reply(500, apiError('internal_error', 'Não foi possível carregar mais produtos.')) : undefined)
+      url === '/api/tracked-products?cursor=page-2' ? failLater() : undefined)
     const section = within(screen.getByRole('region', { name: 'Seus produtos' }))
     expect(await section.findByRole('alert')).toHaveTextContent('Não foi possível carregar mais produtos.')
     expect(section.getByRole('button', { name: 'Carregar mais produtos' })).toBeEnabled()
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await new Promise((resolve) => setTimeout(resolve, 150))
     expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
   })
 
