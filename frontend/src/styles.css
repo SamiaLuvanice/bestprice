@@ -293,7 +293,7 @@ footer { color: var(--color-muted); text-align: center; padding: 28px; margin-to
   .hero-illustration { display: none; }
   .indicators, .skeleton-indicators { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .main-nav span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-  .account-email { display: none; }
+  .account-email { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   /* Tabela empilhada por produto: papéis explícitos mantêm a semântica; cada célula mostra a coluna. */
   .products-table, .products-table tbody, .products-table tr, .products-table td { display: block; width: 100%; }
   .products-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
@@ -303,13 +303,18 @@ footer { color: var(--color-muted); text-align: center; padding: 28px; margin-to
   .cell-product { min-width: 0; }
   .products-table td.cell-actions { display: flex; flex-wrap: nowrap; padding-top: var(--space-2); }
   .cell-actions .secondary-button { flex: 1; }
-  .alert-main { min-width: 0; }
+  .alert-main { flex: 1 1 100%; min-width: 0; }
 }
 @media (max-width: 767px) {
   .bell-panel { position: fixed; top: 76px; left: 16px; right: 16px; width: auto; max-height: calc(100vh - 92px); overflow-y: auto; }
-  .account-panel, .row-menu-panel { width: min(280px, calc(100vw - 32px)); }
+  .account-panel { width: min(280px, calc(100vw - 32px)); }
+  .row-menu-panel { width: min(260px, calc(100vw - 64px)); }
 }
 @media (max-width: 600px) {
+  .header-actions { gap: var(--space-1); }
+  .account-button { width: 44px; justify-content: center; padding: 0; }
+  .account-button .chevron { display: none; }
+  .main-nav a { padding: 0 var(--space-2); min-width: 44px; justify-content: center; }
   .app-header-inner { gap: var(--space-2); }
   .brand-name { display: none; }
   .hero-inner { padding: 24px 16px; }
