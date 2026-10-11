@@ -13,6 +13,8 @@ type Props = {
   onViewProduct?: (id: string) => void
   headingRef?: Ref<HTMLHeadingElement>
   inputRef?: Ref<HTMLInputElement>
+  /** Sem produtos monitorados: o hero ganha prioridade visual (AC23). */
+  priority?: boolean
   /** Conteúdo extra abaixo do formulário (ex.: estado vazio). */
   children?: ReactNode
 }
@@ -33,14 +35,14 @@ function HeroIllustration() {
  * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
-export function HeroTrackForm({ value, onChange, onSubmit, submitting, error, success, onViewProduct, headingRef, inputRef, children }: Props) {
+export function HeroTrackForm({ value, onChange, onSubmit, submitting, error, success, onViewProduct, headingRef, inputRef, priority = false, children }: Props) {
   const hintId = useId()
   const errorId = useId()
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!submitting) onSubmit()
   }
-  return <section className="hero" id="inicio" aria-labelledby="page-title">
+  return <section className={priority ? 'hero hero-priority' : 'hero'} id="inicio" aria-labelledby="page-title">
     <div className="hero-inner">
       <div className="hero-copy">
         <h1 id="page-title" ref={headingRef} tabIndex={-1}>

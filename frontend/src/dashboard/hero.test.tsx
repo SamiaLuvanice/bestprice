@@ -30,7 +30,9 @@ function field() {
 
 async function submit(user: ReturnType<typeof userEvent.setup>, value: string) {
   await user.clear(field())
-  await user.type(field(), value)
+  // Colar (como a pessoa faz com o link) em vez de digitar caractere a caractere, que é lento sob carga.
+  await user.click(field())
+  await user.paste(value)
   await user.click(screen.getByRole('button', { name: 'Monitorar preço' }))
 }
 

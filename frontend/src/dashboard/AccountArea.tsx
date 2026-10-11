@@ -10,6 +10,8 @@ import { NotificationBell } from './NotificationBell'
 import { OpportunityList } from './OpportunityList'
 import { IndicatorsSkeleton, OpportunitiesSkeleton, ProductsSkeleton, TimelineSkeleton } from './Skeletons'
 import { SummaryIndicators } from './SummaryIndicators'
+import type { RowState } from './productColumns'
+import { TrackedProductsTable } from './TrackedProductsTable'
 import { useDashboard } from './useDashboard'
 import { useNotifications } from './useNotifications'
 
@@ -49,31 +51,6 @@ function percentage(value: string | null): string {
   return formatPercentage(value)?.text ?? 'Desconhecida'
 }
 
-function ProductCard({ item, onOpen }: { item: TrackedProduct; onOpen: (id: string) => void }) {
-  const product = item.product
-  return <article className="product-card">
-    {product.image_url ? <img src={product.image_url} alt="" loading="lazy" /> : <div className="image-placeholder" aria-hidden="true">B</div>}
-    <div className="product-info">
-      <span className="product-id">{product.external_id}</span>
-      <h3>{product.title}</h3>
-      <p className="product-price">{money(product.current_price)}</p>
-      <p className="muted">{priceState(product)}</p>
-      <dl className="product-metrics">
-        <div><dt>Anterior</dt><dd>{money(product.previous_price, 'Desconhecido')}</dd></div>
-        <div><dt>Mínimo</dt><dd>{money(product.min_price, 'Desconhecido')}</dd></div>
-        <div><dt>Máximo</dt><dd>{money(product.max_price, 'Desconhecido')}</dd></div>
-        <div><dt>Variação</dt><dd>{percentage(product.percentage_change)}</dd></div>
-      </dl>
-      <p className="metric-note">Mínimo e máximo desde o primeiro registro no BestPrice</p>
-      <p className="muted">Última consulta: {instant(product.last_attempt_at, 'Desconhecida')}</p>
-      <p className="muted">Última alteração: {instant(product.price_changed_at, 'Desconhecida')}</p>
-      {product.last_attempt_status !== 'ok' && <p className="muted">Última tentativa: {attemptResult(product.last_attempt_status)}</p>}
-      {item.alert?.enabled && <span className="small-badge">Alerta em {money(item.alert.target_price)}</span>}
-    </div>
-    <button type="button" className="text-button" onClick={() => onOpen(item.id)}>Ver detalhes</button>
-  </article>
-}
-
 type Props = {
   user: User
   clock: () => Date
@@ -90,6 +67,10 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const [trackError, setTrackError] = useState<TrackFeedback | null>(null)
   const [trackSuccess, setTrackSuccess] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
+  const [rowStates] = useState<Record<string, RowState>>({})
+  const [productsMessage] = useState<string | null>(null)
   const [error, setError] = useState<Feedback | null>(null)
   const [selected, setSelected] = useState<TrackedProduct | null>(null)
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -100,6 +81,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const detailDialog = useRef<HTMLElement>(null)
   const trackedHeading = useRef<HTMLHeadingElement>(null)
   const pageHeading = useRef<HTMLHeadingElement>(null)
+  const linkInput = useRef<HTMLInputElement>(null)
   const alertsHeading = useRef<HTMLHeadingElement>(null)
   const [currentSection, setCurrentSection] = useState<SectionKey>('home')
   const [logoutError, setLogoutError] = useState<string | null>(null)
@@ -116,6 +98,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const { view: dashboardView, reload: reloadDashboard } = useDashboard({ clock, onLoaded: onDashboardLoaded, onUnauthenticated: endSession })
   const dashboard = dashboardView.status === 'ready' ? dashboardView.data : null
   const loading = dashboardView.status === 'loading'
+  // Sem produtos: hero em destaque e seções de produtos ocultas (AC23).
+  const isEmpty = dashboard !== null && list.loaded && list.items.length === 0 && list.nextCursor === null
+  const showProductSections = !isEmpty && dashboardView.status !== 'error'
   const notifications = useNotifications({ clock, onUnauthenticated: endSession })
   const [alertsError, setAlertsError] = useState<string | null>(null)
 
@@ -139,14 +124,16 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }, [endSession])
 
   async function loadMore() {
-    if (!list.nextCursor) return
-    setBusy(true)
-    setError(null)
+    if (!list.nextCursor || loadingMore) return
+    setLoadingMore(true)
+    setLoadMoreError(null)
     try {
       const page = await api.tracked(list.nextCursor)
       dispatchList({ type: 'append', page, receivedAt: clock() })
-    } catch (failure) { fail(failure) }
-    finally { setBusy(false) }
+    } catch (failure) {
+      if (unauthenticated(failure)) endSession(failure)
+      else setLoadMoreError(message(failure))
+    } finally { setLoadingMore(false) }
   }
 
   async function track() {
@@ -311,11 +298,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
   function navigate(section: SectionKey) {
     setCurrentSection(section)
-    const target = { home: pageHeading, products: trackedHeading, alerts: alertsHeading }[section].current
+    // Sem a seção “Seus produtos” (lista vazia), Produtos leva ao campo de link.
+    const productsTarget = trackedHeading.current ?? linkInput.current
+    const target = { home: pageHeading.current, products: productsTarget, alerts: alertsHeading.current }[section]
     target?.focus()
   }
-
-  const trackedItems = list.items.map((entry) => entry.tracked)
 
   return <>
     <AppHeader email={user.email} current={currentSection} onNavigate={navigate}
@@ -325,7 +312,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
     <main id="conteudo" className="page-main">
     <HeroTrackForm value={url} onChange={setUrl} onSubmit={() => void track()} submitting={submitting}
-      error={trackError} success={trackSuccess} onViewProduct={(id) => void open(id)} headingRef={pageHeading} />
+      error={trackError} success={trackSuccess} onViewProduct={(id) => void open(id)} headingRef={pageHeading}
+      inputRef={linkInput} priority={isEmpty}>
+      {isEmpty && <div className="empty-state">
+        <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
+        <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
+      </div>}
+    </HeroTrackForm>
     {error && !selected && <div className="content global-messages"><p role="alert" className="error-box">{error.message}</p></div>}
 
     <div className="content dashboard-content">
@@ -339,30 +332,26 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
         {dashboard && <SummaryIndicators summary={dashboard.summary} />}
       </section>
 
-      <section aria-labelledby="opportunities-title" className="card-section" aria-busy={loading}>
+      {showProductSections && <section aria-labelledby="opportunities-title" className="card-section" aria-busy={loading}>
         <div className="section-heading">
           <h2 id="opportunities-title">Boas oportunidades</h2>
           <p className="section-subtitle">Produtos monitorados que tiveram redução de preço recentemente.</p>
         </div>
         {loading && <OpportunitiesSkeleton />}
         {dashboardView.status === 'ready' && <OpportunityList items={dashboardView.data.opportunities} receivedAt={dashboardView.receivedAt} onOpen={(id) => void open(id)} />}
-      </section>
+      </section>}
 
-      <section id="seus-produtos" aria-labelledby="tracked-title" aria-busy={loading}>
-        <div className="section-heading"><span className="eyebrow">ACOMPANHAMENTO</span><h2 id="tracked-title" ref={trackedHeading} tabIndex={-1}>Seus produtos</h2></div>
-        {loading && <ProductsSkeleton />}
-        {trackedItems.length ? trackedItems.map((item) => <ProductCard key={item.id} item={item} onOpen={open} />) :
-          dashboard && <p className="empty">Você ainda não monitora anúncios.</p>}
-        {list.nextCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMore}>Carregar mais</button>}
-      </section>
+      {showProductSections && <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
+        loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore()} onOpen={(id) => void open(id)}
+        message={productsMessage} headingRef={trackedHeading} skeleton={loading ? <ProductsSkeleton /> : undefined} />}
 
-      <section aria-labelledby="updates-title" aria-busy={loading}>
+      {showProductSections && <section aria-labelledby="updates-title" aria-busy={loading}>
         <div className="section-heading"><span className="eyebrow">HISTÓRICO RECENTE</span><h2 id="updates-title">Atualizações recentes</h2></div>
         {loading && <TimelineSkeleton />}
         {dashboard?.recent_updates.length ? <ul className="feed">{dashboard.recent_updates.map((event) =>
           <li key={event.id}>{event.type === 'price_changed' ? 'Preço alterado' : 'Disponibilidade alterada'} · {instant(event.observed_at)}</li>)}</ul> :
           dashboard && <p className="empty">As mudanças confirmadas aparecerão aqui.</p>}
-      </section>
+      </section>}
 
       <section id="alertas" aria-labelledby="notifications-title">
         <div className="section-heading"><span className="eyebrow">ALERTAS</span><h2 id="notifications-title" ref={alertsHeading} tabIndex={-1}>Alertas</h2></div>

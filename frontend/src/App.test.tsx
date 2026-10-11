@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { App } from './App'
-import { apiError, dashboardWith, emptyDashboard, fakeApi, productUrl, notificationFixture, reply, trackedFixture as trackedItem, type Route } from './test/fakeApi'
+import { apiError, dashboardWith, fakeApi, productUrl, notificationFixture, reply, trackedFixture as trackedItem, type Route } from './test/fakeApi'
 
 afterEach(() => {
   cleanup()
@@ -31,11 +31,11 @@ it('mostra bloqueio real da integração sem criar sucesso fictício nem encerra
   signedIn((url) => url === '/api/tracked-products'
     ? Promise.resolve(reply(503, apiError('integration_not_configured', backendMessage))) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   expect(screen.queryByText(/integração oficial autorizada/i)).not.toBeInTheDocument()
   submitUrl()
   await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(backendMessage))
-  expect(screen.getByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(screen.getByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   expect(screen.getByText('pessoa@example.com')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
 })
@@ -54,7 +54,7 @@ it('mostra anúncio persistido, detalhe e histórico recebidos da API', async ()
   }, dashboardWith([item]))
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   expect(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Ver anúncio no Mercado Livre/ })).toHaveAttribute('href', item.product.canonical_url)
   expect(screen.getByText(/Menor: R\$\s*80,00/)).toBeInTheDocument()
@@ -77,7 +77,7 @@ it('carrega páginas adicionais de histórico e notificações sem repetir entra
   fireEvent.click(screen.getByRole('button', { name: 'Carregar mais notificações' }))
   expect(await screen.findByText(/Aviso notice-2 chegou/)).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Carregar mais notificações' })).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   expect(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Carregar mais preços' }))
   await waitFor(() => expect(mockFetch).toHaveBeenCalledWith('/api/tracked-products/tracking-1/history?cursor=price-page-2', expect.anything()))
@@ -97,8 +97,8 @@ it('distingue tentativa falha, leitura válida, preço observado e mudança no d
   }, dashboardWith([item]))
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  expect(screen.getByText(/Último preço conhecido · preço desatualizado/)).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  expect(screen.getByText(/Preço desatualizado/)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   const detail = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
   expect(detail.getByText(/Última tentativa:/)).toBeInTheDocument()
   expect(detail.getByText(/Última leitura válida:/)).toBeInTheDocument()
@@ -116,7 +116,7 @@ it('mostra erro com nova tentativa quando a sessão não pode ser verificada por
   expect(await screen.findByText('Não foi possível conectar ao BestPrice. Tente novamente.')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
 })
 
 it('não pede login quando a verificação de sessão recebe 503', async () => {
@@ -131,12 +131,12 @@ it('volta ao login quando uma chamada autenticada recebe 401 no meio da sessão'
   signedIn((url) => url === '/api/tracked-products'
     ? Promise.resolve(reply(401, apiError('unauthenticated', 'Sua sessão expirou. Entre novamente.'))) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   submitUrl()
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
   expect(screen.queryByText('pessoa@example.com')).not.toBeInTheDocument()
-  expect(screen.queryByText('Você ainda não monitora anúncios.')).not.toBeInTheDocument()
+  expect(screen.queryByText('Você ainda não está acompanhando nenhum produto.')).not.toBeInTheDocument()
 })
 
 it('oferece Ver produto quando o anúncio já é monitorado', async () => {
@@ -159,7 +159,7 @@ it('informa quando tentar novamente após limite de consultas', async () => {
   signedIn((url) => url === '/api/tracked-products'
     ? Promise.resolve(reply(429, apiError('integration_rate_limited', 'Limite de consultas ao Mercado Livre atingido.', { retry_after_seconds: 90 }))) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   submitUrl()
   const alert = await screen.findByRole('alert')
   expect(alert).toHaveTextContent('Limite de consultas ao Mercado Livre atingido.')
@@ -201,7 +201,8 @@ it('rejeita atualização recente sem produto, moeda ou instante válidos', asyn
 })
 
 it('exibe atualização recente válida de disponibilidade sem moeda', async () => {
-  signedIn(() => undefined, dashboardWith([], [
+  // Migrado (0012/AC23): sem produtos a linha do tempo fica oculta; o evento pertence a um produto carregado.
+  signedIn(() => undefined, dashboardWith([trackedItem()], [
     { id: 'event-1', tracked_product_id: 'tracking-1', type: 'availability_changed', previous_value: 'available', current_value: 'unavailable', currency: null, observed_at: '2026-10-08T11:00:00Z' },
   ]))
   render(<App />)
@@ -211,7 +212,7 @@ it('exibe atualização recente válida de disponibilidade sem moeda', async () 
 it('mostra mensagem de rede quando o cadastro não alcança a API', async () => {
   signedIn((url) => url === '/api/tracked-products' ? Promise.reject(new TypeError('Failed to fetch')) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   submitUrl()
   expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível conectar ao BestPrice. Tente novamente.')
   expect(screen.getByText('pessoa@example.com')).toBeInTheDocument()
@@ -233,7 +234,7 @@ it('recarrega o vínculo e mostra o erro quando a atualização falha na fonte',
   })
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   const detail = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
   expect(detail.getByText('Resultado da última tentativa: Consulta concluída')).toBeInTheDocument()
   fireEvent.click(detail.getByRole('button', { name: 'Atualizar agora' }))
@@ -254,7 +255,7 @@ it('volta ao login quando a atualização recebe 401', async () => {
   }, dashboardWith([item]))
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Atualizar agora' }))
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -276,7 +277,7 @@ it('mostra Preço indisponível e métricas desconhecidas para item sem preço o
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
   expect(screen.getByText('Preço indisponível')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   const detail = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
   expect(detail.getByText('Preço indisponível')).toBeInTheDocument()
   expect(detail.getByText('Ainda não há preço válido registrado.')).toBeInTheDocument()
@@ -287,10 +288,9 @@ it('mostra Preço indisponível e métricas desconhecidas para item sem preço o
   expect(detail.getByText('Última mudança de preço: Desconhecida')).toBeInTheDocument()
 })
 
-function productCard(title: string): HTMLElement {
-  const card = screen.getByRole('heading', { name: title }).closest('article')
-  if (!card) throw new Error(`Card de ${title} não encontrado`)
-  return card
+// Migrado (0012/AC12): o card virou linha da tabela “Seus produtos” (linha principal + secundária).
+function productRow(title: string): HTMLElement {
+  return screen.getByRole('rowgroup', { name: title })
 }
 
 function detailRoutes(item: unknown): Route {
@@ -304,15 +304,14 @@ function detailRoutes(item: unknown): Route {
 it('mostra no card do dashboard preço anterior, mínimo, máximo, variação e horários de consulta e alteração', async () => {
   signedIn(() => undefined, dashboardWith([trackedItem({ last_attempt_at: '2026-10-08T12:00:00Z', price_changed_at: '2026-10-08T11:00:00Z' })]))
   render(<App />)
-  expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  const card = within(productCard('Fone sem fio'))
-  expect(card.getByText('Anterior').closest('div')).toHaveTextContent(/Anterior\s*R\$\s*100,00/)
-  expect(card.getByText('Mínimo').closest('div')).toHaveTextContent(/Mínimo\s*R\$\s*80,00/)
-  expect(card.getByText('Máximo').closest('div')).toHaveTextContent(/Máximo\s*R\$\s*100,00/)
-  expect(card.getByText('Variação').closest('div')).toHaveTextContent(/Variação\s*-20,00%/)
-  expect(card.getByText(/Última consulta:/)).not.toHaveTextContent('Desconhecida')
-  expect(card.getByText(/Última alteração:/)).not.toHaveTextContent('Desconhecida')
-  expect(card.getByText(/desde o primeiro registro no BestPrice/)).toBeInTheDocument()
+  const row = within(await screen.findByRole('rowgroup', { name: 'Fone sem fio' }))
+  expect(row.getByText('Preço anterior').closest('div')).toHaveTextContent(/Preço anterior\s*R\$\s*100,00/)
+  expect(row.getAllByRole('cell')[3]).toHaveTextContent(/^R\$\s*80,00$/)
+  expect(row.getByText('Maior preço').closest('div')).toHaveTextContent(/Maior preço\s*R\$\s*100,00/)
+  expect(row.getAllByRole('cell')[2]).toHaveTextContent(/-20,00%/)
+  expect(row.getByText('Última consulta').closest('div')).not.toHaveTextContent('Desconhecida')
+  expect(row.getByText('Última alteração').closest('div')).not.toHaveTextContent('Desconhecida')
+  expect(screen.getByText(/desde o primeiro registro no BestPrice/)).toBeInTheDocument()
 })
 
 it('identifica como desconhecidas no card as métricas ausentes, sem exibir R$ 0,00', async () => {
@@ -321,23 +320,22 @@ it('identifica como desconhecidas no card as métricas ausentes, sem exibir R$ 0
     percentage_change: null, last_attempt_at: null, last_price_observed_at: null, price_changed_at: null,
   })]))
   render(<App />)
-  expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  const cardElement = productCard('Fone sem fio')
-  const card = within(cardElement)
-  expect(card.getByText('Anterior').closest('div')).toHaveTextContent(/Anterior\s*Desconhecido/)
-  expect(card.getByText('Mínimo').closest('div')).toHaveTextContent(/Mínimo\s*Desconhecido/)
-  expect(card.getByText('Máximo').closest('div')).toHaveTextContent(/Máximo\s*Desconhecido/)
-  expect(card.getByText('Variação').closest('div')).toHaveTextContent(/Variação\s*Desconhecida/)
-  expect(card.getByText(/Última consulta:/)).toHaveTextContent('Última consulta: Desconhecida')
-  expect(card.getByText(/Última alteração:/)).toHaveTextContent('Última alteração: Desconhecida')
-  expect(cardElement).not.toHaveTextContent(/R\$\s*0,00/)
+  const rowElement = await screen.findByRole('rowgroup', { name: 'Fone sem fio' })
+  const row = within(rowElement)
+  expect(row.getByText('Preço anterior').closest('div')).toHaveTextContent(/Preço anterior\s*Desconhecido/)
+  expect(row.getAllByRole('cell')[3]).toHaveTextContent(/^Desconhecido$/)
+  expect(row.getByText('Maior preço').closest('div')).toHaveTextContent(/Maior preço\s*Desconhecido/)
+  expect(row.getAllByRole('cell')[2]).toHaveTextContent(/^Desconhecida$/)
+  expect(row.getByText('Última consulta').closest('div')).toHaveTextContent(/Última consulta\s*Desconhecida/)
+  expect(row.getByText('Última alteração').closest('div')).toHaveTextContent(/Última alteração\s*Desconhecida/)
+  expect(productRow('Fone sem fio')).not.toHaveTextContent(/R\$\s*0,00/)
 })
 
 async function openDetail() {
   const item = trackedItem()
   signedIn(detailRoutes(item), dashboardWith([item]))
   render(<App />)
-  const opener = await screen.findByRole('button', { name: 'Ver detalhes' })
+  const opener = await screen.findByRole('button', { name: /^Ver detalhes/ })
   opener.focus()
   fireEvent.click(opener)
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
@@ -381,7 +379,7 @@ it('mantém Esc e Tab presos ao diálogo quando o botão focado é desabilitado 
     return detailRoutes(item)(url)
   }, dashboardWith([item]))
   render(<App />)
-  fireEvent.click(await screen.findByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(await screen.findByRole('button', { name: /^Ver detalhes/ }))
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   const refresh = within(dialog).getByRole('button', { name: 'Atualizar agora' })
   await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Fechar detalhes' })).toHaveFocus())
@@ -402,10 +400,12 @@ it('mantém Esc e Tab presos ao diálogo quando o botão focado é desabilitado 
 })
 
 it('leva o foco ao título da lista quando o card que abriu o detalhe deixa de existir', async () => {
+  // Migrado (0012/AC19): com outro produto na lista a seção continua visível e recebe o foco.
   const item = trackedItem()
+  const other = trackedItem({ id: 'product-2', title: 'Cafeteira elétrica' }, { id: 'tracking-2' })
   let stopped = false
   fakeApi((url, init) => {
-    if (url === '/api/dashboard') return reply(200, stopped ? emptyDashboard : dashboardWith([item]))
+    if (url === '/api/dashboard') return reply(200, stopped ? dashboardWith([other]) : dashboardWith([item, other]))
     if (url === '/api/tracked-products/tracking-1' && init?.method === 'DELETE') {
       stopped = true
       return reply(204, null)
@@ -413,12 +413,12 @@ it('leva o foco ao título da lista quando o card que abriu o detalhe deixa de e
     return detailRoutes(item)(url)
   })
   render(<App />)
-  const opener = await screen.findByRole('button', { name: 'Ver detalhes' })
+  const opener = await screen.findByRole('button', { name: 'Ver detalhes de Fone sem fio' })
   opener.focus()
   fireEvent.click(opener)
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   fireEvent.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  await waitFor(() => expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument())
   await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
 })
 
@@ -430,7 +430,7 @@ async function closeDuringRefresh(outcome: () => unknown) {
     return detailRoutes(item)(url)
   }, dashboardWith([item]))
   render(<App />)
-  fireEvent.click(await screen.findByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(await screen.findByRole('button', { name: /^Ver detalhes/ }))
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   fireEvent.click(within(dialog).getByRole('button', { name: 'Atualizar agora' }))
   fireEvent.keyDown(document.body, { key: 'Escape' })
@@ -438,7 +438,7 @@ async function closeDuringRefresh(outcome: () => unknown) {
   const dashboardCalls = mockFetch.mock.calls.filter(([url]) => url === '/api/dashboard').length
   finishRefresh(outcome())
   await waitFor(() => expect(mockFetch.mock.calls.filter(([url]) => url === '/api/dashboard').length).toBeGreaterThan(dashboardCalls))
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Ver detalhes' })).toBeEnabled())
+  await waitFor(() => expect(screen.getByRole('button', { name: /^Ver detalhes/ })).toBeEnabled())
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 }
 
