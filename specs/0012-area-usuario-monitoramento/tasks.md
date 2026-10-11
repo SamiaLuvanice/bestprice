@@ -138,7 +138,7 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
 
 ## Navegador
 
-- [ ] **T22 — Inspeção Playwright + axe (D9), fora do repositório.** Script no scratchpad;
+- [x] **T22 — Inspeção Playwright + axe (D9), fora do repositório.** Script no scratchpad;
   `npm run dev` + Compose local. API real: entrada, painel vazio, cadastro com integração
   desligada (503), sair. Fixtures interceptadas: populado com 2 páginas, `not_found`,
   `stale`, sem preço, 99+, erros. Em 360/768/1280: `document.documentElement.scrollWidth <=
@@ -147,20 +147,30 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
   em 360 e 1280; busca por termos proibidos no DOM e em `dist/`. Registrar versões, comandos,
   capturas descritas e limites (só Chromium; sem leitor de tela). — AC12, AC23, AC27, AC28,
   AC29.
+  Evidência: quatro rodadas no Chromium (`6d9e259`, `2f2f348`, `bad8dbe`, `384dcb6`) com
+  Compose isolado `-p qa0012` e fixtures sintéticas em banco real (só os erros simulados
+  por `page.route`), 320/360/768/1280 px; axe 0 violações, sem rolagem horizontal, 58
+  paradas de Tab; ver “Verificação final (/verify)” em `verification.md`.
 
 ## Gates, revisão e documentação
 
-- [ ] **T23 — Quality gates.** `npm run lint` (0 erros), `npm test -- --run` (contagem > 29,
+- [x] **T23 — Quality gates.** `npm run lint` (0 erros), `npm test -- --run` (contagem > 29,
   sem skip), `npm run build` (concluído; conferir tamanho do bundle vs. linha de base). Backend
   sem mudança: confirmar `git diff --stat origin/develop -- backend/` vazio. Registrar saídas
   reais em `verification.md`. — todos.
-- [ ] **T24 — Revisão independente (`arch-reviewer`).** Diff revisado contra
+  Evidência: HEAD `384dcb6`: lint ok; 22 arquivos, 241 passed; build com JS 280,66 kB; diff
+  de `backend/` vazio.
+- [x] **T24 — Revisão independente (`arch-reviewer`).** Diff revisado contra
   `architecture.md`, `frontend.md`, `security.md`, `datetime-pipeline.md` (nenhum `Number`
   em decisão monetária) e a spec; achados corrigidos na mesma branch com novo ciclo de
   T23. — todos.
-- [ ] **T25 — Evidência e progresso.** `verification.md` com cada AC demonstrado (teste ou
+  Evidência: 3 rodadas de `arch-reviewer` (I1–I2/M1–M10, N1–N5, N3/B/C/D) corrigidas; parecer
+  final de `bad8dbe..384dcb6` aprovado sem achado bloqueante nem importante.
+- [x] **T25 — Evidência e progresso.** `verification.md` com cada AC demonstrado (teste ou
   navegador) ou pendência explícita; lista de testes 0013 migrados; atualizar
   `docs/PROGRESS.md`. — todos.
+  Evidência: “Verificação final (/verify)” em `verification.md` (28 ACs demonstrados, AC04
+  parcial com pendência) e `docs/PROGRESS.md` atualizado.
 - [ ] **T26 — `doc-sync-onboarding` (última etapa após código).** Sincronizar
   `docs/apps/frontend.md` (nova estrutura, contador por `unread_only`, confirmação, regras de
   tempo relativo, inspeção) e conferir `AGENTS.md`, `CLAUDE.md` e `docs/`. Repetir se houver
