@@ -171,10 +171,12 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
   `docs/PROGRESS.md`. — todos.
   Evidência: “Verificação final (/verify)” em `verification.md` (28 ACs demonstrados, AC04
   parcial com pendência) e `docs/PROGRESS.md` atualizado.
-- [ ] **T26 — `doc-sync-onboarding` (última etapa após código).** Sincronizar
+- [x] **T26 — `doc-sync-onboarding` (última etapa após código).** Sincronizar
   `docs/apps/frontend.md` (nova estrutura, contador por `unread_only`, confirmação, regras de
   tempo relativo, inspeção) e conferir `AGENTS.md`, `CLAUDE.md` e `docs/`. Repetir se houver
   novo código. — todos.
+  Evidência: `5157dd5` atualiza `docs/apps/frontend.md` e `README.md`; `AGENTS.md`, `CLAUDE.md`
+  e demais documentos de `docs/` conferidos sem mudança necessária.
 - [ ] **T27 — PR para `develop`.** Commits `feat(frontend)`/`test(frontend)`/`docs(specs)` com
   `Refs #33`, sem atribuição a ferramentas; PR com `Closes #33`, resumo, como verificar,
   resultados e pendências. Spec só vira `implementada` após revisão e integração. — handoff.
