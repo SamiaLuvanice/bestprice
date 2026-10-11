@@ -583,7 +583,7 @@ código nem reexecutou testes da aplicação.
 
 ## Auditoria QA dos critérios AC-001 a AC-022 — 09/10/2026
 
-Executada pelo papel `.agents/agents/qa.md` em `HEAD 6c0515b`, sem alterar
+Executada pelo papel `.agents/agents/qa.md` em `HEAD 8b018b0`, sem alterar
 código. "Simulado" indica fonte Mercado Livre substituída por dublê em teste;
 "stack real" indica PostgreSQL 17, FastAPI e Nginx/SPA do projeto Compose
 `bestprice0013verify`. Nenhuma consulta à API do Mercado Livre foi feita.
@@ -669,7 +669,7 @@ processos distintos. pytest e a stack E2E compartilham o mesmo banco (111 contas
 de teste). A fixture `MLB5566778899` e as contas `qa0013-audit*` permanecem no
 volume isolado. CI, Project e PR não foram verificados.
 
-## Reverificação QA após correções `898215b` e `810def5` — 09/10/2026
+## Reverificação QA após correções `793ef0b` e `767a6c6` — 09/10/2026
 
 Sem alteração de código pelo QA. Fonte Mercado Livre não consultada.
 
@@ -751,17 +751,17 @@ variante ambígua e benefício pessoal não são detectados. Os demais (004, 006
   e 9 menores. Auditoria QA (`.agents/agents/qa.md`) registrada na seção
   própria acima.
 - Correções despachadas em paralelo com arquivos exclusivos: frontend
-  (`810def5`) e backend (`898215b`, depois `a8d4e52` para os pontos menores da
+  (`767a6c6`) e backend (`793ef0b`, depois `b15c686` para os pontos menores da
   re-revisão). Cada item teve teste escrito antes; Red observado e relatado
   pelos implementadores, exceto testes que já passavam e ficaram como cobertura
   (registrados como tal, sem contar como Red).
 - Gates conferidos pelo coordenador após cada rodada: frontend lint código 0,
   `npm test -- --run` **19 passed**, build código 0; backend ruff
-  **All checks passed!**, pytest **116 passed** e, após `a8d4e52`,
+  **All checks passed!**, pytest **116 passed** e, após `b15c686`,
   **124 passed, 1 warning**, 0 skipped.
-- Re-revisão independente de `a290ab3..898215b`: **aprovado para PR**;
+- Re-revisão independente de `6528b51..793ef0b`: **aprovado para PR**;
   sonda de deadlock repetida 3 vezes retornou `['ok','ok']`. Pontos menores
-  N1–N3 e o resíduo do achado 2 foram corrigidos em `a8d4e52`.
+  N1–N3 e o resíduo do achado 2 foram corrigidos em `b15c686`.
 - Reverificação QA na stack Compose reconstruída (seção acima) confirmou
   AC-014, códigos de URL, refresh sem integração sem alterar o produto
   compartilhado, instantes com `Z` e bundle atualizado.
@@ -783,13 +783,13 @@ com arquivos exclusivos por papel; o coordenador conferiu gates e fez os commits
 
 - PostgreSQL 17 descartável para testes: container `bestprice-0013-testdb`
   (`postgres:17-alpine`, `127.0.0.1:55433`), `TEST_DATABASE_URL` apontando só a ele.
-- Baseline no HEAD `2ec2c39`: `uv run ruff check .` **All checks passed!**;
+- Baseline no HEAD `5addb49`: `uv run ruff check .` **All checks passed!**;
   pytest **124 passed, 1 warning**, 0 skipped.
 - Stack de QA: snapshot `git archive HEAD` fora do repositório, Compose isolado
   `-p bestprice0013qa`, integração Mercado Livre desabilitada, fixtures sintéticas
   por SQL (títulos “[QA sintético]”), removida ao final com `down -v`.
 
-### Backend (`986b7b6`, `764cf5a`, `0745d10`, `9302277`)
+### Backend (`fefb7bd`, `8aad763`, `4b17304`, `990ea3b`)
 
 - AC-005: `test_new_listing_write_failure_leaves_no_rows_and_retry_succeeds` e
   `test_shared_listing_write_failure_keeps_previous_state_and_retry_succeeds`.
@@ -829,10 +829,10 @@ qualquer restrição compartilhada fora da allowlist bloqueia o anúncio (falso
 positivo possível); variantes publicadas como itens irmãos (User Products) e preço
 personalizado sem `conditions` não são detectados (falso negativo).
 
-### Frontend (`6f590be`, `79eb553`)
+### Frontend (`6e04908`, `6468647`)
 
 Primeira inspeção QA em Chromium (Playwright 1.48.2 + axe 4.10.1, 1366x768 e
-390x844) no HEAD `2ec2c39` reprovou: cards ilegíveis no mobile (`.product-info`
+390x844) no HEAD `5addb49` reprovou: cards ilegíveis no mobile (`.product-info`
 com 15,7 px), logo comprimido, contraste do rodapé (`color-contrast`, serious, em
 todas as telas), diálogo sem mover/prender foco nem fechar com Esc, botão
 “Tentar novamente” sem estilo e métricas de AC-007 só no detalhe.
@@ -846,12 +846,12 @@ agora” não reabre (sucesso e falha). CSS: grid no card mobile, logo sem encol
 rodapé `#5f6b82` (5,05:1). Gates: `npm run lint` sem erros, `npm test -- --run`
 **29 passed**, `npm run build` concluído.
 
-Reinspeção QA no HEAD `6f590be`: axe **sem violações** nas 10 telas (login,
+Reinspeção QA no HEAD `6e04908`: axe **sem violações** nas 10 telas (login,
 dashboard, dois detalhes e falha de rede, nos dois viewports); `.product-info`
 230 px e `.brand-mark` 36 px no mobile; sem overflow horizontal; diálogo com foco
 inicial no fechar, 20 Tab e 20 Shift+Tab dentro, Esc fecha e devolve o foco;
 0 ocorrências de “Amazon”/“ASIN” no DOM e no bundle; nenhum “R$ 0,00”. Os
-comportamentos de `79eb553` estão cobertos por testes de UI, sem nova inspeção
+comportamentos de `6468647` estão cobertos por testes de UI, sem nova inspeção
 em navegador.
 
 ### Situação atualizada
@@ -860,19 +860,19 @@ Passam a **demonstrado**: AC-005; AC-007 e AC-012 (fixtures sintéticas, Chromiu
 AC-008 por processos distintos com fonte dublê; AC-016 com dublês que seguem o
 formato documentado da API. As referências ativas à Amazon em `README.md`,
 `docs/product-context.md`, `AGENTS.md` e `.agents/rules/workspace.md` já tinham
-sido removidas em `08a0225`/`1fb915e`; resta só o registro histórico datado em
+sido removidas em `4e2d4f5`/`c0bf40e`; resta só o registro histórico datado em
 `docs/LEARNINGS.md`.
 
 ### Revisão independente
 
-`arch-reviewer` revisou `2ec2c39..6f590be`: aprovado com ressalvas, sem
+`arch-reviewer` revisou `5addb49..6e04908`: aprovado com ressalvas, sem
 bloqueante; 1 importante (foco escapava do diálogo quando o botão focado ficava
 desabilitado) e 4 menores (foco ao parar de monitorar, isolamento do teste
 multiprocesso, prova de liberação do lock, limites de AC-016). Todos corrigidos
-em `79eb553`, `764cf5a` e `0745d10`. A re-revisão de `6f590be..0745d10`
+em `6468647`, `8aad763` e `4b17304`. A re-revisão de `6e04908..4b17304`
 confirmou as correções (backend 144 passed; frontend 29 passed duas vezes; teste
-multiprocesso 3x verde) e apontou 1 importante novo: a regra de `0745d10`
-recusava promoções legítimas com variações. Corrigido em `9302277`, junto com o
+multiprocesso 3x verde) e apontou 1 importante novo: a regra de `4b17304`
+recusava promoções legítimas com variações. Corrigido em `990ea3b`, junto com o
 `wait()` que podia mascarar a falha original. Menor aceito: o teste multiprocesso
 segura um lock por publicação alheia, e o banco de teste compartilhado cresce sem
 limpeza; recomenda-se recriá-lo periodicamente.

@@ -149,7 +149,7 @@ Marcar tarefas completas somente após evidência em `verification.md`. A ausên
 - Issue #34 criada; branch renomeada para
   `feature/0013-issue-34-monitoramento-mercado-livre` e enviada ao `origin`.
 - T03, T06–T10: achados da revisão independente e lacunas da QA corrigidos
-  (`810def5`, `898215b`, `a8d4e52`); backend 124 e frontend 19 testes
+  (`767a6c6`, `793ef0b`, `b15c686`); backend 124 e frontend 19 testes
   passando. Re-revisão aprovou para PR.
 - T13: gates e fluxo pela stack Compose conferidos; inspeção visual em
   navegador e ciclo real do worker seguem pendentes.
