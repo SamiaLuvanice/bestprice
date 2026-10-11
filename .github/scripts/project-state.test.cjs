@@ -10,6 +10,14 @@ test('Issue usa somente estados existentes e distingue merge em develop', () => 
   assert.equal(projectStatus('issue', { state: 'closed', state_reason: 'completed', closedByDefaultBranchPr: false }), 'Backlog');
 });
 
+test('Issue aberta sem responsável e com spec pronta vai para Ready', () => {
+  assert.equal(projectStatus('issue', { state: 'open', assignees: [], specReady: true }), 'Ready');
+  assert.equal(projectStatus('issue', { state: 'open', assignees: [], specReady: false }), 'Backlog');
+  assert.equal(projectStatus('issue', { state: 'open', assignees: [{}], specReady: true }), 'In progress');
+  assert.equal(projectStatus('issue', { state: 'closed', state_reason: 'completed', closedByDefaultBranchPr: true, specReady: true }), 'Develop');
+  assert.equal(projectStatus('issue', { state: 'closed', state_reason: 'not_planned', specReady: true }), 'Backlog');
+});
+
 test('PR draft, revisão, fechamento e merge seguem a branch-base', () => {
   assert.equal(projectStatus('pr', { state: 'open', draft: true }), 'In progress');
   assert.equal(projectStatus('pr', { state: 'open', draft: false }), 'In review');

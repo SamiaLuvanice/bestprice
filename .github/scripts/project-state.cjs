@@ -12,7 +12,8 @@ function projectStatus(kind, item) {
   if (item.state === 'closed') {
     return item.closedByDefaultBranchPr ? 'Develop' : 'Backlog';
   }
-  return item.assignees?.length ? 'In progress' : 'Backlog';
+  if (item.assignees?.length) return 'In progress';
+  return item.specReady ? 'Ready' : 'Backlog';
 }
 
 module.exports = { projectStatus };

@@ -1,15 +1,46 @@
 const { projectStatus } = require('./project-state.cjs');
+const { parseFeatureBranch, specChanged, issueSpecState } = require('./spec-status.cjs');
 
 module.exports = async ({ github, context, core }) => {
-  const kind = context.payload.pull_request ? 'pr' : context.payload.inputs?.kind || 'issue';
-  const number = Number(context.payload.pull_request?.number || context.payload.issue?.number || context.payload.inputs?.number);
+  const report = text => core.summary.addRaw(text).write();
+  let kind;
+  let number;
+  if (context.eventName === 'push') {
+    const branch = context.ref.replace(/^refs\/heads\//, '');
+    const link = parseFeatureBranch(branch);
+    if (!link) return report(`Push em ${branch}: fora do padrão feature/<spec>-issue-<n>-<slug>; Project não alterado.`);
+    if (context.payload.deleted) return report(`Branch ${branch} removida; Status recalculado no próximo evento da Issue.`);
+    if (!(await pushChangedSpec(github, context, link.spec))) {
+      return report(`Push em ${branch}: spec ${link.spec} não alterada; Project não alterado.`);
+    }
+    kind = 'issue';
+    number = link.issue;
+  } else {
+    kind = context.payload.pull_request ? 'pr' : context.payload.inputs?.kind || 'issue';
+    number = Number(context.payload.pull_request?.number || context.payload.issue?.number || context.payload.inputs?.number);
+  }
   if (!Number.isSafeInteger(number) || number <= 0 || !['pr', 'issue'].includes(kind)) throw new Error('Informe kind e number válidos.');
-  const request = kind === 'pr'
-    ? github.rest.pulls.get({ ...context.repo, pull_number: number })
-    : github.rest.issues.get({ ...context.repo, issue_number: number });
-  const { data: item } = await request; // estado atual, não um evento antigo da fila
-  if (kind === 'issue' && item.pull_request) throw new Error('Use kind=pr para uma Pull Request.');
+  let item;
+  try {
+    const request = kind === 'pr'
+      ? github.rest.pulls.get({ ...context.repo, pull_number: number })
+      : github.rest.issues.get({ ...context.repo, issue_number: number });
+    ({ data: item } = await request); // estado atual, não um evento antigo da fila
+  } catch (error) {
+    if (context.eventName === 'push' && error.status === 404) return report(`Issue #${number} não encontrada; Project não alterado.`);
+    throw error;
+  }
+  if (kind === 'issue' && item.pull_request) {
+    if (context.eventName === 'push') return report(`#${number} é uma Pull Request, não uma Issue; Project não alterado.`);
+    throw new Error('Use kind=pr para uma Pull Request.');
+  }
 
+  let specWarnings = [];
+  if (kind === 'issue' && item.state === 'open') {
+    const spec = await issueSpecState(github, context.repo, number);
+    item.specReady = spec.ready;
+    specWarnings = spec.warnings;
+  }
   if (kind === 'issue' && item.state === 'closed' && item.state_reason !== 'not_planned') {
     item.closedByDefaultBranchPr = await wasClosedByDefaultBranchPr(github, item.node_id, item.closed_at);
   }
@@ -53,8 +84,21 @@ module.exports = async ({ github, context, core }) => {
   const cancellationNote = kind === 'issue' && item.state === 'closed' && item.state_reason === 'not_planned'
     ? ' Issue não planejada: o Project não tem opção Canceled; Backlog foi usado.'
     : '';
-  await core.summary.addRaw(`${kind} #${number}: ${status}. Prioridade e ordenação preservadas.${cancellationNote}`).write();
+  const specNote = specWarnings.length
+    ? ` Specs ilegíveis, consideradas não prontas: ${specWarnings.join('; ')}.`
+    : '';
+  await report(`${kind} #${number}: ${status}. Prioridade e ordenação preservadas.${cancellationNote}${specNote}`);
 };
+
+// Merge de develop na branch traz outras specs; só a spec da própria branch conta.
+async function pushChangedSpec(github, context, spec) {
+  const { before, after } = context.payload;
+  if (/^0+$/.test(before)) return true; // primeiro push da branch
+  if (context.payload.forced) return true; // o diff de três pontos esconde a reversão da spec
+  const { data } = await github.rest.repos.compareCommitsWithBasehead({ ...context.repo, basehead: `${before}...${after}` });
+  const files = data.files || [];
+  return files.length >= 300 || specChanged(files, spec); // a API trunca em 300 arquivos
+}
 
 // O GitHub grava closed_at e o ClosedEvent separadamente; podem diferir em alguns segundos.
 const CLOSED_EVENT_TOLERANCE_MS = 60_000;
