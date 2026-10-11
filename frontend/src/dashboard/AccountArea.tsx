@@ -217,9 +217,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }
 
   // Fecha o detalhe de um produto que deixou de ser monitorado e aplica a convenção de produto removido.
+  // Só fecha o diálogo se ele ainda mostra este produto: a pessoa pode ter trocado de produto
+  // durante a requisição. A linha sai da lista em qualquer caso.
   function closeAsRemoved(id: string, text: string) {
-    detailOpener.current = null
-    setSelected(null)
+    if (openDetailId.current === id) {
+      detailOpener.current = null
+      setSelected(null)
+    }
     removeTracked(id, text)
     recalculate()
   }
@@ -229,7 +233,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   async function reloadSelected(id: string): Promise<boolean> {
     const detail = await api.detail(id)
     if (!detail.active) { closeAsRemoved(id, 'Monitoramento interrompido.'); return false }
-    setSelected(detail)
+    // Fechado (ou trocado) durante a ação: atualiza só a linha, sem reabrir o detalhe.
+    if (openDetailId.current === id) setSelected(detail)
     dispatchList({ type: 'replace', tracked: detail, receivedAt: clock() })
     return true
   }
@@ -247,7 +252,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   async function recoverFromAlertFailure(id: string, failure: unknown) {
     if (!(failure instanceof ApiFailure && failure.status === 404)) { failInDetail(id, failure); return }
     try {
-      if (await reloadSelected(id)) {
+      if (await reloadSelected(id) && openDetailId.current === id) {
         setError({ message: failure.message, trackedProductId: null })
         recalculate()
       }
@@ -382,14 +387,15 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     const remaining = current.items.filter((entry) => entry.tracked.id !== id).length
     dispatchList({ type: 'remove', id })
     forgetRow(id)
+    const otherDialogOpen = openDetailId.current !== null && openDetailId.current !== id
     if (remaining > 0 || current.nextCursor !== null) {
       setGlobalMessage(null)
       setProductsMessage(text)
-      setPendingFocus({ kind: 'productsHeading' })
+      if (!otherDialogOpen) setPendingFocus({ kind: 'productsHeading' })
     } else {
       setProductsMessage(null)
       setGlobalMessage(text)
-      setPendingFocus({ kind: 'linkInput' })
+      if (!otherDialogOpen) setPendingFocus({ kind: 'linkInput' })
     }
   }
 

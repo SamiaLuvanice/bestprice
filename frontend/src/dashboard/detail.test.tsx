@@ -271,6 +271,55 @@ describe('fechar o detalhe com clique fora', () => {
   })
 })
 
+describe('recargas que terminam depois de trocar ou fechar o detalhe', () => {
+  it('não fecha o detalhe de outro produto quando o anterior volta inativo', async () => {
+    const detailA = deferred()
+    let refreshed = false
+    const stopped = product('1', 'Fone sem fio', {}, { active: false })
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), (url, init) => {
+      if (url === `${itemUrl}/refresh` && init?.method === 'POST') {
+        refreshed = true
+        return reply(503, apiError('integration_unavailable', 'Mercado Livre indisponível no momento.'))
+      }
+      if (url === itemUrl) return refreshed ? detailA.promise : reply(200, first)
+      if (url === `${itemUrl}/history` || url === '/api/tracked-products/tracking-2/history') return reply(200, { items: [], next_cursor: null })
+      if (url === '/api/tracked-products/tracking-2') return reply(200, second)
+      return undefined
+    })
+    const dialog = within(await openDetail(user))
+    await user.click(dialog.getByRole('button', { name: 'Atualizar agora' }))
+    await waitFor(() => expect(refreshed).toBe(true))
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Ver detalhes de Cafeteira elétrica' }))
+    const other = await screen.findByRole('dialog', { name: 'Detalhes de Cafeteira elétrica' })
+    detailA.resolve(reply(200, stopped))
+    await waitFor(() => expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument())
+    expect(screen.getByRole('dialog', { name: 'Detalhes de Cafeteira elétrica' })).toBe(other)
+    expect(other).toContainElement(document.activeElement as HTMLElement)
+  })
+
+  it('não reabre o detalhe fechado durante uma ação de alerta', async () => {
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
+    const patch = deferred()
+    const { user, mockFetch } = await renderArea(dashboardFixture({ items: [withAlert, second] }), (url, init) => {
+      if (url === `${itemUrl}/alert` && init?.method === 'PATCH') return patch.promise
+      if (url === itemUrl) return reply(200, withAlert)
+      if (url === `${itemUrl}/history`) return reply(200, { items: [], next_cursor: null })
+      return undefined
+    })
+    const dialog = within(await openDetail(user))
+    await user.click(dialog.getByRole('button', { name: 'Pausar alerta' }))
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    const detailCalls = callsTo(mockFetch, itemUrl).length
+    patch.resolve(reply(200, alertFixture({ enabled: false })))
+    await waitFor(() => expect(callsTo(mockFetch, itemUrl).length).toBeGreaterThan(detailCalls))
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+})
+
 describe('aberturas concorrentes do detalhe', () => {
   it('mostra o detalhe da última abertura quando a anterior responde depois', async () => {
     const slow = deferred()
