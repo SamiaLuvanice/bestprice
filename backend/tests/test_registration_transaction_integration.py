@@ -7,12 +7,14 @@ from decimal import Decimal
 
 import pytest
 from alembic.config import Config
-from sqlalchemy import create_engine, event, func, select
+from sqlalchemy import create_engine, event, func, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import NullPool
 
 from alembic import command
 from app.marketplace.client import ListingData
+from app.products.locking import listing_lock_key
 from app.products.models import (
     PriceHistory,
     Product,
@@ -30,6 +32,29 @@ def _engine(monkeypatch: pytest.MonkeyPatch) -> Engine:
     monkeypatch.setenv("DATABASE_URL", test_url)
     command.upgrade(Config("alembic.ini"), "head")
     return create_engine(test_url.replace("postgresql://", "postgresql+psycopg://", 1))
+
+
+def _independent_engine() -> Engine:
+    """A separate engine without pooling: it never reuses the connection of the failed attempt."""
+    test_url = os.environ["TEST_DATABASE_URL"]
+    return create_engine(test_url.replace("postgresql://", "postgresql+psycopg://", 1), poolclass=NullPool)
+
+
+def _held_listing_locks(external_id: str) -> int:
+    """Count advisory locks on this listing held by any PostgreSQL session (pg_locks is server-wide)."""
+    key = listing_lock_key(external_id) & 0xFFFFFFFFFFFFFFFF
+    observer = _independent_engine()
+    try:
+        with observer.connect() as connection:
+            return connection.scalar(
+                text(
+                    "SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND objsubid = 1"
+                    " AND classid = CAST(:high AS oid) AND objid = CAST(:low AS oid)"
+                ),
+                {"high": key >> 32, "low": key & 0xFFFFFFFF},
+            )
+    finally:
+        observer.dispose()
 
 
 class Source:
@@ -95,9 +120,13 @@ def test_new_listing_write_failure_leaves_no_rows_and_retry_succeeds(monkeypatch
         ).where(Product.id.is_(None))
         assert session.scalar(orphans) == 0
 
-    # Retry with a fresh session: the listing lock was released and nothing blocks the new write.
-    with Session(engine) as session:
+    # The listing lock is session-level and reentrant, so a retry on the same pool could reacquire
+    # a leaked lock. Prove the release in pg_locks and retry through an independent connection.
+    assert _held_listing_locks(external_id) == 0
+    retry_engine = _independent_engine()
+    with Session(retry_engine) as session:
         result, created = add_tracking(session, user_id, url, source)
+    retry_engine.dispose()
     assert created is True
     assert result.product.current_price == Decimal("75.00")
     with Session(engine) as session:
@@ -145,8 +174,11 @@ def test_shared_listing_write_failure_keeps_previous_state_and_retry_succeeds(mo
         assert _count(session, ProductEvent, product_id=product_id) == 0
         assert _count(session, TrackedProduct, user_id=second) == 0
 
-    with Session(engine) as session:
+    assert _held_listing_locks(external_id) == 0
+    retry_engine = _independent_engine()
+    with Session(retry_engine) as session:
         result, created = add_tracking(session, second, url, source)
+    retry_engine.dispose()
     assert created is True
     assert result.product.current_price == Decimal("60.00")
     with Session(engine) as session:

@@ -27,6 +27,11 @@ class ListingBusy(ApiError):
         )
 
 
+def listing_lock_key(external_id: str) -> int:
+    """PostgreSQL advisory lock key (signed bigint) that serializes work on one publication."""
+    return int.from_bytes(hashlib.sha256(external_id.encode("ascii")).digest()[:8], signed=True)
+
+
 @contextmanager
 def listing_lock(session: Session, external_id: str, *, wait_seconds: float | None = None) -> Iterator[None]:
     """Serialize work on one publication across requests and worker processes.
@@ -47,7 +52,7 @@ def listing_lock(session: Session, external_id: str, *, wait_seconds: float | No
             lock.release()
         return
 
-    key = int.from_bytes(hashlib.sha256(external_id.encode("ascii")).digest()[:8], signed=True)
+    key = listing_lock_key(external_id)
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as connection:
         deadline = time.monotonic() + wait
         while not connection.scalar(text("SELECT pg_try_advisory_lock(:key)"), {"key": key}):
