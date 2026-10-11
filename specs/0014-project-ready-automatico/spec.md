@@ -3,7 +3,7 @@ numero: 0014
 titulo: Issues com spec pronta entram em Ready automaticamente no Project
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [harness, github, docs]
 depende_de: [0008]
 ---
