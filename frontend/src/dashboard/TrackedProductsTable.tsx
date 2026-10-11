@@ -27,7 +27,7 @@ export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore,
       <p className="section-subtitle">Todos os produtos que você está monitorando.</p>
       <p className="section-order">Ordem: mais recentes primeiro</p>
     </div>
-    <div role="status" className="section-status">{message}</div>
+    <div role="status" data-testid="products-status" className="section-status">{message}</div>
     {skeleton}
     {!skeleton && <>
       <table role="table" className="products-table" aria-labelledby="tracked-title">

@@ -1,36 +1,12 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { cleanup, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { App } from '../App'
-import { alertFixture, callsTo, dashboardFixture, fakeApi, reply, trackedFixture, type Route } from '../test/fakeApi'
+import { alertFixture, callsTo, dashboardFixture, reply, type Route } from '../test/fakeApi'
+import { product, productRow, renderArea as renderProducts } from '../test/productsHarness'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-
-const clock = () => new Date('2026-10-11T18:00:00Z')
-
-const recentTimes = {
-  last_price_observed_at: '2026-10-11T16:00:00Z', last_attempt_at: '2026-10-11T17:30:00Z', price_changed_at: '2026-10-11T15:00:00Z',
-}
-
-export function product(id: string, title: string, overrides: Record<string, unknown> = {}, tracked: Record<string, unknown> = {}) {
-  return trackedFixture({ id: `product-${id}`, title, ...recentTimes, ...overrides }, { id: `tracking-${id}`, ...tracked })
-}
-
-export async function renderProducts(dashboard: unknown, route: Route = () => undefined) {
-  const mockFetch = fakeApi(route, dashboard)
-  const user = userEvent.setup()
-  render(<App clock={clock} />)
-  await screen.findByRole('heading', { name: 'Seus produtos' })
-  await waitFor(() => expect(screen.queryByText('Carregando seu painel…')).not.toBeInTheDocument())
-  return { user, mockFetch }
-}
-
-export function productRow(title: string) {
-  return screen.getByRole('rowgroup', { name: title })
-}
 
 function cellsOf(row: HTMLElement) {
   return within(row).getAllByRole('cell').map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim())

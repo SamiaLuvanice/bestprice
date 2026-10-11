@@ -53,6 +53,8 @@ function percentage(value: string | null): string {
   return formatPercentage(value)?.text ?? 'Desconhecida'
 }
 
+type PendingFocus = { kind: 'rowMenu'; id: string } | { kind: 'productsHeading' } | { kind: 'linkInput' } | null
+
 type Props = {
   user: User
   clock: () => Date
@@ -64,6 +66,9 @@ type Props = {
 /** Área autenticada: orquestra estado e ações; componentes de apresentação não chamam fetch. */
 export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Props) {
   const [list, dispatchList] = useReducer(trackedListReducer, initialTrackedList)
+  // Lista mais recente para ações assíncronas que decidem foco depois de a resposta chegar.
+  const listRef = useRef(list)
+  useEffect(() => { listRef.current = list }, [list])
   const [url, setUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [trackError, setTrackError] = useState<TrackFeedback | null>(null)
@@ -71,8 +76,10 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const [busy, setBusy] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
-  const [rowStates] = useState<Record<string, RowState>>({})
-  const [productsMessage] = useState<string | null>(null)
+  const [rowStates, setRowStates] = useState<Record<string, RowState>>({})
+  const [productsMessage, setProductsMessage] = useState<string | null>(null)
+  const [globalMessage, setGlobalMessage] = useState<string | null>(null)
+  const [pendingFocus, setPendingFocus] = useState<PendingFocus>(null)
   const [error, setError] = useState<Feedback | null>(null)
   const [selected, setSelected] = useState<TrackedProduct | null>(null)
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -115,6 +122,20 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     if (opener.isConnected) opener.focus()
     else trackedHeading.current?.focus()
   }, [detailOpen])
+
+  // Foco pedido por uma ação, aplicado depois que a lista e as mensagens foram renderizadas.
+  useEffect(() => {
+    if (!pendingFocus) return
+    setPendingFocus(null)
+    if (pendingFocus.kind === 'rowMenu') {
+      const buttons = Array.from(document.querySelectorAll<HTMLElement>('[data-row-menu]'))
+      buttons.find((button) => button.dataset.rowMenu === pendingFocus.id)?.focus()
+    } else if (pendingFocus.kind === 'productsHeading') {
+      (trackedHeading.current ?? linkInput.current)?.focus()
+    } else {
+      linkInput.current?.focus()
+    }
+  }, [pendingFocus])
 
   const closeDetail = useCallback(() => setSelected(null), [])
   useModalFocus(detailOpen, detailDialog, closeDetailButton, closeDetail)
@@ -286,7 +307,73 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }
 
   // Ações da linha: implementadas em T15 e T16.
-  async function refreshRow(id: string) { void id }
+  function setRow(id: string, state: RowState) {
+    setRowStates((current) => ({ ...current, [id]: state }))
+  }
+
+  // Convenção de produto removido (parar, 409/404): mensagem na seção e foco no título; se a lista
+  // ficar vazia, foco no campo de link e mensagem na região global da página.
+  function removeTracked(id: string, text: string) {
+    const current = listRef.current
+    const remaining = current.items.filter((entry) => entry.tracked.id !== id).length
+    dispatchList({ type: 'remove', id })
+    setRowStates((states) => {
+      const next = { ...states }
+      delete next[id]
+      return next
+    })
+    if (remaining > 0 || current.nextCursor !== null) {
+      setGlobalMessage(null)
+      setProductsMessage(text)
+      setPendingFocus({ kind: 'productsHeading' })
+    } else {
+      setProductsMessage(null)
+      setGlobalMessage(text)
+      setPendingFocus({ kind: 'linkInput' })
+    }
+  }
+
+  // Indicadores e contador do sino recalculados pela API, sem descartar itens e páginas carregados.
+  function recalculate() {
+    void reloadDashboard()
+    void notifications.refreshAfterAction()
+  }
+
+  async function refreshRow(id: string) {
+    setRow(id, { busy: true, message: null })
+    setProductsMessage(null)
+    let text: string
+    try {
+      const updated = await api.refresh(id)
+      dispatchList({ type: 'replace', tracked: updated, receivedAt: clock() })
+      const notFound = updated.product.lookup_status === 'not_found'
+      text = updated.product.last_attempt_status === 'ok' && !notFound ? 'Consulta concluída.'
+        : attemptResult(notFound ? 'not_found' : updated.product.last_attempt_status)
+    } catch (failure) {
+      if (unauthenticated(failure)) { endSession(failure); return }
+      if (failure instanceof ApiFailure && (failure.status === 404 || failure.code === 'tracking_inactive')) {
+        removeTracked(id, failure.message)
+        recalculate()
+        return
+      }
+      text = feedback(failure).message
+      // 429 mantém os dados; nas demais falhas o backend registra a tentativa e a linha é recarregada.
+      if (!(failure instanceof ApiFailure && failure.status === 429)) await reloadRow(id)
+    }
+    setRow(id, { busy: false, message: text })
+    setPendingFocus({ kind: 'rowMenu', id })
+    recalculate()
+  }
+
+  async function reloadRow(id: string) {
+    try {
+      const latest = await api.detail(id)
+      dispatchList({ type: 'replace', tracked: latest, receivedAt: clock() })
+    } catch (failure) {
+      if (unauthenticated(failure)) endSession(failure)
+    }
+  }
+
   function requestStop(id: string) { void id }
 
   // Falha ao sair mantém a sessão local e mostra o erro no cabeçalho; só 401 leva à entrada.
@@ -325,7 +412,10 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
         <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
       </div>}
     </HeroTrackForm>
-    {error && !selected && <div className="content global-messages"><p role="alert" className="error-box">{error.message}</p></div>}
+    <div className="content global-messages">
+      <p role="status" data-testid="global-status" className={globalMessage ? 'global-status' : 'sr-only'}>{globalMessage}</p>
+      {error && !selected && <p role="alert" className="error-box">{error.message}</p>}
+    </div>
 
     <div className="content dashboard-content">
       <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
