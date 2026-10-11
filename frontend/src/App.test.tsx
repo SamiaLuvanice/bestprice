@@ -389,3 +389,90 @@ it('mostra Preço indisponível e métricas desconhecidas para item sem preço o
   expect(detail.getByText('Último preço observado: Desconhecido')).toBeInTheDocument()
   expect(detail.getByText('Última mudança de preço: Desconhecida')).toBeInTheDocument()
 })
+
+function productCard(title: string): HTMLElement {
+  const card = screen.getByRole('heading', { name: title }).closest('article')
+  if (!card) throw new Error(`Card de ${title} não encontrado`)
+  return card
+}
+
+function detailRoutes(item: unknown): Route {
+  return (url) => {
+    if (url === '/api/tracked-products/tracking-1') return Promise.resolve(reply(200, item))
+    if (url === '/api/tracked-products/tracking-1/history') return Promise.resolve(reply(200, { items: [], next_cursor: null }))
+    return undefined
+  }
+}
+
+it('mostra no card do dashboard preço anterior, mínimo, máximo, variação e horários de consulta e alteração', async () => {
+  signedIn(() => undefined, dashboardWith([trackedItem({ last_attempt_at: '2026-10-08T12:00:00Z', price_changed_at: '2026-10-08T11:00:00Z' })]))
+  render(<App />)
+  expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
+  const card = within(productCard('Fone sem fio'))
+  expect(card.getByText('Anterior').closest('div')).toHaveTextContent(/Anterior\s*R\$\s*100,00/)
+  expect(card.getByText('Mínimo').closest('div')).toHaveTextContent(/Mínimo\s*R\$\s*80,00/)
+  expect(card.getByText('Máximo').closest('div')).toHaveTextContent(/Máximo\s*R\$\s*100,00/)
+  expect(card.getByText('Variação').closest('div')).toHaveTextContent(/Variação\s*-20,00%/)
+  expect(card.getByText(/Última consulta:/)).not.toHaveTextContent('Desconhecida')
+  expect(card.getByText(/Última alteração:/)).not.toHaveTextContent('Desconhecida')
+  expect(card.getByText(/desde o primeiro registro no BestPrice/)).toBeInTheDocument()
+})
+
+it('identifica como desconhecidas no card as métricas ausentes, sem exibir R$ 0,00', async () => {
+  signedIn(() => undefined, dashboardWith([trackedItem({
+    current_price: null, previous_price: null, min_price: null, max_price: null, absolute_change: null,
+    percentage_change: null, last_attempt_at: null, last_price_observed_at: null, price_changed_at: null,
+  })]))
+  render(<App />)
+  expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
+  const cardElement = productCard('Fone sem fio')
+  const card = within(cardElement)
+  expect(card.getByText('Anterior').closest('div')).toHaveTextContent(/Anterior\s*Desconhecido/)
+  expect(card.getByText('Mínimo').closest('div')).toHaveTextContent(/Mínimo\s*Desconhecido/)
+  expect(card.getByText('Máximo').closest('div')).toHaveTextContent(/Máximo\s*Desconhecido/)
+  expect(card.getByText('Variação').closest('div')).toHaveTextContent(/Variação\s*Desconhecida/)
+  expect(card.getByText(/Última consulta:/)).toHaveTextContent('Última consulta: Desconhecida')
+  expect(card.getByText(/Última alteração:/)).toHaveTextContent('Última alteração: Desconhecida')
+  expect(cardElement).not.toHaveTextContent(/R\$\s*0,00/)
+})
+
+async function openDetail() {
+  const item = trackedItem()
+  signedIn(detailRoutes(item), dashboardWith([item]))
+  render(<App />)
+  const opener = await screen.findByRole('button', { name: 'Ver detalhes' })
+  opener.focus()
+  fireEvent.click(opener)
+  const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
+  return { opener, dialog }
+}
+
+it('move o foco para dentro do diálogo de detalhe ao abrir', async () => {
+  const { dialog } = await openDetail()
+  await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Fechar detalhes' })).toHaveFocus())
+})
+
+it('fecha o diálogo com Esc e devolve o foco a Ver detalhes', async () => {
+  const { opener, dialog } = await openDetail()
+  fireEvent.keyDown(within(dialog).getByRole('button', { name: 'Fechar detalhes' }), { key: 'Escape' })
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(opener).toHaveFocus()
+})
+
+it('devolve o foco a Ver detalhes ao fechar pelo botão', async () => {
+  const { opener, dialog } = await openDetail()
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Fechar detalhes' }))
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  expect(opener).toHaveFocus()
+})
+
+it('prende o foco no diálogo com Tab e Shift+Tab', async () => {
+  const { dialog } = await openDetail()
+  const close = within(dialog).getByRole('button', { name: 'Fechar detalhes' })
+  const last = within(dialog).getByRole('button', { name: 'Parar de monitorar' })
+  last.focus()
+  fireEvent.keyDown(last, { key: 'Tab' })
+  expect(close).toHaveFocus()
+  fireEvent.keyDown(close, { key: 'Tab', shiftKey: true })
+  expect(last).toHaveFocus()
+})

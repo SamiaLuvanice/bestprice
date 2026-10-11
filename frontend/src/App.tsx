@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type Notification, type Product, type TrackedProduct, type User } from './api'
 
 type Feedback = { message: string; trackedProductId: string | null }
@@ -60,6 +60,8 @@ function percentage(value: string | null): string {
   return value === null ? 'Desconhecida' : `${new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value))}%`
 }
 
+const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 function ProductCard({ item, onOpen }: { item: TrackedProduct; onOpen: (id: string) => void }) {
   const product = item.product
   return <article className="product-card">
@@ -69,6 +71,15 @@ function ProductCard({ item, onOpen }: { item: TrackedProduct; onOpen: (id: stri
       <h3>{product.title}</h3>
       <p className="product-price">{money(product.current_price)}</p>
       <p className="muted">{priceState(product)}</p>
+      <dl className="product-metrics">
+        <div><dt>Anterior</dt><dd>{money(product.previous_price, 'Desconhecido')}</dd></div>
+        <div><dt>Mínimo</dt><dd>{money(product.min_price, 'Desconhecido')}</dd></div>
+        <div><dt>Máximo</dt><dd>{money(product.max_price, 'Desconhecido')}</dd></div>
+        <div><dt>Variação</dt><dd>{percentage(product.percentage_change)}</dd></div>
+      </dl>
+      <p className="metric-note">Mínimo e máximo desde o primeiro registro no BestPrice</p>
+      <p className="muted">Última consulta: {instant(product.last_attempt_at, 'Desconhecida')}</p>
+      <p className="muted">Última alteração: {instant(product.price_changed_at, 'Desconhecida')}</p>
       {product.last_attempt_status !== 'ok' && <p className="muted">Última tentativa: {attemptResult(product.last_attempt_status)}</p>}
       {item.alert?.enabled && <span className="small-badge">Alerta em {money(item.alert.target_price)}</span>}
     </div>
@@ -96,6 +107,29 @@ export function App() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [notificationCursor, setNotificationCursor] = useState<string | null>(null)
   const [notificationsError, setNotificationsError] = useState<string | null>(null)
+  const detailOpener = useRef<HTMLElement | null>(null)
+  const closeDetailButton = useRef<HTMLButtonElement>(null)
+  const detailOpen = selected !== null
+
+  // Diálogo modal: foco entra ao abrir e volta ao elemento que o abriu ao fechar, se ele ainda estiver na página.
+  useEffect(() => {
+    if (detailOpen) { closeDetailButton.current?.focus(); return }
+    const opener = detailOpener.current
+    detailOpener.current = null
+    if (opener?.isConnected) opener.focus()
+  }, [detailOpen])
+
+  function detailKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === 'Escape') { event.preventDefault(); setSelected(null); return }
+    if (event.key !== 'Tab') return
+    const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector))
+    if (!focusable.length) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    const active = document.activeElement
+    if (event.shiftKey && (active === first || !event.currentTarget.contains(active))) { event.preventDefault(); last.focus() }
+    else if (!event.shiftKey && (active === last || !event.currentTarget.contains(active))) { event.preventDefault(); first.focus() }
+  }
 
   const resetSession = useCallback(() => {
     setUser(null)
@@ -211,6 +245,7 @@ export function App() {
   }
 
   async function open(id: string) {
+    if (!selected && document.activeElement instanceof HTMLElement) detailOpener.current = document.activeElement
     setError(null)
     try {
       const [detail, priceHistory] = await Promise.all([api.detail(id), api.history(id)])
@@ -366,7 +401,7 @@ export function App() {
     {sessionState === 'unavailable' && <section className="content narrow">
       <div className="panel">
         <p role="alert" className="error-box">{sessionError}</p>
-        <button type="button" onClick={retrySession}>Tentar novamente</button>
+        <button type="button" className="primary-button" onClick={retrySession}>Tentar novamente</button>
       </div>
     </section>}
     {sessionState === 'guest' && <section className="content narrow" aria-labelledby="login-title">
@@ -426,8 +461,8 @@ export function App() {
     </div>}
 
     {selected && <div className="detail-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
-      <section className="detail-panel" role="dialog" aria-modal="true" aria-label={`Detalhes de ${selected.product.title}`} onMouseDown={(event) => event.stopPropagation()}>
-        <button className="close-button" type="button" onClick={() => setSelected(null)} aria-label="Fechar detalhes">×</button>
+      <section className="detail-panel" role="dialog" aria-modal="true" aria-label={`Detalhes de ${selected.product.title}`} onMouseDown={(event) => event.stopPropagation()} onKeyDown={detailKeyDown}>
+        <button ref={closeDetailButton} className="close-button" type="button" onClick={() => setSelected(null)} aria-label="Fechar detalhes">×</button>
         <span className="eyebrow">{selected.product.external_id}</span>
         <h2>{selected.product.title}</h2>
         {error && <p role="alert" className="error-box">{error.message}</p>}
@@ -443,8 +478,10 @@ export function App() {
         <p className="muted">Preço unitário no Mercado Livre · BRL</p>
         <p className="muted">Anterior: {money(selected.product.previous_price, 'Desconhecido')} · Diferença: {money(selected.product.absolute_change, 'Desconhecida')} · Variação: {percentage(selected.product.percentage_change)}</p>
         <p className="muted">Menor: {money(selected.product.min_price, 'Desconhecido')} · Maior: {money(selected.product.max_price, 'Desconhecido')}</p>
-        <button type="button" disabled={busy} className="quiet-button" onClick={refreshSelected}>Atualizar agora</button>
-        <a className="external-link" href={selected.product.canonical_url} target="_blank" rel="noopener noreferrer">Ver anúncio no Mercado Livre ↗</a>
+        <div className="detail-links">
+          <button type="button" disabled={busy} className="quiet-button" onClick={refreshSelected}>Atualizar agora</button>
+          <a className="external-link" href={selected.product.canonical_url} target="_blank" rel="noopener noreferrer">Ver anúncio no Mercado Livre ↗</a>
+        </div>
         <h3>Histórico de preços</h3>
         {history.length ? <ul className="feed">{history.map((entry) => <li key={entry.id}>{money(entry.price)} · {instant(entry.captured_at)}</li>)}</ul> : <p className="empty">Ainda não há preço válido registrado.</p>}
         {historyCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMoreHistory}>Carregar mais preços</button>}
