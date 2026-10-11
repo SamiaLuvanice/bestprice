@@ -56,24 +56,22 @@ module.exports = async ({ github, context, core }) => {
   await core.summary.addRaw(`${kind} #${number}: ${status}. Prioridade e ordenação preservadas.${cancellationNote}`).write();
 };
 
+// O GitHub grava closed_at e o ClosedEvent separadamente; podem diferir em alguns segundos.
+const CLOSED_EVENT_TOLERANCE_MS = 60_000;
+
 async function wasClosedByDefaultBranchPr(github, issueNodeId, closedAt) {
-  let before = null;
-  do {
-    const { node } = await github.graphql(`query($id: ID!, $before: String) {
-      node(id: $id) { ... on Issue { timelineItems(last: 100, before: $before, itemTypes: [CLOSED_EVENT]) {
-        nodes { ... on ClosedEvent { createdAt closer { ... on PullRequest { number baseRefName mergedAt } } } }
-        pageInfo { hasPreviousPage startCursor }
-      } } }
-    }`, { id: issueNodeId, before });
-    const timeline = node?.timelineItems;
-    if (!timeline) throw new Error('GitHub não retornou os eventos de fechamento da Issue.');
-    const closedAtInstant = Date.parse(closedAt);
-    const closingEvent = timeline.nodes.find(event => Date.parse(event.createdAt) === closedAtInstant);
-    if (closingEvent) {
-      const closer = closingEvent.closer;
-      return closer?.baseRefName === 'develop' && Boolean(closer.mergedAt);
-    }
-    before = timeline.pageInfo.hasPreviousPage ? timeline.pageInfo.startCursor : null;
-  } while (before);
-  return false;
+  // O fechamento atual é sempre o ClosedEvent mais recente (último da lista cronológica).
+  const { node } = await github.graphql(`query($id: ID!) {
+    node(id: $id) { ... on Issue { timelineItems(last: 1, itemTypes: [CLOSED_EVENT]) {
+      nodes { ... on ClosedEvent { createdAt closer { ... on PullRequest { number baseRefName mergedAt } } } }
+    } } }
+  }`, { id: issueNodeId });
+  const timeline = node?.timelineItems;
+  if (!timeline) throw new Error('GitHub não retornou os eventos de fechamento da Issue.');
+  const closingEvent = timeline.nodes.at(-1);
+  if (!closingEvent) return false;
+  const distance = Math.abs(Date.parse(closingEvent.createdAt) - Date.parse(closedAt));
+  if (!(distance <= CLOSED_EVENT_TOLERANCE_MS)) return false;
+  const closer = closingEvent.closer;
+  return closer?.baseRefName === 'develop' && Boolean(closer.mergedAt);
 }
