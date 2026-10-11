@@ -59,6 +59,37 @@ test('Issue fechada resolve PR vinculada pelo instante do fechamento e branch pa
   assert.equal(project.status, 'option-4');
 });
 
+test('Issue fechada por PR com evento registrado 1 s depois de closed_at vai para Develop', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: '2026-10-11T18:49:46Z', node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: '2026-10-11T18:49:47Z', closer: { baseRefName: 'develop', mergedAt: '2026-10-11T18:49:45Z' } },
+  ] });
+  await sync(args);
+  assert.equal(project.status, 'option-4');
+});
+
+test('Issue reaberta e fechada manualmente não herda a PR de um fechamento anterior', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: '2026-01-02T00:00:00Z', node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: '2026-01-01T00:00:00Z', closer: { baseRefName: 'develop', mergedAt: '2026-01-01T00:00:00Z' } },
+    { createdAt: '2026-01-02T00:00:00Z', closer: null },
+  ] });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+});
+
+test('Issue cujo fechamento mais recente está distante de closed_at não é atribuída à PR', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: '2026-01-02T00:00:00Z', node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: '2026-01-01T00:00:00Z', closer: { baseRefName: 'develop', mergedAt: '2026-01-01T00:00:00Z' } },
+  ] });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+});
+
 test('Issue não planejada retorna a Backlog e informa falta de Canceled', async () => {
   process.env.PROJECT_OWNER = 'owner';
   process.env.PROJECT_NUMBER = '1';
