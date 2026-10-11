@@ -18,7 +18,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `scripts/compose-worktree.ps1` | Isola nome Compose, volume e portas por worktree no Windows |
 | `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
 | `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, Node tests e actionlint |
-| `.github/workflows/project.yml` | Sincronização opcional com GitHub Project |
+| `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em `main`, publica imagens e cria release com digests |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
 
@@ -27,11 +27,12 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | Código | Responsabilidade observada |
 |---|---|
 | `policy.cjs` — `closingIssue`, `validatePullRequest`, `checkPullRequest` | Exige uma única linha de fechamento `Closes #n`, branch/base válidas, Issue aberta do repositório e referência à Issue nos commits (exceto commits de merge); limita validação a 250 commits |
-| `project-state.cjs` — `projectStatus` | Mapeia Issue/PR para Backlog, In progress, In review, Develop, Stage ou Main |
-| `sync-project.cjs` — função exportada e `wasClosedByDefaultBranchPr` | Busca estado atual do item, consulta o `ClosedEvent` mais recente da Issue (aceito a até 60 s do `closed_at`), localiza campo/opção Status no Project e atualiza via GraphQL |
+| `project-state.cjs` — `projectStatus` | Mapeia Issue/PR para Backlog, Ready, In progress, In review, Develop, Stage ou Main; Issue aberta sem responsável e com `specReady` vai a Ready |
+| `spec-status.cjs` — `parseFeatureBranch`, `parseSpecStatus`, `specChanged`, `issueSpecState` | Liga `feature/<spec>-issue-<n>-<slug>` à Issue `#n`, lê o `status:` de `specs/<spec>-*/spec.md` no SHA atual de cada branch da Issue e indica se alguma está `pronta`; spec ilegível ou pasta ambígua vira aviso |
+| `sync-project.cjs` — função exportada, `pushChangedSpec` e `wasClosedByDefaultBranchPr` | Em push de branch de feature, resolve a Issue pela branch e só segue se a spec da própria branch mudou (primeiro push e force-push contam); busca estado atual do item, preenche `specReady` para Issue aberta, consulta o `ClosedEvent` mais recente da Issue (aceito a até 60 s do `closed_at`), localiza campo/opção Status no Project e atualiza via GraphQL |
 | `*.test.cjs` | Exercita regras de PR, mapeamento de status e sincronização com GraphQL simulado |
 
-O sync mantém prioridade e ordenação existentes. Issue fechada só vai para Develop quando o evento de fechamento atual aponta para PR mergeada em `develop`; cancelamento como “não planejada” volta a Backlog porque não há opção `Canceled` no conjunto esperado. O Project precisa ter campo `Status` com opções existentes. A integração não cria campo nem opções automaticamente.
+O sync mantém prioridade e ordenação existentes. Issue aberta sem responsável vai a Ready quando ao menos uma de suas branches de feature tem a spec `pronta` (spec 0014); responsável tem precedência e Issue fechada ignora a spec. Push fora do padrão de branch, sem alteração da spec da branch, para Issue inexistente ou que aponta uma PR não altera o Project nem falha. Issue fechada só vai para Develop quando o evento de fechamento atual aponta para PR mergeada em `develop`; cancelamento como “não planejada” volta a Backlog porque não há opção `Canceled` no conjunto esperado. O Project precisa ter campo `Status` com opções existentes. A integração não cria campo nem opções automaticamente.
 
 ## Topologia local
 
@@ -73,7 +74,7 @@ Em `main`, `release.yml` cria ou valida uma tag `build-<sha12>` ou uma versão `
 
 ## Integrações operacionais
 
-`project.yml` reage a eventos de Issues e PRs e pode atualizar um GitHub Project. Sem `PROJECT_TOKEN`, emite aviso e encerra como não sincronizado; `PROJECT_OWNER` e `PROJECT_NUMBER` identificam o Project quando configurado. O token não é passado a código da cabeça da PR: o workflow faz checkout da branch padrão. Detalhes de permissões e reconciliação estão em [github-workflow.md](../github-workflow.md).
+`project.yml` reage a eventos de Issues e PRs, a push em `feature/**` que altera `specs/*/spec.md` e a execução manual, e pode atualizar um GitHub Project. O job `resolve` calcula a chave (número da Issue, extraído da branch no push) e o job `sync` usa o grupo de concorrência `project-<chave>`, serializando push e eventos da mesma Issue. Sem `PROJECT_TOKEN`, emite aviso e encerra como não sincronizado; `PROJECT_OWNER` e `PROJECT_NUMBER` identificam o Project quando configurado. O token não é passado a código da cabeça da PR: o workflow faz checkout da branch padrão. No gatilho `push`, os scripts também vêm da branch padrão e a spec é lida pela API como dado, mas o YAML do workflow vem da branch publicada; só colaboradores com escrita publicam branches. Detalhes de permissões e reconciliação estão em [github-workflow.md](../github-workflow.md).
 
 ## Operação diária
 
@@ -91,5 +92,6 @@ Em `main`, `release.yml` cria ou valida uma tag `build-<sha12>` ou uma versão `
 - O backend espera banco healthy e aplica as migrations antes de iniciar. A stack isolada `bestprice0013verify` foi reconstruída: revisão `20261009safe`, health da API e worker aguardando autorização foram conferidos. Pelo proxy Nginx, login retornou 200, URL inválida 400 e anúncio novo sem integração 503. Esses testes não cobriram OAuth real, consulta ao Mercado Livre nem navegação visual; veja [verification.md](../../specs/0013-monitoramento-mercado-livre-brasil/verification.md).
 - O frontend de container é uma imagem Nginx; o modo de desenvolvimento usa Vite e proxy próprio.
 - Não há ambiente de implantação, HTTPS público, destino, credencial/OIDC, migração de produção ou rollback automatizado.
-- Sincronização do GitHub Project é condicional a segredo/variáveis ainda não configurados; não assuma que eventos já aparecem num board.
+- Sincronização do GitHub Project depende de `PROJECT_TOKEN`, `PROJECT_OWNER` e `PROJECT_NUMBER`, registrados como configurados em [github-workflow.md](../github-workflow.md#configurar-o-project-permissão-adicional); confirme pela execução do workflow antes de afirmar que um evento chegou ao board.
+- O Ready automático da 0014 ainda não foi observado no Project real: o gatilho `push` só usa os scripts novos após o merge em `develop` (V04 pendente em [verification.md](../../specs/0014-project-ready-automatico/verification.md)). Remover a branch não dispara sincronização; o Status é recalculado no próximo evento da Issue.
 - Dockerfiles usam versões fixas ou major/minor específicas em imagens base; dependências externas e Actions fixadas precisam de manutenção periódica.
