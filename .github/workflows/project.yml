@@ -41,8 +41,8 @@ jobs:
             else
               key="ref-${REF//[^A-Za-z0-9._-]/-}"
             fi
-          elif [[ "$NUMBER" =~ ^[1-9][0-9]*$ ]]; then
-            key="$NUMBER"
+          elif [[ "$NUMBER" =~ ^[0-9]{1,9}$ ]] && (( 10#$NUMBER > 0 )); then
+            key="$((10#$NUMBER))" # mesmo número que Number() no script (013 -> 13)
           else
             key="invalid-${GITHUB_RUN_ID}"
           fi
