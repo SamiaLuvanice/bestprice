@@ -86,6 +86,8 @@ describe('seção Alertas', () => {
     })
     await user.click(await section().findByRole('button', { name: 'Carregar mais notificações' }))
     expect(await section().findByText('Cafeteira elétrica')).toBeInTheDocument()
+    // Última página: o botão some e o foco vai ao primeiro item novo que pode ser acionado.
+    await waitFor(() => expect(section().getByRole('button', { name: 'Marcar como lida: Cafeteira elétrica' })).toHaveFocus())
     expect(section().getAllByRole('listitem')).toHaveLength(2)
     expect(section().queryByRole('button', { name: 'Carregar mais notificações' })).not.toBeInTheDocument()
     expect(callsTo(mockFetch, '/api/notifications?cursor=page-2')).toHaveLength(1)

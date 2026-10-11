@@ -40,7 +40,7 @@ function unauthenticated(error: unknown): error is ApiFailure {
   return error instanceof ApiFailure && error.status === 401
 }
 
-type PendingFocus = { kind: 'rowMenu'; id: string } | { kind: 'productsHeading' } | { kind: 'linkInput' } | null
+type PendingFocus = { kind: 'rowMenu'; id: string } | { kind: 'rowDetails'; id: string } | { kind: 'productsHeading' } | { kind: 'linkInput' } | null
 
 type Props = {
   user: User
@@ -128,6 +128,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     if (pendingFocus.kind === 'rowMenu') {
       const buttons = Array.from(document.querySelectorAll<HTMLElement>('[data-row-menu]'))
       buttons.find((button) => button.dataset.rowMenu === pendingFocus.id)?.focus()
+    } else if (pendingFocus.kind === 'rowDetails') {
+      const buttons = Array.from(document.querySelectorAll<HTMLElement>('[data-row-details]'))
+      buttons.find((button) => button.dataset.rowDetails === pendingFocus.id)?.focus()
     } else if (pendingFocus.kind === 'productsHeading') {
       (trackedHeading.current ?? linkInput.current)?.focus()
     } else {
@@ -143,13 +146,19 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     setError(feedback(failure))
   }, [endSession])
 
-  async function loadMore() {
+  async function loadMore(fromUser = false) {
     if (!list.nextCursor || loadingMore) return
     setLoadingMore(true)
     setLoadMoreError(null)
     try {
       const page = await api.tracked(list.nextCursor)
+      const known = new Set(listRef.current.items.map((entry) => entry.tracked.id))
       dispatchList({ type: 'append', page, receivedAt: clock() })
+      // Na última página o botão “Carregar mais” some: o foco vai ao primeiro item novo (ou ao título).
+      if (fromUser && page.next_cursor === null) {
+        const added = page.items.find((tracked) => !known.has(tracked.id))
+        setPendingFocus(added ? { kind: 'rowDetails', id: added.id } : { kind: 'productsHeading' })
+      }
     } catch (failure) {
       if (unauthenticated(failure)) endSession(failure)
       else setLoadMoreError(message(failure))
@@ -545,7 +554,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       </section>}
 
       {showProductSections && <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
-        loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore()} onOpen={(id) => void open(id)}
+        loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)} onOpen={(id) => void open(id)}
         renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
           disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
         message={productsMessage} headingRef={trackedHeading} skeleton={loading ? <ProductsSkeleton /> : undefined} />}
@@ -558,7 +567,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       </section>}
 
       <AlertsSection notifications={notifications.all} headingRef={alertsHeading} focusHeading={focusAlertsHeading}
-        onMarkRead={notifications.markRead} onLoadMore={() => void notifications.loadMoreAll()} onRetry={() => void notifications.reloadAll()} />
+        onMarkRead={notifications.markRead} onLoadMore={notifications.loadMoreAll} onRetry={() => void notifications.reloadAll()} />
     </div>
     </main>
 

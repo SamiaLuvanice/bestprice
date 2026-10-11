@@ -1,4 +1,4 @@
-import { cleanup, screen, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { alertFixture, apiError, callsTo, dashboardFixture, reply, type Route } from '../test/fakeApi'
 import { product, productRow, renderArea as renderProducts } from '../test/productsHarness'
@@ -123,6 +123,8 @@ describe('tabela Seus produtos', () => {
     await user.click(screen.getByRole('button', { name: 'Carregar mais produtos' }))
     expect(await screen.findByRole('rowgroup', { name: 'Cafeteira elétrica' })).toBeInTheDocument()
     expect(screen.getAllByRole('rowgroup', { name: 'Fone sem fio' })).toHaveLength(1)
+    // Na última página o botão some: o foco vai ao primeiro item recém-carregado, não ao body.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Ver detalhes de Cafeteira elétrica' })).toHaveFocus())
     expect(screen.queryByRole('button', { name: 'Carregar mais produtos' })).not.toBeInTheDocument()
     expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
   })

@@ -8,7 +8,7 @@ type Props = {
   headingRef: Ref<HTMLHeadingElement>
   focusHeading: () => void
   onMarkRead: (id: string) => Promise<string | null>
-  onLoadMore: () => void
+  onLoadMore: () => Promise<{ added: string[]; hasMore: boolean } | null>
   onRetry: () => void
 }
 
@@ -45,6 +45,12 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
     setFocusRequest({ candidates: [...unread.slice(index + 1), ...unread.slice(0, index).reverse()] })
   }
 
+  // Na última página o botão “Carregar mais” some: o foco vai ao primeiro item novo com botão (ou ao título).
+  async function loadMore() {
+    const result = await onLoadMore()
+    if (result && !result.hasMore) setFocusRequest({ candidates: result.added })
+  }
+
   return <section id="alertas" aria-labelledby="alerts-title" className="card-section alerts-section">
     <div className="section-heading">
       <h2 id="alerts-title" ref={headingRef} tabIndex={-1}>Alertas</h2>
@@ -74,7 +80,7 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
       </li>)}
     </ul>}
     {notifications.status !== 'error' && notifications.message && <p role="alert" className="error-box">{notifications.message}</p>}
-    {notifications.nextCursor && <button type="button" className="secondary-button" disabled={notifications.loadingMore} onClick={onLoadMore}>
+    {notifications.nextCursor && <button type="button" className="secondary-button" disabled={notifications.loadingMore} onClick={() => void loadMore()}>
       Carregar mais notificações
     </button>}
   </section>

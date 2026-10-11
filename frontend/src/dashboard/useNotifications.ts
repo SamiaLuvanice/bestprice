@@ -81,23 +81,27 @@ export function useNotifications({ clock, onUnauthenticated }: Options) {
     }
   }, [])
 
-  const loadMoreAll = useCallback(async () => {
+  /** Próxima página da seção; devolve os ids novos e se ainda há mais páginas (null em falha). */
+  const loadMoreAll = useCallback(async (): Promise<{ added: string[]; hasMore: boolean } | null> => {
     const cursor = all.nextCursor
-    if (!cursor) return
+    if (!cursor) return null
     setAll((state) => ({ ...state, loadingMore: true, message: null }))
     try {
       const page = await api.notifications(cursor)
       const receivedAt = callbacks.current.clock()
+      const known = new Set(all.items.map((entry) => entry.notification.id))
       setAll((state) => {
-        const known = new Set(state.items.map((entry) => entry.notification.id))
-        const fresh = page.items.filter((notification) => !known.has(notification.id)).map((notification) => ({ notification, receivedAt }))
+        const loaded = new Set(state.items.map((entry) => entry.notification.id))
+        const fresh = page.items.filter((notification) => !loaded.has(notification.id)).map((notification) => ({ notification, receivedAt }))
         return { ...state, items: [...state.items, ...fresh], nextCursor: page.next_cursor, loadingMore: false }
       })
+      return { added: page.items.filter((notification) => !known.has(notification.id)).map((notification) => notification.id), hasMore: page.next_cursor !== null }
     } catch (failure) {
-      if (isUnauthenticated(failure)) { callbacks.current.onUnauthenticated(failure); return }
+      if (isUnauthenticated(failure)) { callbacks.current.onUnauthenticated(failure); return null }
       setAll((state) => ({ ...state, loadingMore: false, message: messageOf(failure) }))
+      return null
     }
-  }, [all.nextCursor])
+  }, [all.nextCursor, all.items])
 
   /** Marca como lida e recalcula as não lidas; devolve a mensagem de erro, se houver. */
   const markRead = useCallback(async (id: string): Promise<string | null> => {

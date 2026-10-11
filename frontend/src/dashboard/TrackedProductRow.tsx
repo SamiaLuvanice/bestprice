@@ -57,7 +57,7 @@ export function TrackedProductRow({ entry, state, onOpen, actions }: Props) {
       <td role="cell" {...label(4)}><span className={`availability availability-${product.availability}`}>{availabilityLabel(product.availability)}</span></td>
       <td role="cell" {...label(5)}><RelativeTime iso={product.last_price_observed_at} receivedAt={receivedAt} /></td>
       <td role="cell" {...label(6)} className="cell-actions">
-        <button type="button" className="secondary-button" disabled={state.busy} onClick={() => onOpen(tracked.id)}>
+        <button type="button" className="secondary-button" data-row-details={tracked.id} disabled={state.busy} onClick={() => onOpen(tracked.id)}>
           Ver detalhes{' '}<span className="sr-only">de {product.title}</span>
         </button>
         {actions}
