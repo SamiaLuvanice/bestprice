@@ -28,7 +28,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 |---|---|
 | `policy.cjs` — `closingIssue`, `validatePullRequest`, `checkPullRequest` | Exige uma única linha de fechamento `Closes #n`, branch/base válidas, Issue aberta do repositório e referência à Issue nos commits (exceto commits de merge); limita validação a 250 commits |
 | `project-state.cjs` — `projectStatus` | Mapeia Issue/PR para Backlog, In progress, In review, Develop, Stage ou Main |
-| `sync-project.cjs` — função exportada e `wasClosedByDefaultBranchPr` | Busca estado atual do item, consulta eventos de fechamento da Issue, localiza campo/opção Status no Project e atualiza via GraphQL |
+| `sync-project.cjs` — função exportada e `wasClosedByDefaultBranchPr` | Busca estado atual do item, consulta o `ClosedEvent` mais recente da Issue (aceito a até 60 s do `closed_at`), localiza campo/opção Status no Project e atualiza via GraphQL |
 | `*.test.cjs` | Exercita regras de PR, mapeamento de status e sincronização com GraphQL simulado |
 
 O sync mantém prioridade e ordenação existentes. Issue fechada só vai para Develop quando o evento de fechamento atual aponta para PR mergeada em `develop`; cancelamento como “não planejada” volta a Backlog porque não há opção `Canceled` no conjunto esperado. O Project precisa ter campo `Status` com opções existentes. A integração não cria campo nem opções automaticamente.

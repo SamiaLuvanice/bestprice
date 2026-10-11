@@ -60,6 +60,10 @@ PR: https://github.com/SamiaLuvanice/bestprice/pull/18.
   blocos de 100 para Issues com histórico longo. O teste simula múltiplos eventos e
   uma PR anterior; não fez mutação em um Project real, pois isso exige `PROJECT_TOKEN`
   e acesso de escrita externos.
+  - Nota de 11/10/2026: a [Issue #40](https://github.com/SamiaLuvanice/bestprice/issues/40)
+    substituiu a igualdade exata entre `createdAt` e `closed_at` e a paginação: o
+    fechamento atual passou a ser o `ClosedEvent` mais recente, aceito a até 60 s do
+    `closed_at`. Ver `docs/github-workflow.md`.
 - A Issue não planejada usa `Backlog` e inclui aviso de que o Project não tem opção
   `Canceled`. O workflow existente preserva aviso e resumo **não sincronizado** quando
   `PROJECT_TOKEN` está ausente.

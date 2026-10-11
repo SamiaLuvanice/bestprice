@@ -42,7 +42,13 @@ function fixture({ kind = 'pr', item, closingEvents = [], availableOptions = opt
     graphql: async (query, variables) => {
       calls.push(query);
       if (query.includes('repositoryOwner')) return { repositoryOwner: { projectV2: { id: 'P_1' } } };
-      if (query.includes('timelineItems')) return { node: { timelineItems: { nodes: closingEvents, pageInfo: { hasPreviousPage: false, startCursor: null } } } };
+      if (query.includes('timelineItems')) {
+        // Como a API: first: N devolve os N mais antigos e last: N os N mais recentes, em ordem cronológica.
+        const [, edge, size] = query.match(/timelineItems\((first|last): (\d+)/) || [];
+        if (!edge) throw new Error('Consulta de timeline sem first/last.');
+        const nodes = edge === 'last' ? closingEvents.slice(-Number(size)) : closingEvents.slice(0, Number(size));
+        return { node: { timelineItems: { nodes } } };
+      }
       if (query.includes('fields(first')) return { node: { fields: {
         nodes: [{ id: 'status', name: 'Status', options: availableOptions }], pageInfo: { hasNextPage: false },
       } } };
@@ -95,6 +101,75 @@ test('Issue fechada resolve PR vinculada pelo instante do fechamento e branch pa
   ] });
   await sync(args);
   assert.equal(project.status, 'option-4');
+});
+
+test('Issue fechada por PR com evento registrado 1 s depois de closed_at vai para Develop', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: '2026-10-11T18:49:46Z', node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: '2026-10-11T18:49:47Z', closer: { baseRefName: 'develop', mergedAt: '2026-10-11T18:49:45Z' } },
+  ] });
+  await sync(args);
+  assert.equal(project.status, 'option-4');
+});
+
+test('Issue reaberta e fechada manualmente não herda a PR de um fechamento anterior', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: '2026-01-02T00:00:00Z', node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: '2026-01-01T00:00:00Z', closer: { baseRefName: 'develop', mergedAt: '2026-01-01T00:00:00Z' } },
+    { createdAt: '2026-01-02T00:00:00Z', closer: null },
+  ] });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+});
+
+test('fechamento manual 30 s depois de um merge usa o evento mais recente, não o da PR', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: '2026-01-01T00:00:30Z', node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: '2026-01-01T00:00:00Z', closer: { baseRefName: 'develop', mergedAt: '2026-01-01T00:00:00Z' } },
+    { createdAt: '2026-01-01T00:00:30Z', closer: null },
+  ] });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+});
+
+test('Issue cujo fechamento mais recente está distante de closed_at não é atribuída à PR', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project } = fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: '2026-01-02T00:00:00Z', node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: '2026-01-01T00:00:00Z', closer: { baseRefName: 'develop', mergedAt: '2026-01-01T00:00:00Z' } },
+  ] });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+});
+
+function closedIssue(closedAt, eventAt) {
+  return fixture({ kind: 'issue', item: { state: 'closed', state_reason: 'completed', closed_at: closedAt, node_id: 'ISSUE_1' }, closingEvents: [
+    { createdAt: eventAt, closer: { baseRefName: 'develop', mergedAt: '2026-01-01T00:00:00Z' } },
+  ] });
+}
+
+test('fechamento a 60 s de closed_at é aceito e a 61 s não', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const accepted = closedIssue('2026-01-01T00:00:00Z', '2026-01-01T00:01:00Z');
+  await sync(accepted.args);
+  assert.equal(accepted.project.status, 'option-4');
+  const rejected = closedIssue('2026-01-01T00:00:00Z', '2026-01-01T00:01:01Z');
+  await sync(rejected.args);
+  assert.equal(rejected.project.status, 'option-0');
+});
+
+test('closed_at ausente ou inválido não atribui o fechamento à PR', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  for (const closedAt of [null, 'invalido']) {
+    const { args, project } = closedIssue(closedAt, '2026-01-01T00:00:00Z');
+    await sync(args);
+    assert.equal(project.status, 'option-0');
+  }
 });
 
 test('Issue não planejada retorna a Backlog e informa falta de Canceled', async () => {
