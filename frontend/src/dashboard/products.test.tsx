@@ -96,6 +96,15 @@ describe('tabela Seus produtos', () => {
     expect(within(productRow('Cafeteira elétrica')).queryByText(/Última tentativa:/)).not.toBeInTheDocument()
   })
 
+  it('carrega a página seguinte sozinho quando a lista carregada fica vazia mas há cursor', async () => {
+    const second = product('2', 'Cafeteira elétrica')
+    const { mockFetch } = await renderProducts(dashboardFixture({ items: [], nextCursor: 'page-2', summary: { tracked_count: 1 } }), (url) =>
+      url === '/api/tracked-products?cursor=page-2' ? reply(200, { items: [second], next_cursor: null }) : undefined)
+    expect(await screen.findByRole('rowgroup', { name: 'Cafeteira elétrica' })).toBeInTheDocument()
+    expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
+    expect(screen.queryByText('Você ainda não está acompanhando nenhum produto.')).not.toBeInTheDocument()
+  })
+
   it('acrescenta a página seguinte sem repetir IDs e esconde Carregar mais sem cursor', async () => {
     const first = product('1', 'Fone sem fio')
     const second = product('2', 'Cafeteira elétrica')

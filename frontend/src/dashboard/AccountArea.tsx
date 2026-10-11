@@ -316,6 +316,15 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     }
   }
 
+  // Lista carregada vazia com próxima página (ex.: todos os itens da 1ª página saíram): busca a
+  // página seguinte em vez de mostrar uma tabela vazia. Uma falha para aqui e mostra a mensagem.
+  const listNeedsNextPage = list.loaded && list.items.length === 0 && list.nextCursor !== null && !loadingMore && !loadMoreError
+  useEffect(() => {
+    if (listNeedsNextPage) void loadMore()
+    // loadMore lê o cursor atual; a condição acima evita repetição.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listNeedsNextPage])
+
   // Ações da linha: implementadas em T15 e T16.
   function setRow(id: string, state: RowState) {
     setRowStates((current) => ({ ...current, [id]: state }))
