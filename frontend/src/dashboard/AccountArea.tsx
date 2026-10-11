@@ -56,7 +56,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   // Lista mais recente para ações assíncronas que decidem foco depois de a resposta chegar.
   const listRef = useRef(list)
   useEffect(() => { listRef.current = list }, [list])
-  const [url, setUrl] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [trackError, setTrackError] = useState<TrackFeedback | null>(null)
   const [trackSuccess, setTrackSuccess] = useState<string | null>(null)
@@ -157,20 +156,21 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     } finally { setLoadingMore(false) }
   }
 
-  async function track() {
+  async function track(url: string): Promise<boolean> {
     setTrackError(null)
     setTrackSuccess(null)
     setSubmitting(true)
     try {
       const result = await api.track(url)
-      setUrl('')
       dispatchList({ type: 'upsert', tracked: result.tracked, receivedAt: clock() })
       setTrackSuccess(result.outcome === 'created' ? 'Produto adicionado ao monitoramento.' : 'Você voltou a monitorar este produto.')
       // Indicadores recalculados pela API; a lista já carregada permanece.
       void reloadDashboard()
+      return true
     } catch (failure) {
       if (unauthenticated(failure)) endSession(failure)
       else setTrackError(feedback(failure))
+      return false
     } finally { setSubmitting(false) }
   }
 
@@ -475,7 +475,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
 
     <main id="conteudo" className="page-main">
-    <HeroTrackForm value={url} onChange={setUrl} onSubmit={() => void track()} submitting={submitting}
+    <HeroTrackForm onSubmit={track} submitting={submitting}
       error={trackError} success={trackSuccess} onViewProduct={(id) => void open(id)} headingRef={pageHeading}
       inputRef={linkInput} priority={isEmpty}>
       {isEmpty && <div className="empty-state">

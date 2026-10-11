@@ -26,7 +26,6 @@ export function App({ clock = systemClock }: Props) {
   const [sessionAttempt, setSessionAttempt] = useState(0)
   const [guestMessage, setGuestMessage] = useState<string | null>(null)
   const [guestTrackError, setGuestTrackError] = useState<TrackFeedback | null>(null)
-  const [url, setUrl] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -74,6 +73,7 @@ export function App({ clock = systemClock }: Props) {
 
   function trackAsGuest() {
     setGuestTrackError({ message: 'Entre na sua conta para monitorar este anúncio.', trackedProductId: null })
+    return false
   }
 
   if (sessionState === 'ready' && user) {
@@ -90,7 +90,7 @@ export function App({ clock = systemClock }: Props) {
     </header>
     <main className="page-main">
 
-    <HeroTrackForm value={url} onChange={setUrl} onSubmit={trackAsGuest} submitting={false} error={guestTrackError} success={null} />
+    <HeroTrackForm onSubmit={trackAsGuest} submitting={false} error={guestTrackError} success={null} />
 
     {sessionState === 'loading' && <section className="content"><p role="status">Carregando sua conta…</p></section>}
     {sessionState === 'unavailable' && <section className="content narrow">

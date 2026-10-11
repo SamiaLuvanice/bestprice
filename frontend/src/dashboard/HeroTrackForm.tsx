@@ -1,12 +1,11 @@
-import { useId, type FormEvent, type ReactNode, type Ref } from 'react'
+import { useId, useState, type FormEvent, type ReactNode, type Ref } from 'react'
 import { ArrowRightIcon, InfoIcon, LinkIcon } from './Icons'
 
 export type TrackFeedback = { message: string; trackedProductId: string | null }
 
 type Props = {
-  value: string
-  onChange: (value: string) => void
-  onSubmit: () => void
+  /** Envia o link digitado; devolve true quando o campo deve ser limpo (cadastro aceito). */
+  onSubmit: (value: string) => Promise<boolean> | boolean
   submitting: boolean
   error: TrackFeedback | null
   success: string | null
@@ -35,12 +34,15 @@ function HeroIllustration() {
  * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
-export function HeroTrackForm({ value, onChange, onSubmit, submitting, error, success, onViewProduct, headingRef, inputRef, priority = false, children }: Props) {
+export function HeroTrackForm({ onSubmit, submitting, error, success, onViewProduct, headingRef, inputRef, priority = false, children }: Props) {
   const hintId = useId()
   const errorId = useId()
-  function submit(event: FormEvent<HTMLFormElement>) {
+  // O valor do campo fica aqui: digitar não re-renderiza a área inteira (tabela, linha do tempo…).
+  const [value, setValue] = useState('')
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!submitting) onSubmit()
+    if (submitting) return
+    if (await onSubmit(value)) setValue('')
   }
   return <section className={priority ? 'hero hero-priority' : 'hero'} id="inicio" aria-labelledby="page-title">
     <div className="hero-inner">
@@ -50,12 +52,12 @@ export function HeroTrackForm({ value, onChange, onSubmit, submitting, error, su
           <span className="hero-line hero-highlight">Compre na hora certa.</span>
         </h1>
         <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>
-        <form onSubmit={submit} className="track-form">
+        <form onSubmit={(event) => void submit(event)} className="track-form">
           <div className="track-field">
             <LinkIcon className="field-icon" />
             <label htmlFor="product-url" className="sr-only">Link do anúncio do Mercado Livre</label>
             <input id="product-url" ref={inputRef} type="text" inputMode="url" autoComplete="url" required value={value}
-              onChange={(event) => onChange(event.target.value)} placeholder="https://www.mercadolivre.com.br/..."
+              onChange={(event) => setValue(event.target.value)} placeholder="https://www.mercadolivre.com.br/..."
               aria-invalid={error ? true : undefined} aria-describedby={error ? `${errorId} ${hintId}` : hintId} />
           </div>
           <button disabled={submitting} type="submit" className="primary-button">Monitorar preço <ArrowRightIcon /></button>

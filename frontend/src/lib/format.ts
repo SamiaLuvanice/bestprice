@@ -8,11 +8,24 @@ const DAY = 24 * HOUR
 
 type CivilParts = { year: string; month: string; day: string; hour: string; minute: string; second: string }
 
+// Um formatador por fuso: criar Intl.DateTimeFormat a cada instante exibido é caro em listas.
+const civilFormatters = new Map<string, Intl.DateTimeFormat>()
+
+function civilFormatter(timeZone?: string): Intl.DateTimeFormat {
+  const key = timeZone ?? ''
+  let formatter = civilFormatters.get(key)
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('pt-BR', {
+      timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+    })
+    civilFormatters.set(key, formatter)
+  }
+  return formatter
+}
+
 function civilParts(date: Date, timeZone?: string): CivilParts {
-  const parts = new Intl.DateTimeFormat('pt-BR', {
-    timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
-  }).formatToParts(date)
+  const parts = civilFormatter(timeZone).formatToParts(date)
   const pick = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? ''
   return { year: pick('year'), month: pick('month'), day: pick('day'), hour: pick('hour'), minute: pick('minute'), second: pick('second') }
 }
