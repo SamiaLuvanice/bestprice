@@ -12,7 +12,9 @@ export function ConfirmStopDialog({ title, alertActive, busy, onCancel, onConfir
   const descriptionId = useId()
   useModalFocus(true, dialog, cancel, onCancel)
   useLayoutEffect(() => { cancel.current?.focus() }, [])
-  return <div className="detail-backdrop confirm-backdrop" role="presentation" data-testid="confirm-backdrop" onMouseDown={onCancel}>
+  return <div className="detail-backdrop confirm-backdrop" role="presentation" data-testid="confirm-backdrop"
+    // preventDefault: sem ele, a ação padrão do mousedown levava o foco ao body depois do cancelamento.
+    onMouseDown={(event) => { event.preventDefault(); onCancel() }}>
     <div ref={dialog} className="confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId}
       onMouseDown={(event) => event.stopPropagation()}>
       <StopTrackingConfirm title={title} alertActive={alertActive} busy={busy} cancelRef={cancel}

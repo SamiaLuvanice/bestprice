@@ -78,7 +78,9 @@ export function ProductDetailDialog(props: Props) {
     else if (before === 'confirm') stopButton.current?.focus()
   }, [mode])
 
-  return <div className="detail-backdrop" role="presentation" data-testid="detail-backdrop" onMouseDown={cancelOrClose}>
+  return <div className="detail-backdrop" role="presentation" data-testid="detail-backdrop"
+    // preventDefault: sem ele, a ação padrão do mousedown levava o foco ao body depois do cancelamento.
+    onMouseDown={(event) => { event.preventDefault(); cancelOrClose() }}>
     <section className="detail-panel" role="dialog" aria-modal="true" ref={dialog}
       {...(mode === 'confirm'
         ? { 'aria-labelledby': confirmTitle, 'aria-describedby': confirmDescription }

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { alertFixture, apiError, callsTo, dashboardFixture, reply } from '../test/fakeApi'
 import { chooseRowAction, linkField, product, productRow, renderArea, rowStatus } from '../test/productsHarness'
@@ -50,7 +50,8 @@ describe('Parar de monitorar pela linha', () => {
   it.each([
     ['Cancelar', async (user: Awaited<ReturnType<typeof renderArea>>['user']) => user.click(within(confirmDialog()).getByRole('button', { name: 'Cancelar' }))],
     ['Esc', async (user: Awaited<ReturnType<typeof renderArea>>['user']) => user.keyboard('{Escape}')],
-    ['clique fora', async () => { fireEvent.mouseDown(screen.getByTestId('confirm-backdrop')) }],
+    // userEvent reproduz a ação padrão do mousedown (o navegador tira o foco para o body).
+    ['clique fora', (user: Awaited<ReturnType<typeof renderArea>>['user']) => user.click(screen.getByTestId('confirm-backdrop'))],
   ])('cancela por %s sem requisição e devolve o foco ao menu da linha', async (_how, cancel) => {
     const { user, mockFetch } = await renderArea(dashboardFixture({ items: [first, second] }))
     await chooseRowAction(user, 'Fone sem fio', 'Parar de monitorar')

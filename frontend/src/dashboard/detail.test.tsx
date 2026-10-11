@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { alertFixture, apiError, callsTo, dashboardFixture, deferred, notificationFixture, reply, unreadUrl, type Route } from '../test/fakeApi'
 import { bellButton, linkField, product, productRow, renderArea, type User } from '../test/productsHarness'
@@ -51,7 +51,8 @@ describe('Parar de monitorar no detalhe', () => {
   it.each([
     ['Cancelar', (user: User) => user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))],
     ['Esc', (user: User) => user.keyboard('{Escape}')],
-    ['clique fora', async () => { fireEvent.mouseDown(screen.getByTestId('detail-backdrop')) }],
+    // userEvent reproduz a ação padrão do mousedown (o navegador tira o foco para o body).
+    ['clique fora', (user: User) => user.click(screen.getByTestId('detail-backdrop'))],
   ])('volta ao detalhe aberto ao cancelar por %s, com foco em Parar de monitorar', async (_how, cancel) => {
     const { user, mockFetch } = await renderArea(dashboardFixture({ items: [first, second] }), detailServer([first, second]).route)
     const dialog = await openDetail(user)
