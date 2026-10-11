@@ -260,6 +260,17 @@ describe('produto parado em outra aba', () => {
   })
 })
 
+describe('fechar o detalhe com clique fora', () => {
+  it('fecha o detalhe e devolve o foco ao Ver detalhes de origem', async () => {
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), detailServer([first, second]).route)
+    await openDetail(user)
+    // userEvent reproduz a ação padrão do mousedown, que levaria o foco ao body sem o preventDefault.
+    await user.click(screen.getByTestId('detail-backdrop'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: 'Ver detalhes de Fone sem fio' })).toHaveFocus()
+  })
+})
+
 describe('aberturas concorrentes do detalhe', () => {
   it('mostra o detalhe da última abertura quando a anterior responde depois', async () => {
     const slow = deferred()
