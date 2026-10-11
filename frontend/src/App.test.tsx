@@ -1,69 +1,20 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { App } from './App'
+import { apiError, dashboardWith, fakeApi, productUrl, notificationFixture, reply, trackedFixture as trackedItem, type Route } from './test/fakeApi'
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
 
-function reply(status: number, body: unknown) {
-  return { ok: status >= 200 && status < 300, status, json: async () => body }
-}
-
-function apiError(code: string, message: string, extra: { tracked_product_id?: string; retry_after_seconds?: number } = {}) {
-  return { error: { code, message, fields: [], tracked_product_id: extra.tracked_product_id ?? null, retry_after_seconds: extra.retry_after_seconds ?? null } }
-}
-
-const emptyDashboard = {
-  summary: { tracked_count: 0, price_drop_count: 0, active_alert_count: 0, target_reached_count: 0 },
-  opportunities: [], tracked_products: { items: [], next_cursor: null }, recent_updates: [],
-}
-
-const productUrl = 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM'
-
-function trackedItem(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 'tracking-1', active: true, active_since: '2026-10-08T10:00:00Z', alert: null,
-    product: {
-      id: 'product-1', external_id: 'MLB1234567890', title: 'Fone sem fio', image_url: null,
-      canonical_url: productUrl, currency: 'BRL', price_context: 'mlb_marketplace_unit',
-      current_price: '80.00', previous_price: '100.00', min_price: '80.00', max_price: '100.00',
-      absolute_change: '-20.00', percentage_change: '-20.00', availability: 'available', lookup_status: 'located',
-      last_confirmed_availability: 'available', last_confirmed_availability_at: '2026-10-08T11:00:00Z',
-      last_attempt_status: 'ok', last_attempt_at: '2026-10-08T11:00:00Z',
-      last_success_at: '2026-10-08T11:00:00Z', last_price_observed_at: '2026-10-08T11:00:00Z',
-      price_changed_at: '2026-10-08T11:00:00Z', stale: false, ...overrides,
-    },
-  }
-}
-
-function dashboardWith(items: unknown[], recentUpdates: unknown[] = []) {
-  return {
-    ...emptyDashboard, summary: { ...emptyDashboard.summary, tracked_count: items.length },
-    tracked_products: { items, next_cursor: null }, recent_updates: recentUpdates,
-  }
-}
-
 function submitUrl() {
   fireEvent.change(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...'), { target: { value: productUrl } })
   fireEvent.click(screen.getByRole('button', { name: 'Monitorar preço' }))
 }
 
-type Route = (url: string) => Promise<unknown> | undefined
-
-function signedIn(route: Route, dashboard: unknown = emptyDashboard) {
-  const mockFetch = vi.fn((url: string) => {
-    const custom = route(url)
-    if (custom) return custom
-    if (url === '/api/auth/me') return Promise.resolve(reply(200, { id: 'user-1', email: 'pessoa@example.com' }))
-    if (url === '/api/dashboard') return Promise.resolve(reply(200, dashboard))
-    if (url === '/api/notifications') return Promise.resolve(reply(200, { items: [], next_cursor: null }))
-    throw new Error(`Rota inesperada: ${url}`)
-  })
-  vi.stubGlobal('fetch', mockFetch)
-  return mockFetch
-}
+// Pessoa autenticada com o dublê compartilhado (src/test/fakeApi.ts), que também responde às não lidas do sino.
+const signedIn = fakeApi
 
 it('exibe a proposta do BestPrice e pede sessão antes de monitorar', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
@@ -80,92 +31,55 @@ it('mostra bloqueio real da integração sem criar sucesso fictício nem encerra
   signedIn((url) => url === '/api/tracked-products'
     ? Promise.resolve(reply(503, apiError('integration_not_configured', backendMessage))) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   expect(screen.queryByText(/integração oficial autorizada/i)).not.toBeInTheDocument()
   submitUrl()
   await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(backendMessage))
-  expect(screen.getByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(screen.getByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   expect(screen.getByText('pessoa@example.com')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
 })
 
 it('mostra anúncio persistido, detalhe e histórico recebidos da API', async () => {
-  const item = {
-    id: 'tracking-1', active: true, active_since: '2026-10-08T10:00:00Z', alert: null,
-    product: {
-      id: 'product-1', external_id: 'MLB1234567890', title: 'Fone sem fio', image_url: null,
-      canonical_url: 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM', currency: 'BRL', price_context: 'mlb_marketplace_unit',
-      current_price: '80.00', previous_price: '100.00', min_price: '80.00', max_price: '100.00',
-      absolute_change: '-20.00', percentage_change: '-20.00', availability: 'available', lookup_status: 'located',
-      last_confirmed_availability: 'available', last_confirmed_availability_at: '2026-10-08T11:00:00Z',
-      last_attempt_status: 'ok', last_attempt_at: '2026-10-08T11:00:00Z',
-      last_success_at: '2026-10-08T11:00:00Z', last_price_observed_at: '2026-10-08T11:00:00Z',
-      price_changed_at: '2026-10-08T11:00:00Z', stale: false,
-    },
-  }
-  vi.stubGlobal('fetch', vi.fn((url: string) => {
-    if (url === '/api/auth/me') return Promise.resolve(reply(200, { id: 'user-1', email: 'pessoa@example.com' }))
-    if (url === '/api/dashboard') return Promise.resolve(reply(200, {
-      summary: { tracked_count: 1, price_drop_count: 0, active_alert_count: 0, target_reached_count: 0 },
-      opportunities: [], tracked_products: { items: [item], next_cursor: null }, recent_updates: [],
-    }))
-    if (url === '/api/notifications') return Promise.resolve(reply(200, { items: [], next_cursor: null }))
-    if (url === '/api/tracked-products/tracking-1') return Promise.resolve(reply(200, item))
-    if (url === '/api/tracked-products/tracking-1/history') return Promise.resolve(reply(200, {
+  const item = trackedItem()
+  fakeApi((url) => {
+    if (url === '/api/tracked-products/tracking-1') return reply(200, item)
+    if (url === '/api/tracked-products/tracking-1/history') return reply(200, {
       items: [
         { id: 'event-1', price: '100.00', currency: 'BRL', captured_at: '2026-10-08T10:00:00Z' },
         { id: 'event-2', price: '80.00', currency: 'BRL', captured_at: '2026-10-08T11:00:00Z' },
       ], next_cursor: null,
-    }))
-    throw new Error(`Rota inesperada: ${url}`)
-  }))
+    })
+    return undefined
+  }, dashboardWith([item]))
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   expect(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: /Ver anúncio no Mercado Livre/ })).toHaveAttribute('href', item.product.canonical_url)
   expect(screen.getByText(/Menor: R\$\s*80,00/)).toBeInTheDocument()
 })
 
 it('carrega páginas adicionais de histórico e notificações sem repetir entradas', async () => {
-  const item = {
-    id: 'tracking-1', active: true, active_since: '2026-10-08T10:00:00Z', alert: null,
-    product: {
-      id: 'product-1', external_id: 'MLB1234567890', title: 'Fone sem fio', image_url: null,
-      canonical_url: 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM', currency: 'BRL', price_context: 'mlb_marketplace_unit',
-      current_price: '80.00', previous_price: null, min_price: '80.00', max_price: '80.00',
-      absolute_change: null, percentage_change: null, availability: 'available', lookup_status: 'located',
-      last_confirmed_availability: 'available', last_confirmed_availability_at: '2026-10-08T11:00:00Z',
-      last_attempt_status: 'ok', last_attempt_at: '2026-10-08T11:00:00Z',
-      last_success_at: '2026-10-08T11:00:00Z', last_price_observed_at: '2026-10-08T11:00:00Z',
-      price_changed_at: null, stale: false,
-    },
-  }
-  const notification = (id: string) => ({
-    id, tracked_product_id: item.id, product_title: `Aviso ${id}`, observed_price: '80.00',
-    target_price: '90.00', created_at: '2026-10-08T11:00:00Z', read_at: null,
-  })
+  const item = trackedItem({ previous_price: null, max_price: '80.00', absolute_change: null, percentage_change: null, price_changed_at: null })
+  const notification = (id: string) => notificationFixture(id)
   const history = (id: string) => ({ id, price: '80.00', currency: 'BRL', captured_at: '2026-10-08T11:00:00Z' })
-  const mockFetch = vi.fn((url: string) => {
-    if (url === '/api/auth/me') return Promise.resolve(reply(200, { id: 'user-1', email: 'pessoa@example.com' }))
-    if (url === '/api/dashboard') return Promise.resolve(reply(200, {
-      summary: { tracked_count: 1, price_drop_count: 0, active_alert_count: 0, target_reached_count: 0 },
-      opportunities: [], tracked_products: { items: [item], next_cursor: null }, recent_updates: [],
-    }))
-    if (url === '/api/notifications') return Promise.resolve(reply(200, { items: [notification('notice-1')], next_cursor: 'notice-page-2' }))
-    if (url === '/api/notifications?cursor=notice-page-2') return Promise.resolve(reply(200, { items: [notification('notice-2')], next_cursor: null }))
-    if (url === '/api/tracked-products/tracking-1') return Promise.resolve(reply(200, item))
-    if (url === '/api/tracked-products/tracking-1/history') return Promise.resolve(reply(200, { items: [history('price-1')], next_cursor: 'price-page-2' }))
-    if (url === '/api/tracked-products/tracking-1/history?cursor=price-page-2') return Promise.resolve(reply(200, { items: [history('price-2')], next_cursor: null }))
-    throw new Error(`Rota inesperada: ${url}`)
-  })
-  vi.stubGlobal('fetch', mockFetch)
+  const mockFetch = fakeApi((url) => {
+    if (url === '/api/notifications') return reply(200, { items: [notification('notice-1')], next_cursor: 'notice-page-2' })
+    if (url === '/api/notifications?cursor=notice-page-2') return reply(200, { items: [notification('notice-2')], next_cursor: null })
+    if (url === '/api/tracked-products/tracking-1') return reply(200, item)
+    if (url === '/api/tracked-products/tracking-1/history') return reply(200, { items: [history('price-1')], next_cursor: 'price-page-2' })
+    if (url === '/api/tracked-products/tracking-1/history?cursor=price-page-2') return reply(200, { items: [history('price-2')], next_cursor: null })
+    return undefined
+  }, dashboardWith([item]))
   render(<App />)
-  expect(await screen.findByText(/Aviso notice-1 chegou/)).toBeInTheDocument()
+  // Migrado (0012/AC22): a seção Alertas mostra produto, preços e criação em campos separados.
+  const alerts = within(await screen.findByRole('region', { name: 'Alertas' }))
+  expect(await alerts.findByText('Aviso notice-1')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Carregar mais notificações' }))
-  expect(await screen.findByText(/Aviso notice-2 chegou/)).toBeInTheDocument()
+  expect(await alerts.findByText('Aviso notice-2')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Carregar mais notificações' })).not.toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   expect(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Carregar mais preços' }))
   await waitFor(() => expect(mockFetch).toHaveBeenCalledWith('/api/tracked-products/tracking-1/history?cursor=price-page-2', expect.anything()))
@@ -174,34 +88,19 @@ it('carrega páginas adicionais de histórico e notificações sem repetir entra
 })
 
 it('distingue tentativa falha, leitura válida, preço observado e mudança no detalhe', async () => {
-  const item = {
-    id: 'tracking-1', active: true, active_since: '2026-10-08T10:00:00Z', alert: null,
-    product: {
-      id: 'product-1', external_id: 'MLB1234567890', title: 'Fone sem fio', image_url: null,
-      canonical_url: 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM', currency: 'BRL',
-      price_context: 'mlb_marketplace_unit', current_price: '80.00', previous_price: '100.00',
-      min_price: '80.00', max_price: '100.00', absolute_change: '-20.00', percentage_change: '-20.00',
-      lookup_status: 'located', availability: 'available', last_confirmed_availability: 'available',
-      last_confirmed_availability_at: '2026-10-08T11:00:00Z', last_attempt_status: 'rate_limited',
-      last_attempt_at: '2026-10-08T12:00:00Z', last_success_at: '2026-10-08T11:00:00Z',
-      last_price_observed_at: '2026-10-08T11:00:00Z', price_changed_at: '2026-10-08T10:00:00Z', stale: true,
-    },
-  }
-  vi.stubGlobal('fetch', vi.fn((url: string) => {
-    if (url === '/api/auth/me') return Promise.resolve(reply(200, { id: 'user-1', email: 'pessoa@example.com' }))
-    if (url === '/api/dashboard') return Promise.resolve(reply(200, {
-      summary: { tracked_count: 1, price_drop_count: 0, active_alert_count: 0, target_reached_count: 0 },
-      opportunities: [], tracked_products: { items: [item], next_cursor: null }, recent_updates: [],
-    }))
-    if (url === '/api/notifications') return Promise.resolve(reply(200, { items: [], next_cursor: null }))
-    if (url === '/api/tracked-products/tracking-1') return Promise.resolve(reply(200, item))
-    if (url === '/api/tracked-products/tracking-1/history') return Promise.resolve(reply(200, { items: [], next_cursor: null }))
-    throw new Error(`Rota inesperada: ${url}`)
-  }))
+  const item = trackedItem({
+    last_attempt_status: 'rate_limited', last_attempt_at: '2026-10-08T12:00:00Z',
+    price_changed_at: '2026-10-08T10:00:00Z', stale: true,
+  })
+  fakeApi((url) => {
+    if (url === '/api/tracked-products/tracking-1') return reply(200, item)
+    if (url === '/api/tracked-products/tracking-1/history') return reply(200, { items: [], next_cursor: null })
+    return undefined
+  }, dashboardWith([item]))
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  expect(screen.getByText(/Último preço conhecido · preço desatualizado/)).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  expect(screen.getByText(/Preço desatualizado/)).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   const detail = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
   expect(detail.getByText(/Última tentativa:/)).toBeInTheDocument()
   expect(detail.getByText(/Última leitura válida:/)).toBeInTheDocument()
@@ -216,10 +115,10 @@ it('mostra erro com nova tentativa quando a sessão não pode ser verificada por
   const mockFetch = signedIn(() => undefined)
   mockFetch.mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch')))
   render(<App />)
-  expect(await screen.findByText('Não foi possível conectar à API.')).toBeInTheDocument()
+  expect(await screen.findByText('Não foi possível conectar ao BestPrice. Tente novamente.')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
 })
 
 it('não pede login quando a verificação de sessão recebe 503', async () => {
@@ -234,12 +133,12 @@ it('volta ao login quando uma chamada autenticada recebe 401 no meio da sessão'
   signedIn((url) => url === '/api/tracked-products'
     ? Promise.resolve(reply(401, apiError('unauthenticated', 'Sua sessão expirou. Entre novamente.'))) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   submitUrl()
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
   expect(screen.queryByText('pessoa@example.com')).not.toBeInTheDocument()
-  expect(screen.queryByText('Você ainda não monitora anúncios.')).not.toBeInTheDocument()
+  expect(screen.queryByText('Você ainda não está acompanhando nenhum produto.')).not.toBeInTheDocument()
 })
 
 it('oferece Ver produto quando o anúncio já é monitorado', async () => {
@@ -262,7 +161,7 @@ it('informa quando tentar novamente após limite de consultas', async () => {
   signedIn((url) => url === '/api/tracked-products'
     ? Promise.resolve(reply(429, apiError('integration_rate_limited', 'Limite de consultas ao Mercado Livre atingido.', { retry_after_seconds: 90 }))) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   submitUrl()
   const alert = await screen.findByRole('alert')
   expect(alert).toHaveTextContent('Limite de consultas ao Mercado Livre atingido.')
@@ -273,9 +172,10 @@ it('mostra erro na área de notificações quando elas não carregam', async () 
   signedIn((url) => url === '/api/notifications'
     ? Promise.resolve(reply(500, apiError('internal_error', 'Não foi possível carregar as notificações.'))) : undefined)
   render(<App />)
-  const section = within(await screen.findByRole('region', { name: 'Notificações' }))
+  const section = within(await screen.findByRole('region', { name: 'Alertas' }))
   expect(await section.findByRole('alert')).toHaveTextContent('Não foi possível carregar as notificações.')
-  expect(section.queryByText('Sem notificações por enquanto.')).not.toBeInTheDocument()
+  // Migrado (0012/AC22): texto de vazio da seção mudou.
+  expect(section.queryByText('Nenhuma notificação por enquanto.')).not.toBeInTheDocument()
 })
 
 it('rejeita atualização recente com valor fora do contrato', async () => {
@@ -284,7 +184,8 @@ it('rejeita atualização recente com valor fora do contrato', async () => {
   ]))
   render(<App />)
   expect(await screen.findByText('A API respondeu com dados inválidos.')).toBeInTheDocument()
-  expect(screen.queryByText('As mudanças confirmadas aparecerão aqui.')).not.toBeInTheDocument()
+  // Migrado (0012/AC21): texto de vazio da linha do tempo mudou.
+  expect(screen.queryByText('As mudanças confirmadas de preço e disponibilidade aparecerão aqui.')).not.toBeInTheDocument()
 })
 
 it('rejeita atualização recente com tipo desconhecido', async () => {
@@ -304,19 +205,21 @@ it('rejeita atualização recente sem produto, moeda ou instante válidos', asyn
 })
 
 it('exibe atualização recente válida de disponibilidade sem moeda', async () => {
-  signedIn(() => undefined, dashboardWith([], [
+  // Migrado (0012/AC23): sem produtos a linha do tempo fica oculta; o evento pertence a um produto carregado.
+  signedIn(() => undefined, dashboardWith([trackedItem()], [
     { id: 'event-1', tracked_product_id: 'tracking-1', type: 'availability_changed', previous_value: 'available', current_value: 'unavailable', currency: null, observed_at: '2026-10-08T11:00:00Z' },
   ]))
   render(<App />)
-  expect(await screen.findByText(/Disponibilidade alterada/)).toBeInTheDocument()
+  // Migrado (0012/AC20): o evento descreve o produto e a nova disponibilidade.
+  expect(await screen.findByText(/ficou indisponível\./)).toHaveTextContent('Fone sem fio ficou indisponível.')
 })
 
 it('mostra mensagem de rede quando o cadastro não alcança a API', async () => {
   signedIn((url) => url === '/api/tracked-products' ? Promise.reject(new TypeError('Failed to fetch')) : undefined)
   render(<App />)
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
   submitUrl()
-  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível conectar à API.')
+  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível conectar ao BestPrice. Tente novamente.')
   expect(screen.getByText('pessoa@example.com')).toBeInTheDocument()
 })
 
@@ -336,13 +239,13 @@ it('recarrega o vínculo e mostra o erro quando a atualização falha na fonte',
   })
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   const detail = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
   expect(detail.getByText('Resultado da última tentativa: Consulta concluída')).toBeInTheDocument()
   fireEvent.click(detail.getByRole('button', { name: 'Atualizar agora' }))
   expect(await detail.findByText('Resultado da última tentativa: Falha temporária na consulta')).toBeInTheDocument()
   expect(detail.getByRole('alert')).toHaveTextContent('Mercado Livre indisponível no momento.')
-  const tracked = within(screen.getByRole('region', { name: 'Produtos monitorados' }))
+  const tracked = within(screen.getByRole('region', { name: 'Seus produtos' }))
   expect(await tracked.findByText('Última tentativa: Falha temporária na consulta')).toBeInTheDocument()
   expect(screen.getByText('pessoa@example.com')).toBeInTheDocument()
 })
@@ -357,7 +260,7 @@ it('volta ao login quando a atualização recebe 401', async () => {
   }, dashboardWith([item]))
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Atualizar agora' }))
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -379,7 +282,7 @@ it('mostra Preço indisponível e métricas desconhecidas para item sem preço o
   render(<App />)
   expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
   expect(screen.getByText('Preço indisponível')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   const detail = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
   expect(detail.getByText('Preço indisponível')).toBeInTheDocument()
   expect(detail.getByText('Ainda não há preço válido registrado.')).toBeInTheDocument()
@@ -390,10 +293,9 @@ it('mostra Preço indisponível e métricas desconhecidas para item sem preço o
   expect(detail.getByText('Última mudança de preço: Desconhecida')).toBeInTheDocument()
 })
 
-function productCard(title: string): HTMLElement {
-  const card = screen.getByRole('heading', { name: title }).closest('article')
-  if (!card) throw new Error(`Card de ${title} não encontrado`)
-  return card
+// Migrado (0012/AC12): o card virou linha da tabela “Seus produtos” (linha principal + secundária).
+function productRow(title: string): HTMLElement {
+  return screen.getByRole('rowgroup', { name: title })
 }
 
 function detailRoutes(item: unknown): Route {
@@ -407,15 +309,14 @@ function detailRoutes(item: unknown): Route {
 it('mostra no card do dashboard preço anterior, mínimo, máximo, variação e horários de consulta e alteração', async () => {
   signedIn(() => undefined, dashboardWith([trackedItem({ last_attempt_at: '2026-10-08T12:00:00Z', price_changed_at: '2026-10-08T11:00:00Z' })]))
   render(<App />)
-  expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  const card = within(productCard('Fone sem fio'))
-  expect(card.getByText('Anterior').closest('div')).toHaveTextContent(/Anterior\s*R\$\s*100,00/)
-  expect(card.getByText('Mínimo').closest('div')).toHaveTextContent(/Mínimo\s*R\$\s*80,00/)
-  expect(card.getByText('Máximo').closest('div')).toHaveTextContent(/Máximo\s*R\$\s*100,00/)
-  expect(card.getByText('Variação').closest('div')).toHaveTextContent(/Variação\s*-20,00%/)
-  expect(card.getByText(/Última consulta:/)).not.toHaveTextContent('Desconhecida')
-  expect(card.getByText(/Última alteração:/)).not.toHaveTextContent('Desconhecida')
-  expect(card.getByText(/desde o primeiro registro no BestPrice/)).toBeInTheDocument()
+  const row = within(await screen.findByRole('rowgroup', { name: 'Fone sem fio' }))
+  expect(row.getByText('Preço anterior').closest('div')).toHaveTextContent(/Preço anterior\s*R\$\s*100,00/)
+  expect(row.getAllByRole('cell')[3]).toHaveTextContent(/^R\$\s*80,00$/)
+  expect(row.getByText('Maior preço').closest('div')).toHaveTextContent(/Maior preço\s*R\$\s*100,00/)
+  expect(row.getAllByRole('cell')[2]).toHaveTextContent(/-20,00%/)
+  expect(row.getByText('Última consulta').closest('div')).not.toHaveTextContent('Desconhecida')
+  expect(row.getByText('Última alteração').closest('div')).not.toHaveTextContent('Desconhecida')
+  expect(screen.getByText(/desde o primeiro registro no BestPrice/)).toBeInTheDocument()
 })
 
 it('identifica como desconhecidas no card as métricas ausentes, sem exibir R$ 0,00', async () => {
@@ -424,23 +325,22 @@ it('identifica como desconhecidas no card as métricas ausentes, sem exibir R$ 0
     percentage_change: null, last_attempt_at: null, last_price_observed_at: null, price_changed_at: null,
   })]))
   render(<App />)
-  expect(await screen.findByText('Fone sem fio')).toBeInTheDocument()
-  const cardElement = productCard('Fone sem fio')
-  const card = within(cardElement)
-  expect(card.getByText('Anterior').closest('div')).toHaveTextContent(/Anterior\s*Desconhecido/)
-  expect(card.getByText('Mínimo').closest('div')).toHaveTextContent(/Mínimo\s*Desconhecido/)
-  expect(card.getByText('Máximo').closest('div')).toHaveTextContent(/Máximo\s*Desconhecido/)
-  expect(card.getByText('Variação').closest('div')).toHaveTextContent(/Variação\s*Desconhecida/)
-  expect(card.getByText(/Última consulta:/)).toHaveTextContent('Última consulta: Desconhecida')
-  expect(card.getByText(/Última alteração:/)).toHaveTextContent('Última alteração: Desconhecida')
-  expect(cardElement).not.toHaveTextContent(/R\$\s*0,00/)
+  const rowElement = await screen.findByRole('rowgroup', { name: 'Fone sem fio' })
+  const row = within(rowElement)
+  expect(row.getByText('Preço anterior').closest('div')).toHaveTextContent(/Preço anterior\s*Desconhecido/)
+  expect(row.getAllByRole('cell')[3]).toHaveTextContent(/^Desconhecido$/)
+  expect(row.getByText('Maior preço').closest('div')).toHaveTextContent(/Maior preço\s*Desconhecido/)
+  expect(row.getAllByRole('cell')[2]).toHaveTextContent(/^Desconhecida$/)
+  expect(row.getByText('Última consulta').closest('div')).toHaveTextContent(/Última consulta\s*Desconhecida/)
+  expect(row.getByText('Última alteração').closest('div')).toHaveTextContent(/Última alteração\s*Desconhecida/)
+  expect(productRow('Fone sem fio')).not.toHaveTextContent(/R\$\s*0,00/)
 })
 
 async function openDetail() {
   const item = trackedItem()
   signedIn(detailRoutes(item), dashboardWith([item]))
   render(<App />)
-  const opener = await screen.findByRole('button', { name: 'Ver detalhes' })
+  const opener = await screen.findByRole('button', { name: /^Ver detalhes/ })
   opener.focus()
   fireEvent.click(opener)
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
@@ -484,7 +384,7 @@ it('mantém Esc e Tab presos ao diálogo quando o botão focado é desabilitado 
     return detailRoutes(item)(url)
   }, dashboardWith([item]))
   render(<App />)
-  fireEvent.click(await screen.findByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(await screen.findByRole('button', { name: /^Ver detalhes/ }))
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   const refresh = within(dialog).getByRole('button', { name: 'Atualizar agora' })
   await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Fechar detalhes' })).toHaveFocus())
@@ -505,26 +405,28 @@ it('mantém Esc e Tab presos ao diálogo quando o botão focado é desabilitado 
 })
 
 it('leva o foco ao título da lista quando o card que abriu o detalhe deixa de existir', async () => {
+  // Migrado (0012/AC19): com outro produto na lista a seção continua visível e recebe o foco;
+  // parar pelo detalhe agora passa pela confirmação dentro do próprio diálogo.
   const item = trackedItem()
+  const other = trackedItem({ id: 'product-2', title: 'Cafeteira elétrica' }, { id: 'tracking-2' })
   let stopped = false
-  vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
-    if (url === '/api/auth/me') return Promise.resolve(reply(200, { id: 'user-1', email: 'pessoa@example.com' }))
-    if (url === '/api/notifications') return Promise.resolve(reply(200, { items: [], next_cursor: null }))
-    if (url === '/api/dashboard') return Promise.resolve(reply(200, stopped ? emptyDashboard : dashboardWith([item])))
+  fakeApi((url, init) => {
+    if (url === '/api/dashboard') return reply(200, stopped ? dashboardWith([other]) : dashboardWith([item, other]))
     if (url === '/api/tracked-products/tracking-1' && init?.method === 'DELETE') {
       stopped = true
-      return Promise.resolve(reply(204, null))
+      return reply(204, null)
     }
-    return detailRoutes(item)(url) ?? Promise.reject(new Error(`Rota inesperada: ${url}`))
-  }))
+    return detailRoutes(item)(url)
+  })
   render(<App />)
-  const opener = await screen.findByRole('button', { name: 'Ver detalhes' })
+  const opener = await screen.findByRole('button', { name: 'Ver detalhes de Fone sem fio' })
   opener.focus()
   fireEvent.click(opener)
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   fireEvent.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
-  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
-  await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos monitorados' })).toHaveFocus())
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Parar de monitorar' }))
+  await waitFor(() => expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument())
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
 })
 
 async function closeDuringRefresh(outcome: () => unknown) {
@@ -535,7 +437,7 @@ async function closeDuringRefresh(outcome: () => unknown) {
     return detailRoutes(item)(url)
   }, dashboardWith([item]))
   render(<App />)
-  fireEvent.click(await screen.findByRole('button', { name: 'Ver detalhes' }))
+  fireEvent.click(await screen.findByRole('button', { name: /^Ver detalhes/ }))
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   fireEvent.click(within(dialog).getByRole('button', { name: 'Atualizar agora' }))
   fireEvent.keyDown(document.body, { key: 'Escape' })
@@ -543,7 +445,7 @@ async function closeDuringRefresh(outcome: () => unknown) {
   const dashboardCalls = mockFetch.mock.calls.filter(([url]) => url === '/api/dashboard').length
   finishRefresh(outcome())
   await waitFor(() => expect(mockFetch.mock.calls.filter(([url]) => url === '/api/dashboard').length).toBeGreaterThan(dashboardCalls))
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Ver detalhes' })).toBeEnabled())
+  await waitFor(() => expect(screen.getByRole('button', { name: /^Ver detalhes/ })).toBeEnabled())
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 }
 
