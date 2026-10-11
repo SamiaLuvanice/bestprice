@@ -73,4 +73,15 @@ describe('trackedListReducer', () => {
     expect(state.items[1].receivedAt).toBe(first)
     expect(state.nextCursor).toBeNull()
   })
+
+  it('usa a resposta do painel como carga inicial e, depois, só para atualizar itens existentes', () => {
+    const page = { items: [item('a')], next_cursor: 'page-2' }
+    const initial = trackedListReducer(initialTrackedList, { type: 'dashboard', page, receivedAt: first })
+    expect(ids(initial)).toEqual(['a'])
+    expect(initial.loaded).toBe(true)
+    const afterRemoval = trackedListReducer(initial, { type: 'remove', id: 'a' })
+    const recalculated = trackedListReducer(afterRemoval, { type: 'dashboard', page: { items: [item('a'), item('b')], next_cursor: 'outro' }, receivedAt: later })
+    expect(ids(recalculated)).toEqual([])
+    expect(recalculated.nextCursor).toBe('page-2')
+  })
 })

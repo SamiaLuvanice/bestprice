@@ -13,6 +13,7 @@ export type TrackedListAction =
   | { type: 'remove'; id: string }
   | { type: 'upsert'; tracked: TrackedProduct; receivedAt: Date }
   | { type: 'mergeFromDashboard'; items: TrackedProduct[]; receivedAt: Date }
+  | { type: 'dashboard'; page: Page; receivedAt: Date }
 
 export const initialTrackedList: TrackedListState = { loaded: false, items: [], nextCursor: null }
 
@@ -43,6 +44,11 @@ export function trackedListReducer(state: TrackedListState, action: TrackedListA
         ...state,
         items: [{ tracked: action.tracked, receivedAt: action.receivedAt }, ...state.items.filter((entry) => entry.tracked.id !== action.tracked.id)],
       }
+    case 'dashboard':
+      // Primeira resposta do painel inicializa a lista; as seguintes só atualizam itens já exibidos.
+      return state.loaded
+        ? trackedListReducer(state, { type: 'mergeFromDashboard', items: action.page.items, receivedAt: action.receivedAt })
+        : trackedListReducer(state, { type: 'load', page: action.page, receivedAt: action.receivedAt })
     case 'mergeFromDashboard': {
       const latest = new Map(action.items.map((tracked) => [tracked.id, tracked]))
       return {
