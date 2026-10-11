@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type Notification, type Product, type TrackedProduct, type User } from './api'
 
 type Feedback = { message: string; trackedProductId: string | null }
@@ -109,27 +109,51 @@ export function App() {
   const [notificationsError, setNotificationsError] = useState<string | null>(null)
   const detailOpener = useRef<HTMLElement | null>(null)
   const closeDetailButton = useRef<HTMLButtonElement>(null)
+  const detailDialog = useRef<HTMLElement>(null)
+  const trackedHeading = useRef<HTMLHeadingElement>(null)
   const detailOpen = selected !== null
+  // Produto do diálogo aberto, lido por requisições que terminam depois de a pessoa fechar ou trocar o detalhe.
+  const openDetailId = useRef<string | null>(null)
+  useEffect(() => { openDetailId.current = selected?.id ?? null }, [selected])
 
-  // Diálogo modal: foco entra ao abrir e volta ao elemento que o abriu ao fechar, se ele ainda estiver na página.
+  // Diálogo modal: foco entra ao abrir e volta ao elemento que o abriu ao fechar; se ele saiu da página, vai ao título da lista.
   useEffect(() => {
     if (detailOpen) { closeDetailButton.current?.focus(); return }
     const opener = detailOpener.current
     detailOpener.current = null
-    if (opener?.isConnected) opener.focus()
+    if (!opener) return
+    if (opener.isConnected) opener.focus()
+    else trackedHeading.current?.focus()
   }, [detailOpen])
 
-  function detailKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (event.key === 'Escape') { event.preventDefault(); setSelected(null); return }
-    if (event.key !== 'Tab') return
-    const focusable = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector))
-    if (!focusable.length) return
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
-    const active = document.activeElement
-    if (event.shiftKey && (active === first || !event.currentTarget.contains(active))) { event.preventDefault(); last.focus() }
-    else if (!event.shiftKey && (active === last || !event.currentTarget.contains(active))) { event.preventDefault(); first.focus() }
-  }
+  // Teclado escutado no document: se o botão focado for desabilitado, o foco cai no body e o diálogo ainda precisa responder.
+  useEffect(() => {
+    if (!detailOpen) return
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      const dialog = detailDialog.current
+      if (!dialog) return
+      if (event.key === 'Escape') { event.preventDefault(); setSelected(null); return }
+      if (event.key !== 'Tab') return
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+      const outside = !dialog.contains(active)
+      if (event.shiftKey && (outside || active === first)) { event.preventDefault(); last.focus() }
+      else if (!event.shiftKey && (outside || active === last)) { event.preventDefault(); first.focus() }
+    }
+    function onFocusIn(event: FocusEvent) {
+      const dialog = detailDialog.current
+      if (dialog && event.target instanceof Node && !dialog.contains(event.target)) closeDetailButton.current?.focus()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', onFocusIn)
+    }
+  }, [detailOpen])
 
   const resetSession = useCallback(() => {
     setUser(null)
@@ -245,14 +269,19 @@ export function App() {
   }
 
   async function open(id: string) {
-    if (!selected && document.activeElement instanceof HTMLElement) detailOpener.current = document.activeElement
+    const opening = !selected
+    if (opening && document.activeElement instanceof HTMLElement) detailOpener.current = document.activeElement
     setError(null)
     try {
       const [detail, priceHistory] = await Promise.all([api.detail(id), api.history(id)])
       setSelected(detail)
       setHistory(priceHistory.items)
       setHistoryCursor(priceHistory.next_cursor)
-    } catch (failure) { fail(failure) }
+    } catch (failure) {
+      // Se o diálogo não chegou a abrir, não há foco a devolver depois.
+      if (opening) detailOpener.current = null
+      fail(failure)
+    }
   }
 
   async function loadMoreHistory() {
@@ -327,6 +356,8 @@ export function App() {
     setError(null)
     try {
       await api.stop(selected.id)
+      // O card que abriu o detalhe some na recarga; o foco segue para o título da lista.
+      detailOpener.current = trackedHeading.current
       setSelected(null)
       setDashboard(await api.dashboard())
     } catch (failure) { fail(failure) }
@@ -335,25 +366,28 @@ export function App() {
 
   async function refreshSelected() {
     if (!selected) return
+    const id = selected.id
     setBusy(true)
     setError(null)
     try {
-      await api.refresh(selected.id)
-      await open(selected.id)
+      await api.refresh(id)
+      // Só recarrega o detalhe se o diálogo continua aberto no mesmo produto; fechado, ele não deve reabrir.
+      if (openDetailId.current === id) await open(id)
       setDashboard(await api.dashboard())
       applyNotifications(await api.notifications())
     } catch (failure) {
       fail(failure)
       // O backend persiste a tentativa falha; recarregar mostra o resultado atualizado sem apagar o erro exibido.
-      if (!unauthenticated(failure)) await reloadTracking(selected.id)
+      if (!unauthenticated(failure)) await reloadTracking(id)
     }
     finally { setBusy(false) }
   }
 
   async function reloadTracking(id: string) {
     try {
-      const [detail, latest] = await Promise.all([api.detail(id), api.dashboard()])
-      setSelected(detail)
+      const stillOpen = openDetailId.current === id
+      const [detail, latest] = await Promise.all([stillOpen ? api.detail(id) : Promise.resolve(null), api.dashboard()])
+      if (detail && openDetailId.current === id) setSelected(detail)
       setDashboard(latest)
     } catch (failure) {
       if (unauthenticated(failure)) fail(failure)
@@ -434,7 +468,7 @@ export function App() {
       </section>
 
       <section aria-labelledby="tracked-title">
-        <div className="section-heading"><span className="eyebrow">ACOMPANHAMENTO</span><h2 id="tracked-title">Produtos monitorados</h2></div>
+        <div className="section-heading"><span className="eyebrow">ACOMPANHAMENTO</span><h2 id="tracked-title" ref={trackedHeading} tabIndex={-1}>Produtos monitorados</h2></div>
         {trackedItems.length ? trackedItems.map((item) => <ProductCard key={item.id} item={item} onOpen={open} />) :
           dashboard && <p className="empty">Você ainda não monitora anúncios.</p>}
         {nextCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMore}>Carregar mais</button>}
@@ -461,7 +495,7 @@ export function App() {
     </div>}
 
     {selected && <div className="detail-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
-      <section className="detail-panel" role="dialog" aria-modal="true" aria-label={`Detalhes de ${selected.product.title}`} onMouseDown={(event) => event.stopPropagation()} onKeyDown={detailKeyDown}>
+      <section className="detail-panel" role="dialog" aria-modal="true" aria-label={`Detalhes de ${selected.product.title}`} ref={detailDialog} onMouseDown={(event) => event.stopPropagation()}>
         <button ref={closeDetailButton} className="close-button" type="button" onClick={() => setSelected(null)} aria-label="Fechar detalhes">×</button>
         <span className="eyebrow">{selected.product.external_id}</span>
         <h2>{selected.product.title}</h2>

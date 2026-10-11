@@ -476,3 +476,81 @@ it('prende o foco no diálogo com Tab e Shift+Tab', async () => {
   fireEvent.keyDown(close, { key: 'Tab', shiftKey: true })
   expect(last).toHaveFocus()
 })
+
+it('mantém Esc e Tab presos ao diálogo quando o botão focado é desabilitado e o foco cai no body', async () => {
+  const item = trackedItem()
+  signedIn((url) => {
+    if (url === '/api/tracked-products/tracking-1/refresh') return new Promise(() => undefined)
+    return detailRoutes(item)(url)
+  }, dashboardWith([item]))
+  render(<App />)
+  fireEvent.click(await screen.findByRole('button', { name: 'Ver detalhes' }))
+  const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
+  const refresh = within(dialog).getByRole('button', { name: 'Atualizar agora' })
+  await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Fechar detalhes' })).toHaveFocus())
+  // O navegador tira o foco de um botão que fica desabilitado e o devolve ao body;
+  // o jsdom não faz essa troca nem permite blur em elemento desabilitado, então ela é simulada antes do clique.
+  refresh.focus()
+  refresh.blur()
+  fireEvent.click(refresh)
+  await waitFor(() => expect(refresh).toBeDisabled())
+  expect(document.body).toHaveFocus()
+  fireEvent.keyDown(document.body, { key: 'Tab' })
+  const close = within(dialog).getByRole('button', { name: 'Fechar detalhes' })
+  expect(close).toHaveFocus()
+  close.blur()
+  expect(document.body).toHaveFocus()
+  fireEvent.keyDown(document.body, { key: 'Escape' })
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+})
+
+it('leva o foco ao título da lista quando o card que abriu o detalhe deixa de existir', async () => {
+  const item = trackedItem()
+  let stopped = false
+  vi.stubGlobal('fetch', vi.fn((url: string, init?: RequestInit) => {
+    if (url === '/api/auth/me') return Promise.resolve(reply(200, { id: 'user-1', email: 'pessoa@example.com' }))
+    if (url === '/api/notifications') return Promise.resolve(reply(200, { items: [], next_cursor: null }))
+    if (url === '/api/dashboard') return Promise.resolve(reply(200, stopped ? emptyDashboard : dashboardWith([item])))
+    if (url === '/api/tracked-products/tracking-1' && init?.method === 'DELETE') {
+      stopped = true
+      return Promise.resolve(reply(204, null))
+    }
+    return detailRoutes(item)(url) ?? Promise.reject(new Error(`Rota inesperada: ${url}`))
+  }))
+  render(<App />)
+  const opener = await screen.findByRole('button', { name: 'Ver detalhes' })
+  opener.focus()
+  fireEvent.click(opener)
+  const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
+  expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos monitorados' })).toHaveFocus())
+})
+
+async function closeDuringRefresh(outcome: () => unknown) {
+  const item = trackedItem()
+  let finishRefresh: (value: unknown) => void = () => undefined
+  const mockFetch = signedIn((url) => {
+    if (url === '/api/tracked-products/tracking-1/refresh') return new Promise((resolve) => { finishRefresh = resolve })
+    return detailRoutes(item)(url)
+  }, dashboardWith([item]))
+  render(<App />)
+  fireEvent.click(await screen.findByRole('button', { name: 'Ver detalhes' }))
+  const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Atualizar agora' }))
+  fireEvent.keyDown(document.body, { key: 'Escape' })
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  const dashboardCalls = mockFetch.mock.calls.filter(([url]) => url === '/api/dashboard').length
+  finishRefresh(outcome())
+  await waitFor(() => expect(mockFetch.mock.calls.filter(([url]) => url === '/api/dashboard').length).toBeGreaterThan(dashboardCalls))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Ver detalhes' })).toBeEnabled())
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+}
+
+it('não reabre o diálogo fechado durante Atualizar agora quando a atualização conclui', async () => {
+  await closeDuringRefresh(() => reply(200, trackedItem()))
+})
+
+it('não reabre o diálogo fechado durante Atualizar agora quando a atualização falha', async () => {
+  await closeDuringRefresh(() => reply(503, apiError('source_unavailable', 'Mercado Livre indisponível.')))
+})
