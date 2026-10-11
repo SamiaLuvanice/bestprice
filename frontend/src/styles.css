@@ -44,6 +44,7 @@ button:disabled { cursor: not-allowed; opacity: .65; }
 a { color: var(--color-primary); }
 :focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: 6px; }
 [tabindex="-1"]:focus { outline: none; }
+h1, h2[tabindex="-1"] { scroll-margin-top: 88px; }
 [tabindex="-1"]:focus-visible { outline: 3px solid var(--color-focus); }
 .icon { flex-shrink: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
@@ -164,7 +165,6 @@ h3 { font-size: 16px; letter-spacing: -.01em; margin: 0 0 8px; }
 .min-note { display: block; font-size: 11px; }
 .observed { color: var(--color-muted); font-size: 12px; }
 .observed time, .relative-time { position: relative; z-index: 1; }
-.relative-time:focus-visible::after, .relative-time:hover::after { content: attr(data-full); position: absolute; left: 0; top: calc(100% + 4px); z-index: 2; padding: 4px 8px; border-radius: 6px; background: var(--color-text); color: #fff; font-size: 12px; white-space: nowrap; }
 
 /* Esqueletos */
 .skeleton { display: grid; gap: var(--space-4); }
@@ -286,13 +286,13 @@ footer { color: var(--color-muted); text-align: center; padding: 28px; margin-to
 .alert-main { display: grid; gap: 2px; flex: 1; min-width: 200px; }
 .alert-title { overflow-wrap: anywhere; }
 .alert-prices { color: var(--color-muted); font-size: 13px; }
-.alert-item.is-read { opacity: .8; }
+.alert-item.is-read .alert-title { font-weight: 600; }
 
 @media (max-width: 959px) {
   .hero-inner { grid-template-columns: minmax(0, 1fr); padding: 32px 24px; }
   .hero-illustration { display: none; }
   .indicators, .skeleton-indicators { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .main-nav span { display: none; }
+  .main-nav span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .account-email { display: none; }
   /* Tabela empilhada por produto: papéis explícitos mantêm a semântica; cada célula mostra a coluna. */
   .products-table, .products-table tbody, .products-table tr, .products-table td { display: block; width: 100%; }
@@ -301,9 +301,13 @@ footer { color: var(--color-muted); text-align: center; padding: 28px; margin-to
   .products-table td { padding: var(--space-1) 0; }
   .products-table td[data-label]:not(.cell-product):not(.cell-actions)::before { content: attr(data-label) ": "; color: var(--color-muted); font-size: 12px; }
   .cell-product { min-width: 0; }
-  .cell-actions { flex-wrap: wrap; padding-top: var(--space-2) !important; }
+  .products-table td.cell-actions { display: flex; flex-wrap: nowrap; padding-top: var(--space-2); }
   .cell-actions .secondary-button { flex: 1; }
   .alert-main { min-width: 0; }
+}
+@media (max-width: 767px) {
+  .bell-panel { position: fixed; top: 76px; left: 16px; right: 16px; width: auto; max-height: calc(100vh - 92px); overflow-y: auto; }
+  .account-panel, .row-menu-panel { width: min(280px, calc(100vw - 32px)); }
 }
 @media (max-width: 600px) {
   .app-header-inner { gap: var(--space-2); }
