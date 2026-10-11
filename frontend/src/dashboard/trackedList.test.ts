@@ -84,4 +84,10 @@ describe('trackedListReducer', () => {
     expect(ids(recalculated)).toEqual([])
     expect(recalculated.nextCursor).toBe('page-2')
   })
+
+  it('remove em vez de substituir quando o vínculo devolvido não está mais ativo', () => {
+    const inactive = { ...item('b'), active: false }
+    const state = trackedListReducer(loaded(item('a'), item('b')), { type: 'replace', tracked: inactive, receivedAt: later })
+    expect(ids(state)).toEqual(['a'])
+  })
 })

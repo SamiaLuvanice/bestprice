@@ -31,6 +31,11 @@ function feedback(error: unknown): Feedback {
   return { message: text, trackedProductId: error.code === 'already_tracked' ? error.trackedProductId : null }
 }
 
+// 404 ou 409 tracking_inactive: o vínculo não existe mais para a pessoa (convenção de produto removido).
+function trackingGone(error: unknown): error is ApiFailure {
+  return error instanceof ApiFailure && (error.status === 404 || error.code === 'tracking_inactive')
+}
+
 function unauthenticated(error: unknown): error is ApiFailure {
   return error instanceof ApiFailure && error.status === 401
 }
@@ -203,6 +208,17 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     dispatchList({ type: 'replace', tracked: detail, receivedAt: clock() })
   }
 
+  // Falha de ação no detalhe: produto que deixou de existir fecha o detalhe e segue a convenção
+  // de produto removido; as demais falhas aparecem no próprio detalhe.
+  function failInDetail(id: string, failure: unknown): boolean {
+    if (!trackingGone(failure)) { fail(failure); return false }
+    detailOpener.current = null
+    setSelected(null)
+    removeTracked(id, failure.message)
+    recalculate()
+    return true
+  }
+
   async function createAlert(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selected) return
@@ -214,7 +230,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       await reloadDashboard()
       await notifications.refreshAfterAction()
       setTarget('')
-    } catch (failure) { fail(failure) }
+    } catch (failure) { failInDetail(selected.id, failure) }
     finally { setBusy(false) }
   }
 
@@ -228,7 +244,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       await reloadDashboard()
       await notifications.refreshAfterAction()
       setTarget('')
-    } catch (failure) { fail(failure) }
+    } catch (failure) { failInDetail(selected.id, failure) }
     finally { setBusy(false) }
   }
 
@@ -240,7 +256,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       await api.deleteAlert(selected.id)
       await reloadSelected(selected.id)
       await reloadDashboard()
-    } catch (failure) { fail(failure) }
+    } catch (failure) { failInDetail(selected.id, failure) }
     finally { setBusy(false) }
   }
 
@@ -274,7 +290,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       await reloadDashboard()
       await notifications.refreshAfterAction()
     } catch (failure) {
-      fail(failure)
+      if (failInDetail(id, failure)) return
       // O backend persiste a tentativa falha; recarregar mostra o resultado atualizado sem apagar o erro exibido.
       if (!unauthenticated(failure)) await reloadTracking(id)
     }
@@ -291,6 +307,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       await reloadDashboard()
     } catch (failure) {
       if (unauthenticated(failure)) fail(failure)
+      else if (trackingGone(failure)) failInDetail(id, failure)
     }
   }
 
@@ -339,7 +356,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
         : attemptResult(notFound ? 'not_found' : updated.product.last_attempt_status)
     } catch (failure) {
       if (unauthenticated(failure)) { endSession(failure); return }
-      if (failure instanceof ApiFailure && (failure.status === 404 || failure.code === 'tracking_inactive')) {
+      if (trackingGone(failure)) {
         removeTracked(id, failure.message)
         recalculate()
         return

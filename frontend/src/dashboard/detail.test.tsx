@@ -166,3 +166,28 @@ describe('recálculo após ações no detalhe', () => {
     expect(callsTo(mockFetch, '/api/dashboard').length).toBeGreaterThan(dashboardCalls)
   })
 })
+
+describe('produto parado em outra aba', () => {
+  it.each([
+    ['Atualizar agora', 409, 'tracking_inactive', `${itemUrl}/refresh`, 'POST'],
+    ['Criar alerta', 409, 'tracking_inactive', `${itemUrl}/alert`, 'POST'],
+    ['Pausar alerta', 404, 'resource_not_found', `${itemUrl}/alert`, 'PATCH'],
+    ['Excluir alerta', 404, 'resource_not_found', `${itemUrl}/alert`, 'DELETE'],
+  ])('fecha o detalhe e remove o produto quando %s responde %i', async (action, status, code, url, method) => {
+    const message = 'Você não monitora mais este produto.'
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
+    const start = action === 'Criar alerta' || action === 'Atualizar agora' ? first : withAlert
+    const server = detailServer([start, second], (requested, init) =>
+      requested === url && init?.method === method ? reply(status, apiError(code, message)) : undefined)
+    server.setDetail(start)
+    const { user } = await renderArea(dashboardFixture({ items: [start, second] }), server.route)
+    const dialog = within(await openDetail(user))
+    if (action === 'Criar alerta') await user.type(dialog.getByLabelText('Avise quando chegar a'), '70.00')
+    await user.click(dialog.getByRole('button', { name: action }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument()
+    expect(productRow('Cafeteira elétrica')).toBeInTheDocument()
+    expect(screen.getByTestId('products-status')).toHaveTextContent(message)
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
+  })
+})

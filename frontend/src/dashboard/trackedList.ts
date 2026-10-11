@@ -31,6 +31,8 @@ export function trackedListReducer(state: TrackedListState, action: TrackedListA
       return { ...state, items: [...state.items, ...entries(fresh, action.receivedAt)], nextCursor: action.page.next_cursor }
     }
     case 'replace': {
+      // Vínculo interrompido (ex.: parado em outra aba) sai da lista em vez de ser substituído.
+      if (!action.tracked.active) return trackedListReducer(state, { type: 'remove', id: action.tracked.id })
       if (!state.items.some((entry) => entry.tracked.id === action.tracked.id)) return state
       return {
         ...state,
