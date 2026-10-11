@@ -222,3 +222,99 @@ dinheiro); `formatMoney`/`formatPercentage` recebem a string decimal validada; n
   AC04 para esses gatilhos ficam em T15/T17.
 - Nenhum critério de aceite foi dado como demonstrado de ponta a ponta nesta fase; não houve
   inspeção em navegador.
+
+## 2026-10-11 — Implementação — fase 2 (T13–T21)
+
+Mesmo papel, worktree e branch da fase 1; commits locais, sem push. Nenhum arquivo de
+`backend/` alterado (`git diff --stat origin/develop -- backend/` vazio). Vitest rodou no
+sandbox. O card de produto, a linha do tempo e a seção Alertas antigos foram removidos.
+
+### Red → Green por tarefa
+
+| Tarefa | Arquivo | Red observado | Green |
+|---|---|---|---|
+| T13 | `dashboard/products.test.tsx` (tabela) | 8 failed (8): `Unable to find ... text: Todos os produtos que você está monitorando.`, `... role "rowgroup" and name "Fone sem fio"` (6), `... role "button" and name "Carregar mais produtos"`. Na 1ª implementação, 2 falhas restantes: erro do próprio teste (instante de 1 min esperado como “Agora”, corrigido para 30 s) e nome acessível `"Carregar maisprodutos"` (o espaço dentro do `sr-only` era descartado; corrigido com `{' '}` fora do span, também em “Ver detalhes de …”) | 8 passed |
+| T20 antecipado (AC23) | `dashboard/states.test.tsx` (estado vazio) | 1 failed: `Unable to find an element with the text: Você ainda não está acompanhando nenhum produto.` | passou; implementado junto de T13 porque a tabela deixou de mostrar o texto de vazio antigo |
+| T14 | `dashboard/products.test.tsx` (ações) | 3 failed: `Unable to find ... role "link" and name "Ver anúncio no Mercado Livre (abre em nova aba)"`, `... role "button" and name "Ações de Fone sem fio"` (2) | 3 passed |
+| T15 | `dashboard/refresh-row.test.tsx` | 11 failed (11): `toHaveAttribute("aria-busy", "true")`, `toHaveTextContent()`, `Unable to find ... text: Última tentativa: Falha temporária na consulta`, `not.toBeInTheDocument()`, `toHaveFocus()`, `Unable to find role="button" and name "Entrar"`. Depois da implementação, 4 falhas eram do dublê (o painel recarregado devolvia o produto antigo e o merge desfazia a linha); o teste passou a usar um servidor com estado, como a API real | 11 passed |
+| T16 | `dashboard/stop-tracking.test.tsx` | 9 failed: `Unable to find ... role "alertdialog" and name "Parar de monitorar “Fone sem fio”?"` (8) e `... "Carregar mais produtos"` (fixture sem cursor, corrigida) | 9 passed |
+| T17 | `dashboard/detail.test.tsx` | 6 failed / 5 passed (11): `Unable to find ... role "dialog"`, `... data-testid="detail-backdrop"`. Os 5 que passaram: falha ao parar (o fluxo antigo já mostrava o erro no detalhe) e os 4 testes do AC04 (recálculo do sino após criar, editar, pausar alerta e Atualizar agora no detalhe), já ligado na fase 1 — sem Red, ficam como evidência | 11 passed |
+| T18 | `dashboard/timeline.test.tsx` | 3 failed: `TypeError: Cannot read properties of null (reading 'textContent')` (sem `<p>` por evento) e `Unable to find ... text: As mudanças confirmadas de preço e disponibilidade aparecerão aqui.` | 3 passed |
+| T19 | `dashboard/alerts.test.tsx` | 7 failed (7): `Unable to find ... text: Fone sem fio`, `... role="button" and name "Marcar como lida: Cafeteira elétrica"`, `... text: Nenhuma notificação por enquanto.`, `... role "button" and name "Tentar novamente"` | 7 passed |
+| T20 | `dashboard/useDashboard.test.ts` | 1 failed: `expected undefined to be 'Serviço temporariamente indisponível.'` (sem `refreshError`) | 6 passed |
+| T20 | `dashboard/states.test.tsx` (integração) | 1 failed / 12 passed: `Unable to find role="alert"` na falha de recarga após a primeira carga. Os 12 que passaram (respostas fora de ordem, falha 500/rede do painel e das notificações por região, 401 em painel/notificações/não lidas, tabela do AC26 e “Ontem, HH:mm”) cobrem comportamento construído em T06, T09, T12 e T19 (Reds registrados lá) e ficam como evidência de integração | 13 passed |
+| T21 | `content.test.tsx` | Guarda sobre código existente, sem Red natural; validada injetando `// Amazon` em `dashboard/labels.ts`: `expected [ 'dashboard\labels.ts: Amazon' ] to deeply equal []`; arquivo restaurado com `git checkout` | 3 passed |
+
+### Testes da 0013 migrados nesta fase (`src/App.test.tsx`, continua com 29)
+
+| Teste | Antes → depois | AC |
+|---|---|---|
+| vários (bloqueio da integração, rede na sessão, 401, 429, rede no cadastro) | espera por “Você ainda não monitora anúncios.” → “Você ainda não está acompanhando nenhum produto.” | AC23 |
+| todos que abrem o detalhe | botão `name: 'Ver detalhes'` → `/^Ver detalhes/` (nome único “Ver detalhes de <título>”) | AC28 (nomes únicos por linha) |
+| distingue tentativa falha… | “Último preço conhecido · preço desatualizado” no card → “Preço desatualizado” na linha | AC14 |
+| mostra no card do dashboard preço anterior, mínimo, máximo… | card `article`/`dl` → grupo de linhas da tabela: célula Menor preço, Variação, detalhes Preço anterior, Maior preço, Última consulta/alteração | AC12 |
+| identifica como desconhecidas no card as métricas ausentes… | idem, com “Desconhecido/Desconhecida” por célula e detalhe | AC13 |
+| exibe atualização recente válida de disponibilidade sem moeda | painel sem produtos → com o produto carregado (sem produtos a linha do tempo fica oculta); “Disponibilidade alterada” → “Fone sem fio ficou indisponível.” | AC20, AC23 |
+| rejeita atualização recente com valor fora do contrato | ausência de “As mudanças confirmadas aparecerão aqui.” → do novo texto de vazio | AC21 |
+| carrega páginas adicionais de histórico e notificações… | “Aviso notice-1 chegou …” → título “Aviso notice-1” na região Alertas | AC22 |
+| mostra erro na área de notificações… | ausência de “Sem notificações por enquanto.” → “Nenhuma notificação por enquanto.” | AC22 |
+| leva o foco ao título da lista quando o card que abriu o detalhe deixa de existir | 1 → 2 produtos (com 1 a seção some e o foco vai ao campo, AC19) e confirmação dentro do diálogo antes do DELETE | AC19 |
+
+Os testes de foco do diálogo da 0013 (abrir, Esc, fechar, Tab preso, foco no body,
+fechar durante Atualizar agora) continuam sem mudança de asserção e verdes com o
+`ProductDetailDialog`.
+
+### Instabilidade “fecha o diálogo com Esc e devolve o foco a Ver detalhes”
+
+Causa provável: o `waitFor` do Testing Library espera 1 s por padrão, e a falha da fase 1
+ocorreu com 1197 ms durante a suíte completa em paralelo. Na fase 2 houve o mesmo padrão em
+outro teste (“mostra Localizando produto…” estourou 5 s com `user.type` caractere a
+caractere). Correções: `asyncUtilTimeout` de 3 s em `src/test-setup.ts`, `testTimeout` de
+15 s em `vite.config.ts` e `user.paste` no lugar de `user.type` para o link no hero. Depois
+disso, 2 execuções completas durante T15 e 3 execuções finais seguidas passaram sem falha.
+
+### Gates ao fim da fase 2
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | sem erros nem avisos |
+| `npm test -- --run` (1ª) | 19 arquivos, **213 passed (213)**, 23,63 s |
+| `npm test -- --run` (2ª) | 19 arquivos, **213 passed (213)**, 22,65 s |
+| `npm test -- --run` (3ª) | 19 arquivos, **213 passed (213)**, 25,65 s |
+| `npm run build` | concluído; `index-HRzyVAXH.css` 21,88 kB (gzip 4,98 kB), `index-Cqu394CO.js` 278,60 kB (gzip 84,54 kB) |
+
+Contagem por arquivo: `App.test.tsx` 29, `api.test.ts` 14, `content.test.tsx` 3,
+`dashboard/alerts.test.tsx` 7, `bell.test.tsx` 10, `detail.test.tsx` 11, `header.test.tsx` 6,
+`hero.test.tsx` 13, `overview.test.tsx` 4, `products.test.tsx` 11, `refresh-row.test.tsx` 11,
+`states.test.tsx` 13, `stop-tracking.test.tsx` 9, `timeline.test.tsx` 3, `trackedList.test.ts` 8,
+`useDashboard.test.ts` 6, `lib/decimal.test.ts` 20, `lib/focus.test.tsx` 8, `lib/format.test.ts` 27.
+
+`Number(` continua só no número do dia civil em `lib/format.ts`; queda/alta da linha do tempo
+usa `compareDecimal`. Commits sem atribuição a ferramentas (`git log --format=%B
+origin/develop..HEAD`).
+
+### Desvios do plano registrados
+
+- AC23 (estado vazio) foi implementado junto de T13, antes de T20.
+- O teste de “Atualizar agora” pela linha ficou em `refresh-row.test.tsx` e o detalhe em
+  `detail.test.tsx` (o plano citava `products.test.tsx` e `stop-tracking.test.tsx`), para
+  manter arquivos menores; o apoio comum está em `src/test/productsHarness.tsx`.
+- Falha do painel antes da primeira carga mostra a mensagem e “Tentar novamente” na região
+  do resumo e oculta oportunidades, produtos e atualizações (não há dados para elas); depois
+  da primeira carga, a falha de recarga mantém os dados e mostra a mensagem na mesma região.
+- Na seção Alertas, “item seguinte” é o próximo ainda não lido (os lidos continuam na lista);
+  sem nenhum, o foco vai ao título.
+- `availability_changed` para valor diferente de `available`/`unavailable` mostra “teve a
+  disponibilidade alterada.” (a spec só define os dois casos).
+- Selo “Último preço conhecido”/“Preço desatualizado” só aparece quando há preço atual.
+- Limites de espera dos testes ampliados (3 s / 15 s), descrito acima.
+- O layout mantém uma coluna em todas as larguras (ordem do DOM = ordem mobile); a tabela é
+  empilhada abaixo de 960 px.
+
+### Pendências para a fase 3
+
+- T22: inspeção em navegador (Playwright + axe) em 360/768/1280 px — sem rolagem horizontal,
+  ordem em 360, percurso só por teclado com foco visível e WCAG 2.1 AA; os estilos desta fase
+  não foram vistos renderizados. AC12 (em 360 px), AC27 e AC28 dependem dela.
+- Avaliar no navegador as paradas de Tab extras dos instantes relativos (`<time tabIndex=0>`).
+- T23–T27: gates finais, revisão independente, `docs/PROGRESS.md`, `doc-sync-onboarding` e PR.

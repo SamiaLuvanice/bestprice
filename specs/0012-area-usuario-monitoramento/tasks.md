@@ -83,54 +83,54 @@ arquivo de `backend/` é alterado. Marque `[x]` só com evidência registrada.
   oportunidades, produtos, atualizações, alertas; esqueletos `aria-hidden` com um status
   “Carregando seu painel…” e região `aria-busy`; nenhum número/zero/texto de vazio antes da
   resposta. *Pronto quando:* teste de esqueleto em `states.test.tsx` verde. — AC24.
-- [ ] **T13 — Tabela “Seus produtos” (`products.test.tsx`).** Colunas principais e linha
+- [x] **T13 — Tabela “Seus produtos” (`products.test.tsx`).** Colunas principais e linha
   secundária (anterior, maior, Última consulta, Última alteração relativas, selo “Alerta em
   R$ 99,90” só com alerta ativo); ausentes como “Preço indisponível”/“Desconhecido”/
   “Desconhecida”; variação com sinal, seta e “vs. preço anterior”; disponibilidade;
   `not_found` com “último preço conhecido”; `stale` desatualizado; aviso de tentativa não
   `ok`; ordem em texto; “Carregar mais” sem repetir IDs e oculto sem cursor. — AC12, AC13,
   AC14, AC17.
-- [ ] **T14 — Menu de ações da linha (`products.test.tsx`).** “Ver detalhes” abre o detalhe
+- [x] **T14 — Menu de ações da linha (`products.test.tsx`).** “Ver detalhes” abre o detalhe
   0013; menu com “Atualizar agora”, “Ver anúncio no Mercado Livre” (nova aba, externo,
   `rel` seguro) e “Parar de monitorar”; teclado do menu. — AC03, AC15.
-- [ ] **T15 — Atualizar agora pela linha (`products.test.tsx`).** Só a linha ocupada (outra
+- [x] **T15 — Atualizar agora pela linha (`products.test.tsx`).** Só a linha ocupada (outra
   linha acionável durante a promessa pendente); 200 `ok` → “Consulta concluída.”; 200
   `not_found`; 429 + 30 s; 502/503 → mensagem mantida e linha recarregada por
   `GET /tracked-products/{id}`; foco no botão do menu; 409/404 → só o item sai, mensagem na
   região da seção e foco no título (ou campo de link + anúncio global se era o único); com
   página 2 carregada, demais itens permanecem e indicadores e contador são recalculados;
   401 → entrada. — AC16, AC04.
-- [ ] **T16 — Parar de monitorar pela linha (`stop-tracking.test.tsx`).** Diálogo com título
+- [x] **T16 — Parar de monitorar pela linha (`stop-tracking.test.tsx`).** Diálogo com título
   do produto; frase do alerta só com alerta ativo; Cancelar/Esc/clique fora sem requisição e
   foco no botão do menu; confirmar remove só o item (página 2 preservada), recalcula
   indicadores, mensagem e foco conforme convenção; falha 5xx/rede mantém item, erro na
   linha, foco no menu; 404 segue convenção de removido (D10). — AC18.
-- [ ] **T17 — Detalhe: confirmação no próprio diálogo e link externo
+- [x] **T17 — Detalhe: confirmação no próprio diálogo e link externo
   (`stop-tracking.test.tsx`).** Um único diálogo; foco na confirmação; Cancelar/Esc/clique
   fora voltam ao detalhe com foco em “Parar de monitorar”; confirmar fecha e aplica AC18;
   falha volta com erro anunciado; rótulo “Ver anúncio no Mercado Livre”; após criar/editar/
   ativar alerta e “Atualizar agora” no detalhe, linha, indicadores e contador recalculados.
   Testes de detalhe da 0013 (histórico, alerta, foco) continuam verdes. — AC19, AC15, AC04.
-- [ ] **T18 — Atualizações recentes (`timeline.test.tsx`).** Textos da tabela da spec com
+- [x] **T18 — Atualizações recentes (`timeline.test.tsx`).** Textos da tabela da spec com
   título carregado; queda/alta por `compareDecimal` (`"99.90"`→`"100.00"` alta,
   `"100.10"`→`"100.09"` queda); iguais (`"1079.00"`→`"1079.0"`) e `"abc"` → “teve o preço
   alterado.” sem valores, sem seta, sem “R$”; disponibilidade; produto não carregado → “Um
   produto monitorado” + “Ver produto”; tempo relativo; vazio AC21; sem “Ver todas”. — AC20,
   AC21.
-- [ ] **T19 — Seção Alertas (`alerts.test.tsx`).** Produto, preço observado, alvo,
+- [x] **T19 — Seção Alertas (`alerts.test.tsx`).** Produto, preço observado, alvo,
   `created_at` relativo, lida/não lida; marcar move foco ao seguinte ou ao título, recalcula o
   sino e tira o item do painel; “Carregar mais” sem repetir; vazio “Nenhuma notificação por
   enquanto.”; erro com “Tentar novamente”. — AC22, AC05.
 
 ## Integração
 
-- [ ] **T20 — Estados gerais (`states.test.tsx`).** Vazio: dois textos, hero em destaque,
+- [x] **T20 — Estados gerais (`states.test.tsx`).** Vazio: dois textos, hero em destaque,
   três seções ocultas, Produtos foca o campo, Alertas visível (com e sem notificações);
   respostas do painel fora de ordem mantêm a mais recente; falha 500/rede no painel e nas
   notificações com “Tentar novamente” só na região e hero utilizável; 401 em qualquer chamada
   → entrada; relógio fixo produz textos da tabela AC26 e avançar o relógio sem nova resposta
   não muda o texto. — AC23, AC24, AC25, AC26.
-- [ ] **T21 — Estilos responsivos, acessibilidade e conteúdo.** Tokens em `:root` (D7), foco
+- [x] **T21 — Estilos responsivos, acessibilidade e conteúdo.** Tokens em `:root` (D7), foco
   visível, alvos de 44 px, `prefers-reduced-motion`, empilhamento < 960 px sem rolagem
   horizontal, ordem do DOM = ordem mobile; `content.test.ts` varre `src/` (exceto testes e
   `test/`) por “Amazon”, “prime”, “amazon.com”, estrelas/avaliações e confirma render vazio
