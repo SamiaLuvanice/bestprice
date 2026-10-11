@@ -83,3 +83,18 @@ pelo coordenador e aplicados em `spec.md` (numeração AC01–AC29 mantida):
 
 Nenhum código, teste ou gate foi executado; nenhum critério demonstrado. Status segue
 `rascunho`, aguardando o PR #35 em `develop`.
+
+## 2026-10-11 — `/plan 0012` (sem implementação)
+
+Criados `plan.md` e `tasks.md` (T01–T27) na worktree com `develop` atualizado e a 0013
+integrada (PR #35). Contrato conferido no código de `backend/app/products/` e
+`backend/app/auth/routes.py`: todos os dados usados pela spec existem; nenhum endpoint muda.
+Decisões principais: lista “Seus produtos” separada do painel após a primeira carga (merge por
+ID), descarte de respostas antigas por sequência, tempo relativo fixado por `receivedAt` com
+relógio injetável, comparação decimal própria (sem dependência), contador do sino por
+`unread_only=true&limit=100`, `@testing-library/user-event` como única dependência nova (dev),
+inspeção Playwright + axe fora do repositório. Os 29 testes atuais da 0013 serão migrados
+conscientemente (T03), com cada alteração listada aqui.
+
+Nenhum código, teste ou gate foi executado nesta etapa; nenhum critério demonstrado. Status
+da spec segue `rascunho` até a aprovação do plano.
