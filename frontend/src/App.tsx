@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type Notification, type Product, type TrackedProduct, type User } from './api'
+import { useModalFocus } from './lib/focus'
 import { formatMoney, formatPercentage, retryHint } from './lib/format'
 
 type Feedback = { message: string; trackedProductId: string | null }
@@ -52,8 +53,6 @@ function availability(value: string): string {
 function percentage(value: string | null): string {
   return formatPercentage(value)?.text ?? 'Desconhecida'
 }
-
-const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 function ProductCard({ item, onOpen }: { item: TrackedProduct; onOpen: (id: string) => void }) {
   const product = item.product
@@ -119,34 +118,8 @@ export function App() {
     else trackedHeading.current?.focus()
   }, [detailOpen])
 
-  // Teclado escutado no document: se o botão focado for desabilitado, o foco cai no body e o diálogo ainda precisa responder.
-  useEffect(() => {
-    if (!detailOpen) return
-    function onKeyDown(event: globalThis.KeyboardEvent) {
-      const dialog = detailDialog.current
-      if (!dialog) return
-      if (event.key === 'Escape') { event.preventDefault(); setSelected(null); return }
-      if (event.key !== 'Tab') return
-      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
-      if (!focusable.length) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      const active = document.activeElement
-      const outside = !dialog.contains(active)
-      if (event.shiftKey && (outside || active === first)) { event.preventDefault(); last.focus() }
-      else if (!event.shiftKey && (outside || active === last)) { event.preventDefault(); first.focus() }
-    }
-    function onFocusIn(event: FocusEvent) {
-      const dialog = detailDialog.current
-      if (dialog && event.target instanceof Node && !dialog.contains(event.target)) closeDetailButton.current?.focus()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('focusin', onFocusIn)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.removeEventListener('focusin', onFocusIn)
-    }
-  }, [detailOpen])
+  const closeDetail = useCallback(() => setSelected(null), [])
+  useModalFocus(detailOpen, detailDialog, closeDetailButton, closeDetail)
 
   const resetSession = useCallback(() => {
     setUser(null)
