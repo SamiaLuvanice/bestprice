@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
-import { apiError, callsTo, dashboardWith, fakeApi, notificationFixture, reply, trackedFixture, unreadUrl, type Route } from '../test/fakeApi'
+import { apiError, callsTo, dashboardWith, deferred, fakeApi, notificationFixture, reply, trackedFixture, unreadUrl, type Route } from '../test/fakeApi'
 
 afterEach(() => {
   cleanup()
@@ -175,5 +175,26 @@ describe('painel do sino', () => {
     expect(bell()).toHaveAttribute('aria-expanded', 'false')
     // Abrir o painel não faz nova consulta: as 5 primeiras vêm da mesma resposta do contador.
     expect(callsTo(mockFetch, unreadUrl)).toHaveLength(1)
+  })
+
+  it('descarta o pedido de foco quando o painel fecha antes de a marcação terminar', async () => {
+    const pending = deferred()
+    let items = unread(2)
+    const { user } = await renderWithUnread(() => page(items), (url, init) => {
+      if (url === '/api/notifications/n-1' && init?.method === 'PATCH') return pending.promise
+      return undefined
+    })
+    await waitFor(() => expect(bell()).toHaveAccessibleName('Notificações, 2 não lidas'))
+    await user.click(bell())
+    await user.click(panel().getByRole('button', { name: 'Marcar como lida: Produto 1' }))
+    await user.keyboard('{Escape}')
+    expect(bell()).toHaveFocus()
+    items = [unread(2)[1]]
+    pending.resolve(reply(200, { ...unread(2)[0], read_at: '2026-10-11T18:00:00Z' }))
+    await waitFor(() => expect(bell()).toHaveAccessibleName('Notificações, 1 não lida'))
+    await user.keyboard('{Enter}')
+    expect(bell()).toHaveAttribute('aria-expanded', 'true')
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(bell()).toHaveFocus()
   })
 })

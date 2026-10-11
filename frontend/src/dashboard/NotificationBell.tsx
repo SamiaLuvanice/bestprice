@@ -39,8 +39,10 @@ export function NotificationBell({ unread, onRetry, onMarkRead, onSeeAll }: Prop
 
   // Após marcar como lida: foco no próximo item da lista atual; sem itens, no título do painel.
   useEffect(() => {
-    if (!focusRequest || !panel.open) return
+    if (!focusRequest) return
     setFocusRequest(null)
+    // Painel fechado antes de a ação terminar: o pedido é descartado e não move o foco ao reabrir.
+    if (!panel.open) return
     const remaining = new Set(visible.map((item) => item.id))
     const candidates = focusRequest === 'title' ? [] : [
       ...focusRequest.previous.slice(focusRequest.index + 1),
