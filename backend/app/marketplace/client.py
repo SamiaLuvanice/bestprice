@@ -68,8 +68,11 @@ class MercadoLivreClient:
                         raise IntegrationError("unsupported_price_context")
                     self._ensure_shared_price_conditions(price_data.get("conditions"))
                     price = self._money(price_data["amount"])
-                    if len(variation_prices | {price}) > 1:
-                        # A priced variation disagrees with the item-level sale price.
+                    regular = price_data.get("regular_amount")
+                    accepted = {price} if regular is None else {price, self._money(regular)}
+                    if variation_prices and not variation_prices <= accepted:
+                        # The variations' common price is neither the sale price nor the
+                        # regular price it discounts: there is no single comparable price.
                         raise IntegrationError("unsupported_price_context")
             image_url = next(
                 (
@@ -135,8 +138,12 @@ class MercadoLivreClient:
         price of the range) would be arbitrary. Semantics:
         - a variation without ``price`` (absent or null) follows the item-level sale price;
         - the priced variations must agree among themselves (checked here, before the
-          sale price is requested) and with the sale ``amount`` when the source returns
-          one (checked by the caller); any disagreement is ``unsupported_price_context``;
+          sale price is requested); distinct prices are ``unsupported_price_context``;
+        - when the source returns a sale ``amount``, the variations' common price must equal
+          that amount or the sale ``regular_amount`` (a promotion over the full price the
+          variations carry); otherwise ``unsupported_price_context`` (checked by the caller).
+          The stored price is always the sale ``amount``. A present but malformed
+          ``regular_amount`` is an invalid response;
         - when the sale price has no amount the listing stays without price: a variation
           price is never used in its place;
         - each variation price goes through the same single rounding as the sale price,

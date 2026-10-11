@@ -14,7 +14,7 @@ import sys
 import time
 import uuid
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -124,8 +124,10 @@ def _run_workers(database_url: str, work_dir: Path, workers: dict[str, float]) -
         for process in processes:
             if process.poll() is None:
                 process.kill()
-            # Reap the process and close its pipe so no handle keeps files in tmp_path busy.
-            process.wait(timeout=30)
+            # Reap the process and close its pipe so no handle keeps files in tmp_path busy;
+            # a slow reap must not mask the original failure.
+            with suppress(subprocess.TimeoutExpired):
+                process.wait(timeout=30)
             if process.stdout is not None:
                 process.stdout.close()
     records = []

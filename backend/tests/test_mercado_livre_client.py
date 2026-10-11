@@ -203,3 +203,26 @@ def test_client_rejects_malformed_variation_price_as_invalid_response(variations
     with pytest.raises(IntegrationError) as failure:
         _client({**ITEM, "variations": variations}).get_listing("MLB1234567890")
     assert failure.value.code == "integration_invalid_response"
+
+
+def test_client_accepts_promotion_when_variations_match_regular_amount() -> None:
+    # Variations carry the full price; the sale price is a promotion over that same price.
+    sale = httpx.Response(200, json={"amount": 89.90, "regular_amount": 99.90, "currency_id": "BRL"})
+    client = _client({**ITEM, "variations": [_variation(1, 99.90), _variation(2, 99.90)]}, sale)
+    assert client.get_listing("MLB1234567890").price == Decimal("89.90")
+
+
+@pytest.mark.parametrize("regular_amount", ["99.90", True, -1])
+def test_client_rejects_malformed_regular_amount_as_invalid_response(regular_amount: object) -> None:
+    sale = httpx.Response(200, json={"amount": 89.90, "regular_amount": regular_amount, "currency_id": "BRL"})
+    with pytest.raises(IntegrationError) as failure:
+        _client({**ITEM, "variations": [_variation(1, 99.90)]}, sale).get_listing("MLB1234567890")
+    assert failure.value.code == "integration_invalid_response"
+
+
+def test_client_rejects_variation_price_differing_from_amount_and_regular_amount() -> None:
+    sale = httpx.Response(200, json={"amount": 89.90, "regular_amount": 109.90, "currency_id": "BRL"})
+    client = _client({**ITEM, "variations": [_variation(1, 99.90), _variation(2, 99.90)]}, sale)
+    with pytest.raises(IntegrationError) as failure:
+        client.get_listing("MLB1234567890")
+    assert failure.value.code == "unsupported_price_context"
