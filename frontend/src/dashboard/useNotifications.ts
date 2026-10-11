@@ -36,6 +36,7 @@ export function useNotifications({ clock, onUnauthenticated }: Options) {
   const [unread, setUnread] = useState<UnreadView>({ status: 'loading' })
   const [all, setAll] = useState<AllNotifications>({ status: 'loading', message: null, items: [], nextCursor: null, loadingMore: false })
   const unreadSequence = useRef(0)
+  const allSequence = useRef(0)
   const callbacks = useRef({ clock, onUnauthenticated })
   useEffect(() => { callbacks.current = { clock, onUnauthenticated } })
 
@@ -54,9 +55,12 @@ export function useNotifications({ clock, onUnauthenticated }: Options) {
 
   /** Primeira página da seção. Com `merge`, itens novos entram no topo e as páginas já carregadas permanecem. */
   const reloadAll = useCallback(async (merge = false) => {
+    // Só a carga mais recente da primeira página altera a seção (respostas antigas são descartadas).
+    const current = ++allSequence.current
     if (!merge) setAll((state) => state.status === 'error' ? { ...state, status: 'loading', message: null } : state)
     try {
       const page = await api.notifications()
+      if (current !== allSequence.current) return
       const receivedAt = callbacks.current.clock()
       setAll((state) => {
         const fresh = page.items.map((notification) => ({ notification, receivedAt }))
@@ -69,6 +73,7 @@ export function useNotifications({ clock, onUnauthenticated }: Options) {
         }
       })
     } catch (failure) {
+      if (current !== allSequence.current) return
       if (isUnauthenticated(failure)) { callbacks.current.onUnauthenticated(failure); return }
       if (!merge) setAll((state) => ({ ...state, status: 'error', message: messageOf(failure) }))
     }
