@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type FormEvent } from 'react'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
 import { formatMoney, retryHint } from '../lib/format'
 import { AppHeader, type SectionKey } from './AppHeader'
@@ -10,6 +10,7 @@ import { NotificationBell } from './NotificationBell'
 import { ProductDetailDialog, type DetailMode } from './ProductDetailDialog'
 import { OpportunityList } from './OpportunityList'
 import { IndicatorsSkeleton, OpportunitiesSkeleton, ProductsSkeleton, TimelineSkeleton } from './Skeletons'
+import { RecentUpdatesTimeline, type KnownProduct } from './RecentUpdatesTimeline'
 import { RowActionsMenu } from './RowActionsMenu'
 import { SummaryIndicators } from './SummaryIndicators'
 import type { RowState } from './productColumns'
@@ -99,6 +100,12 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const loading = dashboardView.status === 'loading'
   // Sem produtos: hero em destaque e seções de produtos ocultas (AC23).
   const isEmpty = dashboard !== null && list.loaded && list.items.length === 0 && list.nextCursor === null
+  const knownProducts = useMemo(() => {
+    const known = new Map<string, KnownProduct>()
+    const all = [...(dashboard?.opportunities ?? []), ...list.items.map((entry) => entry.tracked)]
+    for (const tracked of all) known.set(tracked.id, { title: tracked.product.title, imageUrl: tracked.product.image_url })
+    return known
+  }, [dashboard, list.items])
   const showProductSections = !isEmpty && dashboardView.status !== 'error'
   const notifications = useNotifications({ clock, onUnauthenticated: endSession })
   const [alertsError, setAlertsError] = useState<string | null>(null)
@@ -480,9 +487,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       {showProductSections && <section aria-labelledby="updates-title" aria-busy={loading}>
         <div className="section-heading"><span className="eyebrow">HISTÓRICO RECENTE</span><h2 id="updates-title">Atualizações recentes</h2></div>
         {loading && <TimelineSkeleton />}
-        {dashboard?.recent_updates.length ? <ul className="feed">{dashboard.recent_updates.map((event) =>
-          <li key={event.id}>{event.type === 'price_changed' ? 'Preço alterado' : 'Disponibilidade alterada'} · {instant(event.observed_at)}</li>)}</ul> :
-          dashboard && <p className="empty">As mudanças confirmadas aparecerão aqui.</p>}
+        {dashboardView.status === 'ready' && <RecentUpdatesTimeline events={dashboardView.data.recent_updates}
+          receivedAt={dashboardView.receivedAt} known={knownProducts} onOpen={(id) => void open(id)} />}
       </section>}
 
       <section id="alertas" aria-labelledby="notifications-title">

@@ -181,7 +181,8 @@ it('rejeita atualização recente com valor fora do contrato', async () => {
   ]))
   render(<App />)
   expect(await screen.findByText('A API respondeu com dados inválidos.')).toBeInTheDocument()
-  expect(screen.queryByText('As mudanças confirmadas aparecerão aqui.')).not.toBeInTheDocument()
+  // Migrado (0012/AC21): texto de vazio da linha do tempo mudou.
+  expect(screen.queryByText('As mudanças confirmadas de preço e disponibilidade aparecerão aqui.')).not.toBeInTheDocument()
 })
 
 it('rejeita atualização recente com tipo desconhecido', async () => {
@@ -206,7 +207,8 @@ it('exibe atualização recente válida de disponibilidade sem moeda', async () 
     { id: 'event-1', tracked_product_id: 'tracking-1', type: 'availability_changed', previous_value: 'available', current_value: 'unavailable', currency: null, observed_at: '2026-10-08T11:00:00Z' },
   ]))
   render(<App />)
-  expect(await screen.findByText(/Disponibilidade alterada/)).toBeInTheDocument()
+  // Migrado (0012/AC20): o evento descreve o produto e a nova disponibilidade.
+  expect(await screen.findByText(/ficou indisponível\./)).toHaveTextContent('Fone sem fio ficou indisponível.')
 })
 
 it('mostra mensagem de rede quando o cadastro não alcança a API', async () => {
