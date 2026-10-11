@@ -54,7 +54,7 @@ class MercadoLivreClient:
                 raise IntegrationError("product_not_found")
             item = self._decode(item_response)
             self._validate_item(item, external_id)
-            self._ensure_single_variation_price(item)
+            variation_prices = self._variation_prices(item)
             price_response = self._get(
                 client,
                 f"/items/{external_id}/sale_price",
@@ -68,6 +68,9 @@ class MercadoLivreClient:
                         raise IntegrationError("unsupported_price_context")
                     self._ensure_shared_price_conditions(price_data.get("conditions"))
                     price = self._money(price_data["amount"])
+                    if len(variation_prices | {price}) > 1:
+                        # A priced variation disagrees with the item-level sale price.
+                        raise IntegrationError("unsupported_price_context")
             image_url = next(
                 (
                     candidate for candidate in (item.get("secure_thumbnail"), item.get("thumbnail"))
@@ -125,21 +128,31 @@ class MercadoLivreClient:
         return price.quantize(CENT, rounding=ROUND_HALF_UP)
 
     @classmethod
-    def _ensure_single_variation_price(cls, item: dict[str, object]) -> None:
-        """Refuse items whose variations carry distinct prices.
+    def _variation_prices(cls, item: dict[str, object]) -> set[Decimal]:
+        """Return the distinct own prices of the item's variations, refusing ambiguous ones.
 
         The accepted URL never identifies a variation, so choosing one (or the lowest
-        price of the range) would be arbitrary. Variations without their own price
-        follow the item-level sale price.
+        price of the range) would be arbitrary. Semantics:
+        - a variation without ``price`` (absent or null) follows the item-level sale price;
+        - the priced variations must agree among themselves (checked here, before the
+          sale price is requested) and with the sale ``amount`` when the source returns
+          one (checked by the caller); any disagreement is ``unsupported_price_context``;
+        - when the sale price has no amount the listing stays without price: a variation
+          price is never used in its place;
+        - each variation price goes through the same single rounding as the sale price,
+          so prices that differ by less than one cent collapse into one value;
+        - a non-numeric variation price, or a malformed ``variations`` field, is an
+          invalid response, never a price.
         """
         variations = item.get("variations")
         if variations is None:
-            return
+            return set()
         if not isinstance(variations, list) or not all(isinstance(v, dict) for v in variations):
             raise IntegrationError("integration_invalid_response")
         prices = {cls._money(v["price"]) for v in variations if v.get("price") is not None}
         if len(prices) > 1:
             raise IntegrationError("unsupported_price_context")
+        return prices
 
     @staticmethod
     def _ensure_shared_price_conditions(conditions: object) -> None:

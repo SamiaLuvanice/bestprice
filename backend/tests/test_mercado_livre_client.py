@@ -169,3 +169,37 @@ def test_client_accepts_marketplace_only_price_conditions() -> None:
         "conditions": {"context_restrictions": ["channel_marketplace"], "eligible": True},
     })
     assert _client(sale=sale).get_listing("MLB1234567890").price == Decimal("89.90")
+
+
+def test_client_lets_unpriced_variation_follow_item_sale_price() -> None:
+    # A variation without its own price follows the item-level sale price; the priced one agrees.
+    sale = httpx.Response(200, json={"amount": 89.90, "currency_id": "BRL"})
+    client = _client({**ITEM, "variations": [_variation(1, 89.90), {"id": 2, "available_quantity": 1}]}, sale)
+    assert client.get_listing("MLB1234567890").price == Decimal("89.90")
+
+
+def test_client_rejects_variation_price_differing_from_sale_price() -> None:
+    # The unpriced variation would cost 89.90 and the priced one 99.90: no single price exists.
+    sale = httpx.Response(200, json={"amount": 89.90, "currency_id": "BRL"})
+    client = _client({**ITEM, "variations": [_variation(1, 99.90), {"id": 2, "available_quantity": 1}]}, sale)
+    with pytest.raises(IntegrationError) as failure:
+        client.get_listing("MLB1234567890")
+    assert failure.value.code == "unsupported_price_context"
+
+
+def test_client_keeps_missing_sale_price_without_using_variation_price() -> None:
+    client = _client({**ITEM, "variations": [_variation(1, 99.90)]}, httpx.Response(404))
+    assert client.get_listing("MLB1234567890").price is None
+
+
+def test_client_collapses_variation_prices_differing_below_one_cent() -> None:
+    # 99.901 and 99.899 both round once to 99.90, so they are one price, not an ambiguity.
+    client = _client({**ITEM, "variations": [_variation(1, 99.901), _variation(2, 99.899)]})
+    assert client.get_listing("MLB1234567890").price == Decimal("99.90")
+
+
+@pytest.mark.parametrize("variations", [[_variation(1, "99.90"), _variation(2, 99.90)], {"id": 1}, ["MLB1"]])
+def test_client_rejects_malformed_variation_price_as_invalid_response(variations: object) -> None:
+    with pytest.raises(IntegrationError) as failure:
+        _client({**ITEM, "variations": variations}).get_listing("MLB1234567890")
+    assert failure.value.code == "integration_invalid_response"
