@@ -25,7 +25,10 @@ describe('carregamento do painel', () => {
     const response = deferred()
     fakeApi((url) => url === '/api/dashboard' ? response.promise : undefined)
     render(<App clock={clock} />)
-    expect((await screen.findByText('Carregando seu painel…')).closest('[role="status"]')).not.toBeNull()
+    const loadingStatus = (await screen.findByText('Carregando seu painel…')).closest('[role="status"]')
+    expect(loadingStatus).not.toBeNull()
+    // O anúncio não pode ficar dentro de região aria-busy, que suprime a leitura.
+    expect(loadingStatus?.closest('[aria-busy="true"]')).toBeNull()
     const regions = dashboardRegions()
     for (const region of regions) {
       expect(region).toHaveAttribute('aria-busy', 'true')

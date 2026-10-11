@@ -163,10 +163,9 @@ describe('painel do sino', () => {
     bell().focus()
     await user.keyboard('{Enter}')
     expect(bell()).toHaveAttribute('aria-expanded', 'true')
-    // Primeira parada: o instante da notificação, acessível ao foco; depois, o botão do item.
+    // O instante não é parada de Tab (QA 0012, M10): a primeira parada é o botão do item.
     await user.tab()
-    expect(panel().getAllByText('Há 10 min')[0].closest('time')).toHaveFocus()
-    await user.tab()
+    expect(panel().getAllByText('Há 10 min')[0].closest('time')).not.toHaveAttribute('tabindex')
     expect(panel().getByRole('button', { name: 'Marcar como lida: Produto 1' })).toHaveFocus()
     await user.keyboard('{ArrowDown}')
     expect(panel().getByRole('button', { name: 'Marcar como lida: Produto 1' })).toHaveFocus()

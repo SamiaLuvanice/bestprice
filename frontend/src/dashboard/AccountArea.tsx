@@ -489,12 +489,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     </div>
 
     <div className="content dashboard-content">
+      {/* Fora das regiões aria-busy, para o anúncio não ser suprimido. */}
+      <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
       <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
         {dashboardError && <div className="region-error">
           <p role="alert" className="error-box">{dashboardError}</p>
           <button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</button>
         </div>}
-        <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
         {loading && <IndicatorsSkeleton />}
         {dashboard && <SummaryIndicators summary={dashboard.summary} />}
       </section>

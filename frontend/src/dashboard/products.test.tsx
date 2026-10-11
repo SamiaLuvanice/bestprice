@@ -87,7 +87,7 @@ describe('tabela Seus produtos', () => {
       product('3', 'Liquidificador', { last_attempt_status: 'rate_limited', last_price_observed_at: '2026-10-11T17:59:30Z' }),
     ] }))
     const missing = within(productRow('Fone sem fio'))
-    expect(missing.getByText('Anúncio não localizado no Mercado Livre')).toBeInTheDocument()
+    expect(missing.getAllByText(/Anúncio não localizado no Mercado Livre/)).toHaveLength(1)
     expect(missing.getByText('Último preço conhecido')).toBeInTheDocument()
     expect(within(productRow('Cafeteira elétrica')).getByText('Preço desatualizado')).toBeInTheDocument()
     const limited = within(productRow('Liquidificador'))

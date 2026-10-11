@@ -41,7 +41,7 @@ export function TrackedProductRow({ entry, state, onOpen, actions }: Props) {
   const product = tracked.product
   const notFound = product.lookup_status === 'not_found'
   const label = (index: number) => ({ 'data-label': productColumns[index] })
-  return <tbody role="rowgroup" aria-labelledby={titleId} aria-busy={state.busy} className={state.busy ? 'product-group is-busy' : 'product-group'}>
+  return <tbody role="rowgroup" aria-labelledby={titleId} data-busy={state.busy || undefined} className={state.busy ? 'product-group is-busy' : 'product-group'}>
     <tr role="row" className="product-main">
       <td role="cell" {...label(0)} className="cell-product">
         <ProductImage src={product.image_url} className="row-image" />
@@ -74,9 +74,10 @@ export function TrackedProductRow({ entry, state, onOpen, actions }: Props) {
         <div className="row-flags">
           {tracked.alert?.enabled && <span className="small-badge">Alerta em {formatMoney(tracked.alert.target_price) ?? 'Desconhecido'}</span>}
           {notFound && <span className="row-warning">Anúncio não localizado no Mercado Livre</span>}
-          {product.last_attempt_status !== 'ok' && <span className="row-warning">Última tentativa: {attemptResult(product.last_attempt_status)}</span>}
+          {/* Com anúncio não localizado, o aviso acima já diz o resultado; não repete em “Última tentativa”. */}
+          {product.last_attempt_status !== 'ok' && !(notFound && product.last_attempt_status === 'not_found') && <span className="row-warning">Última tentativa: {attemptResult(product.last_attempt_status)}</span>}
         </div>
-        <div role="status" className="row-status">{state.busy ? 'Atualizando…' : state.message}</div>
+        <div role="status" aria-live="polite" className="row-status">{state.busy ? 'Atualizando…' : state.message}</div>
       </td>
     </tr>
   </tbody>
