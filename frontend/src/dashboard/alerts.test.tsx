@@ -78,6 +78,19 @@ describe('seção Alertas', () => {
     expect(section().getByText('Lida')).toBeInTheDocument()
   })
 
+  it('leva o foco ao primeiro item novo numa página intermediária', async () => {
+    const { user } = await renderArea(loaded, (url) => {
+      if (url === '/api/notifications') return reply(200, { items: [notice('n-1', 'Fone sem fio')], next_cursor: 'page-2' })
+      if (url === '/api/notifications?cursor=page-2') return reply(200, { items: [notice('n-2', 'Cafeteira elétrica')], next_cursor: 'page-3' })
+      return undefined
+    })
+    const button = await section().findByRole('button', { name: 'Carregar mais notificações' })
+    button.focus()
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(section().getByRole('button', { name: 'Marcar como lida: Cafeteira elétrica' })).toHaveFocus())
+    expect(section().getByRole('button', { name: 'Carregar mais notificações' })).toBeInTheDocument()
+  })
+
   it('carrega mais notificações sem repetir itens', async () => {
     const { user, mockFetch } = await renderArea(loaded, (url) => {
       if (url === '/api/notifications') return reply(200, { items: [notice('n-1', 'Fone sem fio')], next_cursor: 'page-2' })

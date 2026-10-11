@@ -45,10 +45,11 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
     setFocusRequest({ candidates: [...unread.slice(index + 1), ...unread.slice(0, index).reverse()] })
   }
 
-  // Na última página o botão “Carregar mais” some: o foco vai ao primeiro item novo com botão (ou ao título).
+  // Mesmo critério de “Seus produtos”: o botão fica desabilitado na carga (e some na última página),
+  // então o foco vai ao primeiro item novo com botão, em qualquer página (ou ao título).
   async function loadMore() {
     const result = await onLoadMore()
-    if (result && !result.hasMore) setFocusRequest({ candidates: result.added })
+    if (result) setFocusRequest({ candidates: result.added })
   }
 
   return <section id="alertas" aria-labelledby="alerts-title" className="card-section alerts-section">

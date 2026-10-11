@@ -115,6 +115,17 @@ describe('tabela Seus produtos', () => {
     expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
   })
 
+  it('leva o foco ao primeiro produto novo numa página intermediária', async () => {
+    const first = product('1', 'Fone sem fio')
+    const second = product('2', 'Cafeteira elétrica')
+    const { user } = await renderProducts(dashboardFixture({ items: [first], nextCursor: 'page-2' }), (url) =>
+      url === '/api/tracked-products?cursor=page-2' ? reply(200, { items: [second], next_cursor: 'page-3' }) : undefined)
+    screen.getByRole('button', { name: 'Carregar mais produtos' }).focus()
+    await user.keyboard('{Enter}')
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Ver detalhes de Cafeteira elétrica' })).toHaveFocus())
+    expect(screen.getByRole('button', { name: 'Carregar mais produtos' })).toBeInTheDocument()
+  })
+
   it('acrescenta a página seguinte sem repetir IDs e esconde Carregar mais sem cursor', async () => {
     const first = product('1', 'Fone sem fio')
     const second = product('2', 'Cafeteira elétrica')

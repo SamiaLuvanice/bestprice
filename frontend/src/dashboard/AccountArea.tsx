@@ -154,8 +154,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       const page = await api.tracked(list.nextCursor)
       const known = new Set(listRef.current.items.map((entry) => entry.tracked.id))
       dispatchList({ type: 'append', page, receivedAt: clock() })
-      // Na última página o botão “Carregar mais” some: o foco vai ao primeiro item novo (ou ao título).
-      if (fromUser && page.next_cursor === null) {
+      // O botão fica desabilitado durante a carga (e some na última página), o que tira o foco dele:
+      // em qualquer página, o foco vai ao primeiro item novo (ou ao título, se nada novo chegou).
+      if (fromUser) {
         const added = page.items.find((tracked) => !known.has(tracked.id))
         setPendingFocus(added ? { kind: 'rowDetails', id: added.id } : { kind: 'productsHeading' })
       }
