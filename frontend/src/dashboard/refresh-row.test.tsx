@@ -155,4 +155,34 @@ describe('Atualizar agora pela linha', () => {
     await chooseRowAction(user, 'Fone sem fio', 'Atualizar agora')
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   })
+
+  it('não grava estado nem foco da linha quando o produto sai durante a consulta', async () => {
+    const response = deferred()
+    let current = [first, second]
+    const { user } = await renderArea(dashboardFixture({ items: current, opportunities: [first] }), (url, init) => {
+      if (url === refreshUrl && init?.method === 'POST') return response.promise
+      if (url === '/api/tracked-products/tracking-1' && init?.method === 'DELETE') { current = [second]; return reply(204, null) }
+      if (url === '/api/tracked-products/tracking-1') return reply(200, first)
+      if (url === '/api/tracked-products/tracking-1/history') return reply(200, { items: [], next_cursor: null })
+      if (url === '/api/tracked-products' && init?.method === 'POST') { current = [first, second]; return reply(200, first) }
+      if (url === '/api/dashboard') return reply(200, dashboardFixture({ items: current, opportunities: current.includes(first) ? [first] : [] }))
+      return undefined
+    })
+    await chooseRowAction(user, 'Fone sem fio', 'Atualizar agora')
+    await user.click(within(screen.getByRole('region', { name: 'Boas oportunidades' })).getByRole('button', { name: 'Fone sem fio' }))
+    const dialog = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
+    await user.click(dialog.getByRole('button', { name: 'Parar de monitorar' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Parar de monitorar' }))
+    await waitFor(() => expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
+    response.resolve(reply(200, product('1', 'Fone sem fio', { current_price: '75.00' })))
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus()
+    await user.click(linkField())
+    await user.paste('https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM')
+    await user.click(screen.getByRole('button', { name: 'Monitorar preço' }))
+    await screen.findByText('Você voltou a monitorar este produto.')
+    expect(rowStatus('Fone sem fio')).toHaveTextContent(/^$/)
+  })
 })

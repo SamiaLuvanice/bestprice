@@ -327,11 +327,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     const current = listRef.current
     const remaining = current.items.filter((entry) => entry.tracked.id !== id).length
     dispatchList({ type: 'remove', id })
-    setRowStates((states) => {
-      const next = { ...states }
-      delete next[id]
-      return next
-    })
+    forgetRow(id)
     if (remaining > 0 || current.nextCursor !== null) {
       setGlobalMessage(null)
       setProductsMessage(text)
@@ -370,9 +366,23 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       // 429 mantém os dados; nas demais falhas o backend registra a tentativa e a linha é recarregada.
       if (!(failure instanceof ApiFailure && failure.status === 429)) await reloadRow(id)
     }
+    recalculate()
+    // Produto removido durante a consulta (ex.: parado pelo detalhe): não grava estado nem foco da linha.
+    if (!isListed(id)) { forgetRow(id); return }
     setRow(id, { busy: false, message: text })
     setPendingFocus({ kind: 'rowMenu', id })
-    recalculate()
+  }
+
+  function forgetRow(id: string) {
+    setRowStates((states) => {
+      const next = { ...states }
+      delete next[id]
+      return next
+    })
+  }
+
+  function isListed(id: string): boolean {
+    return listRef.current.items.some((entry) => entry.tracked.id === id)
   }
 
   async function reloadRow(id: string) {
@@ -422,7 +432,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     setStopRequest({ ...stopRequest, busy: true })
     const failure = await stopTrackingRequest(id)
     setStopRequest(null)
-    if (failure) {
+    if (failure && isListed(id)) {
       setRow(id, { busy: false, message: failure })
       setPendingFocus({ kind: 'rowMenu', id })
     }
