@@ -1,0 +1,168 @@
+import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { alertFixture, apiError, callsTo, dashboardFixture, notificationFixture, reply, unreadUrl, type Route } from '../test/fakeApi'
+import { bellButton, linkField, product, productRow, renderArea, type User } from '../test/productsHarness'
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
+
+const first = product('1', 'Fone sem fio')
+const second = product('2', 'Cafeteira elétrica')
+const itemUrl = '/api/tracked-products/tracking-1'
+
+function detailServer(items: ReturnType<typeof product>[], extra: Route = () => undefined) {
+  let current = items
+  let detail = items[0]
+  const route: Route = (url, init) => {
+    const custom = extra(url, init)
+    if (custom !== undefined) return custom
+    if (url === itemUrl && init?.method === 'DELETE') {
+      current = current.filter((item) => item.id !== 'tracking-1')
+      return reply(204, null)
+    }
+    if (url === itemUrl) return reply(200, detail)
+    if (url === `${itemUrl}/history`) return reply(200, { items: [], next_cursor: null })
+    if (url === '/api/dashboard') return reply(200, dashboardFixture({ items: current }))
+    return undefined
+  }
+  return { route, setDetail: (next: ReturnType<typeof product>) => { detail = next; current = current.map((item) => item.id === next.id ? next : item) } }
+}
+
+async function openDetail(user: User) {
+  await user.click(screen.getByRole('button', { name: 'Ver detalhes de Fone sem fio' }))
+  return screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
+}
+
+describe('Parar de monitorar no detalhe', () => {
+  it('substitui o conteúdo do próprio diálogo pela confirmação e move o foco para ela', async () => {
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), detailServer([first, second]).route)
+    const dialog = await openDetail(user)
+    await user.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
+    expect(screen.getAllByRole('dialog')).toHaveLength(1)
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    const current = within(screen.getByRole('dialog'))
+    expect(current.getByRole('heading', { name: 'Parar de monitorar “Fone sem fio”?' })).toBeInTheDocument()
+    expect(current.queryByRole('heading', { name: 'Histórico de preços' })).not.toBeInTheDocument()
+    expect(current.getByRole('button', { name: 'Cancelar' })).toHaveFocus()
+  })
+
+  it.each([
+    ['Cancelar', (user: User) => user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }))],
+    ['Esc', (user: User) => user.keyboard('{Escape}')],
+    ['clique fora', async () => { fireEvent.mouseDown(screen.getByTestId('detail-backdrop')) }],
+  ])('volta ao detalhe aberto ao cancelar por %s, com foco em Parar de monitorar', async (_how, cancel) => {
+    const { user, mockFetch } = await renderArea(dashboardFixture({ items: [first, second] }), detailServer([first, second]).route)
+    const dialog = await openDetail(user)
+    await user.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
+    await cancel(user)
+    const detail = within(screen.getByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
+    expect(detail.getByRole('heading', { name: 'Histórico de preços' })).toBeInTheDocument()
+    await waitFor(() => expect(detail.getByRole('button', { name: 'Parar de monitorar' })).toHaveFocus())
+    expect(callsTo(mockFetch, itemUrl, 'DELETE')).toHaveLength(0)
+  })
+
+  it('fecha o detalhe ao confirmar e segue a convenção de produto removido', async () => {
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), detailServer([first, second]).route)
+    const dialog = await openDetail(user)
+    await user.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Parar de monitorar' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('products-status')).toHaveTextContent('Você parou de monitorar este produto.')
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
+  })
+
+  it('leva o foco ao campo de link quando o produto parado era o único', async () => {
+    const { user } = await renderArea(dashboardFixture({ items: [first] }), detailServer([first]).route)
+    const dialog = await openDetail(user)
+    await user.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Parar de monitorar' }))
+    await waitFor(() => expect(linkField()).toHaveFocus())
+    expect(screen.getByTestId('global-status')).toHaveTextContent('Você parou de monitorar este produto.')
+  })
+
+  it('volta ao detalhe com o erro anunciado quando parar falha', async () => {
+    const server = detailServer([first, second], (url, init) =>
+      url === itemUrl && init?.method === 'DELETE' ? reply(500, apiError('internal_error', 'Não foi possível parar de monitorar agora.')) : undefined)
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), server.route)
+    const dialog = await openDetail(user)
+    await user.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Parar de monitorar' }))
+    const detail = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
+    expect(await detail.findByRole('alert')).toHaveTextContent('Não foi possível parar de monitorar agora.')
+    await waitFor(() => expect(detail.getByRole('button', { name: 'Parar de monitorar' })).toHaveFocus())
+    expect(productRow('Fone sem fio')).toBeInTheDocument()
+  })
+})
+
+describe('recálculo após ações no detalhe', () => {
+  function counterServer(extra: Route) {
+    let unread = 3
+    const server = detailServer([first, second], (url, init) => {
+      if (url === unreadUrl) return reply(200, { items: Array.from({ length: unread }, (_, index) => notificationFixture(`n-${index}`)), next_cursor: null })
+      const result = extra(url, init)
+      if (result !== undefined) unread = 1
+      return result
+    })
+    return server
+  }
+
+  async function expectCounterRecalculated(user: User, act: (dialog: HTMLElement) => Promise<void>, server: ReturnType<typeof counterServer>) {
+    await waitFor(() => expect(bellButton()).toHaveAccessibleName('Notificações, 3 não lidas'))
+    const dialog = await openDetail(user)
+    await act(dialog)
+    await waitFor(() => expect(bellButton()).toHaveAccessibleName('Notificações, 1 não lida'))
+    void server
+  }
+
+  it('recalcula o contador do sino e a linha após criar alerta', async () => {
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture({ target_price: '85.00' }) })
+    const server: ReturnType<typeof counterServer> = counterServer((url, init) => {
+      if (url === `${itemUrl}/alert` && init?.method === 'POST') {
+        server.setDetail(withAlert)
+        return reply(201, alertFixture({ target_price: '85.00' }))
+      }
+      return undefined
+    })
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), server.route)
+    await expectCounterRecalculated(user, async (dialog) => {
+      await user.type(within(dialog).getByLabelText('Avise quando chegar a'), '85.00')
+      await user.click(within(dialog).getByRole('button', { name: 'Criar alerta' }))
+    }, server)
+    await waitFor(() => expect(within(productRow('Fone sem fio')).getByText(/Alerta em/)).toHaveTextContent(/R\$\s*85,00/))
+  })
+
+  it.each([
+    ['editar o alvo', 'Salvar alvo', '90.00'],
+    ['pausar ou ativar', 'Pausar alerta', null],
+  ])('recalcula o contador do sino após %s', async (_case, buttonName, typed) => {
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
+    const server = counterServer((url, init) => url === `${itemUrl}/alert` && init?.method === 'PATCH' ? reply(200, alertFixture()) : undefined)
+    server.setDetail(withAlert)
+    const { user } = await renderArea(dashboardFixture({ items: [withAlert, second] }), server.route)
+    await expectCounterRecalculated(user, async (dialog) => {
+      if (typed) await user.type(within(dialog).getByLabelText('Novo alvo (opcional)'), typed)
+      await user.click(within(dialog).getByRole('button', { name: buttonName }))
+    }, server)
+  })
+
+  it('recalcula o contador do sino, a linha e os indicadores após Atualizar agora no detalhe', async () => {
+    const server: ReturnType<typeof counterServer> = counterServer((url, init) => {
+      if (url === `${itemUrl}/refresh` && init?.method === 'POST') {
+        const updated = product('1', 'Fone sem fio', { current_price: '70.00' })
+        server.setDetail(updated)
+        return reply(200, updated)
+      }
+      return undefined
+    })
+    const { user, mockFetch } = await renderArea(dashboardFixture({ items: [first, second] }), server.route)
+    const dashboardCalls = callsTo(mockFetch, '/api/dashboard').length
+    await expectCounterRecalculated(user, async (dialog) => {
+      await user.click(within(dialog).getByRole('button', { name: 'Atualizar agora' }))
+    }, server)
+    await waitFor(() => expect(within(productRow('Fone sem fio')).getAllByRole('cell')[1]).toHaveTextContent(/R\$\s*70,00/))
+    expect(callsTo(mockFetch, '/api/dashboard').length).toBeGreaterThan(dashboardCalls)
+  })
+})

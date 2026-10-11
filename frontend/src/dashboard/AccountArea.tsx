@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useReducer, useRef, useState, type FormEvent } from 'react'
-import { api, ApiFailure, type Dashboard, type HistoryEntry, type Product, type TrackedProduct, type User } from '../api'
-import { useModalFocus } from '../lib/focus'
-import { formatMoney, formatPercentage, retryHint } from '../lib/format'
+import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
+import { formatMoney, retryHint } from '../lib/format'
 import { AppHeader, type SectionKey } from './AppHeader'
 import { ConfirmStopDialog } from './ConfirmStopDialog'
-import { ExternalListingLink } from './ExternalListingLink'
 import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
-import { attemptResult, availabilityLabel } from './labels'
+import { attemptResult } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
 import { NotificationBell } from './NotificationBell'
+import { ProductDetailDialog, type DetailMode } from './ProductDetailDialog'
 import { OpportunityList } from './OpportunityList'
 import { IndicatorsSkeleton, OpportunitiesSkeleton, ProductsSkeleton, TimelineSkeleton } from './Skeletons'
 import { RowActionsMenu } from './RowActionsMenu'
@@ -43,17 +42,6 @@ function unauthenticated(error: unknown): error is ApiFailure {
   return error instanceof ApiFailure && error.status === 401
 }
 
-function priceState(product: Product): string {
-  if (product.current_price === null) return 'Preço ainda não observado'
-  if (product.lookup_status === 'not_found') return 'Anúncio não localizado · último preço conhecido'
-  if (product.stale) return 'Último preço conhecido · preço desatualizado'
-  return `Preço observado em ${instant(product.last_price_observed_at)}`
-}
-
-function percentage(value: string | null): string {
-  return formatPercentage(value)?.text ?? 'Desconhecida'
-}
-
 type PendingFocus = { kind: 'rowMenu'; id: string } | { kind: 'productsHeading' } | { kind: 'linkInput' } | null
 
 type Props = {
@@ -81,6 +69,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const [productsMessage, setProductsMessage] = useState<string | null>(null)
   const [globalMessage, setGlobalMessage] = useState<string | null>(null)
   const [pendingFocus, setPendingFocus] = useState<PendingFocus>(null)
+  const [detailMode, setDetailMode] = useState<DetailMode>('detail')
+  const [detailStopBusy, setDetailStopBusy] = useState(false)
   const [stopRequest, setStopRequest] = useState<{ id: string; title: string; alertActive: boolean; busy: boolean } | null>(null)
   const [error, setError] = useState<Feedback | null>(null)
   const [selected, setSelected] = useState<TrackedProduct | null>(null)
@@ -88,8 +78,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const [historyCursor, setHistoryCursor] = useState<string | null>(null)
   const [target, setTarget] = useState('')
   const detailOpener = useRef<HTMLElement | null>(null)
-  const closeDetailButton = useRef<HTMLButtonElement>(null)
-  const detailDialog = useRef<HTMLElement>(null)
   const trackedHeading = useRef<HTMLHeadingElement>(null)
   const pageHeading = useRef<HTMLHeadingElement>(null)
   const linkInput = useRef<HTMLInputElement>(null)
@@ -115,14 +103,16 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const notifications = useNotifications({ clock, onUnauthenticated: endSession })
   const [alertsError, setAlertsError] = useState<string | null>(null)
 
-  // Diálogo modal: foco entra ao abrir e volta ao elemento que o abriu ao fechar; se ele saiu da página, vai ao título da lista.
+  // Ao fechar o detalhe, o foco volta ao elemento que o abriu; se ele saiu da página, ao título da lista
+  // (ou ao campo de link, sem lista). O foco inicial dentro do diálogo é do próprio ProductDetailDialog.
   useEffect(() => {
-    if (detailOpen) { closeDetailButton.current?.focus(); return }
+    if (detailOpen) return
+    setDetailMode('detail')
     const opener = detailOpener.current
     detailOpener.current = null
     if (!opener) return
     if (opener.isConnected) opener.focus()
-    else trackedHeading.current?.focus()
+    else (trackedHeading.current ?? linkInput.current)?.focus()
   }, [detailOpen])
 
   // Foco pedido por uma ação, aplicado depois que a lista e as mensagens foram renderizadas.
@@ -140,7 +130,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }, [pendingFocus])
 
   const closeDetail = useCallback(() => setSelected(null), [])
-  useModalFocus(detailOpen, detailDialog, closeDetailButton, closeDetail)
 
   // Somente 401 encerra a sessão BestPrice; falhas da integração (503) e de rede mantêm a pessoa no painel.
   const fail = useCallback((failure: unknown) => {
@@ -254,20 +243,21 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     finally { setBusy(false) }
   }
 
-  async function stopTracking() {
-    if (!selected) return
+  // Confirmação dentro do detalhe: sucesso fecha o detalhe e aplica a convenção de produto removido;
+  // falha volta ao conteúdo do detalhe com o erro anunciado e foco em “Parar de monitorar”.
+  async function confirmDetailStop() {
+    if (!selected || detailStopBusy) return
     const id = selected.id
-    setBusy(true)
-    setError(null)
-    try {
-      await api.stop(id)
-      // O item que abriu o detalhe sai da lista; o foco segue para o título da lista.
-      detailOpener.current = trackedHeading.current
-      setSelected(null)
-      dispatchList({ type: 'remove', id })
-      await reloadDashboard()
-    } catch (failure) { fail(failure) }
-    finally { setBusy(false) }
+    setDetailStopBusy(true)
+    const failure = await stopTrackingRequest(id)
+    setDetailStopBusy(false)
+    if (failure) {
+      setError({ message: failure, trackedProductId: null })
+      setDetailMode('detail')
+      return
+    }
+    detailOpener.current = null
+    setSelected(null)
   }
 
   async function refreshSelected() {
@@ -514,46 +504,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     {stopRequest && <ConfirmStopDialog title={stopRequest.title} alertActive={stopRequest.alertActive} busy={stopRequest.busy}
       onCancel={cancelStop} onConfirm={() => void confirmStop()} />}
 
-    {selected && <div className="detail-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
-      <section className="detail-panel" role="dialog" aria-modal="true" aria-label={`Detalhes de ${selected.product.title}`} ref={detailDialog} onMouseDown={(event) => event.stopPropagation()}>
-        <button ref={closeDetailButton} className="close-button" type="button" onClick={() => setSelected(null)} aria-label="Fechar detalhes">×</button>
-        <span className="eyebrow">{selected.product.external_id}</span>
-        <h2>{selected.product.title}</h2>
-        {error && <p role="alert" className="error-box">{error.message}</p>}
-        <p className="product-price">{money(selected.product.current_price)}</p>
-        <p className="muted">{priceState(selected.product)}</p>
-        <p className="muted">Resultado da última tentativa: {attemptResult(selected.product.last_attempt_status)}</p>
-        <p className="muted">Última tentativa: {instant(selected.product.last_attempt_at)}</p>
-        <p className="muted">Última leitura válida: {instant(selected.product.last_success_at, 'Desconhecida')}</p>
-        <p className="muted">Último preço observado: {instant(selected.product.last_price_observed_at, 'Desconhecido')}</p>
-        <p className="muted">Última mudança de preço: {instant(selected.product.price_changed_at, 'Desconhecida')}</p>
-        <p className="muted">Disponibilidade observada: {availabilityLabel(selected.product.availability)}</p>
-        {selected.product.last_confirmed_availability && <p className="muted">Última disponibilidade confirmada: {availabilityLabel(selected.product.last_confirmed_availability)} · {instant(selected.product.last_confirmed_availability_at)}</p>}
-        <p className="muted">Preço unitário no Mercado Livre · BRL</p>
-        <p className="muted">Anterior: {money(selected.product.previous_price, 'Desconhecido')} · Diferença: {money(selected.product.absolute_change, 'Desconhecida')} · Variação: {percentage(selected.product.percentage_change)}</p>
-        <p className="muted">Menor: {money(selected.product.min_price, 'Desconhecido')} · Maior: {money(selected.product.max_price, 'Desconhecido')}</p>
-        <div className="detail-links">
-          <button type="button" disabled={busy} className="quiet-button" onClick={refreshSelected}>Atualizar agora</button>
-          <ExternalListingLink href={selected.product.canonical_url} />
-        </div>
-        <h3>Histórico de preços</h3>
-        {history.length ? <ul className="feed">{history.map((entry) => <li key={entry.id}>{money(entry.price)} · {instant(entry.captured_at)}</li>)}</ul> : <p className="empty">Ainda não há preço válido registrado.</p>}
-        {historyCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMoreHistory}>Carregar mais preços</button>}
-        <h3>Alerta de preço</h3>
-        {selected.alert ? <div className="alert-controls">
-          <p>Alvo: {money(selected.alert.target_price)} · {selected.alert.enabled ? 'Ativo' : 'Pausado'}</p>
-          <label htmlFor="edit-target">Novo alvo (opcional)</label>
-          <input id="edit-target" value={target} onChange={(event) => setTarget(event.target.value)} inputMode="decimal" placeholder="99.90" />
-          <button disabled={busy} type="button" onClick={updateAlert}>{target ? 'Salvar alvo' : selected.alert.enabled ? 'Pausar alerta' : 'Ativar alerta'}</button>
-          <button disabled={busy} type="button" className="quiet-button" onClick={removeAlert}>Excluir alerta</button>
-        </div> :
-          <form className="alert-form" onSubmit={createAlert}>
-            <label htmlFor="target-price">Avise quando chegar a</label>
-            <input id="target-price" value={target} onChange={(event) => setTarget(event.target.value)} inputMode="decimal" placeholder="99.90" required />
-            <button disabled={busy} type="submit">Criar alerta</button>
-          </form>}
-        <div className="detail-actions"><button disabled={busy} type="button" className="quiet-button" onClick={stopTracking}>Parar de monitorar</button></div>
-      </section>
-    </div>}
+    {selected && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}
+      target={target} onTargetChange={setTarget} onClose={closeDetail} onRefresh={() => void refreshSelected()}
+      onLoadMoreHistory={() => void loadMoreHistory()} onCreateAlert={(event) => void createAlert(event)}
+      onUpdateAlert={() => void updateAlert()} onRemoveAlert={() => void removeAlert()}
+      mode={detailMode} stopBusy={detailStopBusy} onRequestStop={() => { setError(null); setDetailMode('confirm') }}
+      onCancelStop={() => setDetailMode('detail')} onConfirmStop={() => void confirmDetailStop()} />}
   </>
 }

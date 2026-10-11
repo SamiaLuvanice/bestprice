@@ -400,7 +400,8 @@ it('mantém Esc e Tab presos ao diálogo quando o botão focado é desabilitado 
 })
 
 it('leva o foco ao título da lista quando o card que abriu o detalhe deixa de existir', async () => {
-  // Migrado (0012/AC19): com outro produto na lista a seção continua visível e recebe o foco.
+  // Migrado (0012/AC19): com outro produto na lista a seção continua visível e recebe o foco;
+  // parar pelo detalhe agora passa pela confirmação dentro do próprio diálogo.
   const item = trackedItem()
   const other = trackedItem({ id: 'product-2', title: 'Cafeteira elétrica' }, { id: 'tracking-2' })
   let stopped = false
@@ -418,6 +419,7 @@ it('leva o foco ao título da lista quando o card que abriu o detalhe deixa de e
   fireEvent.click(opener)
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   fireEvent.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Parar de monitorar' }))
   await waitFor(() => expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument())
   await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
 })
