@@ -7,6 +7,8 @@ import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
 import { attemptResult, availabilityLabel } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
 import { NotificationBell } from './NotificationBell'
+import { OpportunityList } from './OpportunityList'
+import { SummaryIndicators } from './SummaryIndicators'
 import { useDashboard } from './useDashboard'
 import { useNotifications } from './useNotifications'
 
@@ -325,24 +327,20 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     {error && !selected && <div className="content global-messages"><p role="alert" className="error-box">{error.message}</p></div>}
 
     <div className="content dashboard-content">
-      <section aria-labelledby="indicators-title">
-        <div className="section-heading"><span className="eyebrow">SEU PAINEL</span><h2 id="indicators-title">Tudo em um só lugar</h2></div>
+      <section aria-label="Resumo do monitoramento" className="summary-section">
         {dashboardView.status === 'error' && <div className="region-error">
           <p role="alert" className="error-box">{dashboardView.message}</p>
           <button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</button>
         </div>}
-        {dashboard ? <div className="metrics">
-          <div><strong>{dashboard.summary.tracked_count}</strong><span>Produtos monitorados</span></div>
-          <div><strong>{dashboard.summary.price_drop_count}</strong><span>Baixaram de preço</span></div>
-          <div><strong>{dashboard.summary.active_alert_count}</strong><span>Alertas ativos</span></div>
-          <div><strong>{dashboard.summary.target_reached_count}</strong><span>Alvos atingidos</span></div>
-        </div> : dashboardView.status === 'loading' && <p role="status">Carregando seu painel…</p>}
+        {dashboard ? <SummaryIndicators summary={dashboard.summary} /> : dashboardView.status === 'loading' && <p role="status">Carregando seu painel…</p>}
       </section>
 
-      <section aria-labelledby="opportunities-title">
-        <div className="section-heading"><span className="eyebrow">ÚLTIMAS 24 HORAS</span><h2 id="opportunities-title">Boas oportunidades</h2></div>
-        {dashboard?.opportunities.length ? dashboard.opportunities.map((item) => <ProductCard key={item.id} item={item} onOpen={open} />) :
-          dashboard && <p className="empty">Nenhuma queda recente confirmada por enquanto.</p>}
+      <section aria-labelledby="opportunities-title" className="card-section">
+        <div className="section-heading">
+          <h2 id="opportunities-title">Boas oportunidades</h2>
+          <p className="section-subtitle">Produtos monitorados que tiveram redução de preço recentemente.</p>
+        </div>
+        {dashboardView.status === 'ready' && <OpportunityList items={dashboardView.data.opportunities} receivedAt={dashboardView.receivedAt} onOpen={(id) => void open(id)} />}
       </section>
 
       <section id="seus-produtos" aria-labelledby="tracked-title">
