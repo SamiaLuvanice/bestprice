@@ -1,3 +1,5 @@
+import { isDecimal } from './lib/decimal'
+
 export type User = { id: string; email: string }
 export type Product = {
   id: string
@@ -61,8 +63,7 @@ function record(value: unknown): value is Record<string, unknown> {
 function string(value: unknown): value is string { return typeof value === 'string' }
 function nullableString(value: unknown): value is string | null { return value === null || string(value) }
 // Dinheiro e percentuais chegam como strings decimais em notação simples (NUMERIC serializado pelo backend).
-const decimalPattern = /^-?\d+(\.\d+)?$/
-function decimal(value: unknown): value is string { return string(value) && decimalPattern.test(value) }
+function decimal(value: unknown): value is string { return string(value) && isDecimal(value) }
 function nullableDecimal(value: unknown): value is string | null { return value === null || decimal(value) }
 
 function user(value: unknown): value is User {
