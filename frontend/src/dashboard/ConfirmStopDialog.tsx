@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
 import { useModalFocus } from '../lib/focus'
 import { StopTrackingConfirm } from './StopTrackingConfirm'
 
@@ -11,7 +11,7 @@ export function ConfirmStopDialog({ title, alertActive, busy, onCancel, onConfir
   const titleId = useId()
   const descriptionId = useId()
   useModalFocus(true, dialog, cancel, onCancel)
-  useEffect(() => { cancel.current?.focus() }, [])
+  useLayoutEffect(() => { cancel.current?.focus() }, [])
   return <div className="detail-backdrop confirm-backdrop" role="presentation" data-testid="confirm-backdrop" onMouseDown={onCancel}>
     <div ref={dialog} className="confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId}
       onMouseDown={(event) => event.stopPropagation()}>

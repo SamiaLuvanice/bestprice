@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type RefObject } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FocusEvent, type KeyboardEvent, type RefObject } from 'react'
 
 export const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
@@ -13,9 +13,11 @@ export function focusableIn(root: HTMLElement | null): HTMLElement[] {
  */
 export function useModalFocus(open: boolean, dialogRef: RefObject<HTMLElement | null>, fallbackRef: RefObject<HTMLElement | null>, onEscape: () => void) {
   const escape = useRef(onEscape)
-  useEffect(() => { escape.current = onEscape })
+  useLayoutEffect(() => { escape.current = onEscape })
 
-  useEffect(() => {
+  // Layout effect: o teclado fica escutado no mesmo commit em que o diálogo aparece; com useEffect,
+  // um Esc logo após a abertura (sob carga) chegava antes do listener e era perdido.
+  useLayoutEffect(() => {
     if (!open) return
     function onKeyDown(event: globalThis.KeyboardEvent) {
       const dialog = dialogRef.current

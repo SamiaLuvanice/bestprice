@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type FormEvent } from 'react'
+import { useId, useLayoutEffect, useRef, type FormEvent } from 'react'
 import type { HistoryEntry, Product, TrackedProduct } from '../api'
 import { useModalFocus } from '../lib/focus'
 import { formatMoney, formatPercentage } from '../lib/format'
@@ -69,7 +69,7 @@ export function ProductDetailDialog(props: Props) {
   useModalFocus(true, dialog, fallback, cancelOrClose)
 
   // Foco: ao abrir, no botão de fechar; na confirmação, em Cancelar; ao voltar dela, em “Parar de monitorar”.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const before = previousMode.current
     previousMode.current = mode
     fallback.current = mode === 'confirm' ? cancelButton.current : closeButton.current
