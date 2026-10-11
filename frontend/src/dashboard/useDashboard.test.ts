@@ -65,3 +65,24 @@ it('encerra a sessão somente em 401', async () => {
   const { onUnauthenticated } = setup()
   await waitFor(() => expect(onUnauthenticated).toHaveBeenCalledTimes(1))
 })
+
+it('mantém os dados e expõe a mensagem quando uma recarga falha depois da primeira carga', async () => {
+  let fail = false
+  fakeApi((url) => {
+    if (url !== '/api/dashboard') return undefined
+    return fail ? reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')) : reply(200, dashboardFixture({ summary: { tracked_count: 2 } }))
+  })
+  const { result } = setup()
+  await waitFor(() => expect(result.current.view.status).toBe('ready'))
+  fail = true
+  await act(async () => { await result.current.reload() })
+  const view = result.current.view
+  if (view.status !== 'ready') throw new Error(`estado inesperado: ${view.status}`)
+  expect(view.data.summary.tracked_count).toBe(2)
+  expect(view.refreshError).toBe('Serviço temporariamente indisponível.')
+  fail = false
+  await act(async () => { await result.current.reload() })
+  const recovered = result.current.view
+  if (recovered.status !== 'ready') throw new Error(`estado inesperado: ${recovered.status}`)
+  expect(recovered.refreshError).toBeNull()
+})

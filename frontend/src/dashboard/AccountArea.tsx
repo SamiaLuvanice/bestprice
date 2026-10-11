@@ -90,6 +90,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const { view: dashboardView, reload: reloadDashboard } = useDashboard({ clock, onLoaded: onDashboardLoaded, onUnauthenticated: endSession })
   const dashboard = dashboardView.status === 'ready' ? dashboardView.data : null
   const loading = dashboardView.status === 'loading'
+  const dashboardError = dashboardView.status === 'error' ? dashboardView.message
+    : dashboardView.status === 'ready' ? dashboardView.refreshError : null
   // Sem produtos: hero em destaque e seções de produtos ocultas (AC23).
   const isEmpty = dashboard !== null && list.loaded && list.items.length === 0 && list.nextCursor === null
   const knownProducts = useMemo(() => {
@@ -447,8 +449,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
     <div className="content dashboard-content">
       <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
-        {dashboardView.status === 'error' && <div className="region-error">
-          <p role="alert" className="error-box">{dashboardView.message}</p>
+        {dashboardError && <div className="region-error">
+          <p role="alert" className="error-box">{dashboardError}</p>
           <button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</button>
         </div>}
         <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
