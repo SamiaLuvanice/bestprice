@@ -9,6 +9,9 @@ import httpx
 ITEM_ID = re.compile(r"MLB[0-9]+\Z")
 API_BASE_URL = "https://api.mercadolibre.com"
 CENT = Decimal("0.01")
+# The only price restriction compatible with the shared context: MLB marketplace, one unit,
+# no buyer-specific benefit (loyalty level, coupon, personalised price).
+SHARED_PRICE_RESTRICTIONS = frozenset({"channel_marketplace"})
 
 
 class IntegrationError(Exception):
@@ -51,6 +54,7 @@ class MercadoLivreClient:
                 raise IntegrationError("product_not_found")
             item = self._decode(item_response)
             self._validate_item(item, external_id)
+            self._ensure_single_variation_price(item)
             price_response = self._get(
                 client,
                 f"/items/{external_id}/sale_price",
@@ -62,15 +66,8 @@ class MercadoLivreClient:
                 if price_data.get("amount") is not None:
                     if price_data.get("currency_id") != "BRL":
                         raise IntegrationError("unsupported_price_context")
-                    amount = price_data["amount"]
-                    if isinstance(amount, bool) or not isinstance(amount, (int, Decimal)):
-                        raise IntegrationError("integration_invalid_response")
-                    price = Decimal(amount)
-                    if not price.is_finite() or price < 0:
-                        raise IntegrationError("integration_invalid_response")
-                    # Single rounding at the source boundary: comparisons and NUMERIC(18, 2)
-                    # storage see the same value, so sub-cent noise is never a "change".
-                    price = price.quantize(CENT, rounding=ROUND_HALF_UP)
+                    self._ensure_shared_price_conditions(price_data.get("conditions"))
+                    price = self._money(price_data["amount"])
             image_url = next(
                 (
                     candidate for candidate in (item.get("secure_thumbnail"), item.get("thumbnail"))
@@ -115,6 +112,47 @@ class MercadoLivreClient:
         if response.status_code != 200 and response.status_code != 404:
             raise IntegrationError("integration_invalid_response")
         return response
+
+    @staticmethod
+    def _money(amount: object) -> Decimal:
+        if isinstance(amount, bool) or not isinstance(amount, (int, Decimal)):
+            raise IntegrationError("integration_invalid_response")
+        price = Decimal(amount)
+        if not price.is_finite() or price < 0:
+            raise IntegrationError("integration_invalid_response")
+        # Single rounding at the source boundary: comparisons and NUMERIC(18, 2)
+        # storage see the same value, so sub-cent noise is never a "change".
+        return price.quantize(CENT, rounding=ROUND_HALF_UP)
+
+    @classmethod
+    def _ensure_single_variation_price(cls, item: dict[str, object]) -> None:
+        """Refuse items whose variations carry distinct prices.
+
+        The accepted URL never identifies a variation, so choosing one (or the lowest
+        price of the range) would be arbitrary. Variations without their own price
+        follow the item-level sale price.
+        """
+        variations = item.get("variations")
+        if variations is None:
+            return
+        if not isinstance(variations, list) or not all(isinstance(v, dict) for v in variations):
+            raise IntegrationError("integration_invalid_response")
+        prices = {cls._money(v["price"]) for v in variations if v.get("price") is not None}
+        if len(prices) > 1:
+            raise IntegrationError("unsupported_price_context")
+
+    @staticmethod
+    def _ensure_shared_price_conditions(conditions: object) -> None:
+        """Refuse a price restricted to a buyer, loyalty level, coupon or any non-marketplace context."""
+        if conditions is None:
+            return
+        if not isinstance(conditions, dict):
+            raise IntegrationError("integration_invalid_response")
+        restrictions = conditions.get("context_restrictions") or []
+        if not isinstance(restrictions, list) or not all(isinstance(r, str) for r in restrictions):
+            raise IntegrationError("integration_invalid_response")
+        if set(restrictions) - SHARED_PRICE_RESTRICTIONS or conditions.get("eligible") is False:
+            raise IntegrationError("unsupported_price_context")
 
     @staticmethod
     def _decode(response: httpx.Response) -> dict[str, object]:

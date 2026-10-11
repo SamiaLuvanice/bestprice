@@ -129,3 +129,43 @@ def test_client_rejects_other_currency_as_unsupported_price_context() -> None:
     with pytest.raises(IntegrationError) as failure:
         client.get_listing("MLB1234567890")
     assert failure.value.code == "unsupported_price_context"
+
+
+def _variation(variation_id: int, price: object) -> dict:
+    return {"id": variation_id, "price": price, "available_quantity": 1, "attribute_combinations": []}
+
+
+def test_client_rejects_variations_with_distinct_prices_as_unsupported_price_context() -> None:
+    # The accepted URL never identifies a variation: picking one, or the cheapest, would be arbitrary.
+    client = _client({**ITEM, "variations": [_variation(1, 99.90), _variation(2, 129.90)]})
+    with pytest.raises(IntegrationError) as failure:
+        client.get_listing("MLB1234567890")
+    assert failure.value.code == "unsupported_price_context"
+
+
+def test_client_accepts_variations_sharing_one_price() -> None:
+    client = _client({**ITEM, "variations": [_variation(1, 99.90), _variation(2, 99.90)]})
+    assert client.get_listing("MLB1234567890").price == Decimal("99.90")
+
+
+@pytest.mark.parametrize(
+    "conditions",
+    [
+        {"context_restrictions": ["channel_marketplace", "user_type_loyalty_3"], "eligible": True},
+        {"context_restrictions": ["channel_marketplace"], "eligible": False},
+        {"context_restrictions": ["buyer_coupon"]},
+    ],
+)
+def test_client_rejects_personal_benefit_price_as_unsupported_price_context(conditions: dict) -> None:
+    sale = httpx.Response(200, json={"amount": 89.90, "currency_id": "BRL", "conditions": conditions})
+    with pytest.raises(IntegrationError) as failure:
+        _client(sale=sale).get_listing("MLB1234567890")
+    assert failure.value.code == "unsupported_price_context"
+
+
+def test_client_accepts_marketplace_only_price_conditions() -> None:
+    sale = httpx.Response(200, json={
+        "amount": 89.90, "currency_id": "BRL",
+        "conditions": {"context_restrictions": ["channel_marketplace"], "eligible": True},
+    })
+    assert _client(sale=sale).get_listing("MLB1234567890").price == Decimal("89.90")
