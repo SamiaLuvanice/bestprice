@@ -1,6 +1,6 @@
 import { cleanup, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { alertFixture, callsTo, dashboardFixture, reply, type Route } from '../test/fakeApi'
+import { alertFixture, apiError, callsTo, dashboardFixture, reply, type Route } from '../test/fakeApi'
 import { product, productRow, renderArea as renderProducts } from '../test/productsHarness'
 
 afterEach(() => {
@@ -103,6 +103,16 @@ describe('tabela Seus produtos', () => {
     expect(await screen.findByRole('rowgroup', { name: 'Cafeteira elétrica' })).toBeInTheDocument()
     expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
     expect(screen.queryByText('Você ainda não está acompanhando nenhum produto.')).not.toBeInTheDocument()
+  })
+
+  it('tenta a página seguinte automática uma vez só e mostra o erro com Carregar mais', async () => {
+    const { mockFetch } = await renderProducts(dashboardFixture({ items: [], nextCursor: 'page-2', summary: { tracked_count: 1 } }), (url) =>
+      url === '/api/tracked-products?cursor=page-2' ? reply(500, apiError('internal_error', 'Não foi possível carregar mais produtos.')) : undefined)
+    const section = within(screen.getByRole('region', { name: 'Seus produtos' }))
+    expect(await section.findByRole('alert')).toHaveTextContent('Não foi possível carregar mais produtos.')
+    expect(section.getByRole('button', { name: 'Carregar mais produtos' })).toBeEnabled()
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
   })
 
   it('acrescenta a página seguinte sem repetir IDs e esconde Carregar mais sem cursor', async () => {
