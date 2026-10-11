@@ -54,6 +54,22 @@ os gates de Python e React não se aplicam a esta mudança (o CI os executa mesm
 | 14 | eventos de PR inalterados | testes 0008 de PR em `project-state` e `sync-project` seguem verdes |
 | 15 | documentação | `docs/github-workflow.md`: matriz com Ready, seção "Ready pela spec (0014)", limite de confiança do push, "Ready só manual" removido, credenciais marcadas como configuradas |
 
+## Revisão independente
+
+- `arch-reviewer`, rodada 1 (`origin/develop..9eba47f`): **aprovado com ressalvas**.
+  Bloqueante: branch atrás de `develop` com conflito com a #40 em `sync-project.cjs`.
+  Importantes: corrida entre push e evento de Issue em grupos de concorrência
+  distintos; force-push que reverte a spec era ignorado. Menores: remoção de branch,
+  `spec.md` > 1 MB, aspas no status, docs/apps e PROGRESS.
+- Correções: merge `ca6f03e` (mantém a #40); `441e7b4` (job `resolve` com
+  concorrência por Issue, `forced`, `deleted`, encoding, aspas, com Red → Green
+  registrado acima).
+- `arch-reviewer`, rodada 2 (`9eba47f..441e7b4`): **aprovado**; confirmou que
+  `origin/develop` é ancestral de HEAD e que o diff não reverte a #40. Sem achados
+  bloqueantes ou importantes novos.
+- Após QA: `d4aa955` (normaliza `number` da reconciliação manual na chave de
+  concorrência; actionlint verde; 43 testes verdes).
+
 ## QA
 
 `qa`: **aceito com ressalvas** (43 testes reexecutados). Critérios 8, 9 e 13
