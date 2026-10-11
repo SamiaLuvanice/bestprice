@@ -40,6 +40,10 @@ registros substitui as evidências de verificação.
    git commit -m 'feat(backend): adiciona recurso' -m 'Refs #123'
    ```
 
+   A autoria é sempre humana: commits, PRs, issues e comentários não incluem
+   `Co-Authored-By` de agentes de IA (Claude, Cursor, Codex, OpenCode, Copilot
+   etc.) nem rodapés como "Generated with ...". Ver `.agents/rules/git.md`.
+
 5. Abra uma PR para develop, com **uma linha real** `Closes #123`, o caminho da
    spec e evidências. Branches aceitas: `feature|fix|chore|docs/`, número de spec
    opcional, `issue-123-descricao`. A referência deve ser uma Issue local aberta.
