@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, ApiFailure, type User } from './api'
 import { AccountArea } from './dashboard/AccountArea'
+import { HeroTrackForm, type TrackFeedback } from './dashboard/HeroTrackForm'
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
@@ -24,6 +25,7 @@ export function App({ clock = systemClock }: Props) {
   const [sessionError, setSessionError] = useState<string | null>(null)
   const [sessionAttempt, setSessionAttempt] = useState(0)
   const [guestMessage, setGuestMessage] = useState<string | null>(null)
+  const [guestTrackError, setGuestTrackError] = useState<TrackFeedback | null>(null)
   const [url, setUrl] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -70,9 +72,8 @@ export function App({ clock = systemClock }: Props) {
     finally { setBusy(false) }
   }
 
-  function trackAsGuest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setGuestMessage('Entre na sua conta para monitorar este anúncio.')
+  function trackAsGuest() {
+    setGuestTrackError({ message: 'Entre na sua conta para monitorar este anúncio.', trackedProductId: null })
   }
 
   if (sessionState === 'ready' && user) {
@@ -89,20 +90,7 @@ export function App({ clock = systemClock }: Props) {
     </header>
     <main className="page-main">
 
-    <section className="hero" aria-labelledby="page-title">
-      <div className="hero-inner">
-        <span className="eyebrow">MONITORAMENTO DE PREÇOS</span>
-        <h1 id="page-title">Acompanhe o preço. Compre na hora certa.</h1>
-        <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>
-        <form onSubmit={trackAsGuest} className="track-form">
-          <label htmlFor="product-url" className="sr-only">Link do anúncio do Mercado Livre</label>
-          <input id="product-url" type="url" required value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.mercadolivre.com.br/..." />
-          <button type="submit">Monitorar preço</button>
-        </form>
-        {guestMessage && <p role="alert" className="error-box">{guestMessage}</p>}
-        <p className="hero-note">Os preços exibidos vêm das consultas do BestPrice ao Mercado Livre e podem diferir do valor no checkout.</p>
-      </div>
-    </section>
+    <HeroTrackForm value={url} onChange={setUrl} onSubmit={trackAsGuest} submitting={false} error={guestTrackError} success={null} />
 
     {sessionState === 'loading' && <section className="content"><p role="status">Carregando sua conta…</p></section>}
     {sessionState === 'unavailable' && <section className="content narrow">
@@ -115,6 +103,7 @@ export function App({ clock = systemClock }: Props) {
       <div className="panel">
         <span className="eyebrow">SUA ÁREA</span>
         <h2 id="login-title">Entre para acompanhar seus anúncios</h2>
+        {guestMessage && <p role="alert" className="error-box">{guestMessage}</p>}
         <form onSubmit={login} className="login-form">
           <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" /></label>
           <label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label>

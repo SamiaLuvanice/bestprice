@@ -3,6 +3,7 @@ import { api, ApiFailure, type Dashboard, type HistoryEntry, type Product, type 
 import { useModalFocus } from '../lib/focus'
 import { formatMoney, formatPercentage, retryHint } from '../lib/format'
 import { AppHeader, type SectionKey } from './AppHeader'
+import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
 import { attemptResult, availabilityLabel } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
 import { NotificationBell } from './NotificationBell'
@@ -82,6 +83,9 @@ type Props = {
 export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Props) {
   const [list, dispatchList] = useReducer(trackedListReducer, initialTrackedList)
   const [url, setUrl] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [trackError, setTrackError] = useState<TrackFeedback | null>(null)
+  const [trackSuccess, setTrackSuccess] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<Feedback | null>(null)
   const [selected, setSelected] = useState<TrackedProduct | null>(null)
@@ -141,17 +145,21 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     finally { setBusy(false) }
   }
 
-  async function track(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null)
-    setBusy(true)
+  async function track() {
+    setTrackError(null)
+    setTrackSuccess(null)
+    setSubmitting(true)
     try {
       const result = await api.track(url)
       setUrl('')
       dispatchList({ type: 'upsert', tracked: result.tracked, receivedAt: clock() })
-      await reloadDashboard()
-    } catch (failure) { fail(failure) }
-    finally { setBusy(false) }
+      setTrackSuccess(result.outcome === 'created' ? 'Produto adicionado ao monitoramento.' : 'Você voltou a monitorar este produto.')
+      // Indicadores recalculados pela API; a lista já carregada permanece.
+      void reloadDashboard()
+    } catch (failure) {
+      if (unauthenticated(failure)) endSession(failure)
+      else setTrackError(feedback(failure))
+    } finally { setSubmitting(false) }
   }
 
   async function open(id: string) {
@@ -312,21 +320,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
 
     <main id="conteudo" className="page-main">
-    <section className="hero" id="inicio" aria-labelledby="page-title">
-      <div className="hero-inner">
-        <span className="eyebrow">MONITORAMENTO DE PREÇOS</span>
-        <h1 id="page-title" ref={pageHeading} tabIndex={-1}>Acompanhe o preço. Compre na hora certa.</h1>
-        <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>
-        <form onSubmit={track} className="track-form">
-          <label htmlFor="product-url" className="sr-only">Link do anúncio do Mercado Livre</label>
-          <input id="product-url" type="url" required value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://www.mercadolivre.com.br/..." />
-          <button disabled={busy} type="submit">Monitorar preço</button>
-        </form>
-        {error && !selected && <p role="alert" className="error-box">{error.message}</p>}
-        {error?.trackedProductId && !selected && <button type="button" className="text-button" onClick={() => { if (error.trackedProductId) void open(error.trackedProductId) }}>Ver produto</button>}
-        <p className="hero-note">Os preços exibidos vêm das consultas do BestPrice ao Mercado Livre e podem diferir do valor no checkout.</p>
-      </div>
-    </section>
+    <HeroTrackForm value={url} onChange={setUrl} onSubmit={() => void track()} submitting={submitting}
+      error={trackError} success={trackSuccess} onViewProduct={(id) => void open(id)} headingRef={pageHeading} />
+    {error && !selected && <div className="content global-messages"><p role="alert" className="error-box">{error.message}</p></div>}
 
     <div className="content dashboard-content">
       <section aria-labelledby="indicators-title">
