@@ -22,6 +22,6 @@ O código dispõe de armazenamento cifrado e renovação OAuth da conta operador
 
 ## Verificar
 
-Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`. Resultados e limites desta branch estão em [spec 0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md).
+Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`. Resultados e limites estão nas verificações das specs [0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md) (API e integração) e [0012](specs/0012-area-usuario-monitoramento/verification.md) (área do usuário).
 
 A [documentação de onboarding](docs/index.md) detalha arquitetura, esquema, módulos e infraestrutura. O processo de contribuição usa spec, plano, implementação, verificação, PR para `develop` e revisão independente. A publicação no GHCR após merge em `main` não configura implantação externa.
