@@ -42,7 +42,7 @@ export function alertFixture(overrides: Record<string, unknown> = {}) {
 export function notificationFixture(id: string, overrides: Record<string, unknown> = {}) {
   return {
     id, tracked_product_id: 'tracking-1', product_title: `Aviso ${id}`, observed_price: '80.00',
-    target_price: '90.00', created_at: '2026-10-08T11:00:00Z', read_at: null, ...overrides,
+    target_price: '90.00', created_at: '2026-10-08T11:00:00Z', read_at: null as string | null, ...overrides,
   }
 }
 

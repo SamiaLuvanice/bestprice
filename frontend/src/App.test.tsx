@@ -73,9 +73,11 @@ it('carrega páginas adicionais de histórico e notificações sem repetir entra
     return undefined
   }, dashboardWith([item]))
   render(<App />)
-  expect(await screen.findByText(/Aviso notice-1 chegou/)).toBeInTheDocument()
+  // Migrado (0012/AC22): a seção Alertas mostra produto, preços e criação em campos separados.
+  const alerts = within(await screen.findByRole('region', { name: 'Alertas' }))
+  expect(await alerts.findByText('Aviso notice-1')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Carregar mais notificações' }))
-  expect(await screen.findByText(/Aviso notice-2 chegou/)).toBeInTheDocument()
+  expect(await alerts.findByText('Aviso notice-2')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Carregar mais notificações' })).not.toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: /^Ver detalhes/ }))
   expect(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })).toBeInTheDocument()
@@ -172,7 +174,8 @@ it('mostra erro na área de notificações quando elas não carregam', async () 
   render(<App />)
   const section = within(await screen.findByRole('region', { name: 'Alertas' }))
   expect(await section.findByRole('alert')).toHaveTextContent('Não foi possível carregar as notificações.')
-  expect(section.queryByText('Sem notificações por enquanto.')).not.toBeInTheDocument()
+  // Migrado (0012/AC22): texto de vazio da seção mudou.
+  expect(section.queryByText('Nenhuma notificação por enquanto.')).not.toBeInTheDocument()
 })
 
 it('rejeita atualização recente com valor fora do contrato', async () => {

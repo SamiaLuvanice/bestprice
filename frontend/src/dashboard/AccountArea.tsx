@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type FormEvent } from 'react'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
-import { formatMoney, retryHint } from '../lib/format'
+import { retryHint } from '../lib/format'
+import { AlertsSection } from './AlertsSection'
 import { AppHeader, type SectionKey } from './AppHeader'
 import { ConfirmStopDialog } from './ConfirmStopDialog'
 import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
@@ -19,15 +20,6 @@ import { useDashboard } from './useDashboard'
 import { useNotifications } from './useNotifications'
 
 type Feedback = { message: string; trackedProductId: string | null }
-
-// Formatação apenas para apresentação: valores monetários chegam como strings decimais e nenhum cálculo é feito aqui.
-function money(value: string | null, unknown = 'Preço indisponível'): string {
-  return formatMoney(value) ?? unknown
-}
-
-function instant(value: string | null, unknown = 'Ainda não consultado'): string {
-  return value ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value)) : unknown
-}
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
@@ -108,7 +100,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }, [dashboard, list.items])
   const showProductSections = !isEmpty && dashboardView.status !== 'error'
   const notifications = useNotifications({ clock, onUnauthenticated: endSession })
-  const [alertsError, setAlertsError] = useState<string | null>(null)
+  const focusAlertsHeading = useCallback(() => alertsHeading.current?.focus(), [])
 
   // Ao fechar o detalhe, o foco volta ao elemento que o abriu; se ele saiu da página, ao título da lista
   // (ou ao campo de link, sem lista). O foco inicial dentro do diálogo é do próprio ProductDetailDialog.
@@ -300,11 +292,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     }
   }
 
-  async function readNotification(id: string) {
-    const failure = await notifications.markRead(id)
-    setAlertsError(failure)
-  }
-
   // Ações da linha: implementadas em T15 e T16.
   function setRow(id: string, state: RowState) {
     setRowStates((current) => ({ ...current, [id]: state }))
@@ -491,19 +478,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
           receivedAt={dashboardView.receivedAt} known={knownProducts} onOpen={(id) => void open(id)} />}
       </section>}
 
-      <section id="alertas" aria-labelledby="notifications-title">
-        <div className="section-heading"><span className="eyebrow">ALERTAS</span><h2 id="notifications-title" ref={alertsHeading} tabIndex={-1}>Alertas</h2></div>
-        {notifications.all.status === 'error' && <p role="alert" className="error-box">{notifications.all.message}</p>}
-        {alertsError && <p role="alert" className="error-box">{alertsError}</p>}
-        {notifications.all.items.length ? <ul className="feed">{notifications.all.items.map(({ notification }) =>
-          <li key={notification.id} className="notification-row">
-            <span>{notification.product_title} chegou a {money(notification.observed_price)} · {instant(notification.created_at)}</span>
-            <span className="read-state">{notification.read_at ? 'Lida' : 'Não lida'}</span>
-            {!notification.read_at && <button type="button" className="text-button" onClick={() => void readNotification(notification.id)}>Marcar como lida</button>}
-          </li>)}</ul> :
-          notifications.all.status === 'ready' && <p className="empty">Sem notificações por enquanto.</p>}
-        {notifications.all.nextCursor && <button type="button" disabled={notifications.all.loadingMore} className="text-button" onClick={() => void notifications.loadMoreAll()}>Carregar mais notificações</button>}
-      </section>
+      <AlertsSection notifications={notifications.all} headingRef={alertsHeading} focusHeading={focusAlertsHeading}
+        onMarkRead={notifications.markRead} onLoadMore={() => void notifications.loadMoreAll()} onRetry={() => void notifications.reloadAll()} />
     </div>
     </main>
 
