@@ -4,6 +4,10 @@ on:
     types: [opened, reopened, closed, assigned, unassigned]
   pull_request_target:
     types: [opened, reopened, closed, edited, synchronize, ready_for_review, converted_to_draft]
+  # Spec 0014: status da spec na branch da feature leva a Issue a Ready.
+  push:
+    branches: ['feature/**']
+    paths: ['specs/*/spec.md']
   workflow_dispatch:
     inputs:
       kind:
@@ -17,7 +21,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: project-${{ github.event.issue.number || github.event.pull_request.number || inputs.number }}
+  group: project-${{ github.event.issue.number || github.event.pull_request.number || inputs.number || github.ref }}
   cancel-in-progress: false
 jobs:
   sync:

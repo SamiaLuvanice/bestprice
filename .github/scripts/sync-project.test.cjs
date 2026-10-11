@@ -4,14 +4,40 @@ const sync = require('./sync-project.cjs');
 
 const options = ['Backlog', 'Ready', 'In progress', 'In review', 'Develop', 'Stage', 'Main']
   .map((name, index) => ({ id: `option-${index}`, name }));
+const READY = 'option-1';
+const notFound = () => Object.assign(new Error('Not Found'), { status: 404 });
 
-function fixture({ kind = 'pr', item, closingEvents = [], availableOptions = options } = {}) {
+// branches: { nome: texto de specs/<spec>-x/spec.md | null (branch ainda sem spec) }
+function fixture({ kind = 'pr', item, closingEvents = [], availableOptions = options, branches = {},
+  push, issueMissing = false } = {}) {
   const project = { status: null, added: false, writes: 0 };
   const calls = [];
+  const specDir = name => `${name.split('/')[1].slice(0, 4)}-x`;
   const github = {
+    paginate: async (_method, { ref }) => Object.keys(branches)
+      .filter(name => `heads/${name}`.startsWith(ref)).map(name => ({ ref: `refs/heads/${name}` })),
     rest: {
       pulls: { get: async () => ({ data: item || { state: 'closed', merged: true, base: { ref: 'develop' }, node_id: 'PR_1' } }) },
-      issues: { get: async () => ({ data: item || { state: 'closed', state_reason: 'completed', closed_at: '2026-01-01T00:00:00Z', node_id: 'ISSUE_1' } }) },
+      issues: { get: async () => {
+        if (issueMissing) throw notFound();
+        return { data: item || { state: 'closed', state_reason: 'completed', closed_at: '2026-01-01T00:00:00Z', node_id: 'ISSUE_1' } };
+      } },
+      git: {
+        listMatchingRefs: () => {},
+        getRef: async ({ ref }) => {
+          const name = ref.replace(/^heads\//, '');
+          if (!(name in branches)) throw notFound();
+          return { data: { object: { sha: name } } };
+        },
+      },
+      repos: {
+        compareCommitsWithBasehead: async () => ({ data: { files: push?.files || [] } }),
+        getContent: async ({ path, ref }) => {
+          const text = branches[ref];
+          if (path === 'specs') return { data: text === null ? [] : [{ type: 'dir', name: specDir(ref) }] };
+          return { data: { content: Buffer.from(text).toString('base64'), encoding: 'base64' } };
+        },
+      },
     },
     graphql: async (query, variables) => {
       calls.push(query);
@@ -31,11 +57,23 @@ function fixture({ kind = 'pr', item, closingEvents = [], availableOptions = opt
   };
   const summaries = [];
   const core = { summary: { addRaw: text => ({ write: async () => summaries.push(text) }) } };
-  const payload = kind === 'pr'
-    ? { pull_request: { number: 13 } }
-    : { issue: { number: 13 } };
-  return { args: { github, core, context: { repo: { owner: 'owner', repo: 'repo' }, payload } }, project, calls, summaries };
+  const event = push
+    ? { eventName: 'push', ref: `refs/heads/${push.branch}`,
+      payload: { before: push.before || 'b'.repeat(40), after: 'a'.repeat(40) } }
+    : { eventName: kind === 'pr' ? 'pull_request_target' : 'issues',
+      payload: kind === 'pr' ? { pull_request: { number: 13 } } : { issue: { number: 13 } } };
+  return { args: { github, core, context: { repo: { owner: 'owner', repo: 'repo' }, ...event } }, project, calls, summaries };
 }
+
+function configure() {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+}
+
+const openIssue = (assignees = []) => ({ state: 'open', assignees, node_id: 'ISSUE_1' });
+const spec = status => `---\nnumero: 0014\nstatus: ${status}\n---\n`;
+const changed = [{ filename: 'specs/0014-x/spec.md' }];
+const branch = 'feature/0014-issue-13-x';
 
 test('reexecução de evento antigo usa a base atual da PR e é idempotente', async () => {
   process.env.PROJECT_OWNER = 'owner';
@@ -92,4 +130,105 @@ test('ausência da credencial é informativa e não declara sucesso de sincroniz
   await assert.rejects(sync(args), /Configure PROJECT_OWNER e PROJECT_NUMBER/);
   assert.equal(project.added, false);
   assert.equal(summaries.length, 0);
+});
+
+test('push que torna a spec pronta leva a Issue da branch a Ready', async () => {
+  configure();
+  const { args, project, summaries } = fixture({ item: openIssue(), branches: { [branch]: spec('pronta') },
+    push: { branch, files: changed } });
+  await sync(args);
+  assert.equal(project.status, READY);
+  assert.match(summaries[0], /issue #13: Ready/);
+});
+
+test('push que tira a spec de pronta devolve a Issue a Backlog', async () => {
+  configure();
+  for (const status of ['rascunho', 'implementada', 'descartada']) {
+    const { args, project } = fixture({ item: openIssue(), branches: { [branch]: spec(status) }, push: { branch, files: changed } });
+    await sync(args);
+    assert.equal(project.status, 'option-0', status);
+  }
+});
+
+test('responsável tem precedência sobre spec pronta', async () => {
+  configure();
+  const { args, project } = fixture({ item: openIssue([{}]), branches: { [branch]: spec('pronta') }, push: { branch, files: changed } });
+  await sync(args);
+  assert.equal(project.status, 'option-2');
+});
+
+test('evento de Issue e reconciliação manual consideram a spec da branch', async () => {
+  configure();
+  const branches = { [branch]: spec('pronta'), 'feature/0015-issue-14-y': spec('pronta') };
+  const event = fixture({ kind: 'issue', item: openIssue(), branches });
+  await sync(event.args);
+  assert.equal(event.project.status, READY);
+
+  const manual = fixture({ kind: 'issue', item: openIssue(), branches });
+  manual.args.context = { ...manual.args.context, eventName: 'workflow_dispatch', payload: { inputs: { kind: 'issue', number: '13' } } };
+  await sync(manual.args);
+  assert.equal(manual.project.status, READY);
+
+  const other = fixture({ kind: 'issue', item: openIssue(), branches: { 'feature/0015-issue-14-y': spec('pronta') } });
+  await sync(other.args);
+  assert.equal(other.project.status, 'option-0');
+});
+
+test('branch recém-criada sem spec mantém Backlog sem aviso', async () => {
+  configure();
+  const { args, project, summaries } = fixture({ kind: 'issue', item: openIssue(), branches: { [branch]: null } });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+  assert.doesNotMatch(summaries[0], /ilegíve/);
+});
+
+test('spec ilegível mantém Backlog, avisa no resumo e não falha', async () => {
+  configure();
+  const { args, project, summaries } = fixture({ item: openIssue(), branches: { [branch]: spec('prontaa') }, push: { branch, files: changed } });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+  assert.match(summaries[0], /feature\/0014-issue-13-x: status 'prontaa' inválido/);
+});
+
+test('Issue fechada ignora a spec da branch', async () => {
+  configure();
+  const { args, project } = fixture({ kind: 'issue', branches: { [branch]: spec('pronta') },
+    item: { state: 'closed', state_reason: 'not_planned', closed_at: '2026-01-01T00:00:00Z', node_id: 'ISSUE_1' } });
+  await sync(args);
+  assert.equal(project.status, 'option-0');
+});
+
+test('push fora do padrão ou sem alterar a spec da branch não altera o Project', async () => {
+  configure();
+  const outside = fixture({ item: openIssue(), push: { branch: 'fix/issue-13-x', files: changed } });
+  await sync(outside.args);
+  assert.equal(outside.calls.length, 0);
+  assert.match(outside.summaries[0], /fora do padrão/);
+
+  const merged = fixture({ item: openIssue(), branches: { [branch]: spec('pronta') },
+    push: { branch, files: [{ filename: 'specs/0013-y/spec.md' }] } });
+  await sync(merged.args);
+  assert.equal(merged.calls.length, 0);
+  assert.match(merged.summaries[0], /spec 0014 não alterada/);
+});
+
+test('primeiro push da branch é tratado como alteração da spec', async () => {
+  configure();
+  const { args, project } = fixture({ item: openIssue(), branches: { [branch]: spec('pronta') },
+    push: { branch, before: '0'.repeat(40), files: [] } });
+  await sync(args);
+  assert.equal(project.status, READY);
+});
+
+test('push que aponta Issue inexistente ou PR não altera o Project e não falha', async () => {
+  configure();
+  const missing = fixture({ issueMissing: true, branches: { [branch]: spec('pronta') }, push: { branch, files: changed } });
+  await sync(missing.args);
+  assert.equal(missing.calls.length, 0);
+  assert.match(missing.summaries[0], /#13 não encontrada/);
+
+  const pr = fixture({ item: { ...openIssue(), pull_request: {} }, branches: { [branch]: spec('pronta') }, push: { branch, files: changed } });
+  await sync(pr.args);
+  assert.equal(pr.calls.length, 0);
+  assert.match(pr.summaries[0], /#13 é uma Pull Request/);
 });
