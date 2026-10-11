@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState, type FormEvent } 
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type Notification, type Product, type TrackedProduct, type User } from '../api'
 import { useModalFocus } from '../lib/focus'
 import { formatMoney, formatPercentage, retryHint } from '../lib/format'
+import { AppHeader, type SectionKey } from './AppHeader'
 import { attemptResult, availabilityLabel } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
 import { useDashboard } from './useDashboard'
@@ -92,6 +93,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const closeDetailButton = useRef<HTMLButtonElement>(null)
   const detailDialog = useRef<HTMLElement>(null)
   const trackedHeading = useRef<HTMLHeadingElement>(null)
+  const pageHeading = useRef<HTMLHeadingElement>(null)
+  const alertsHeading = useRef<HTMLHeadingElement>(null)
+  const [currentSection, setCurrentSection] = useState<SectionKey>('home')
+  const [logoutError, setLogoutError] = useState<string | null>(null)
+  const [loggingOut, setLoggingOut] = useState(false)
   const detailOpen = selected !== null
   // Produto do diálogo aberto, lido por requisições que terminam depois de a pessoa fechar ou trocar o detalhe.
   const openDetailId = useRef<string | null>(null)
@@ -313,26 +319,36 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     } catch (failure) { fail(failure) }
   }
 
+  // Falha ao sair mantém a sessão local e mostra o erro no cabeçalho; só 401 leva à entrada.
   async function logout() {
+    setLoggingOut(true)
+    setLogoutError(null)
     try {
       await api.logout()
       onLoggedOut()
-    } catch (failure) { fail(failure) }
+    } catch (failure) {
+      if (unauthenticated(failure)) endSession(failure)
+      else { setLogoutError(message(failure)); setLoggingOut(false) }
+    }
+  }
+
+  function navigate(section: SectionKey) {
+    setCurrentSection(section)
+    const target = { home: pageHeading, products: trackedHeading, alerts: alertsHeading }[section].current
+    target?.focus()
   }
 
   const trackedItems = list.items.map((entry) => entry.tracked)
 
   return <>
-    <header className="masthead">
-      <span className="brand-mark" aria-hidden="true">B</span>
-      <span className="brand-name">BestPrice</span>
-      <span className="account-label">{user.email}</span><button type="button" className="text-button" onClick={logout}>Sair</button>
-    </header>
+    <AppHeader email={user.email} current={currentSection} onNavigate={navigate}
+      logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
 
-    <section className="hero" aria-labelledby="page-title">
+    <main id="conteudo" className="page-main">
+    <section className="hero" id="inicio" aria-labelledby="page-title">
       <div className="hero-inner">
         <span className="eyebrow">MONITORAMENTO DE PREÇOS</span>
-        <h1 id="page-title">Acompanhe o preço. Compre na hora certa.</h1>
+        <h1 id="page-title" ref={pageHeading} tabIndex={-1}>Acompanhe o preço. Compre na hora certa.</h1>
         <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>
         <form onSubmit={track} className="track-form">
           <label htmlFor="product-url" className="sr-only">Link do anúncio do Mercado Livre</label>
@@ -366,8 +382,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
           dashboard && <p className="empty">Nenhuma queda recente confirmada por enquanto.</p>}
       </section>
 
-      <section aria-labelledby="tracked-title">
-        <div className="section-heading"><span className="eyebrow">ACOMPANHAMENTO</span><h2 id="tracked-title" ref={trackedHeading} tabIndex={-1}>Produtos monitorados</h2></div>
+      <section id="seus-produtos" aria-labelledby="tracked-title">
+        <div className="section-heading"><span className="eyebrow">ACOMPANHAMENTO</span><h2 id="tracked-title" ref={trackedHeading} tabIndex={-1}>Seus produtos</h2></div>
         {trackedItems.length ? trackedItems.map((item) => <ProductCard key={item.id} item={item} onOpen={open} />) :
           dashboard && <p className="empty">Você ainda não monitora anúncios.</p>}
         {list.nextCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMore}>Carregar mais</button>}
@@ -380,8 +396,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
           dashboard && <p className="empty">As mudanças confirmadas aparecerão aqui.</p>}
       </section>
 
-      <section aria-labelledby="notifications-title">
-        <div className="section-heading"><span className="eyebrow">ALERTAS</span><h2 id="notifications-title">Notificações</h2></div>
+      <section id="alertas" aria-labelledby="notifications-title">
+        <div className="section-heading"><span className="eyebrow">ALERTAS</span><h2 id="notifications-title" ref={alertsHeading} tabIndex={-1}>Alertas</h2></div>
         {notificationsError && <p role="alert" className="error-box">{notificationsError}</p>}
         {notifications.length ? <ul className="feed">{notifications.map((notification) =>
           <li key={notification.id} className="notification-row">
@@ -392,6 +408,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
         {notificationCursor && <button type="button" disabled={busy} className="text-button" onClick={loadMoreNotifications}>Carregar mais notificações</button>}
       </section>
     </div>
+    </main>
 
     {selected && <div className="detail-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
       <section className="detail-panel" role="dialog" aria-modal="true" aria-label={`Detalhes de ${selected.product.title}`} ref={detailDialog} onMouseDown={(event) => event.stopPropagation()}>

@@ -76,17 +76,18 @@ export function App({ clock = systemClock }: Props) {
   }
 
   if (sessionState === 'ready' && user) {
-    return <main className="page">
+    return <div className="page">
       <AccountArea user={user} clock={clock} onUnauthenticated={onUnauthenticated} onLoggedOut={onLoggedOut} />
       <footer>BestPrice · Acompanhe com clareza</footer>
-    </main>
+    </div>
   }
 
-  return <main className="page">
+  return <div className="page">
     <header className="masthead">
       <span className="brand-mark" aria-hidden="true">B</span>
       <span className="brand-name">BestPrice</span>
     </header>
+    <main className="page-main">
 
     <section className="hero" aria-labelledby="page-title">
       <div className="hero-inner">
@@ -121,6 +122,7 @@ export function App({ clock = systemClock }: Props) {
         </form>
       </div>
     </section>}
+    </main>
     <footer>BestPrice · Acompanhe com clareza</footer>
-  </main>
+  </div>
 }

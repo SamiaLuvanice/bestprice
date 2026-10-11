@@ -170,7 +170,7 @@ it('mostra erro na área de notificações quando elas não carregam', async () 
   signedIn((url) => url === '/api/notifications'
     ? Promise.resolve(reply(500, apiError('internal_error', 'Não foi possível carregar as notificações.'))) : undefined)
   render(<App />)
-  const section = within(await screen.findByRole('region', { name: 'Notificações' }))
+  const section = within(await screen.findByRole('region', { name: 'Alertas' }))
   expect(await section.findByRole('alert')).toHaveTextContent('Não foi possível carregar as notificações.')
   expect(section.queryByText('Sem notificações por enquanto.')).not.toBeInTheDocument()
 })
@@ -239,7 +239,7 @@ it('recarrega o vínculo e mostra o erro quando a atualização falha na fonte',
   fireEvent.click(detail.getByRole('button', { name: 'Atualizar agora' }))
   expect(await detail.findByText('Resultado da última tentativa: Falha temporária na consulta')).toBeInTheDocument()
   expect(detail.getByRole('alert')).toHaveTextContent('Mercado Livre indisponível no momento.')
-  const tracked = within(screen.getByRole('region', { name: 'Produtos monitorados' }))
+  const tracked = within(screen.getByRole('region', { name: 'Seus produtos' }))
   expect(await tracked.findByText('Última tentativa: Falha temporária na consulta')).toBeInTheDocument()
   expect(screen.getByText('pessoa@example.com')).toBeInTheDocument()
 })
@@ -419,7 +419,7 @@ it('leva o foco ao título da lista quando o card que abriu o detalhe deixa de e
   const dialog = await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' })
   fireEvent.click(within(dialog).getByRole('button', { name: 'Parar de monitorar' }))
   expect(await screen.findByText('Você ainda não monitora anúncios.')).toBeInTheDocument()
-  await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos monitorados' })).toHaveFocus())
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
 })
 
 async function closeDuringRefresh(outcome: () => unknown) {
