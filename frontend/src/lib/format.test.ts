@@ -70,6 +70,11 @@ describe('formatMoney', () => {
     expect(plain(formatMoney('12345678901234567.89'))).toBe('R$ 12.345.678.901.234.567,89')
   })
 
+  it('não mostra sinal em zero negativo', () => {
+    expect(plain(formatMoney('-0.00'))).toBe('R$ 0,00')
+    expect(plain(formatMoney('-0'))).toBe('R$ 0,00')
+  })
+
   it('não formata valor inválido nem transforma ausência em zero', () => {
     expect(formatMoney('abc')).toBeNull()
     expect(formatMoney(null)).toBeNull()
@@ -82,6 +87,12 @@ describe('formatPercentage', () => {
     expect(formatPercentage('-20.00')).toEqual({ text: '-20,00%', direction: 'down' })
     expect(formatPercentage('5.5')).toEqual({ text: '+5,50%', direction: 'up' })
     expect(formatPercentage('0.00')).toEqual({ text: '0,00%', direction: 'none' })
+  })
+
+  it('não mostra sinal nem direção quando o percentual arredonda para zero', () => {
+    expect(formatPercentage('-0.004')).toEqual({ text: '0,00%', direction: 'none' })
+    expect(formatPercentage('0.004')).toEqual({ text: '0,00%', direction: 'none' })
+    expect(formatPercentage('-0.005')).toEqual({ text: '-0,01%', direction: 'down' })
   })
 
   it('não inventa percentual para ausente ou inválido', () => {

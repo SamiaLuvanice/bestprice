@@ -67,13 +67,16 @@ type DecimalString = Intl.StringNumericLiteral
 /** Reais a partir da string decimal da API; null para ausente ou inválido (o chamador escolhe o rótulo). */
 export function formatMoney(value: string | null): string | null {
   if (value === null || !isDecimal(value)) return null
-  return moneyFormat.format(value as DecimalString)
+  // Zero negativo ("-0.00") não ganha sinal; a comparação é decimal, sem number.
+  const normalized = compareDecimal(value, '0') === 0 ? '0' : value
+  return moneyFormat.format(normalized as DecimalString)
 }
 
 /** Percentual com sinal e direção decidida por comparação decimal exata com zero. */
 export function formatPercentage(value: string | null): { text: string; direction: Direction } | null {
   if (value === null || !isDecimal(value)) return null
-  const comparison = compareDecimal(value, '0')
-  const direction: Direction = comparison === -1 ? 'down' : comparison === 1 ? 'up' : 'none'
-  return { text: `${percentFormat.format(value as DecimalString)}%`, direction }
+  // A direção segue o valor exibido: percentual que arredonda para 0,00 não tem sinal nem seta.
+  const text = percentFormat.format(value as DecimalString)
+  const direction: Direction = text.startsWith('-') ? 'down' : text.startsWith('+') ? 'up' : 'none'
+  return { text: `${text}%`, direction }
 }
