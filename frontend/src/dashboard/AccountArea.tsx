@@ -86,6 +86,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const detailOpen = selected !== null
   // Produto do diálogo aberto, lido por requisições que terminam depois de a pessoa fechar ou trocar o detalhe.
   const openDetailId = useRef<string | null>(null)
+  const openSequence = useRef(0)
   useEffect(() => { openDetailId.current = selected?.id ?? null }, [selected])
 
   const endSession = useCallback((failure: ApiFailure) => onUnauthenticated(failure.message), [onUnauthenticated])
@@ -177,12 +178,16 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     const opening = !selected
     if (opening && document.activeElement instanceof HTMLElement) detailOpener.current = document.activeElement
     setError(null)
+    // Vale a última abertura: resposta de uma abertura anterior que chega depois é descartada.
+    const current = ++openSequence.current
     try {
       const [detail, priceHistory] = await Promise.all([api.detail(id), api.history(id)])
+      if (current !== openSequence.current) return
       setSelected(detail)
       setHistory(priceHistory.items)
       setHistoryCursor(priceHistory.next_cursor)
     } catch (failure) {
+      if (current !== openSequence.current) return
       // Se o diálogo não chegou a abrir, não há foco a devolver depois.
       if (opening) detailOpener.current = null
       fail(failure)

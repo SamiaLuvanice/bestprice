@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { alertFixture, apiError, callsTo, dashboardFixture, notificationFixture, reply, unreadUrl, type Route } from '../test/fakeApi'
+import { alertFixture, apiError, callsTo, dashboardFixture, deferred, notificationFixture, reply, unreadUrl, type Route } from '../test/fakeApi'
 import { bellButton, linkField, product, productRow, renderArea, type User } from '../test/productsHarness'
 
 afterEach(() => {
@@ -189,5 +189,23 @@ describe('produto parado em outra aba', () => {
     expect(productRow('Cafeteira elétrica')).toBeInTheDocument()
     expect(screen.getByTestId('products-status')).toHaveTextContent(message)
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
+  })
+})
+
+describe('aberturas concorrentes do detalhe', () => {
+  it('mostra o detalhe da última abertura quando a anterior responde depois', async () => {
+    const slow = deferred()
+    const { user } = await renderArea(dashboardFixture({ items: [first, second] }), (url) => {
+      if (url === itemUrl) return slow.promise
+      if (url === `${itemUrl}/history` || url === '/api/tracked-products/tracking-2/history') return reply(200, { items: [], next_cursor: null })
+      if (url === '/api/tracked-products/tracking-2') return reply(200, second)
+      return undefined
+    })
+    await user.click(screen.getByRole('button', { name: 'Ver detalhes de Fone sem fio' }))
+    await user.click(screen.getByRole('button', { name: 'Ver detalhes de Cafeteira elétrica' }))
+    expect(await screen.findByRole('dialog', { name: 'Detalhes de Cafeteira elétrica' })).toBeInTheDocument()
+    slow.resolve(reply(200, first))
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(screen.getByRole('dialog', { name: 'Detalhes de Cafeteira elétrica' })).toBeInTheDocument()
   })
 })
