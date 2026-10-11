@@ -3,6 +3,7 @@ import { api, ApiFailure, type Dashboard, type HistoryEntry, type Product, type 
 import { useModalFocus } from '../lib/focus'
 import { formatMoney, formatPercentage, retryHint } from '../lib/format'
 import { AppHeader, type SectionKey } from './AppHeader'
+import { ConfirmStopDialog } from './ConfirmStopDialog'
 import { ExternalListingLink } from './ExternalListingLink'
 import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
 import { attemptResult, availabilityLabel } from './labels'
@@ -80,6 +81,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const [productsMessage, setProductsMessage] = useState<string | null>(null)
   const [globalMessage, setGlobalMessage] = useState<string | null>(null)
   const [pendingFocus, setPendingFocus] = useState<PendingFocus>(null)
+  const [stopRequest, setStopRequest] = useState<{ id: string; title: string; alertActive: boolean; busy: boolean } | null>(null)
   const [error, setError] = useState<Feedback | null>(null)
   const [selected, setSelected] = useState<TrackedProduct | null>(null)
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -374,7 +376,49 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     }
   }
 
-  function requestStop(id: string) { void id }
+  function requestStop(id: string) {
+    const entry = listRef.current.items.find((item) => item.tracked.id === id)
+    if (!entry) return
+    setStopRequest({ id, title: entry.tracked.product.title, alertActive: Boolean(entry.tracked.alert?.enabled), busy: false })
+  }
+
+  function cancelStop() {
+    if (!stopRequest) return
+    const id = stopRequest.id
+    setStopRequest(null)
+    setPendingFocus({ kind: 'rowMenu', id })
+  }
+
+  /** DELETE do vínculo; devolve a mensagem de erro (produto mantido) ou null quando o produto saiu da lista. */
+  async function stopTrackingRequest(id: string): Promise<string | null> {
+    try {
+      await api.stop(id)
+      removeTracked(id, 'Você parou de monitorar este produto.')
+      void reloadDashboard()
+      return null
+    } catch (failure) {
+      if (unauthenticated(failure)) { endSession(failure); return null }
+      // 404: o vínculo já não existe para a pessoa — segue a convenção de produto removido (plano D10).
+      if (failure instanceof ApiFailure && failure.status === 404) {
+        removeTracked(id, failure.message)
+        void reloadDashboard()
+        return null
+      }
+      return feedback(failure).message
+    }
+  }
+
+  async function confirmStop() {
+    if (!stopRequest || stopRequest.busy) return
+    const id = stopRequest.id
+    setStopRequest({ ...stopRequest, busy: true })
+    const failure = await stopTrackingRequest(id)
+    setStopRequest(null)
+    if (failure) {
+      setRow(id, { busy: false, message: failure })
+      setPendingFocus({ kind: 'rowMenu', id })
+    }
+  }
 
   // Falha ao sair mantém a sessão local e mostra o erro no cabeçalho; só 401 leva à entrada.
   async function logout() {
@@ -466,6 +510,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       </section>
     </div>
     </main>
+
+    {stopRequest && <ConfirmStopDialog title={stopRequest.title} alertActive={stopRequest.alertActive} busy={stopRequest.busy}
+      onCancel={cancelStop} onConfirm={() => void confirmStop()} />}
 
     {selected && <div className="detail-backdrop" role="presentation" onMouseDown={() => setSelected(null)}>
       <section className="detail-panel" role="dialog" aria-modal="true" aria-label={`Detalhes de ${selected.product.title}`} ref={detailDialog} onMouseDown={(event) => event.stopPropagation()}>
