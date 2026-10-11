@@ -1,4 +1,4 @@
-import { compareDecimal, isDecimal } from './decimal'
+import { isDecimal } from './decimal'
 
 export type Direction = 'down' | 'up' | 'none'
 
@@ -71,7 +71,8 @@ export function retryHint(seconds: number): string {
   return `Tente novamente em ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
 }
 
-const moneyFormat = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+// signDisplay 'negative': valores que arredondam para zero ("-0.00", "-0.004") não ganham sinal.
+const moneyFormat = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', signDisplay: 'negative' })
 const percentFormat = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' })
 
 // Intl.NumberFormat formata a string decimal como decimal exato (sem conversão para number).
@@ -80,12 +81,10 @@ type DecimalString = Intl.StringNumericLiteral
 /** Reais a partir da string decimal da API; null para ausente ou inválido (o chamador escolhe o rótulo). */
 export function formatMoney(value: string | null): string | null {
   if (value === null || !isDecimal(value)) return null
-  // Zero negativo ("-0.00") não ganha sinal; a comparação é decimal, sem number.
-  const normalized = compareDecimal(value, '0') === 0 ? '0' : value
-  return moneyFormat.format(normalized as DecimalString)
+  return moneyFormat.format(value as DecimalString)
 }
 
-/** Percentual com sinal e direção decidida por comparação decimal exata com zero. */
+/** Percentual com sinal; a direção vem do texto já arredondado (0,00% não tem sinal nem seta). */
 export function formatPercentage(value: string | null): { text: string; direction: Direction } | null {
   if (value === null || !isDecimal(value)) return null
   // A direção segue o valor exibido: percentual que arredonda para 0,00 não tem sinal nem seta.

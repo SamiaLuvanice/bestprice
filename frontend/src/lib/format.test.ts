@@ -73,6 +73,8 @@ describe('formatMoney', () => {
   it('não mostra sinal em zero negativo', () => {
     expect(plain(formatMoney('-0.00'))).toBe('R$ 0,00')
     expect(plain(formatMoney('-0'))).toBe('R$ 0,00')
+    expect(plain(formatMoney('-0.004'))).toBe('R$ 0,00')
+    expect(plain(formatMoney('-10.50'))).toBe('-R$ 10,50')
   })
 
   it('não formata valor inválido nem transforma ausência em zero', () => {
