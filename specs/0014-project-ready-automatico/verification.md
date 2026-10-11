@@ -77,13 +77,40 @@ reclassificados acima como parcial/por inspeção; a brecha de `number=013` fora
 grupo de concorrência foi corrigida; na documentação, foram incluídos o evento
 "desatribuída" e a dependência da serialização.
 
+## Validação real (V04), após o merge
+
+PR [#42](https://github.com/SamiaLuvanice/bestprice/pull/42) integrado em `develop` em
+2026-10-11T19:39:27Z (`6dc4b8c`). O fechamento da Issue #39 sincronizou #39 e #42 para
+`Develop`. Validação no Project real (owner `SamiaLuvanice`, número 1) com a Issue
+temporária [#43](https://github.com/SamiaLuvanice/bestprice/issues/43), sem responsável,
+e a branch `feature/9999-issue-43-validacao-v04` com `specs/9999-validacao-v04/spec.md`.
+O Status foi lido com `gh project item-list 1 --owner SamiaLuvanice --format json`.
+
+| Passo | Ação | Execução do Project sync | Status observado |
+|---|---|---|---|
+| 0 | Issue criada e branch ligada (`gh issue develop`) | evento `issues` | Backlog |
+| 1 | push com spec `rascunho` (`c084f58`, primeiro commit da branch) | run 38169041664, push, success | Backlog |
+| 2 | push com spec `pronta` (`123aaf5`) | run 38169088576, push, success | **Ready** (critério 1) |
+| 3 | atribuir responsável | run 38169140784, issues, success | In progress (critério 3) |
+| 4 | remover responsável | run 38169171550, issues, success | **Ready** (critérios 2 e 3) |
+| 5 | push com spec `rascunho` (`3358f3c`) | run 38169220673, push, success | Backlog (critério 4) |
+| 6 | push com spec `pronta` e, ao mesmo tempo, atribuir e remover responsável | push 38169267149: job `sync` `cancelled` com 0 passos ("Canceling since a higher priority waiting request for project-43 exists"); dois `issues` success, `sync` em 19:44:13→19:44:19 e 19:44:20→19:44:30, sem sobreposição | **Ready** (critérios 8 e 9) |
+| 7 | Issue #43 fechada como não planejada | run 38169351141, issues, success | Backlog (critério 7) |
+
+O passo 6 confirma a serialização por Issue: as execuções do grupo `project-43` não se
+sobrepõem, e a execução pendente mais antiga é substituída pela mais nova, que lê o
+estado atual. Os critérios 8 e 9 passam de "parcial/por inspeção" a demonstrados em
+execução real para este cenário.
+
+Observado e fora do escopo da 0014: logo após fechar a #43, o Project mostrou `Main` por
+alguns segundos, antes de a execução 38169351141 gravar `Backlog`. O código nunca produz
+`Main` para Issue, então a causa provável é uma automação nativa do Project ainda ativa
+para itens fechados, apesar de `docs/github-workflow.md` pedir que seja desativada. O
+estado final ficou correto.
+
+Limpeza: Issue #43 fechada como não planejada; branch de teste removida local e
+remotamente; worktree de teste removida.
+
 ## Pendências
 
-- **Execução real (V04):** o gatilho `push` com o código novo só funciona depois do
-  merge em `develop`, porque os scripts vêm da branch padrão. Antes do merge, pushes
-  desta branch que alterem a spec disparam o workflow com os scripts antigos de
-  `develop`, que falham com `Informe kind e number válidos.`. Isso é esperado e
-  restrito a esta PR. Depois do merge: criar uma branch de teste para uma Issue sem
-  responsável, publicar a spec `pronta`, observar Ready; mudar para `rascunho`,
-  observar Backlog; atribuir e remover responsável (In progress → Ready); push e
-  evento de Issue em sequência rápida (critérios 8 e 9); remover a branch de teste.
+- Nenhuma pendência da 0014. Critério 13 (push sem `PROJECT_TOKEN`) continua demonstrado só por inspeção.

@@ -26,6 +26,6 @@
 - [x] **V01 — Gates.** `node --test .github/scripts/*.test.cjs` (contagem > 0) e
   `actionlint`; registrar em `verification.md`.
 - [x] **V02 — Revisão independente** (`arch-reviewer`) e QA dos ACs.
-- [ ] **V03 — doc-sync-onboarding** por último; PR para `develop` com `Closes #39`.
-- [ ] **V04 — Pós-merge.** Com branch de teste para uma Issue sem responsável, observar
+- [x] **V03 — doc-sync-onboarding** por último; PR para `develop` com `Closes #39`.
+- [x] **V04 — Pós-merge.** Com branch de teste para uma Issue sem responsável, observar
   `Ready` e o retorno a `Backlog` no Project real; registrar em `verification.md`.
