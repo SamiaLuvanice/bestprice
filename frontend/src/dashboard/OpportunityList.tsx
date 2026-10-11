@@ -22,13 +22,15 @@ export function OpportunityList({ items, receivedAt, onOpen }: Props) {
       return <li key={item.id} className="opportunity-card">
         <div className="opportunity-media">
           <ProductImage src={product.image_url} />
-          <span className="drop-badge"><ArrowDownIcon /><span className="sr-only">Queda de </span>{drop ?? ''}</span>
+          {drop && <span className="drop-badge"><ArrowDownIcon /><span className="sr-only">Queda de </span>{drop}</span>}
         </div>
         <h3 className="opportunity-title">
           <button type="button" className="card-link" onClick={() => onOpen(item.id)}>{product.title}</button>
         </h3>
         <p className="opportunity-prices">
-          {product.previous_price && <s className="previous-price"><span className="sr-only">Preço anterior: </span>{formatMoney(product.previous_price) ?? 'Desconhecido'}</s>}{' '}
+          {formatMoney(product.previous_price)
+            ? <s className="previous-price"><span className="sr-only">Preço anterior: </span>{formatMoney(product.previous_price)}</s>
+            : <span className="previous-price">Preço anterior: Desconhecido</span>}{' '}
           <strong className="current-price">{formatMoney(product.current_price) ?? 'Preço indisponível'}</strong>
         </p>
         <p className="min-price">Menor preço: <strong>{formatMoney(product.min_price) ?? 'Desconhecido'}</strong>{' '}

@@ -89,6 +89,15 @@ describe('boas oportunidades', () => {
     expect(await screen.findByRole('dialog', { name: 'Detalhes de Cafeteira elétrica' })).toBeInTheDocument()
   })
 
+  it('não mostra selo vazio sem percentual e identifica preço anterior desconhecido', async () => {
+    const partial = trackedFixture({ id: 'product-3', title: 'Liquidificador', percentage_change: null, previous_price: null }, { id: 'tracking-3' })
+    await renderOverview(dashboardFixture({ items: [withImage], opportunities: [partial] }))
+    const [card] = within(screen.getByRole('region', { name: 'Boas oportunidades' })).getAllByRole('listitem')
+    expect(card.querySelector('.drop-badge')).toBeNull()
+    expect(card.querySelector('s')).toBeNull()
+    expect(card).toHaveTextContent('Preço anterior: Desconhecido')
+  })
+
   it('informa quando há produtos mas nenhuma oportunidade', async () => {
     await renderOverview(dashboardFixture({ items: [withImage], opportunities: [] }))
     expect(within(screen.getByRole('region', { name: 'Boas oportunidades' }))
