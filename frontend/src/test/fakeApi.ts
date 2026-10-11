@@ -86,6 +86,13 @@ export function deferred<T = unknown>() {
 
 export type Route = (url: string, init?: RequestInit) => unknown
 
+const unexpectedCalls: string[] = []
+
+/** Devolve e limpa as rotas não previstas chamadas desde a última verificação. */
+export function takeUnexpectedCalls(): string[] {
+  return unexpectedCalls.splice(0, unexpectedCalls.length)
+}
+
 /**
  * Substitui `fetch` por um roteador. A rota do teste tem prioridade; quando devolve `undefined`,
  * valem os padrões de pessoa autenticada: `me`, painel informado e notificações (todas e não lidas) vazias.
@@ -101,6 +108,9 @@ export function fakeApi(route: Route = () => undefined, dashboard: unknown = emp
       if (url === '/api/dashboard') return Promise.resolve(reply(200, dashboard))
       if (url === '/api/notifications' || url === unreadUrl) return Promise.resolve(emptyPage())
     }
+    // O cliente traduziria o erro em “falha de rede” silenciosa; a rota fica registrada e o
+    // afterEach global (src/test-setup.ts) reprova o teste.
+    unexpectedCalls.push(`${method} ${url}`)
     throw new Error(`Rota inesperada: ${method} ${url}`)
   })
   vi.stubGlobal('fetch', mockFetch)
