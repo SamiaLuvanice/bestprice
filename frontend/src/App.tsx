@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type Notification, type Product, type TrackedProduct, type User } from './api'
+import { formatMoney, formatPercentage, retryHint } from './lib/format'
 
 type Feedback = { message: string; trackedProductId: string | null }
 
 // Formatação apenas para apresentação: valores monetários chegam como strings decimais e nenhum cálculo é feito aqui.
 function money(value: string | null, unknown = 'Preço indisponível'): string {
-  if (value === null) return unknown
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value))
+  return formatMoney(value) ?? unknown
 }
 
 function instant(value: string | null, unknown = 'Ainda não consultado'): string {
@@ -15,13 +15,6 @@ function instant(value: string | null, unknown = 'Ainda não consultado'): strin
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
-}
-
-function retryHint(seconds: number): string {
-  if (seconds <= 0) return 'Tente novamente agora.'
-  if (seconds < 60) return `Tente novamente em ${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}.`
-  const minutes = Math.ceil(seconds / 60)
-  return `Tente novamente em ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
 }
 
 function feedback(error: unknown): Feedback {
@@ -57,7 +50,7 @@ function availability(value: string): string {
 }
 
 function percentage(value: string | null): string {
-  return value === null ? 'Desconhecida' : `${new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value))}%`
+  return formatPercentage(value)?.text ?? 'Desconhecida'
 }
 
 const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
