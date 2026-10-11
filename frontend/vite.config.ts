@@ -14,5 +14,8 @@ export default defineConfig({
     restoreMocks: true,
     // Fuso fixo: textos de tempo relativo e datas civis não dependem da máquina que roda os testes.
     env: { TZ: 'America/Sao_Paulo' },
+    // Testes de integração da área renderizam a App inteira com user-event; sob carga paralela
+    // passam de 5 s. O limite maior evita falso negativo sem mascarar espera infinita.
+    testTimeout: 15_000,
   },
 })
