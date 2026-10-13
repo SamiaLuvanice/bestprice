@@ -63,15 +63,19 @@ Em 13/10/2026, os painéis das contas usadas para stage mostraram:
   pipeline incluídos no mês. A configuração do pipeline tinha limite mensal de
   gasto de **US$ 0**; o painel informa que builds param ao esgotar os minutos.
   O aviso de cobrança além das franquias continua visível e não foi encontrado
-  limite equivalente para toda a banda.
+  limite equivalente para toda a banda. A [documentação oficial do
+  Render](https://render.com/docs/free#bandwidth-and-build-pipeline) esclarece
+  que, **sem forma de pagamento**, excesso de banda suspende os serviços Free e
+  excesso de minutos desativa novos builds, em vez de gerar cobrança.
 - **Cloudflare:** `Workers Free` ativo, **US$ 0**, sem forma de pagamento e sem
   projetos Workers & Pages. O painel mostrava 0/100.000 requests no dia e
   3.000 minutos de Workers Builds por mês no plano Free.
 - **Supabase / Samia's Org:** plano `Free`, spend cap habilitado e compute Nano
   no projeto de stage; os três add-ons listados estavam desativados.
 
-Render e Cloudflare não foram provisionados neste ponto. Os dados dos painéis
-atestam a configuração observada, não uma garantia contratual de cobrança zero.
+Render e Cloudflare não foram provisionados neste ponto. Essa proteção de custo
+depende de manter a conta Render sem forma de pagamento e de implantar apenas
+instâncias Free; o excedente pode interromper o stage.
 
 ## Critérios de aceite
 
@@ -80,7 +84,7 @@ atestam a configuração observada, não uma garantia contratual de cobrança ze
 | Render Free na branch `stage`, deploy após checks | Configurado em `render.yaml`; falta sincronizar Blueprint e comprovar deploy no Render. |
 | Pages compila `frontend/` e publica `stage` | Build local verde; projeto Pages e deploy real pendentes. |
 | Três serviços gratuitos, sem add-ons | Supabase `Free` com Nano US$ 0/h e add-ons desativados; Render `Hobby` sem serviço; Cloudflare `Workers Free` sem projeto Pages. Planos vistos nos painéis, implantação ainda pendente. |
-| Sem excedentes faturáveis | Supabase spend cap ligado, Render sem cartão e pipeline limitado a US$ 0, Cloudflare Free sem forma de pagamento. Render ainda alerta sobre cobrança acima da franquia e não mostrou limite global de banda; garantia de custo zero pendente. |
+| Sem excedentes faturáveis | Supabase spend cap ligado; Render sem cartão e pipeline limitado a US$ 0; Cloudflare Workers Free sem forma de pagamento. A documentação Render prevê suspensão dos serviços Free em vez de cobrar banda sem cartão. Revalidar após criar os serviços e não cadastrar pagamento. |
 | Proxy `/api/*` na mesma origem | Teste da Function e `_routes.json` verdes; falta navegador no Pages real. |
 | Supabase isolado, TLS e segredos | Projeto `bestprice-stage` exclusivo criado e saudável; conexão do conector usou TLS. Session pooler com `sslmode=require` no Render e segredo ainda pendentes. |
 | Migrations e health 200 em deploy limpo | Comprovados no Compose local; deploy Render/Supabase pendente. |

@@ -7,8 +7,9 @@
 - A Issue [#60](https://github.com/SamiaLuvanice/bestprice/issues/60) e a branch da
   feature existem. O projeto Supabase `bestprice-stage` foi criado em `sa-east-1`
   no plano Free. Os controles de cobrança dos três painéis foram inspecionados
-  em 13/10/2026; Render e Pages ainda precisam de provisionamento, e o limite
-  de banda do Render não ficou comprovado como bloqueio absoluto de cobrança.
+  em 13/10/2026; Render e Pages ainda precisam de provisionamento. A
+  documentação Render prevê suspensão dos serviços Free se a banda exceder a
+  franquia enquanto não houver forma de pagamento cadastrada.
 - A API já oferece `GET /api/health`, cujo `200` depende de `SELECT 1` no banco.
 - O Dockerfile do backend inclui Alembic e Uvicorn. No Compose, a migration roda
   antes do servidor. A implementação da 0018 habilitou `Secure` em `stage` e
