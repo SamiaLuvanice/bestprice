@@ -12,4 +12,4 @@
 - [x] **T09** — Revisão independente com `arch-reviewer`. Achados voltam à worktree com teste de regressão.
 - [x] **T10** — Registrar as evidências por AC em `specs/0017-redesign-pagina-login/verification.md`.
 - [x] **T11** — `doc-sync-onboarding` por último: `docs/apps/frontend.md`, `docs/PROGRESS.md`, `AGENTS.md` e `CLAUDE.md` conferidos.
-- [ ] **T12** — Commits, push de `feature/0017-issue-56-redesign-login` e PR para `develop` com `Closes #56`.
+- [x] **T12** — Commits, push de `feature/0017-issue-56-redesign-login` e PR para `develop` com `Closes #56`.
