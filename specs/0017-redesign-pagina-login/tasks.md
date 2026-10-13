@@ -11,5 +11,5 @@
 - [x] **T08** — QA no navegador com o agente `qa`: AC01 com e sem `backdrop-filter`; AC07 em 320, 768 e 1280 px; AC08 com contraste, teclado, reduced-motion e axe; AC06 com campos vazios, 401 e API parada.
 - [x] **T09** — Revisão independente com `arch-reviewer`. Achados voltam à worktree com teste de regressão.
 - [x] **T10** — Registrar as evidências por AC em `specs/0017-redesign-pagina-login/verification.md`.
-- [ ] **T11** — `doc-sync-onboarding` por último: `docs/apps/frontend.md`, `docs/PROGRESS.md`, `AGENTS.md` e `CLAUDE.md` conferidos.
+- [x] **T11** — `doc-sync-onboarding` por último: `docs/apps/frontend.md`, `docs/PROGRESS.md`, `AGENTS.md` e `CLAUDE.md` conferidos.
 - [ ] **T12** — Commits, push de `feature/0017-issue-56-redesign-login` e PR para `develop` com `Closes #56`.

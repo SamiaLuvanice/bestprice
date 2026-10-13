@@ -16,8 +16,12 @@ composição da entrada. As extensões aplicadas estão registradas em
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
 operacional (`prefers-color-scheme`); a SPA não oferece seletor nem grava uma
 preferência de tema. A ação principal usa verde com texto preto; o rosa marca
-links e destaques. Cabeçalho, menus e diálogos têm base sólida legível, com
-`backdrop-filter` como melhoria progressiva. A tipografia usa fontes do sistema e
+links e destaques. Cabeçalho, menus, diálogos e, desde a spec 0017, a casca de
+entrada têm base sólida legível, com `backdrop-filter` como melhoria progressiva
+dentro de `@supports`. Nessas regras, `-webkit-backdrop-filter` vem **antes** de
+`backdrop-filter`: na ordem inversa, o lightningcss usado pelo build do Vite
+reduzia o par só à forma prefixada, que o Chrome não aplica, e o vidro ficava sem
+desfoque (defeito presente desde a 0015 e corrigido na 0017). A tipografia usa fontes do sistema e
 alternativas sans-serif, sem distribuir a fonte citada no protótipo. Os estados de
 carga, erro, sucesso e foco seguem os mesmos fluxos funcionais descritos abaixo.
 Em telas estreitas, a lista de produtos continua empilhada e sem rolagem horizontal.
@@ -30,6 +34,45 @@ e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
 [`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
 
+## Tela de entrada — spec 0017
+
+Sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) abaixo
+do hero com o campo de link. O componente segue a composição de
+`designsystem/login.html` com os tokens de `designsystem/index.html`:
+
+- **Casca e vidro:** `.login-shell` contém dois brilhos ambientes (verde e rosa, em
+  `radial-gradient` que esmaece até transparente, `aria-hidden`) e usa
+  `overflow: hidden` para não gerar rolagem horizontal. O `.login-card` tem
+  superfície sólida `--color-glass` por padrão; com suporte a `backdrop-filter`,
+  passa a `--color-glass-translucent` com desfoque. Tokens novos:
+  `--color-glass-translucent`, `--color-glow-action` e `--color-glow-primary`
+  (registrados em [`designsystem/README.md`](../../designsystem/README.md)).
+- **Coluna visual:** acima de 840 px o card tem duas colunas. A coluna da esquerda é
+  decorativa (`aria-hidden="true"`, logo com `alt=""`) e traz frase de benefício e um
+  card ilustrativo sem dados (sem produto, preço, percentual, contagem ou horário).
+  Até 840 px ela fica oculta e o card mostra só o formulário.
+- **Formulário:** título “Bem-vindo de volta”, subtítulo, E-mail (`type="email"`,
+  `required`, `autocomplete="email"`) e Senha (`required`,
+  `autocomplete="current-password"`). A validação é a nativa do navegador: campo vazio
+  ou inválido não envia requisição.
+- **Mostrar senha:** botão com nome fixo “Mostrar senha” e `aria-pressed`, que alterna
+  o `type` entre `password` e `text` sem perder o valor. Ao enviar, a senha volta a
+  ficar oculta.
+- **Envio:** botão pílula verde de largura total (`.primary-button.btn-pill`). Durante o
+  envio, exibe “Entrando…” e fica desabilitado; um segundo clique ou Enter não gera
+  outro `POST /api/auth/login`. `App` controla `busy` e chama `api.login`; os valores
+  dos campos ficam no `LoginForm`.
+- **Falha e foco:** erro de login ou aviso de sessão encerrada aparece como um único
+  `role="alert"`. Depois de uma tentativa que falhou, os campos são preservados e o
+  foco vai para Senha; o aviso de sessão exibido na montagem não move o foco. No
+  sucesso, o `LoginForm` desmonta e a senha é descartada.
+- **Movimento:** com `prefers-reduced-motion: reduce`, o botão não encolhe ao ser
+  pressionado.
+
+A verificação (QA em Chrome headless com axe, larguras de 320, 768 e 1280 px, com
+desfoque e em modo sólido simulado) e os limites estão em
+[`verification.md`](../../specs/0017-redesign-pagina-login/verification.md).
+
 ## Fluxo atual nesta branch
 
 A SPA consome o contrato REST da spec 0013 sem alterá-lo; a área do usuário da spec 0012 é somente interface. `frontend/src/App.tsx` é o portão de sessão: consulta `GET /api/auth/me` ao abrir e decide entre a tela de entrada e a área autenticada (`AccountArea`). Somente 401 é tratado como ausência de sessão e apresenta o formulário de entrada; se `/auth/me` falhar por indisponibilidade da API ou da rede, a tela mostra a mensagem de erro e o botão “Tentar novamente”, sem enviar a pessoa ao login. Sem sessão, o hero com o campo de link continua visível e pede que a pessoa entre para monitorar. A conta precisa ser provisionada no backend antes do login. Não há cadastro público nem roteamento client-side.
@@ -38,7 +81,8 @@ Com sessão, a área é uma página única com cabeçalho (marca, navegação In
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `frontend/src/App.tsx` | Portão de sessão: carregando, indisponível, entrada ou área autenticada; recebe o relógio injetável (`clock`) |
+| `frontend/src/App.tsx` | Portão de sessão: carregando, indisponível, entrada ou área autenticada; recebe o relógio injetável (`clock`); controla o envio do login |
+| `frontend/src/LoginForm.tsx` | Tela de entrada (spec 0017): coluna visual decorativa, campos, “Mostrar senha”, envio único e foco em Senha após falha |
 | `frontend/src/dashboard/AccountArea.tsx` | Orquestra estado e ações da área; os componentes de apresentação não chamam `fetch` |
 | `frontend/src/dashboard/AppHeader.tsx`, `AccountMenu.tsx` | Cabeçalho, navegação de página única e menu da conta |
 | `frontend/src/dashboard/NotificationBell.tsx`, `useNotifications.ts` | Sino com contador e painel das não lidas; páginas da seção Alertas; marcar como lida |
