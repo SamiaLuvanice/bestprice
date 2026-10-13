@@ -3,7 +3,7 @@ numero: 0017
 titulo: Redesign da página de login com referência oficial
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend, docs]
 depende_de: [0011, 0015, 0016]
 ---
