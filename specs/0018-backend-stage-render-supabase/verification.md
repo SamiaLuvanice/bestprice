@@ -38,16 +38,28 @@ a ressalva de que nenhum critério dependente do ambiente público foi aceito.
 Não há aprovação humana registrada no GitHub nem merge da PR. Esses checks não
 comprovam projetos externos, promoção para `stage` ou deploy.
 
+## Provisionamento Supabase
+
+Em 13/10/2026, após confirmação do custo pelo responsável, `get_cost` informou
+**0 por mês** para novo projeto na organização `Samia's Org` (plano `free`). O
+projeto `bestprice-stage`, ref `nhqlkqgliofpesfslozb`, foi criado em `sa-east-1`.
+`get_project` retornou `ACTIVE_HEALTHY`, PostgreSQL 17.11; `list_tables` no
+esquema `public` retornou lista vazia e o advisor de segurança não trouxe avisos.
+Uma consulta somente leitura retornou `connection_uses_tls=true` para a conexão
+do conector Supabase. Isso não comprova o TLS da futura conexão Render → Session
+pooler, nem migrations, plano/add-ons do painel ou ausência de cobrança futura.
+Nenhuma senha ou URL de banco foi registrada.
+
 ## Critérios de aceite
 
 | Critério | Estado e limite |
 |---|---|
 | Render Free na branch `stage`, deploy após checks | Configurado em `render.yaml`; falta sincronizar Blueprint e comprovar deploy no Render. |
 | Pages compila `frontend/` e publica `stage` | Build local verde; projeto Pages e deploy real pendentes. |
-| Três serviços gratuitos, sem add-ons | Código declara Render `free`; planos e add-ons dos painéis não conferidos. |
+| Três serviços gratuitos, sem add-ons | Organização Supabase `free` e novo projeto com custo informado de 0/mês; Render e Cloudflare e add-ons dos painéis não conferidos. |
 | Sem excedentes faturáveis | Pendente de confirmar cobrança nos painéis. Render Free pode cobrar banda e pipeline se houver forma de pagamento. |
 | Proxy `/api/*` na mesma origem | Teste da Function e `_routes.json` verdes; falta navegador no Pages real. |
-| Supabase isolado, TLS e segredos | Plano prevê Session pooler com `sslmode=require`; projeto e conexão real pendentes. |
+| Supabase isolado, TLS e segredos | Projeto `bestprice-stage` exclusivo criado e saudável; conexão do conector usou TLS. Session pooler com `sslmode=require` no Render e segredo ainda pendentes. |
 | Migrations e health 200 em deploy limpo | Comprovados no Compose local; deploy Render/Supabase pendente. |
 | Health 503 sem DB e Render considera unhealthy | 503 real local comprovado; decisão do Render pendente. |
 | Cookie `Secure` e `HttpOnly` | Teste HTTPS local verde; cookie no endereço Pages pendente. |

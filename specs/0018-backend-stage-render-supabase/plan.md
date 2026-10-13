@@ -5,11 +5,13 @@
 - `origin/stage` está atrás de `origin/develop`; a promoção por PR é necessária para
   colocar a configuração e a API atual na branch implantada.
 - A Issue [#60](https://github.com/SamiaLuvanice/bestprice/issues/60) e a branch da
-  feature existem. O conector Render e o conector Supabase estão disponíveis; a
-  criação e os controles de cobrança ainda precisam de confirmação no painel.
+  feature existem. O projeto Supabase `bestprice-stage` foi criado em `sa-east-1`
+  no plano Free; Render e Pages, bem como os controles de cobrança dos painéis,
+  ainda precisam de confirmação e configuração.
 - A API já oferece `GET /api/health`, cujo `200` depende de `SELECT 1` no banco.
 - O Dockerfile do backend inclui Alembic e Uvicorn. No Compose, a migration roda
-  antes do servidor. O cookie de sessão usa `Secure` somente em `production`.
+  antes do servidor. A implementação da 0018 habilitou `Secure` em `stage` e
+  `production`.
 - O frontend chama `/api` por caminho relativo, compatível com um proxy Pages da
   mesma origem; o projeto não configura CORS.
 
