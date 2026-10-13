@@ -24,10 +24,11 @@ Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o 
 | `BACKEND_PORT`, `FRONTEND_PORT`, `DB_PORT` | Portas locais do Compose |
 | `MERCADOLIVRE_THIRD_PARTY_VALIDATED` | Liberação explícita após validar acesso a terceiros; padrão `false` |
 | `MERCADOLIVRE_CLIENT_ID`, `MERCADOLIVRE_CLIENT_SECRET`, `MERCADOLIVRE_OAUTH_KEY` | Cliente OAuth e chave Fernet da conta operadora; segredos somente no ambiente |
-| `APP_ENV` | Cookie Secure quando igual a `production` |
+| `APP_ENV` | Cookie Secure quando igual a `stage` ou `production` |
+| `API_ORIGIN` | Origem HTTPS da API Render usada apenas pela Pages Function de stage; não é segredo nem entra na SPA |
 | `MONITOR_CHECK_INTERVAL_SECONDS`, `MONITOR_FRESHNESS_SECONDS` | Cadência após sucesso e janela de frescor, ambas com padrão de 3600 segundos e faixa de 60 a 86400 |
 | `MONITOR_BATCH_LIMIT`, `MONITOR_MAX_CONCURRENCY` | Publicações por ciclo (padrão 20, faixa 1 a 100) e tentativas paralelas (padrão 1, faixa 1 a 16) |
 | `MONITOR_POLL_INTERVAL_SECONDS` | Pausa entre ciclos (padrão 60 segundos, faixa 1 a 3600) |
 | `TEST_DATABASE_URL` | Banco isolado dos testes de integração |
 
-O Compose inicia DB, executa Alembic no backend, aguarda seu health check e inicia worker e frontend. GitHub Actions valida o código e publica imagens após o fluxo de release; não há implantação externa configurada. Consulte os guias de [backend](apps/backend.md), [frontend](apps/frontend.md), [banco](database.md) e [infraestrutura](apps/infraestrutura.md).
+O Compose inicia DB, executa Alembic no backend, aguarda seu health check e inicia worker e frontend. A configuração da spec 0018 prepara outra topologia: navegador → Cloudflare Pages/Function em `/api/*` → API Render → PostgreSQL Supabase exclusivo de stage. O Blueprint executa Alembic antes de Uvicorn e usa `/api/health` como health check. O proxy mantém as chamadas e o cookie na origem da interface. Ainda não há projeto público criado nem implantação comprovada; o worker não integra essa topologia. GitHub Actions valida o código e publica imagens após o fluxo de release. Consulte os guias de [backend](apps/backend.md), [frontend](apps/frontend.md), [banco](database.md) e [infraestrutura](apps/infraestrutura.md).

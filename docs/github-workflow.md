@@ -254,11 +254,12 @@ público: ajuste a visibilidade e o acesso do repositório nas configurações d
 Se um pacote já existe, permita acesso de Actions deste repositório. Consumidores
 de pacote privado precisam de credencial própria com `read:packages`.
 
-**Implantação externa não configurada:** faltam destino, credenciais/OIDC, segredos
-da conta/banco, HTTPS, migração e política de rollback. A entrega atual termina em
-GHCR + release. Ao escolher o destino, crie uma spec com environment protegido,
-aprovação e health check antes de adicionar o job de implantação. Não reutilize
-credenciais de estudo em infraestrutura pública.
+**Implantação externa ainda não comprovada:** a [spec 0018](../specs/0018-backend-stage-render-supabase/spec.md)
+prepara stage em Render, Supabase e Cloudflare Pages, fora do workflow Delivery.
+Projetos, segredos, HTTPS público, migration real e reversão ainda precisam de
+provisionamento e validação. A entrega de `main` por este workflow termina em
+GHCR e release; produção continua sem destino de implantação. Não reutilize credenciais
+de estudo em infraestrutura pública.
 
 ## Manutenção e referências
 

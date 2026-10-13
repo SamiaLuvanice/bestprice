@@ -156,3 +156,17 @@ Ao trocar a stack, a configuração ativa precisa apontar para FastAPI, React e
 PostgreSQL em todos os pontos: regras, skills, gates, documentação, Compose e
 workflows. As instruções e os links publicados devem corresponder aos arquivos
 e ferramentas que fazem parte do projeto naquele momento.
+
+## 2026-10-13 — Confirmar custo no workspace, além do plano do serviço
+
+**Contexto:** a spec 0018 exige stage sem cobrança. A documentação do Render informa
+que serviços web `free` ainda podem gerar cobrança por banda de saída e minutos de
+build excedentes quando o workspace tem forma de pagamento.
+
+**Princípio:** para afirmar custo zero, confira também a configuração de cobrança do
+workspace e o tratamento de cada cota; registre o resultado observado no painel.
+
+**Anti-pattern:** concluir que `plan: free` sozinho impede qualquer cobrança.
+
+**Referências:** Issue #60, `render.yaml`,
+[limites do Render Free](https://render.com/docs/free).
