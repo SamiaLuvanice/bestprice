@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { App } from './App'
-import { apiError, dashboardWith, fakeApi, productUrl, notificationFixture, reply, trackedFixture as trackedItem, type Route } from './test/fakeApi'
+import { apiError, callsTo, dashboardWith, deferred, fakeApi, productUrl, notificationFixture, reply, sessionUser, trackedFixture as trackedItem, type Route } from './test/fakeApi'
 
 afterEach(() => {
   cleanup()
@@ -466,4 +466,61 @@ it('não reabre o diálogo fechado durante Atualizar agora quando a atualizaçã
 
 it('não reabre o diálogo fechado durante Atualizar agora quando a atualização falha', async () => {
   await closeDuringRefresh(() => reply(503, apiError('source_unavailable', 'Mercado Livre indisponível.')))
+})
+
+// 0017 (AC05/AC06): integração do LoginForm com api.login.
+function guestThenLogin(login: () => unknown) {
+  return fakeApi((url, init) => {
+    if (url === '/api/auth/me') return reply(401, apiError('unauthenticated', 'Entre para continuar.'))
+    if (url === '/api/auth/login' && init?.method === 'POST') return login()
+    return undefined
+  })
+}
+
+function fillLogin(email: string, password: string) {
+  fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: email } })
+  fireEvent.change(screen.getByLabelText('Senha'), { target: { value: password } })
+}
+
+it('mostra Entrando… sem reenviar, preserva os campos após 401, foca a Senha e entra na nova tentativa', async () => {
+  const pending = deferred()
+  let attempt = 0
+  const mockFetch = guestThenLogin(() => {
+    attempt += 1
+    return attempt === 1 ? pending.promise : reply(200, sessionUser)
+  })
+  render(<App />)
+  fireEvent.click(await screen.findByRole('button', { name: 'Mostrar senha' }))
+  fillLogin('pessoa@example.com', 'errada')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  const busyButton = await screen.findByRole('button', { name: 'Entrando…' })
+  expect(busyButton).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Mostrar senha' })).toHaveAttribute('aria-pressed', 'false')
+  fireEvent.click(busyButton)
+  fireEvent.submit(busyButton.closest('form') as HTMLFormElement)
+  expect(callsTo(mockFetch, '/api/auth/login', 'POST')).toHaveLength(1)
+  expect(callsTo(mockFetch, '/api/auth/login', 'POST')[0][1]?.body).toBe(JSON.stringify({ email: 'pessoa@example.com', password: 'errada' }))
+  pending.resolve(reply(401, apiError('invalid_credentials', 'E-mail ou senha inválidos.')))
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.'))
+  expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
+  expect(screen.getByLabelText('Senha')).toHaveValue('errada')
+  await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
+  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  fillLogin('pessoa@example.com', 'certa')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  expect(await screen.findByText('pessoa@example.com')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
+})
+
+it('mostra falha de conexão no login como alerta e mantém os campos', async () => {
+  guestThenLogin(() => Promise.reject(new TypeError('Failed to fetch')))
+  render(<App />)
+  await screen.findByRole('button', { name: 'Entrar' })
+  fillLogin('pessoa@example.com', 'segredo')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível conectar ao BestPrice. Tente novamente.'))
+  expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
+  expect(screen.getByLabelText('Senha')).toHaveValue('segredo')
+  await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
+  expect(screen.getByRole('button', { name: 'Entrar' })).toBeEnabled()
 })

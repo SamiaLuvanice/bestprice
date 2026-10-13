@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { api, ApiFailure, type User } from './api'
+import { LoginForm } from './LoginForm'
 import { AccountArea } from './dashboard/AccountArea'
 import { HeroTrackForm, type TrackFeedback } from './dashboard/HeroTrackForm'
 import bestPriceLogo from './assets/logo-bestprice.png'
@@ -27,8 +28,6 @@ export function App({ clock = systemClock }: Props) {
   const [sessionAttempt, setSessionAttempt] = useState(0)
   const [guestMessage, setGuestMessage] = useState<string | null>(null)
   const [guestTrackError, setGuestTrackError] = useState<TrackFeedback | null>(null)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -59,14 +58,13 @@ export function App({ clock = systemClock }: Props) {
   const onUnauthenticated = useCallback((text: string) => endSession(text), [endSession])
   const onLoggedOut = useCallback(() => endSession(null), [endSession])
 
-  async function login(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  // No sucesso o LoginForm desmonta e descarta a senha; na falha os valores ficam nele (0017/AC06).
+  async function login(email: string, password: string) {
     setGuestMessage(null)
     setBusy(true)
     try {
       const result = await api.login(email, password)
       setUser(result)
-      setPassword('')
       setSessionState('ready')
     } catch (failure) { setGuestMessage(message(failure)) }
     finally { setBusy(false) }
@@ -100,18 +98,7 @@ export function App({ clock = systemClock }: Props) {
         <button type="button" className="primary-button" onClick={retrySession}>Tentar novamente</button>
       </div>
     </section>}
-    {sessionState === 'guest' && <section className="content narrow" aria-labelledby="login-title">
-      <div className="panel">
-        <span className="eyebrow">SUA ÁREA</span>
-        <h2 id="login-title">Entre para acompanhar seus anúncios</h2>
-        {guestMessage && <p role="alert" className="error-box">{guestMessage}</p>}
-        <form onSubmit={login} className="login-form">
-          <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" /></label>
-          <label>Senha<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required autoComplete="current-password" /></label>
-          <button disabled={busy} type="submit">Entrar</button>
-        </form>
-      </div>
-    </section>}
+    {sessionState === 'guest' && <LoginForm busy={busy} error={guestMessage} onSubmit={login} />}
     </main>
     <footer>BestPrice · Acompanhe com clareza</footer>
   </div>
