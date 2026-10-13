@@ -1,0 +1,40 @@
+name: Tarefa
+description: Feature, melhoria ou bug com critérios de aceite
+title: "[Tarefa] "
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Tipo
+      options: [Feature, Melhoria, Bug]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema e resultado esperado
+      description: Para bug, inclua reprodução, comportamento observado e esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite
+      placeholder: "- [ ] Dado ..., quando ..., então ..."
+    validations:
+      required: true
+  - type: input
+    id: spec
+    attributes:
+      label: Spec relacionada
+      placeholder: specs/NNNN-descricao/spec.md (ou justificar dispensa)
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade sugerida
+      description: A prioridade final e a ordem são definidas manualmente no Project.
+      options: [P2, P0, P1, P3]
+  - type: textarea
+    id: scope
+    attributes:
+      label: Fora de escopo e dependências

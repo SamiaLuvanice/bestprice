@@ -1,0 +1,31 @@
+version: 0.3.0
+project:
+  name: replace-me
+  root: .
+tools:
+  claude: true
+  codex: true
+  opencode: false
+  cursor: false
+profile:
+  name: fastapi-react-postgresql
+  backend_dir: backend
+  frontend_dir: frontend
+  specs_dir: specs
+modules:
+  core: [evidence, spec-driven, quality-gates, agent-orchestration]
+  technical: [fastapi-react-postgresql]
+  integrations: [github]
+git:
+  protected_branches: [develop, stage, main]
+  default_base: develop
+quality:
+  backend_install_command: uv sync --locked --extra dev
+  backend_lint_command: uv run ruff check .
+  backend_test_command: uv run pytest -q
+  frontend_install_command: npm ci
+  frontend_lint_command: npm run lint
+  frontend_test_command: npm test -- --run
+  frontend_build_command: npm run build
+customization:
+  project_sources_file: .agents/sources.md

@@ -1,0 +1,54 @@
+version: 0.3.0
+core:
+  agents:
+    - product-owner
+    - spec-reviewer
+    - backend
+    - frontend
+    - fullstack
+    - qa
+    - arch-reviewer
+    - debugger
+    - doc-sync-onboarding
+  rules:
+    - evidencia.md
+    - git.md
+    - git-worktree-required.md
+    - implementation-handoff.md
+    - naming.md
+    - security.md
+    - task-done-criteria.md
+    - testing.md
+    - workspace.md
+  skills:
+    - spec-driven
+    - quality-gates
+    - bug-resolve
+    - learnings
+    - po-intake
+    - agent-orchestration
+    - solid-principles
+    - task-cleanup
+    - tdd
+profiles:
+  fastapi-react-postgresql:
+    rules:
+      - architecture.md
+      - backend.md
+      - errors.md
+      - frontend.md
+      - datetime-pipeline.md
+    skills:
+      - fastapi-feature
+      - fastapi-persistence
+      - fastapi-testing
+      - react-feature
+      - api-contract
+      - monorepo-navigation
+      - doc-sync-onboarding
+      - fastapi-templates
+      - frontend-design
+      - react-vite-performance
+integrations:
+  github:
+    documentation: docs/github-workflow.md

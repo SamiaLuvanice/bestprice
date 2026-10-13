@@ -1,0 +1,48 @@
+# Segredos e config local
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.properties
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest-cache-files-*/
+.ruff_cache/
+.mypy_cache/
+.venv/
+*.egg-info/
+coverage.xml
+.coverage
+
+# Build artifacts
+target/
+build/
+.gradle/
+*.class
+
+# Node
+node_modules/
+.npm-cache/
+dist/
+
+# Worktrees locais para desenvolvimento de features
+.worktrees/
+
+# IDE / SO
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Claude Code: configuração pessoal local
+.claude/settings.local.json
+
+# Projeções geradas por .agents/sync.sh (links para .agents/)
+.claude/agents
+.claude/skills
+.claude/commands
+.opencode/
+.cursor/
