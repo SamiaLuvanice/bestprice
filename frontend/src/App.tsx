@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { api, ApiFailure, type User } from './api'
 import { AccountArea } from './dashboard/AccountArea'
 import { HeroTrackForm, type TrackFeedback } from './dashboard/HeroTrackForm'
+import bestPriceLogo from './assets/logo-bestprice.png'
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
@@ -85,8 +86,8 @@ export function App({ clock = systemClock }: Props) {
 
   return <div className="page">
     <header className="masthead">
-      <span className="brand-mark" aria-hidden="true">B</span>
-      <span className="brand-name">BestPrice</span>
+      <img className="brand-logo" src={bestPriceLogo} alt="BestPrice" />
+      <span className="brand-name" aria-hidden="true">BestPrice</span>
     </header>
     <main className="page-main">
 

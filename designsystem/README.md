@@ -4,7 +4,31 @@
 
 O arquivo veio do protótipo local `designsystem/index.html` do checkout principal. Sua autoria e a origem dos trechos que ele descreve como tokens Apple ainda precisam ser esclarecidas antes de reutilizar esses trechos em outro produto.
 
-## Abrir
+## Uso na aplicação
+
+Conforme a spec 0015, `index.html` governa a identidade visual e seus tokens;
+`logo-bestprice.png` é a logo oficial fornecida, preservada sem redesenho ou distorção.
+`login.html` orienta a composição da entrada: se divergir dos tokens do catálogo,
+prevalece `index.html`. Consulte a skill `frontend-design` e a regra ativa
+`.agents/rules/frontend.md` antes de criar ou alterar uma tela.
+
+Esta orientação rege a SPA da spec 0015. O protótipo continua separado da aplicação.
+Produtos, preços, gráficos e controles da demonstração não autorizam novos recursos.
+Os contratos e a acessibilidade da aplicação continuam obrigatórios.
+
+### Registro de extensões
+
+Antes de aplicar uma extensão, registrar aqui o token/componente/regra, o motivo,
+as superfícies afetadas e a spec responsável.
+
+| Extensão da spec 0015 | Motivo | Superfícies |
+|---|---|---|
+| Rosa de leitura `#c7005e` no claro e `#ff3ea5` no escuro; verde de ação `#39ff14` com texto preto | Preservar a identidade de `index.html` e dar contraste a texto, foco e ações nos dois temas | Links, títulos de destaque, estados, botões e foco |
+| Cores semânticas próprias para queda, alta, aviso e erro; bordas de controles mais fortes | Distinguir significado de preço e erro sem depender apenas da cor e manter limites visíveis | Painel, produtos, histórico, alertas e formulários |
+| Superfície sólida sob o vidro, base escura `rgba(29,29,31,.96)` e desfoque apenas quando suportado | Manter leitura sem `backdrop-filter`; a base escura preserva contraste do rosa mesmo composta sobre branco | Cabeçalho, menus e diálogos |
+| Fontes do sistema com alternativas sans-serif | Evitar distribuir fonte sem licença confirmada e manter a hierarquia tipográfica da referência | Toda a SPA |
+
+## Abrir o protótipo
 
 Abra `index.html` diretamente no navegador, ou execute `python -m http.server 8000` nesta pasta e acesse `http://localhost:8000/`. A página usa CSS e JavaScript embutidos e não precisa da API, do banco nem de dependências de rede para a demonstração.
 

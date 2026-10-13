@@ -1,5 +1,34 @@
 # Módulo frontend
 
+## Identidade visual atual — spec 0015
+
+A entrada e a área autenticada usam a mesma logo oficial, copiada de
+`designsystem/logo-bestprice.png` para `frontend/src/assets/logo-bestprice.png`.
+A classe `.brand-logo` exibe a imagem inteira (`object-fit: contain`, sem
+`border-radius` nem outro recorte), com superfície de apoio
+`--color-logo-surface`. O texto visual “BestPrice” ao lado da imagem fica oculto
+para leitores de tela; a imagem fornece o nome acessível.
+`designsystem/index.html` orienta os tokens e `designsystem/login.html`, a
+composição da entrada. As extensões aplicadas estão registradas em
+[`designsystem/README.md`](../../designsystem/README.md).
+
+`frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
+foco nos temas claro e escuro. O tema acompanha `prefers-color-scheme` do sistema,
+inclusive quando a preferência muda com a página aberta; a SPA não oferece seletor
+nem grava uma preferência. A ação principal usa verde com texto preto; o rosa marca
+links e destaques. Cabeçalho, menus e diálogos têm base sólida legível, com
+`backdrop-filter` como melhoria progressiva. A tipografia usa fontes do sistema e
+alternativas sans-serif, sem distribuir a fonte citada no protótipo. Os estados de
+carga, erro, sucesso e foco seguem os mesmos fluxos funcionais descritos abaixo.
+Em telas estreitas, a lista de produtos continua empilhada e sem rolagem horizontal.
+O layout reduz movimento não essencial quando `prefers-reduced-motion` está ativo.
+
+O catálogo contém dados demonstrativos; a SPA continua mostrando apenas dados da
+API. A verificação visual da spec 0015 foi feita em Chromium nas larguras de 320,
+768 e 1280 px, nos dois temas, com fixtures sintéticas e um smoke local com API e
+PostgreSQL isolados. Os resultados e limites estão em
+[`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
+
 ## Fluxo atual nesta branch
 
 A SPA consome o contrato REST da spec 0013 sem alterá-lo; a área do usuário da spec 0012 é somente interface. `frontend/src/App.tsx` é o portão de sessão: consulta `GET /api/auth/me` ao abrir e decide entre a tela de entrada e a área autenticada (`AccountArea`). Somente 401 é tratado como ausência de sessão e apresenta o formulário de entrada; se `/auth/me` falhar por indisponibilidade da API ou da rede, a tela mostra a mensagem de erro e o botão “Tentar novamente”, sem enviar a pessoa ao login. Sem sessão, o hero com o campo de link continua visível e pede que a pessoa entre para monitorar. A conta precisa ser provisionada no backend antes do login. Não há cadastro público nem roteamento client-side.
@@ -26,7 +55,8 @@ Com sessão, a área é uma página única com cabeçalho (marca, navegação In
 | `frontend/src/lib/focus.ts` | `useModalFocus` (foco preso em diálogo) e `useDisclosure` (sino, conta e menu da linha) |
 | `frontend/src/lib/url.ts` | `safeHttpsUrl`: só `https` vira `href`/`src` (bloqueia `javascript:`, `data:` e `http:`) |
 | `frontend/src/api.ts` | Cliente HTTP relativo a `/api`, cookie da sessão, validação das respostas (dinheiro e percentuais como strings decimais) e erros `ApiFailure` com `status`, `code`, `trackedProductId` e `retryAfterSeconds` |
-| `frontend/src/styles.css` | Apresentação responsiva |
+| `frontend/src/styles.css` | Tokens da identidade BestPrice, temas por preferência do sistema e apresentação responsiva |
+| `frontend/src/assets/logo-bestprice.png` | Cópia da logo oficial usada na entrada e no cabeçalho autenticado |
 | `frontend/src/health.ts` | Cliente legado de `/api/health`, preservado para testes de saúde |
 
 O cliente consome `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/dashboard`, `/api/tracked-products`, seus subrecursos `history`, `refresh` e `alert`, além de `/api/notifications` (todas e `unread_only`). Usa `credentials: 'same-origin'`; o proxy Vite ou Nginx encaminha `/api` ao FastAPI. Valores monetários chegam como strings decimais: `Intl.NumberFormat` os formata sem conversão para `number`, e a direção de um evento de preço vem de `compareDecimal`. Resposta fora do contrato vira “A API respondeu com dados inválidos.”; erro sem `code` e `message` vira a mensagem genérica, e falha de rede, “Não foi possível conectar ao BestPrice. Tente novamente.”.

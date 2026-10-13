@@ -12,6 +12,8 @@ Leia [docs/product-context.md](../../docs/product-context.md) antes de definir o
 - Diagnóstico com evidência: evidencia.md.
 - API e persistência: architecture.md, backend.md, errors.md.
 - Interface: frontend.md. Contrato REST: skill api-contract.
+- Identidade visual: antes de alterar ou criar uma tela, siga `frontend.md` e consulte
+  `designsystem/` e a skill `frontend-design`.
 - Convenções: naming.md, testing.md, security.md e datetime-pipeline.md.
 - Processo: git.md, git-worktree-required.md, implementation-handoff.md, task-done-criteria.md.
 - Descoberta: skill monorepo-navigation. Gates: skill quality-gates.

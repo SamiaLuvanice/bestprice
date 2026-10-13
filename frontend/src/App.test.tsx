@@ -26,6 +26,17 @@ it('exibe a proposta do BestPrice e pede sessão antes de monitorar', async () =
   expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
 })
 
+it('mostra a logo oficial inteira e com nome acessível na entrada', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
+    error: { code: 'unauthenticated', message: 'Entre para continuar.' },
+  })))
+  render(<App />)
+  await screen.findByRole('button', { name: 'Entrar' })
+  const logos = within(screen.getByRole('banner')).getAllByRole('img', { name: 'BestPrice' })
+  expect(logos).toHaveLength(1)
+  expect(logos[0].getAttribute('src')).toContain('logo-bestprice.png')
+})
+
 it('mostra bloqueio real da integração sem criar sucesso fictício nem encerrar a sessão', async () => {
   const backendMessage = 'Cadastro indisponível até a autorização da integração com o Mercado Livre.'
   signedIn((url) => url === '/api/tracked-products'
