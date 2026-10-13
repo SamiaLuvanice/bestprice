@@ -11,7 +11,8 @@ from app.main import app
 from app.products.models import User
 
 
-def test_login_uses_private_cookie_and_rejects_wrong_password() -> None:
+def test_login_uses_private_cookie_and_rejects_wrong_password(monkeypatch) -> None:
+    monkeypatch.setenv("APP_ENV", "stage")
     engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)
 
@@ -24,7 +25,7 @@ def test_login_uses_private_cookie_and_rejects_wrong_password() -> None:
         with Session(engine) as session:
             session.add(User(email="pessoa@example.com", password_hash=hash_password("senha-validada-123")))
             session.commit()
-        client = TestClient(app)
+        client = TestClient(app, base_url="https://testserver")
         wrong = client.post("/api/auth/login", json={"email": "pessoa@example.com", "password": "errada"})
         assert wrong.status_code == 401
         assert "bestprice_session" not in wrong.cookies
@@ -33,6 +34,7 @@ def test_login_uses_private_cookie_and_rejects_wrong_password() -> None:
         assert accepted.status_code == 200
         assert accepted.cookies.get("bestprice_session")
         assert "httponly" in accepted.headers["set-cookie"].lower()
+        assert "secure" in accepted.headers["set-cookie"].lower()
         assert client.get("/api/auth/me").status_code == 200
     finally:
         app.dependency_overrides.clear()

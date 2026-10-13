@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: bestprice-stage-api
+    runtime: docker
+    plan: free
+    region: virginia
+    branch: stage
+    autoDeployTrigger: checksPass
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: sh -c 'alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}'
+    healthCheckPath: /api/health
+    envVars:
+      - key: APP_ENV
+        value: stage
+      - key: MERCADOLIVRE_THIRD_PARTY_VALIDATED
+        value: "false"
+      - key: DATABASE_URL
+        sync: false

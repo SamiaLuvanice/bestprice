@@ -71,7 +71,7 @@ def login(payload: LoginRequest, response: Response, session: SessionDep) -> Use
     session.commit()
     response.set_cookie(
         SESSION_COOKIE, raw_token, max_age=SESSION_LIFETIME_SECONDS,
-        secure=os.environ.get("APP_ENV") == "production", httponly=True,
+        secure=os.environ.get("APP_ENV") in {"stage", "production"}, httponly=True,
         samesite="lax", path="/api",
     )
     return UserResponse(id=user.id, email=user.email)
