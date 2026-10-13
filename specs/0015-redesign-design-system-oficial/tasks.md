@@ -43,5 +43,5 @@ presumir integração em `develop`. AC01–AC08 referem-se aos critérios de `sp
   doc-sync-onboarding; conferir AGENTS.md, CLAUDE.md e docs/, sincronizar projeções e
   registrar resultado em verification.md e docs/PROGRESS.md.
 - [x] **T12 / entrega** — Preparar PR para develop, conferir CI e revisão independente.
-  PR #49 aberto, checks remotos verdes e revisão independente concluída. Manter o
-  status `pronta` até o PR ser integrado em `develop`.
+  PR #49 com checks remotos verdes e revisão independente concluída, aprovado e
+  integrado em `develop` no commit `0600cb3`; spec `implementada`.

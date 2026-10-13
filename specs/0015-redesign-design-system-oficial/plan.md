@@ -4,7 +4,7 @@
 
 Base inspecionada: `ab7ff8e07eb7cfd0aa935790b11e74ae74c22781` de develop. O
 inventário foi fixado antes da implementação e orientou o redesign nesta branch.
-Spec `pronta` registra requisitos revisados; a evidência de execução está em
+A spec registra requisitos revisados; a evidência de execução está em
 `verification.md`. Revalidar mudanças na base em futuras alterações deste escopo.
 
 Preservar `frontend/src/api.ts`, endpoints, DTOs, mensagens, paginação e estados de domínio
