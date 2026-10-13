@@ -11,10 +11,6 @@ function Svg({ className, children }: IconProps & { children: ReactNode }) {
   </svg>
 }
 
-export function BrandIcon(props: IconProps) {
-  return <Svg {...props}><path d="M3 12.5 11.5 4H20v8.5L11.5 21 3 12.5Z" /><circle cx="15.5" cy="8.5" r="1.5" /><path d="M9 13h5M11.5 10.5v5" /></Svg>
-}
-
 export function HomeIcon(props: IconProps) {
   return <Svg {...props}><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1v-9.5Z" /></Svg>
 }

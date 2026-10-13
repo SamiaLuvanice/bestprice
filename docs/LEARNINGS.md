@@ -2,6 +2,37 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-13 — Medir contraste do vidro no pior fundo
+
+**Contexto:** no QA da spec 0015, o rosa escuro passava sobre a cor base do menu,
+mas caía para 4,07:1 quando a transparência do vidro era composta sobre branco.
+
+**Princípio:** calcular o contraste do texto sobre o pior fundo possível atrás de
+uma superfície translúcida, inclusive sem `backdrop-filter`. A base escura ajustada
+compõe `#262628` no pior caso e mantém 4,66:1 para o rosa.
+
+**Anti-pattern:** medir somente os tokens opacos e assumir que o vidro herda o
+mesmo contraste em qualquer sobreposição.
+
+**Referências:** spec 0015 AC03, `frontend/src/styles.css` e
+`designsystem/README.md`.
+
+## 2026-10-13 — Fixar inventário e precedência antes do redesign
+
+**Contexto:** a revisão documental da spec 0015 encontrou um plano que adiava a lista
+de arquivos para a implementação e citava referências com tokens diferentes sem
+definir qual prevalecia.
+
+**Princípio:** inspecionar e fixar a revisão base, as superfícies, os estados e os arquivos
+no plano. Definir a precedência das referências e registrar adaptações ao design system.
+Manter requisitos responsivos e funcionais das specs anteriores explicitamente.
+
+**Anti-pattern:** definir o aceite pelo que restar na interface ao final da implementação,
+ou combinar tokens conflitantes de protótipos sem uma decisão documentada.
+
+**Referências:** spec 0015, tarefas T01/T02, `.agents/rules/frontend.md` e
+`specs/0015-redesign-design-system-oficial/verification.md`.
+
 ## 2026-10-09 — Serializar a decisão antes da notificação
 
 **Contexto:** duas sessões PostgreSQL avaliavam o mesmo alerta como ainda não

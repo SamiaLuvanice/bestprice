@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from 'react'
 import { AccountMenu } from './AccountMenu'
-import { BoxIcon, BellIcon, BrandIcon, HomeIcon } from './Icons'
+import { BoxIcon, BellIcon, HomeIcon } from './Icons'
+import bestPriceLogo from '../assets/logo-bestprice.png'
 
 export type SectionKey = 'home' | 'products' | 'alerts'
 
@@ -28,7 +29,7 @@ export function AppHeader({ email, current, onNavigate, bell, logoutError, loggi
   }
   return <header className="app-header">
     <div className="app-header-inner">
-      <span className="brand"><BrandIcon className="brand-icon" /><span className="brand-name">BestPrice</span></span>
+      <span className="brand"><img className="brand-logo" src={bestPriceLogo} alt="BestPrice" /><span className="brand-name" aria-hidden="true">BestPrice</span></span>
       <nav aria-label="Principal" className="main-nav">
         <ul>
           {items.map((item) => <li key={item.key}>
