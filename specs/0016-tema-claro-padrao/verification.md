@@ -4,6 +4,11 @@ Base: `6ddf407` de `origin/develop` (worktree
 `.worktrees/feature-0016-issue-52-tema-claro-padrao`, branch
 `feature/0016-issue-52-tema-claro-padrao`).
 
+Integração: PR [#53](https://github.com/SamiaLuvanice/bestprice/pull/53) integrada em
+`develop` em `f414674`; Issue [#52](https://github.com/SamiaLuvanice/bestprice/issues/52),
+registro na Issue [#54](https://github.com/SamiaLuvanice/bestprice/issues/54). CI remoto
+da PR verde (Backend, Frontend, Automation, policy, resolve, sync).
+
 ## Mudança
 
 `frontend/src/styles.css`: removido o bloco `@media (prefers-color-scheme: dark)`

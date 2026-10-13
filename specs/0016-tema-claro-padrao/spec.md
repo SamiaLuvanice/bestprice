@@ -3,7 +3,7 @@ numero: 0016
 titulo: Tema claro fixo no app
 tipo: melhoria
 prioridade: P1
-status: pronta
+status: implementada
 toca: [frontend, docs]
 depende_de: [0015]
 ---
