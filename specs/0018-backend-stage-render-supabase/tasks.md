@@ -13,7 +13,7 @@
   documentar configuração de build/branch; validar proxy localmente.
 - [x] T06 — Executar lint e pytest do backend, incluindo integração PostgreSQL
   isolada quando disponível; registrar contagens reais.
-- [ ] T07 — Revisar diff, segurança e arquitetura; executar doc-sync-onboarding
+- [x] T07 — Revisar diff, segurança e arquitetura; executar doc-sync-onboarding
   como última etapa após qualquer alteração de código.
 - [ ] T08 — Abrir PR para `develop`, obter revisão e CI verde; promover por PR
   para `stage`.

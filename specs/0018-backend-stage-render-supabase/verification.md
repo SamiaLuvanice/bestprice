@@ -28,6 +28,16 @@ O primeiro `npm test`, `npm run build` e `node --test` no sandbox falharam com
 primeiro `uv run` no sandbox falhou por permissão no cache; a suíte foi executada
 fora dele. Não há `actionlint` instalado e os workflows não foram alterados.
 
+## Handoff e revisão da preparação local
+
+O commit `a03fa8e` está na PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61),
+aberta para `develop`. `gh pr checks 61 --watch` concluiu nesse commit com CI, Backend,
+Frontend, Automation, PR policy, sync e resolve verdes. A revisão independente
+de arquitetura não apontou achado de código; QA aceitou a preparação local com
+a ressalva de que nenhum critério dependente do ambiente público foi aceito.
+Não há aprovação humana registrada no GitHub nem merge da PR. Esses checks não
+comprovam projetos externos, promoção para `stage` ou deploy.
+
 ## Critérios de aceite
 
 | Critério | Estado e limite |
@@ -41,8 +51,9 @@ fora dele. Não há `actionlint` instalado e os workflows não foram alterados.
 | Migrations e health 200 em deploy limpo | Comprovados no Compose local; deploy Render/Supabase pendente. |
 | Health 503 sem DB e Render considera unhealthy | 503 real local comprovado; decisão do Render pendente. |
 | Cookie `Secure` e `HttpOnly` | Teste HTTPS local verde; cookie no endereço Pages pendente. |
-| Nova promoção atualiza somente `stage` | Pendente de PRs, CI e deploy. |
-| Procedimento, variáveis, cotas e reversão documentados e conferidos | Documentação local em andamento; operação real pendente. |
+| Nova promoção atualiza somente `stage` | PR #61 para `develop` aberta e CI verde; merge, promoção para `stage` e deploy pendentes. |
+| Procedimento, variáveis, cotas e reversão documentados e conferidos | Documentação local sincronizada; painéis e operação real pendentes. |
 
 Nenhum critério que depende do ambiente público é dado como aceito por um teste
-local. Revisão independente, CI da PR e promoção também permanecem pendentes.
+local ou pelo CI da PR. Promoção, operação real e aprovação humana no GitHub
+permanecem pendentes.
