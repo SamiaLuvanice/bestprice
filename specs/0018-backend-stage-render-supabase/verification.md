@@ -30,10 +30,11 @@ fora dele. Não há `actionlint` instalado e os workflows não foram alterados.
 
 ## Handoff e revisão da preparação local
 
-O commit `7bc508c` está na PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61),
+O commit `101b07b` está na PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61),
 aberta para `develop`. `gh pr checks 61 --watch` concluiu nesse commit com CI, Backend,
 Frontend, Automation, PR policy, sync e resolve verdes. A revisão independente
-de arquitetura não apontou achado de código; QA aceitou a preparação local com
+de arquitetura do mesmo HEAD não apontou achado de código; QA aceitou a
+preparação local com
 a ressalva de que nenhum critério dependente do ambiente público foi aceito.
 Não há aprovação humana registrada no GitHub nem merge da PR. Esses checks não
 comprovam projetos externos, promoção para `stage` ou deploy.
