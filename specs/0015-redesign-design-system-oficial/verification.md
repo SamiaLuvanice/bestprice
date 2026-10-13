@@ -81,16 +81,35 @@ O parecer é estático, complementado pelo QA de navegador acima. O QA aceitou
 AC01–AC05 e AC08 sem defeito visual remanescente; os limites de contraste
 inconclusivo sob o menu, navegador único e integração externa permanecem registrados.
 
+### Revalidação orquestração — 13/10/2026
+
+`arch-reviewer` e `qa` reexecutados na worktree após o PR #49 (CI remoto verde no
+SHA `31a3fa8`). Pareceres: **aprovado com ressalvas** / **aceito com ressalvas**.
+
+Achado importante tratado nesta passagem: `.brand-logo` tinha `border-radius: 12px`,
+em tensão com AC02 (sem recorte). O raio foi removido; a superfície de apoio da
+logo e `object-fit: contain` permanecem. CSS órfão `.brand-icon` também removido.
+Ressalvas remanescentes conscientes: contraste do vidro escuro com margem fina
+(~4,66:1 no pior fundo calculado); classe residual `tone-blue` (cor rosa via token);
+matriz visual e artefatos só em `%TEMP%\bestprice-0015-qa\` (não no Git).
+
+Gates reconfirmados nesta revalidação (worktree `frontend/`): lint exit 0;
+`npm test -- --run --maxWorkers=2` — 22 arquivos, **242 passed**; build exit 0;
+SHA-256 da logo ainda `E91BEA39…556F`. Smoke Compose: `GET /api/health` 200
+`database: ok` e SPA Nginx 200; fluxo login→produto não foi reexecutado. A matriz
+de 170 capturas **não** foi re-rodada após o ajuste do `border-radius` da logo.
+
 ## Sincronização do onboarding
 
-Após a última alteração de código, o agente `doc-sync-onboarding` conferiu o diff e
-os componentes alterados. `docs/apps/frontend.md` agora descreve a identidade,
-os temas, o fallback do vidro, a logo e os limites da inspeção visual; `docs/PROGRESS.md`
-registra implementação, revisão e QA locais. `AGENTS.md`, `CLAUDE.md` e `docs/index.md`
-foram conferidos e não exigiram edição: o fluxo do harness e o catálogo de documentos
-continuam corretos. As projeções de `.agents/` foram sincronizadas com
-`.agents/sync.ps1`. Nenhum documento de backend, banco, infraestrutura ou contrato
-precisou mudar, pois a alteração de código se restringiu à apresentação da SPA.
+Após o ajuste AC02 (remoção de `border-radius` em `.brand-logo` e CSS órfão
+`.brand-icon`), o agente `doc-sync-onboarding` reexecutou na worktree.
+`docs/apps/frontend.md` passa a registrar que a logo é exibida inteira, sem
+recorte/`border-radius`, com `object-fit: contain` e superfície
+`--color-logo-surface`. `docs/PROGRESS.md` e este `verification.md` já
+traziam a revalidação arch/QA e os gates reconfirmados (lint, 242 testes, build).
+`AGENTS.md`, `CLAUDE.md` e `docs/index.md` foram conferidos e não exigiram
+edição. Regras em `.agents/` não mudaram — `.agents/sync.ps1` não foi necessário.
+Nenhum documento de backend, banco, infraestrutura ou contrato precisou mudar.
 
 ## Critérios e limites
 
@@ -107,5 +126,17 @@ precisou mudar, pois a alteração de código se restringiu à apresentação da
 Os artefatos de navegador estão em pasta temporária local e não integram o Git nem
 o CI. Não houve validação com leitor de tela, outros navegadores ou dispositivo
 físico. A integração externa Mercado Livre continua limitada pelas credenciais
-ausentes, conforme as specs dependentes. CI remoto e revisão humana serão
-registrados após o PR.
+ausentes, conforme as specs dependentes.
+
+## Handoff por PR
+
+PR [#49](https://github.com/SamiaLuvanice/bestprice/pull/49) aberto da branch
+`feature/0015-issue-48-design-system-oficial` para `develop`, com `Closes #48`.
+No SHA `31a3fa8a68e1b0cecb56808c1e5457308febf9e8`, o workflow
+[#38399404769](https://github.com/SamiaLuvanice/bestprice/actions/runs/38399404769)
+aprovou `quality / Frontend`, `quality / Backend`, `quality / Automation`,
+`PR policy` e `CI`; os jobs `resolve` e `sync` do Project também passaram.
+Após a revalidação, o push seguinte inclui o ajuste AC02 da logo e este handoff;
+o CI remoto precisa passar de novo nesse SHA. Revisão independente local sem
+bloqueios; aprovação humana no GitHub e merge em `develop` permanecem pendentes
+(ruleset exige aprovação independente — sem autoaprovação). Status da spec: `pronta`.

@@ -4,10 +4,13 @@
 
 A entrada e a área autenticada usam a mesma logo oficial, copiada de
 `designsystem/logo-bestprice.png` para `frontend/src/assets/logo-bestprice.png`.
-O texto visual “BestPrice” ao lado da imagem fica oculto para leitores de tela;
-a imagem fornece o nome acessível. `designsystem/index.html` orienta os tokens e
-`designsystem/login.html`, a composição da entrada. As extensões aplicadas estão
-registradas em [`designsystem/README.md`](../../designsystem/README.md).
+A classe `.brand-logo` exibe a imagem inteira (`object-fit: contain`, sem
+`border-radius` nem outro recorte), com superfície de apoio
+`--color-logo-surface`. O texto visual “BestPrice” ao lado da imagem fica oculto
+para leitores de tela; a imagem fornece o nome acessível.
+`designsystem/index.html` orienta os tokens e `designsystem/login.html`, a
+composição da entrada. As extensões aplicadas estão registradas em
+[`designsystem/README.md`](../../designsystem/README.md).
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
 foco nos temas claro e escuro. O tema acompanha `prefers-color-scheme` do sistema,
