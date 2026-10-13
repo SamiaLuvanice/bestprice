@@ -14,85 +14,115 @@ Issue: https://github.com/SamiaLuvanice/bestprice/issues/56
 
 ## Problema
 
-A experiência de entrada e login da aplicação BestPrice ainda apresenta um painel
-provisório e compacto em `App.tsx`, sem refletir a composição rica em duas colunas, a
-linguagem de Liquid Glass e os recursos de usabilidade presentes no protótipo oficial
-`designsystem/login.html`.
+A área de login da tela de visitante ainda é um painel provisório e compacto. Ela não
+reflete a composição em duas colunas, a linguagem de vidro (Liquid Glass) e as
+conveniências de uso do protótipo oficial `designsystem/login.html`.
 
-Isso afeta qualquer pessoa não autenticada que acessa o BestPrice: a primeira impressão do
-produto fica aquém da identidade visual e a interação de login não dispõe de conveniências
-comuns de acessibilidade e experiência, como a alternância de visibilidade da senha.
+Isso afeta qualquer pessoa não autenticada que acessa o BestPrice: a primeira impressão
+do produto fica aquém da identidade visual, e não há como conferir a senha digitada antes
+de enviar.
 
 ## Comportamento esperado
 
-Na tela de visitante, a pessoa encontra a área de login redesenhada com base na
-composição de `designsystem/login.html`.
+Na tela de visitante, a área de login é redesenhada com base na composição de
+`designsystem/login.html`, dentro de um contêiner de vidro sobre fundo claro com brilhos
+ambientes sutis. O cabeçalho da página (logo oficial) e o formulário de monitoramento por
+link continuam presentes, acima da área de login, para que novos visitantes experimentem a
+proposta central antes de entrar.
 
-A estrutura utiliza um container com estilo Liquid Glass sobre fundo claro com brilhos
-ambientes sutis. Em telas largas (desktop), o container se divide em duas colunas:
-1. **Lateral visual (à esquerda):** exibe a logo oficial BestPrice sem distorção, a marca,
-   o título "Acompanhe preços com a calma de uma vitrine.", o subtítulo de monitoramento
-   inteligente e um card demonstrativo ilustrativo (`aria-hidden="true"`, adaptado para
-   produto neutro do Mercado Livre Brasil, sem qualquer referência à Amazon ou marcas
-   fictícias tratadas como reais).
-2. **Painel do formulário (à direita):** apresenta a saudação "Bem-vindo de volta", campos
-   identificados para e-mail e senha, controle para mostrar/ocultar senha com retorno visual
-   e acessível (`aria-pressed` e `aria-label`), opções informativas ("Lembrar de mim" e
-   "Esqueceu a senha?"), botão de ação primária em formato pílula com verde neon (`#39ff14`)
-   e rótulo "Entrar", separador "OU" e nota informativa para criação de conta.
+Em telas largas, a área de login tem duas colunas:
 
-O formulário de rastreamento por URL (`HeroTrackForm`) permanece acessível na página de
-visitante para que novos usuários possam experimentar a proposta central de colar um link do
-Mercado Livre antes de entrar.
+1. **Coluna visual (esquerda), puramente decorativa:** a logo oficial sem distorção nem
+   corte, tratada como decorativa porque a marca já está no cabeçalho; a frase de destaque
+   "Acompanhe preços com a calma de uma vitrine." e um texto curto sobre monitoramento
+   automático; e um card ilustrativo de vidro **sem dados**, isto é, sem produto, preço,
+   percentual, contagem ou horário, apenas ícone e frase de benefício. Nenhum elemento da
+   coluna é título de página nem repete o nome da marca para leitores de tela.
+2. **Painel do formulário (direita):** título "Bem-vindo de volta" com um subtítulo
+   orientador; campos E-mail e Senha; um controle para mostrar ou ocultar a senha; e o
+   botão de ação primária "Entrar", em formato pílula, com a cor de ação do design system.
 
-Durante o envio, o botão indica estado de carregamento e fica desabilitado para evitar
-submissões duplicadas. Mensagens de erro de autenticação ou de conexão continuam anunciadas
-com `role="alert"`. O layout se adapta responsivamente às larguras de 320, 768 e 1280 px sem
-rolagem horizontal da página, ocultando a lateral visual em telas estreitas (<= 840 px).
+A tela não oferece "Lembrar de mim", "Esqueceu a senha?", "Criar conta" nem o separador
+"OU" do protótipo, porque esses recursos não existem (spec 0011) e uma pessoa real não deve
+encontrar controles sem efeito.
 
-O tema permanece o claro fixo definido na spec 0016. Preferências por movimento reduzido
-suprimem transições e animações não essenciais.
+A validação continua a da spec 0011: campos vazios ou e-mail inválido impedem o envio,
+indicam o que corrigir e levam o foco ao primeiro campo inválido. O cliente não impõe
+regra de tamanho de senha.
+
+Durante o envio, o botão mostra "Entrando…" e fica desabilitado, impedindo envios
+duplicados. A senha volta a ficar oculta a cada tentativa disparada. Após uma falha, o foco
+volta ao campo Senha para que quem usa teclado tente de novo sem percorrer a página. Erros de autenticação, de conexão,
+de indisponibilidade e o aviso de sessão encerrada continuam anunciados como alerta.
+
+Em telas estreitas, a coluna visual é ocultada e o formulário ocupa a largura disponível,
+sem rolagem horizontal. O tema permanece o claro fixo da spec 0016. Com preferência por
+movimento reduzido, transições e animações não essenciais são suprimidas.
 
 ## Critérios de aceite
 
-- [ ] **AC01** — A área de login apresenta a casca de vidro (Liquid Glass) com efeito de
-      iluminação ambiente e layout em duas colunas (lateral visual e painel do formulário)
-      em viewports largas (>= 840 px).
-- [ ] **AC02** — A lateral visual inclui a logo oficial BestPrice sem distorção ou corte, o
-      nome da marca, o título e descrição de apresentação e um card demonstrativo puramente
-      ilustrativo marcado com `aria-hidden="true"`.
-- [ ] **AC03** — O painel de formulário oferece cabeçalho "Bem-vindo de volta", campos
-      identificados para E-mail e Senha com rótulos acessíveis e tipos adequados.
-- [ ] **AC04** — O campo de senha oferece controle de alternar visibilidade ("Mostrar senha" /
-      "Ocultar senha"), com estado `aria-pressed`, ícone coerente e preservação do valor
-      digitado.
-- [ ] **AC05** — O botão de submissão adota formato pílula com fundo verde de ação (`#39ff14`)
-      e texto escuro, informando estado desabilitado/ocupado durante a autenticação para
-      prevenir envios concorrentes.
-- [ ] **AC06** — Erros de autenticação (401, falha de rede ou indisponibilidade) continuam
-      anunciados com `role="alert"` em caixa de erro acessível e legível.
-- [ ] **AC07** — Em larguras de 320, 768 e 1280 px, o layout não gera rolagem horizontal;
-      em telas de 320 e 768 px a coluna visual é ocultada e o formulário permanece
-      confortável e utilizável.
-- [ ] **AC08** — O formulário HeroTrackForm continua acessível na página de visitante e os
-      contratos de autenticação existentes com a API (`/api/auth/login`, `/api/auth/me`) e
-      os fluxos das specs 0011–0016 são mantidos sem alteração de backend.
+- [ ] **AC01** — Com viewport acima de 840 px, a área de login aparece num contêiner de
+      vidro sobre fundo com brilhos ambientes, em duas colunas: visual à esquerda e
+      formulário à direita. Sem suporte a `backdrop-filter`, o contêiner mantém superfície
+      sólida legível.
+- [ ] **AC02** — A coluna visual mostra a logo oficial sem distorção nem corte, a frase de
+      destaque, o texto de apoio e um card ilustrativo. A coluna inteira fica fora da
+      árvore de acessibilidade (logo decorativa, sem `h1` extra, sem repetir "BestPrice").
+      Nenhum texto da coluna contém produto, preço, percentual, contagem ou horário.
+- [ ] **AC03** — O painel tem um título "Bem-vindo de volta" e campos E-mail
+      (`type="email"`, `autocomplete="email"`) e Senha (`autocomplete="current-password"`),
+      ambos obrigatórios e com rótulo acessível.
+- [ ] **AC04** — O controle de visibilidade tem rótulo acessível fixo "Mostrar senha" e
+      estado `aria-pressed` (`false` com a senha oculta, `true` com ela visível). O ícone
+      alterna entre olho e olho riscado, e o valor digitado é preservado. Quando uma
+      tentativa de login é disparada, a senha volta a ficar oculta e o estado volta a
+      `false`.
+- [ ] **AC05** — O botão "Entrar" tem formato pílula, a cor de ação do design system com
+      texto escuro, e estados distintos de hover, foco visível e desabilitado. Durante o
+      envio, mostra "Entrando…", fica desabilitado, e um segundo clique não dispara outra
+      requisição.
+- [ ] **AC06** — Campos vazios ou e-mail inválido não chamam a API e levam o foco ao
+      primeiro campo inválido. Erros de uma tentativa de login (401, falha de rede,
+      indisponibilidade) aparecem em caixa legível com `role="alert"`, preservam o e-mail e
+      a senha digitados e devolvem o foco ao campo Senha. O aviso de sessão encerrada
+      aparece na mesma caixa ao abrir a entrada, sem mover o foco.
+- [ ] **AC07** — Em 320, 768 e 1280 px não há rolagem horizontal da página. Em 320 e 768 px
+      a coluna visual está oculta. Nenhum texto ou campo fica cortado, e todo controle tem
+      área de toque de pelo menos 44 × 44 px.
+- [ ] **AC08** — Texto tem contraste de pelo menos 4,5:1 e bordas, controles e foco de
+      pelo menos 3:1, tanto sobre o vidro quanto sobre a superfície sólida. Todos os
+      controles são operáveis por teclado com foco visível. Com
+      `prefers-reduced-motion: reduce`, transições e animações não essenciais são
+      suprimidas.
+- [ ] **AC09** — O formulário de monitoramento por link continua na tela de visitante.
+      Os contratos `/api/auth/login` e `/api/auth/me` e os fluxos das specs 0011–0016
+      seguem sem alteração de backend, comprovados pela suíte existente do frontend.
 
 ## Fora de escopo
 
-- Alterações em endpoints, contratos REST, esquemas de banco ou regras de domínio do backend.
-- Fluxos reais de recuperação de senha ou cadastro de novos usuários no backend (links
-  permanecem informativos/placeholders).
-- Qualquer menção a produtos da Amazon, serviços Prime ou inclusão de dados fixos fictícios
-  como dados reais de negócio.
-- Seletor de tema manual ou tema escuro (o tema claro permanece fixo pela spec 0016).
+- Alterações em endpoints, contratos REST, esquemas de banco ou regras do backend.
+- Recuperação de senha, criação de conta, "lembrar de mim" ou duração de sessão
+  configurável, inclusive como links ou controles sem efeito.
+- Dados ilustrativos (produtos, preços, variações, horários) na interface de produção.
+- Telas de carregamento e de sessão indisponível, que mantêm o visual atual.
+- Seletor de tema ou tema escuro (a spec 0016 fixa o tema claro).
 
 ## Referências e decisões do intake
 
-1. A referência de composição é `designsystem/login.html`, e a autoridade de tokens de
-   identidade visual é `designsystem/index.html` e a spec 0015.
-2. Na decisão de design alinhada com o usuário, o formulário `HeroTrackForm` é preservado na
-   página de visitante para manter a proposta de valor ("cole o link uma vez").
-3. O card demonstrativo da lateral visual é adaptado com `aria-hidden="true"` e produto
-   neutro do Mercado Livre, em estrito cumprimento às regras do projeto (sem produtos da
-   Amazon ou dados fictícios reais).
+1. A composição de referência é `designsystem/login.html`. Os tokens vêm de
+   `designsystem/index.html` e da spec 0015; se houver divergência, prevalece `index.html`.
+2. O formulário de monitoramento por link fica na tela de visitante, preservando a
+   proposta "cole o link uma vez".
+3. Decisões tomadas com o usuário em 13/10/2026, após a revisão da spec:
+   - o card demonstrativo vira uma ilustração sem dados, para cumprir `frontend.md`, o
+     README do design system e o AC29 da 0012;
+   - "Lembrar de mim", "Esqueceu a senha?", "Criar conta gratuita" e "OU" são removidos;
+   - o controle de senha usa rótulo fixo com `aria-pressed`;
+   - a coluna visual é decorativa: o cabeçalho e o `h1` do hero continuam como
+     identificação e título da página.
+4. Itens do protótipo que não entram: produto "Echo Dot" e preços, validação própria com
+   `novalidate` e regra de 6 caracteres, rótulo "Entrar na conta" e o toast simulado.
+
+## Perguntas em aberto
+
+Nenhuma.
