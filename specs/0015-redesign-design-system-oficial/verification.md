@@ -99,6 +99,26 @@ SHA-256 da logo ainda `E91BEA39…556F`. Smoke Compose: `GET /api/health` 200
 `database: ok` e SPA Nginx 200; fluxo login→produto não foi reexecutado. A matriz
 de 170 capturas **não** foi re-rodada após o ajuste do `border-radius` da logo.
 
+### Revisão do ajuste AC02 (logo) — 13/10/2026
+
+Revisão do commit do ajuste da logo (reescrito sem trailer de IA; conteúdo idêntico ao
+`c37bd6e`, hoje `d0ac44e`).
+
+- `arch-reviewer`: **aprovado com ressalvas**, sem achado bloqueante. Parecer estático:
+  AC02 atendido por leitura do CSS, sem referência órfã a `.brand-icon`, tamanhos
+  inalterados (AC04). Apontou o trailer de IA na mensagem do commit (corrigido) e a
+  ausência de capturas pós-ajuste.
+- `qa`: **aceito com ressalva estética não bloqueante**. Chrome headless, API simulada
+  por fixtures, script em `%TEMP%\bestprice-0015-qa-logo\`. Entrada e painel × claro e
+  escuro × 320/768/1280 px (12 cenários): logo 1254×1254 inteira, caixa quadrada,
+  `border-radius` 0, `object-fit: contain`, sem overflow horizontal. SHA-256 idêntico
+  (`e91bea39…556f`) no ativo oficial, no `src`, no `dist` e no PNG servido. Lint, 242
+  testes e build verdes.
+- Ressalva: no tema escuro a logo é um quadrado branco de cantos retos sobre o
+  cabeçalho escuro, consequência do fundo opaco do PNG oficial; aceita sem alteração.
+- Limites: navegador único, sem leitor de tela nem dispositivo físico, axe e matriz
+  completa de superfícies não refeitos nesta passada, sem serviços reais.
+
 ## Sincronização do onboarding
 
 Após o ajuste AC02 (remoção de `border-radius` em `.brand-logo` e CSS órfão
