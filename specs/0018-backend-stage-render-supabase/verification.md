@@ -30,7 +30,7 @@ fora dele. Não há `actionlint` instalado e os workflows não foram alterados.
 
 ## Handoff e revisão da preparação local
 
-O commit `a03fa8e` está na PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61),
+O commit `7bc508c` está na PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61),
 aberta para `develop`. `gh pr checks 61 --watch` concluiu nesse commit com CI, Backend,
 Frontend, Automation, PR policy, sync e resolve verdes. A revisão independente
 de arquitetura não apontou achado de código; QA aceitou a preparação local com
@@ -47,8 +47,31 @@ projeto `bestprice-stage`, ref `nhqlkqgliofpesfslozb`, foi criado em `sa-east-1`
 esquema `public` retornou lista vazia e o advisor de segurança não trouxe avisos.
 Uma consulta somente leitura retornou `connection_uses_tls=true` para a conexão
 do conector Supabase. Isso não comprova o TLS da futura conexão Render → Session
-pooler, nem migrations, plano/add-ons do painel ou ausência de cobrança futura.
+pooler nem migrations. O painel confirmou plano `Free`, compute `NANO` a
+**US$ 0/h**, sem réplicas, e add-ons IPv4 dedicado, PITR e domínio personalizado
+**desativados**. O spend cap da organização está **habilitado** e o painel informa
+que não haverá cobrança extra por uso, embora o projeto possa ficar sem resposta
+ou somente leitura ao exceder a cota. Isso não comprova disponibilidade contínua.
 Nenhuma senha ou URL de banco foi registrada.
+
+## Conferência de cobrança em Chrome
+
+Em 13/10/2026, os painéis das contas usadas para stage mostraram:
+
+- **Render / My Workspace:** plano `Hobby`, sem cartão cadastrado, sem cobrança
+  pendente e sem serviços; 750 horas gratuitas, 5 GB de banda e 500 minutos de
+  pipeline incluídos no mês. A configuração do pipeline tinha limite mensal de
+  gasto de **US$ 0**; o painel informa que builds param ao esgotar os minutos.
+  O aviso de cobrança além das franquias continua visível e não foi encontrado
+  limite equivalente para toda a banda.
+- **Cloudflare:** `Workers Free` ativo, **US$ 0**, sem forma de pagamento e sem
+  projetos Workers & Pages. O painel mostrava 0/100.000 requests no dia e
+  3.000 minutos de Workers Builds por mês no plano Free.
+- **Supabase / Samia's Org:** plano `Free`, spend cap habilitado e compute Nano
+  no projeto de stage; os três add-ons listados estavam desativados.
+
+Render e Cloudflare não foram provisionados neste ponto. Os dados dos painéis
+atestam a configuração observada, não uma garantia contratual de cobrança zero.
 
 ## Critérios de aceite
 
@@ -56,8 +79,8 @@ Nenhuma senha ou URL de banco foi registrada.
 |---|---|
 | Render Free na branch `stage`, deploy após checks | Configurado em `render.yaml`; falta sincronizar Blueprint e comprovar deploy no Render. |
 | Pages compila `frontend/` e publica `stage` | Build local verde; projeto Pages e deploy real pendentes. |
-| Três serviços gratuitos, sem add-ons | Organização Supabase `free` e novo projeto com custo informado de 0/mês; Render e Cloudflare e add-ons dos painéis não conferidos. |
-| Sem excedentes faturáveis | Pendente de confirmar cobrança nos painéis. Render Free pode cobrar banda e pipeline se houver forma de pagamento. |
+| Três serviços gratuitos, sem add-ons | Supabase `Free` com Nano US$ 0/h e add-ons desativados; Render `Hobby` sem serviço; Cloudflare `Workers Free` sem projeto Pages. Planos vistos nos painéis, implantação ainda pendente. |
+| Sem excedentes faturáveis | Supabase spend cap ligado, Render sem cartão e pipeline limitado a US$ 0, Cloudflare Free sem forma de pagamento. Render ainda alerta sobre cobrança acima da franquia e não mostrou limite global de banda; garantia de custo zero pendente. |
 | Proxy `/api/*` na mesma origem | Teste da Function e `_routes.json` verdes; falta navegador no Pages real. |
 | Supabase isolado, TLS e segredos | Projeto `bestprice-stage` exclusivo criado e saudável; conexão do conector usou TLS. Session pooler com `sslmode=require` no Render e segredo ainda pendentes. |
 | Migrations e health 200 em deploy limpo | Comprovados no Compose local; deploy Render/Supabase pendente. |
