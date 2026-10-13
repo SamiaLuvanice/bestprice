@@ -31,6 +31,41 @@ foreach ($area in @('agents', 'skills', 'commands')) {
     Sync-Junction ".claude/$area" ".agents/$area"
 }
 
+# MCP agnóstico: .agents/mcp.json é a fonte. Geramos o .mcp.json da raiz no
+# formato mcpServers (lido por Claude e afins) e o bloco mcp do opencode.json,
+# que o OpenCode expõe num formato próprio.
+function Project-McpConfig {
+    $canonical = Join-Path $Root '.agents/mcp.json'
+    if (-not (Test-Path -LiteralPath $canonical)) { return }
+
+    Copy-Item -LiteralPath $canonical -Destination (Join-Path $Root '.mcp.json') -Force
+    Write-Output '+ .mcp.json (gerado — não editar)'
+
+    $def = Get-Content -LiteralPath $canonical -Raw | ConvertFrom-Json
+    $mcp = [ordered]@{}
+    foreach ($prop in $def.mcpServers.PSObject.Properties) {
+        $srv = $prop.Value
+        $command = @($srv.command)
+        if ($srv.args) { $command += @($srv.args) }
+        $entry = [ordered]@{
+            type    = 'local'
+            command = $command
+            enabled = -not ($srv.disabled -eq $true)
+        }
+        if ($srv.env) { $entry.environment = $srv.env }
+        $mcp[$prop.Name] = $entry
+    }
+    $config = [ordered]@{
+        '$schema' = 'https://opencode.ai/config.json'
+        mcp       = $mcp
+    }
+    Set-Content -LiteralPath (Join-Path $Root 'opencode.json') `
+        -Value ($config | ConvertTo-Json -Depth 10) -Encoding utf8
+    Write-Output '+ opencode.json (gerado — não editar)'
+}
+
+Project-McpConfig
+
 if ($WithOpenCode -or (Test-Path -LiteralPath (Join-Path $Root '.opencode'))) {
     Sync-Junction '.opencode/agent' '.agents/agents'
     Sync-Junction '.opencode/skills' '.agents/skills'

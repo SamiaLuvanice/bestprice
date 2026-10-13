@@ -25,3 +25,5 @@ Backend: .agents/rules/architecture.md, backend.md, errors.md. Frontend: fronten
 Leia .agents/skills/<nome>/SKILL.md quando a descrição combinar com a tarefa; cite .agents/agents/<papel>.md ao delegar. Para /spec, /plan, /implement e /verify, leia .agents/commands/<nome>.md quando a ferramenta não tiver slash-command. $ARGUMENTS é o argumento do pedido.
 
 Este arquivo é lido por Codex, Cursor e OpenCode; Claude importa via CLAUDE.md. Pastas .claude/, .opencode/ e .cursor/ são projeções. Edite .agents/ e execute .agents/sync.ps1 no Windows ou bash .agents/sync.sh em sistemas Unix.
+
+MCP: a fonte é .agents/mcp.json (formato agnóstico mcpServers). O sync gera .mcp.json na raiz e o bloco mcp de opencode.json — não edite os gerados.
