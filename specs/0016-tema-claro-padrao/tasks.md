@@ -13,5 +13,5 @@
   `specs/0016-tema-claro-padrao/verification.md`; capturas em navegador pendentes (QA).
 - [x] **T05** — Registrar a spec em `docs/PROGRESS.md` e executar doc-sync-onboarding.
   Verificação: linha da 0016 presente e documentos conferidos.
-- [ ] **T06** — Commit, push e PR para `develop` com `Closes #52`. Verificação: PR aberta,
+- [x] **T06** — Commit, push e PR para `develop` com `Closes #52`. Verificação: PR aberta,
   CI acionado.
