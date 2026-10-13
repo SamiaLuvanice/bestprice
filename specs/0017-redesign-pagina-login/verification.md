@@ -5,6 +5,10 @@ Base: `0302a64` de `origin/develop` (worktree
 `feature/0017-issue-56-redesign-login`). Código verificado em `49869a0`.
 Issue [#56](https://github.com/SamiaLuvanice/bestprice/issues/56).
 
+Integração: PR [#57](https://github.com/SamiaLuvanice/bestprice/pull/57) integrada em
+`develop` em `793b880`; registro na Issue [#58](https://github.com/SamiaLuvanice/bestprice/issues/58). CI remoto
+da PR verde (CI, Frontend, Backend, Automation, PR policy, resolve, sync).
+
 ## Mudança
 
 - `frontend/src/LoginForm.tsx` (novo): entrada em duas colunas, com uma coluna visual
@@ -112,4 +116,4 @@ foi 5,04:1.
 - **Cosmético:** abaixo de cerca de 552 px, a cauda lateral da sombra do card (8%) é
   recortada.
 - A área autenticada não foi re-medida em 320 px após a correção B1.
-- CI remoto e revisão humana do PR estão pendentes.
+- Sem revisão humana registrada no GitHub para a PR #57; merge por SamiaLuvanice.
