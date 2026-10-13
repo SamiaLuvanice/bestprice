@@ -3,7 +3,7 @@ numero: 0015
 titulo: Redesign com design system e logo oficiais BestPrice
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend, docs, harness]
 depende_de: [0011, 0012, 0013]
 ---

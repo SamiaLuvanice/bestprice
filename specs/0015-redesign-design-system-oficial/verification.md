@@ -156,7 +156,18 @@ No SHA `31a3fa8a68e1b0cecb56808c1e5457308febf9e8`, o workflow
 [#38399404769](https://github.com/SamiaLuvanice/bestprice/actions/runs/38399404769)
 aprovou `quality / Frontend`, `quality / Backend`, `quality / Automation`,
 `PR policy` e `CI`; os jobs `resolve` e `sync` do Project também passaram.
-Após a revalidação, o push seguinte inclui o ajuste AC02 da logo e este handoff;
-o CI remoto precisa passar de novo nesse SHA. Revisão independente local sem
-bloqueios; aprovação humana no GitHub e merge em `develop` permanecem pendentes
-(ruleset exige aprovação independente — sem autoaprovação). Status da spec: `pronta`.
+O ajuste AC02 da logo foi publicado no SHA `9cb135e` (o commit do ajuste foi
+reescrito para remover um trailer de autoria de agente, sem mudar o conteúdo). Nesse
+SHA, os workflows [#38406514936](https://github.com/SamiaLuvanice/bestprice/actions/runs/38406514936)
+e [#38406511104](https://github.com/SamiaLuvanice/bestprice/actions/runs/38406511104)
+aprovaram `quality / Frontend`, `quality / Backend`, `quality / Automation`,
+`PR policy`, `CI`, `resolve` e `sync`.
+
+## Integração
+
+O PR #49 recebeu aprovação independente no GitHub e foi integrado em `develop` em
+13/10/2026 (13:41 UTC), no commit de merge `0600cb3`; a Issue #48 foi fechada pelo
+`Closes #48`. A integração e este registro seguem em #50. Status da spec:
+`implementada`. Permanecem os limites já declarados: matriz completa de capturas, axe e
+fluxo com serviços reais não foram refeitos após o ajuste da logo, e a integração
+externa do Mercado Livre segue sem credenciais.
