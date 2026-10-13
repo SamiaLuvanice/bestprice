@@ -52,40 +52,6 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --color-text: #f5f5f7;
-    --color-muted: #aaaab0;
-    --color-bg: #000000;
-    --color-surface: #1d1d1f;
-    --color-surface-raised: #272729;
-    --color-border: #424245;
-    --color-border-soft: #353538;
-    --color-control-border: #8c8c93;
-    --color-primary: #ff3ea5;
-    --color-primary-strong: #ff71ba;
-    --color-primary-soft: #3b1830;
-    --color-badge-text: #000000;
-    --color-highlight: #ff3ea5;
-    --color-down: #65d886;
-    --color-down-soft: #143322;
-    --color-up: #ff8379;
-    --color-up-soft: #431e1c;
-    --color-amber: #f1c45e;
-    --color-amber-soft: #3d3118;
-    --color-danger-text: #ffaaa7;
-    --color-danger-bg: #411c1c;
-    --color-danger-border: #914848;
-    --color-focus: #ff3ea5;
-    --color-glass: rgba(29, 29, 31, .96);
-    --color-glass-edge: rgba(255, 255, 255, .15);
-    --color-overlay: rgba(0, 0, 0, .78);
-    --color-skeleton-a: #29292c;
-    --color-skeleton-b: #39393d;
-    --shadow-card: 0 12px 32px rgba(0, 0, 0, .45);
-  }
-}
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--color-bg); }
 button, input { font: inherit; }

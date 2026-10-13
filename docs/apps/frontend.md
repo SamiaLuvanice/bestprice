@@ -13,9 +13,9 @@ composição da entrada. As extensões aplicadas estão registradas em
 [`designsystem/README.md`](../../designsystem/README.md).
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
-foco nos temas claro e escuro. O tema acompanha `prefers-color-scheme` do sistema,
-inclusive quando a preferência muda com a página aberta; a SPA não oferece seletor
-nem grava uma preferência. A ação principal usa verde com texto preto; o rosa marca
+foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
+operacional (`prefers-color-scheme`); a SPA não oferece seletor nem grava uma
+preferência de tema. A ação principal usa verde com texto preto; o rosa marca
 links e destaques. Cabeçalho, menus e diálogos têm base sólida legível, com
 `backdrop-filter` como melhoria progressiva. A tipografia usa fontes do sistema e
 alternativas sans-serif, sem distribuir a fonte citada no protótipo. Os estados de
@@ -24,8 +24,9 @@ Em telas estreitas, a lista de produtos continua empilhada e sem rolagem horizon
 O layout reduz movimento não essencial quando `prefers-reduced-motion` está ativo.
 
 O catálogo contém dados demonstrativos; a SPA continua mostrando apenas dados da
-API. A verificação visual da spec 0015 foi feita em Chromium nas larguras de 320,
-768 e 1280 px, nos dois temas, com fixtures sintéticas e um smoke local com API e
+API. A verificação visual da spec 0015 (à época, com tema automático) foi feita em
+Chromium nas larguras de 320, 768 e 1280 px, nos dois temas, com fixtures sintéticas
+e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
 [`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
 
@@ -55,7 +56,7 @@ Com sessão, a área é uma página única com cabeçalho (marca, navegação In
 | `frontend/src/lib/focus.ts` | `useModalFocus` (foco preso em diálogo) e `useDisclosure` (sino, conta e menu da linha) |
 | `frontend/src/lib/url.ts` | `safeHttpsUrl`: só `https` vira `href`/`src` (bloqueia `javascript:`, `data:` e `http:`) |
 | `frontend/src/api.ts` | Cliente HTTP relativo a `/api`, cookie da sessão, validação das respostas (dinheiro e percentuais como strings decimais) e erros `ApiFailure` com `status`, `code`, `trackedProductId` e `retryAfterSeconds` |
-| `frontend/src/styles.css` | Tokens da identidade BestPrice, temas por preferência do sistema e apresentação responsiva |
+| `frontend/src/styles.css` | Tokens da identidade BestPrice no tema claro fixo e apresentação responsiva |
 | `frontend/src/assets/logo-bestprice.png` | Cópia da logo oficial usada na entrada e no cabeçalho autenticado |
 | `frontend/src/health.ts` | Cliente legado de `/api/health`, preservado para testes de saúde |
 
