@@ -3,7 +3,7 @@ numero: 0018
 titulo: Aplicação de stage no Render, Supabase e Cloudflare Pages
 tipo: feature
 prioridade: P1
-status: pronta
+status: implementada
 toca: [backend, frontend, infraestrutura, docs]
 depende_de: [0013]
 ---
@@ -35,28 +35,30 @@ configuração, banco ou migration impedem que a nova versão seja considerada p
 
 ## Critérios de aceite
 
-- [ ] O serviço web gratuito do Render acompanha a branch `stage` e só publica uma
+- [x] O serviço web gratuito do Render acompanha a branch `stage` e só publica uma
   revisão depois que os checks exigidos dessa revisão passam.
-- [ ] O projeto Cloudflare Pages usa `frontend/`, compila a aplicação e publica a
+- [x] O projeto Cloudflare Pages usa `frontend/`, compila a aplicação e publica a
   branch `stage` no ambiente de produção do projeto Pages.
-- [ ] Render, Supabase e Cloudflare estão configurados somente nos planos gratuitos,
+- [x] Render, Supabase e Cloudflare estão configurados somente nos planos gratuitos,
   sem add-ons, compute pago, recurso premium ou upgrade automático.
-- [ ] Os limites de gasto estão em zero ou não há forma de pagamento habilitada para
+- [x] Os limites de gasto estão em zero ou não há forma de pagamento habilitada para
   excedentes; esgotar uma cota pode interromper o serviço, sem gerar cobrança.
-- [ ] Chamadas `/api/*` da interface chegam à API de stage por proxy da mesma
+- [x] Chamadas `/api/*` da interface chegam à API de stage por proxy da mesma
   origem, sem exigir CORS aberto nem expor credenciais de banco na SPA.
-- [ ] O backend de stage usa um projeto PostgreSQL próprio no Supabase, com conexão
+- [x] O backend de stage usa um projeto PostgreSQL próprio no Supabase, com conexão
   cifrada; nenhuma credencial aparece no repositório ou nos logs de validação.
-- [ ] Uma implantação limpa aplica todas as migrations e responde `200` em
+- [x] Uma implantação limpa aplica todas as migrations e responde `200` em
   `GET /api/health`, com `status` e `database` iguais a `ok`.
-- [ ] Sem acesso ao banco, `GET /api/health` responde `503` com o contrato seguro, e
+- [x] Sem acesso ao banco, `GET /api/health` responde `503` com o contrato seguro, e
   o Render não considera a instância saudável.
-- [ ] O cookie de sessão emitido pelo backend de stage tem os atributos `Secure` e
+- [x] O cookie de sessão emitido pelo backend de stage tem os atributos `Secure` e
   `HttpOnly`.
-- [ ] Uma promoção posterior para `stage` atualiza o serviço sem alterar `develop`
+- [x] Uma promoção posterior para `stage` atualiza o serviço sem alterar `develop`
   ou `main`; a revisão implantada e o resultado do health check ficam registrados.
-- [ ] O procedimento de implantação e reversão, as variáveis necessárias e os
+- [x] O procedimento de implantação e reversão, as variáveis necessárias e os
   limites do plano gratuito estão documentados e foram conferidos no ambiente real.
+  A ação de rollback Render reimplantou um deploy anterior do mesmo commit;
+  reversão entre versões e rollback Pages não foram testados nesta spec.
 
 ## Fora de escopo
 
