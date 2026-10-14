@@ -16,7 +16,7 @@
 | [README](../README.md) | Setup rápido, execução local e Compose |
 | [Contexto do produto](product-context.md) | Visão de produção, monitoramento por URL, requisitos e decisões pendentes |
 | [Arquitetura](architecture.md) | Componentes, dependências, requisição, configuração e operação |
-| [Banco de dados](database.md) | Conexão, migration e tabelas de domínio da branch 0013 |
+| [Banco de dados](database.md) | Conexão, migrations, tabelas de domínio e proteção RLS de stage |
 | [Fluxo GitHub](github-workflow.md) | Processo de contribuição, CI, sincronização opcional e entrega |
 | [Progresso](PROGRESS.md) | Registro de andamento do harness |
 | [Aprendizados](LEARNINGS.md) | Aprendizados documentados do projeto |
