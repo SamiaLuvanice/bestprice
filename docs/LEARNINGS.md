@@ -2,6 +2,27 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-14 — Testar o comando de entrada no contrato do provedor
+
+**Contexto:** o primeiro deploy da API da spec 0018 no Render falhou antes da
+migration. O `dockerCommand` continha `sh -c` e uma expressão com `&&`; o log
+mostrou que a expressão inteira foi tratada como um comando inexistente. Os
+testes locais do Compose e o CI não exercitavam esse ponto de entrada do Render.
+
+**Princípio:** quando o provedor recebe um comando Docker próprio, use um
+executável explícito na imagem para sequências de inicialização. Verifique que o
+Blueprint aponta para ele, que a imagem o contém e que uma falha na migration
+impede a subida do servidor. Confirme o resultado nos logs do deploy real.
+
+**Anti-pattern:** colocar uma expressão de shell complexa diretamente em
+`dockerCommand` e considerar o start validado apenas porque o Compose local ou
+o build passou.
+
+**Referências:** Issue #60, PR #62 (`3e18697`), `render.yaml`,
+`backend/Dockerfile`, `backend/start-stage.sh`,
+`backend/tests/test_stage_start.py` e
+`specs/0018-backend-stage-render-supabase/verification.md`.
+
 ## 2026-10-13 — Medir contraste do vidro no pior fundo
 
 **Contexto:** no QA da spec 0015, o rosa escuro passava sobre a cor base do menu,

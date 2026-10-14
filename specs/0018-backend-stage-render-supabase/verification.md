@@ -1,6 +1,6 @@
 # Verificação — Spec 0018
 
-Data: 13/10/2026. Issue [#60](https://github.com/SamiaLuvanice/bestprice/issues/60).
+Iniciada em 13/10/2026; atualizada em 14/10/2026. Issue [#60](https://github.com/SamiaLuvanice/bestprice/issues/60).
 Base: `dbd20d7` de `origin/develop`; branch
 `feature/0018-issue-60-stage-render-supabase-pages` na worktree própria.
 
@@ -30,14 +30,14 @@ fora dele. Não há `actionlint` instalado e os workflows não foram alterados.
 
 ## Handoff e revisão da preparação local
 
-O commit `101b07b` está na PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61),
-aberta para `develop`. `gh pr checks 61 --watch` concluiu nesse commit com CI, Backend,
+O commit `101b07b` integrou a PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61)
+em `develop`. `gh pr checks 61 --watch` concluiu nesse commit com CI, Backend,
 Frontend, Automation, PR policy, sync e resolve verdes. A revisão independente
 de arquitetura do mesmo HEAD não apontou achado de código; QA aceitou a
 preparação local com
 a ressalva de que nenhum critério dependente do ambiente público foi aceito.
-Não há aprovação humana registrada no GitHub nem merge da PR. Esses checks não
-comprovam projetos externos, promoção para `stage` ou deploy.
+Não havia aprovação humana registrada no GitHub na revisão inicial. Esses checks,
+isoladamente, não comprovavam projetos externos, promoção para `stage` ou deploy.
 
 ## Provisionamento Supabase
 
@@ -74,26 +74,65 @@ Em 13/10/2026, os painéis das contas usadas para stage mostraram:
 - **Supabase / Samia's Org:** plano `Free`, spend cap habilitado e compute Nano
   no projeto de stage; os três add-ons listados estavam desativados.
 
-Render e Cloudflare não foram provisionados neste ponto. Essa proteção de custo
+Render e Cloudflare ainda não tinham sido provisionados nessa conferência inicial. Essa proteção de custo
 depende de manter a conta Render sem forma de pagamento e de implantar apenas
 instâncias Free; o excedente pode interromper o stage.
+
+## Promoção e primeiro deploy externo
+
+Em 13/10/2026, a PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61)
+foi integrada em `develop` (`16c8235`); a PR
+[#62](https://github.com/SamiaLuvanice/bestprice/pull/62) promoveu `develop` para
+`stage` (`3e18697`) e o CI de `stage` passou. A PR reversa
+[#63](https://github.com/SamiaLuvanice/bestprice/pull/63) foi aberta para preservar
+a ancestralidade em `develop`; ainda não há registro de integração dela aqui.
+
+O projeto Cloudflare Pages `bestprice-stage` publicou a revisão `3e18697` em
+[bestprice-stage.pages.dev](https://bestprice-stage.pages.dev). A interface abriu
+no navegador. Isso não demonstra que o proxy `/api/*`, login ou cookie funcionam,
+porque a API ainda não iniciou.
+
+O serviço Render Free `bestprice-stage-api`, em
+[bestprice-stage-api.onrender.com](https://bestprice-stage-api.onrender.com), foi
+criado com `DATABASE_URL` inserida diretamente pelo responsável como segredo. A
+senha do Supabase foi girada; seu valor não é registrado aqui. O primeiro deploy
+da revisão `3e18697` ficou **FAILED**. O log mostrou
+`sh: 1: alembic upgrade head && exec uvicorn ...: not found`: `dockerCommand`
+fornecia uma expressão de shell que o Render tentou iniciar como um único comando.
+Não há evidência de migration aplicada nem de API saudável nesse deploy. A Issue
+[#60](https://github.com/SamiaLuvanice/bestprice/issues/60) foi reaberta para a
+correção.
+
+Na branch `fix/0018-issue-60-render-start`, a correção em preparação substitui o
+`dockerCommand` por `/app/start-stage.sh`. O Dockerfile copia e marca o script
+executável; ele aplica `alembic upgrade head` e só depois inicia Uvicorn. O teste
+`backend/tests/test_stage_start.py` cobre a referência do Blueprint e Dockerfile;
+os cenários POSIX foram escritos para conferir a ordem e a falha da migration.
+Com o diretório de trabalho em `backend/` desta worktree, usando os executáveis
+Ruff e pytest da venv da worktree anterior, `ruff check .` passou e
+`pytest -q tests/test_stage_start.py --basetemp=.pytest-tmp` retornou
+**1 passed, 2 skipped**. O teste que confere a configuração passou; os dois
+cenários de execução POSIX foram pulados no Windows e não estão verificados
+localmente. `uv run` não estava disponível por restrições de cache/rede.
+Ainda faltam CI em Linux e novo deploy no Render; nenhum resultado de migration
+ou health público pode ser atribuído a essa correção neste ponto.
 
 ## Critérios de aceite
 
 | Critério | Estado e limite |
 |---|---|
-| Render Free na branch `stage`, deploy após checks | Configurado em `render.yaml`; falta sincronizar Blueprint e comprovar deploy no Render. |
-| Pages compila `frontend/` e publica `stage` | Build local verde; projeto Pages e deploy real pendentes. |
-| Três serviços gratuitos, sem add-ons | Supabase `Free` com Nano US$ 0/h e add-ons desativados; Render `Hobby` sem serviço; Cloudflare `Workers Free` sem projeto Pages. Planos vistos nos painéis, implantação ainda pendente. |
-| Sem excedentes faturáveis | Supabase spend cap ligado; Render sem cartão e pipeline limitado a US$ 0; Cloudflare Workers Free sem forma de pagamento. A documentação Render prevê suspensão dos serviços Free em vez de cobrar banda sem cartão. Revalidar após criar os serviços e não cadastrar pagamento. |
-| Proxy `/api/*` na mesma origem | Teste da Function e `_routes.json` verdes; falta navegador no Pages real. |
-| Supabase isolado, TLS e segredos | Projeto `bestprice-stage` exclusivo criado e saudável; conexão do conector usou TLS. Session pooler com `sslmode=require` no Render e segredo ainda pendentes. |
-| Migrations e health 200 em deploy limpo | Comprovados no Compose local; deploy Render/Supabase pendente. |
+| Render Free na branch `stage`, deploy após checks | Serviço criado; primeiro deploy da revisão `3e18697` falhou na inicialização. Novo deploy e política de checks no serviço real ainda precisam de conferência. |
+| Pages compila `frontend/` e publica `stage` | Projeto Pages publicou `3e18697` em HTTPS e a interface abriu; atualização posterior ainda não verificada. |
+| Três serviços gratuitos, sem add-ons | Supabase `Free` com Nano US$ 0/h e add-ons desativados; serviço Render `Free`; projeto Pages em `Workers Free`. Revalidar planos/controles após a correção. |
+| Sem excedentes faturáveis | Supabase spend cap ligado; Render sem cartão e pipeline limitado a US$ 0; Cloudflare Workers Free sem forma de pagamento. A documentação Render prevê suspensão dos serviços Free em vez de cobrar banda sem cartão. Revalidar os controles com os serviços já criados e não cadastrar pagamento. |
+| Proxy `/api/*` na mesma origem | Teste da Function e `_routes.json` verdes; Pages público disponível, mas fluxo via API ainda não verificado. |
+| Supabase isolado, TLS e segredos | Projeto `bestprice-stage` exclusivo criado; `DATABASE_URL` foi inserida como segredo pelo responsável. TLS Render → Supabase e migrations ainda não verificados. |
+| Migrations e health 200 em deploy limpo | Comprovados no Compose local; primeiro deploy Render falhou antes da migration. Novo deploy pendente. |
 | Health 503 sem DB e Render considera unhealthy | 503 real local comprovado; decisão do Render pendente. |
 | Cookie `Secure` e `HttpOnly` | Teste HTTPS local verde; cookie no endereço Pages pendente. |
-| Nova promoção atualiza somente `stage` | PR #61 para `develop` aberta e CI verde; merge, promoção para `stage` e deploy pendentes. |
-| Procedimento, variáveis, cotas e reversão documentados e conferidos | Documentação local sincronizada; painéis e operação real pendentes. |
+| Nova promoção atualiza somente `stage` | Promoção inicial #62 e CI de `stage` concluídos; promoção posterior e deploy atualizado pendentes. |
+| Procedimento, variáveis, cotas e reversão documentados e conferidos | Painéis conferidos antes do provisionamento; operação real e rollback pendentes. |
 
-Nenhum critério que depende do ambiente público é dado como aceito por um teste
-local ou pelo CI da PR. Promoção, operação real e aprovação humana no GitHub
+Os testes locais e o CI não substituem a validação pública. O Pages está publicado,
+mas o primeiro deploy da API falhou; migrations, health, proxy, cookie e rollback
 permanecem pendentes.

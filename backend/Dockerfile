@@ -10,6 +10,8 @@ RUN uv sync --locked --no-dev --no-install-project
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini ./alembic.ini
+COPY start-stage.sh /app/start-stage.sh
+RUN chmod +x /app/start-stage.sh
 
 ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8000

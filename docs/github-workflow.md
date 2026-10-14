@@ -254,10 +254,13 @@ público: ajuste a visibilidade e o acesso do repositório nas configurações d
 Se um pacote já existe, permita acesso de Actions deste repositório. Consumidores
 de pacote privado precisam de credencial própria com `read:packages`.
 
-**Implantação externa ainda não comprovada:** a [spec 0018](../specs/0018-backend-stage-render-supabase/spec.md)
-prepara stage em Render, Supabase e Cloudflare Pages, fora do workflow Delivery.
-Projetos, segredos, HTTPS público, migration real e reversão ainda precisam de
-provisionamento e validação. A entrega de `main` por este workflow termina em
+**Implantação externa ainda não concluída:** a [spec 0018](../specs/0018-backend-stage-render-supabase/spec.md)
+configura stage em Render, Supabase e Cloudflare Pages, fora do workflow Delivery.
+As PRs [#61](https://github.com/SamiaLuvanice/bestprice/pull/61) e
+[#62](https://github.com/SamiaLuvanice/bestprice/pull/62) integraram a preparação
+em `develop` e `stage`. O Pages publicou a interface, mas o primeiro deploy do
+Render falhou na inicialização; migration real, health público e reversão seguem
+pendentes. A entrega de `main` por este workflow termina em
 GHCR e release; produção continua sem destino de implantação. Não reutilize credenciais
 de estudo em infraestrutura pública.
 
