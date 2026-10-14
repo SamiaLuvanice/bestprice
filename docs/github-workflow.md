@@ -17,7 +17,8 @@ flowchart LR
 ```
 
 `develop` é a branch padrão e a base das tarefas. `stage` valida candidatas e
-`main` publica releases. A spec descreve o comportamento; a Issue identifica a
+tem implantação externa em Render, Supabase e Cloudflare Pages pela spec 0018;
+`main` publica releases no GHCR, sem destino de implantação de produção. A spec descreve o comportamento; a Issue identifica a
 tarefa e, se configurado, o Project organiza prioridade, responsáveis e progresso. Nenhum desses
 registros substitui as evidências de verificação.
 
@@ -254,15 +255,22 @@ público: ajuste a visibilidade e o acesso do repositório nas configurações d
 Se um pacote já existe, permita acesso de Actions deste repositório. Consumidores
 de pacote privado precisam de credencial própria com `read:packages`.
 
-**Implantação externa ainda não concluída:** a [spec 0018](../specs/0018-backend-stage-render-supabase/spec.md)
-configura stage em Render, Supabase e Cloudflare Pages, fora do workflow Delivery.
-As PRs [#61](https://github.com/SamiaLuvanice/bestprice/pull/61) e
-[#62](https://github.com/SamiaLuvanice/bestprice/pull/62) integraram a preparação
-em `develop` e `stage`. O Pages publicou a interface, mas o primeiro deploy do
-Render falhou na inicialização; migration real, health público e reversão seguem
-pendentes. A entrega de `main` por este workflow termina em
-GHCR e release; produção continua sem destino de implantação. Não reutilize credenciais
-de estudo em infraestrutura pública.
+**Implantação externa de stage:** a [spec 0018](../specs/0018-backend-stage-render-supabase/spec.md)
+configura Render, Supabase e Cloudflare Pages fora do workflow Delivery. As PRs
+[#68](https://github.com/SamiaLuvanice/bestprice/pull/68) e
+[#69](https://github.com/SamiaLuvanice/bestprice/pull/69) integraram a migration
+RLS e promoveram a revisão `0b5aea4` para `stage`. O CI da revisão terminou às
+16:42:07 UTC; o Render iniciou o deploy automático às 16:42:09 UTC, aplicou
+`20261014rls` e ficou Live. Pages publicou a mesma revisão; health direto e pelo
+proxy retornaram 200 com banco `ok`. Uma pausa controlada do Supabase produziu
+503 seguro na API e evento de health check 503 no Render, seguido de 502 na
+borda; o restore recuperou o health 200. O controle de rollback do Render foi
+exercitado com um deploy anterior do mesmo commit #67, antes da migration;
+reversão entre versões e rollback Pages não foram testados. O procedimento e os
+limites estão na [verificação 0018](../specs/0018-backend-stage-render-supabase/verification.md).
+A entrega de `main` por este workflow termina em GHCR e release; produção continua
+sem destino de implantação. Não reutilize credenciais de estudo em infraestrutura
+pública.
 
 ## Manutenção e referências
 

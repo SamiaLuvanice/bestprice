@@ -137,7 +137,7 @@ Os testes locais e o CI não substituem a validação pública. O Pages está pu
 mas o primeiro deploy da API falhou; migrations, health, proxy, cookie e rollback
 permanecem pendentes.
 
-## Atualização de stage em 14/10/2026
+## Atualização intermediária de stage em 14/10/2026
 
 As PRs [#66](https://github.com/SamiaLuvanice/bestprice/pull/66) (correção de start) e [#67](https://github.com/SamiaLuvanice/bestprice/pull/67) (promoção para `stage`, merge `7639d85`) foram integradas com CI verde. A sincronização reversa [#63](https://github.com/SamiaLuvanice/bestprice/pull/63) entrou em `develop` (`d530e94`) sem diferença de arquivos. O Render mostra `bestprice-stage-api` Docker Free **Live**, com health path `/api/health` e `Auto-Deploy: After CI Checks Pass`. O Supabase recebeu migrations até `20261009safe`, criando dez tabelas `public`. A API HTTPS direta e a rota de mesma origem no Pages retornaram 200 com `{"status":"ok","database":"ok"}`; a raiz do Pages retornou 200. `GET /api/auth/me` sem cookie retornou 401 seguro nas duas origens, sem abrir CORS.
 
@@ -161,3 +161,29 @@ A branch `feature/0018-issue-60-supabase-rls` acrescenta a migration `20261014rl
 | Promoção posterior | #67 atualizou `stage`, sem alteração de `main`; nova promoção precisa confirmar a ordem checks→deploy. |
 
 A spec permanece `pronta` e a Issue #60 aberta até os critérios restantes serem demonstrados.
+
+## Verificação final de stage em 14/10/2026
+
+A PR [#68](https://github.com/SamiaLuvanice/bestprice/pull/68) integrou a migration de RLS em `develop`; o CI executou **154 testes backend** com PostgreSQL. A PR [#69](https://github.com/SamiaLuvanice/bestprice/pull/69) promoveu a revisão `0b5aea4` para `stage`. O CI dessa revisão ([run 38600177498](https://github.com/SamiaLuvanice/bestprice/actions/runs/38600177498)) terminou com sucesso às **16:42:07 UTC**, incluindo **154 testes backend aprovados**, 1 warning, em 18,64 segundos. O deploy automático Render `dep-db7r1ocs728c73di33v0` iniciou às **16:42:09 UTC**, dois segundos depois, e ficou **Live** em 47,1 segundos. O log registrou Alembic `20261009safe -> 20261014rls` às **16:42:40 UTC**. O Blueprint permaneceu com **Auto Sync: No** e `render.yaml` não mudou nessa promoção, confirmando a sequência checks→deploy para esta revisão. O projeto Pages publicou a revisão `0b5aea4` em produção (`5be92b4c...`, sucesso em 32 segundos). A PR reversa [#70](https://github.com/SamiaLuvanice/bestprice/pull/70) foi integrada em `develop` às 16:46:37 UTC (`8c03edd`), sem diferença de arquivos e com checks verdes.
+
+Após o deploy, a consulta ao Supabase retornou head `20261014rls`, **10/10** tabelas `public` com RLS ativo e **0** políticas. `GET /api/health` direto na API e pelo Pages retornou 200 com `status=ok` e `database=ok`. O teste anterior de login na origem Pages comprovou cookie `Secure` e `HttpOnly`, além de `SameSite=Lax` e `Path=/api`; a conta QA foi removida.
+
+O teste controlado de falha do banco começou com Supabase `ACTIVE_HEALTHY`, head `20261009safe`, RLS 10/10 e health 200. Após pausa autorizada, o projeto ficou `INACTIVE` e a API pública respondeu **503** com JSON seguro. Events do Render registrou `HTTP health check failed with status code 503` às 13:33 (America/Sao_Paulo); depois, foi observado 502 na borda. Restaurado o projeto Supabase, ele voltou a `ACTIVE_HEALTHY`, o Render registrou `Service recovered` às 13:37, o health retornou 200 e o head/RLS permaneceram preservados. O contrato 503 foi observado antes do 502 da borda; a causa interna deste segundo status não foi inspecionada.
+
+Antes de aplicar a nova migration, a ação de rollback no Render **reimplantou um deploy anterior do mesmo commit #67 (`7639d85`)**. O deploy `dep-db7r0cjrjlhs73cn7fig` ficou Live às 13:39:50 e o health direto e via Pages retornou 200. Isso exercitou o controle de rollback e a recuperação operacional, **sem testar reversão entre versões de código**. A ação desativou Auto-Deploy no painel; a opção **After CI Checks Pass** foi restaurada antes da promoção #69. O rollback do Pages não foi testado. **Não usar #67 como alvo depois da migration `20261014rls`**: o código antigo não conhece o novo head Alembic. Para reversão futura, selecione apenas deploy compatível com o esquema atual, confira API e Pages na mesma versão funcional e valide health e sessão.
+
+### Critérios de aceite após #69
+
+| Critério | Evidência e limite |
+|---|---|
+| Render Free na branch `stage`, depois dos checks | Serviço Docker Free e branch `stage` conferidos. Em #69, CI terminou 16:42:07 UTC e deploy automático iniciou 16:42:09 UTC; Live e migration no log. O teste demonstra essa promoção, sem garantir toda execução futura. |
+| Pages publica `stage` | Projeto de produção publicou `0b5aea4` com sucesso; build de `frontend/` e proxy configurados. |
+| Planos gratuitos e sem excedentes cobrados | Supabase Free/Nano com spend cap e sem add-ons; Render Free sem cartão e pipeline limitado a US$ 0; Cloudflare Free sem pagamento, conforme conferências dos painéis. Cotas podem suspender o stage. |
+| Proxy e banco isolado com TLS e segredos | Health via Pages e API direta 200; projeto Supabase exclusivo, URL com `sslmode=require` inserida como segredo do Render, sem valor registrado. Nenhum CORS aberto necessário. |
+| Migrations e health em deploy limpo | Log Alembic `20261009safe -> 20261014rls`; consulta posterior confirmou head, RLS 10/10 e health 200 nas duas origens. |
+| Falha de banco e Render unhealthy | API retornou 503 seguro com banco `INACTIVE`; Events do Render registrou health check 503, seguido de 502 observado na borda. Recuperação e health 200 observados após restore. |
+| Cookie de sessão | Login público anterior comprovou `Secure` e `HttpOnly`; conta e sessão QA descartadas. |
+| Promoção posterior restrita a `stage` | #69 publicou a revisão `0b5aea4` em Render e Pages de stage; `main` não participou dessa promoção. |
+| Implantação, reversão, variáveis e cotas | Configuração e limites documentados e conferidos; ação de rollback Render reimplantou deploy anterior do mesmo commit #67 antes da migration. Reversão entre versões e rollback Pages não foram testados; #67 não é alvo compatível após #69. |
+
+Os critérios da spec estão demonstrados nos limites descritos acima. Esta branch registra a spec como `implementada`; a documentação final ainda precisa ser integrada em `develop`.

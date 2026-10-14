@@ -81,7 +81,7 @@ Começar como monólito modular. Fluxo conceitual: React/Vite → API REST FastA
 | Frontend | React, Vite, TypeScript, React Router; componentes e gráficos a definir | React/Vite/TypeScript presentes; sem router ou bibliotecas de componentes/gráficos |
 | Backend | Python 3.13, FastAPI, Pydantic, SQLAlchemy, Alembic, HTTPX e autenticação JWT | FastAPI/Pydantic, SQLAlchemy, Alembic e HTTPX (cliente oficial do Mercado Livre); sessão por cookie HttpOnly com token opaco, não JWT |
 | Banco | PostgreSQL | Tabelas de domínio por migrations Alembic; ver [banco](database.md) |
-| Infraestrutura | Docker, Compose, Git, GitHub, Actions e CI/CD | Stack local, CI e workflow de publicação de imagens/release; sem deploy externo configurado |
+| Infraestrutura | Docker, Compose, Git, GitHub, Actions e CI/CD | Stack local, CI e workflow de publicação de imagens/release; stage externo configurado pela spec 0018, sem destino DEV/PROD |
 
 Não instalar dependências apenas para antecipar essa lista. Introduzi-las nas specs que justificarem seu uso, mantendo os padrões existentes e contratos compatíveis entre frontend e backend.
 
@@ -89,7 +89,7 @@ Não instalar dependências apenas para antecipar essa lista. Introduzi-las nas 
 
 O destino é operar com **LOCAL, DEV, STAGE e PROD**, com configurações independentes para banco, secrets, URLs, credenciais, chaves e monitoramento. Nenhuma credencial deve ser versionada ou exposta na SPA, nos logs ou nas mensagens de erro.
 
-O fluxo desejado inclui PR, lint, testes, análise, build, imagem Docker, deploy DEV, validação em STAGE e promoção segura para PROD, com rollback. Hoje as branches `develop`, `stage` e `main` organizam integração e promoção de código; sua existência não comprova ambientes implantados. O [fluxo GitHub](github-workflow.md) descreve as automações existentes. Destino de hospedagem, HTTPS, backups/restauração, execução de migrations, observabilidade e rollback operacional ainda precisam de configuração e validação.
+O fluxo desejado inclui PR, lint, testes, análise, build, imagem Docker, deploy DEV, validação em STAGE e promoção segura para PROD, com rollback. Hoje as branches `develop`, `stage` e `main` organizam integração e promoção de código; sua existência não comprova ambientes implantados. A [spec 0018](../specs/0018-backend-stage-render-supabase/verification.md) configurou e verificou stage externo com HTTPS, migrations, health e uma ação de rollback Render que reimplantou deploy do mesmo commit. Reversão entre versões e rollback Pages não foram testados. DEV e PROD ainda precisam de destino; backups/restauração e observabilidade operacional continuam pendentes. O [fluxo GitHub](github-workflow.md) descreve as automações existentes.
 
 Priorizar tecnologias e serviços gratuitos ou com free tier na fase inicial, avaliando limites, custo futuro e confiabilidade antes da adoção. Não há fornecedor de hospedagem escolhido por este documento.
 
