@@ -7,7 +7,7 @@
 - [x] T02 — Criar worktree e branch da Issue a partir de `origin/develop`.
 - [x] T03 — Testar cookie em `APP_ENV=stage` falhando pelo motivo esperado; corrigir
   a política e obter teste verde.
-- [ ] T04 — Adicionar Blueprint sem segredos, com build e start compatíveis com
+- [x] T04 — Adicionar Blueprint sem segredos, com build e start compatíveis com
   Render free; corrigir e validar o comando Docker após a falha do primeiro deploy.
 - [x] T05 — Adicionar Pages Function para proxy `/api/*`, `_routes.json` e
   documentar configuração de build/branch; validar proxy localmente.
@@ -17,8 +17,13 @@
   como última etapa após qualquer alteração de código.
 - [x] T08 — Abrir PR para `develop`, obter revisão e CI verde; promover por PR
   para `stage`.
-- [ ] T09 — Configurar projeto Supabase e segredos no Render, sincronizar Blueprint
+- [x] T09 — Configurar projeto Supabase e segredos no Render, sincronizar Blueprint
   e validar logs, migrations, health e cookie no endereço HTTPS. O primeiro deploy
-  Render falhou antes da migration; o Pages publicou a interface.
+  falhou; a correção #67 chegou a Live, com health e cookie conferidos.
 - [ ] T10 — Registrar resultados, limites e procedimento de reversão; concluir
   somente quando cada critério de aceite estiver comprovado.
+- [ ] T11 — Integrar a migration RLS (`20261014rls`) após CI PostgreSQL e promover
+  novamente a `stage`; conferir head, 10/10 tabelas protegidas e health público.
+- [ ] T12 — Com Auto Sync desligado no Blueprint, comparar horários dos checks e
+  do próximo deploy Render; exercitar rollback e falha pública do banco com 503
+  e health Render antes de marcar a spec como `implementada`.
