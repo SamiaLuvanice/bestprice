@@ -20,10 +20,12 @@
 - [x] T09 — Configurar projeto Supabase e segredos no Render, sincronizar Blueprint
   e validar logs, migrations, health e cookie no endereço HTTPS. O primeiro deploy
   falhou; a correção #67 chegou a Live, com health e cookie conferidos.
-- [ ] T10 — Registrar resultados, limites e procedimento de reversão; concluir
+- [x] T10 — Registrar resultados, limites e procedimento de reversão; concluir
   somente quando cada critério de aceite estiver comprovado.
-- [ ] T11 — Integrar a migration RLS (`20261014rls`) após CI PostgreSQL e promover
+- [x] T11 — Integrar a migration RLS (`20261014rls`) após CI PostgreSQL e promover
   novamente a `stage`; conferir head, 10/10 tabelas protegidas e health público.
-- [ ] T12 — Com Auto Sync desligado no Blueprint, comparar horários dos checks e
+- [x] T12 — Com Auto Sync desligado no Blueprint, comparar horários dos checks e
   do próximo deploy Render; exercitar rollback e falha pública do banco com 503
-  e health Render antes de marcar a spec como `implementada`.
+  e health Render antes de marcar a spec como `implementada`. A ação de rollback
+  reimplantou deploy anterior do mesmo commit; troca entre versões e rollback
+  Pages não foram exercitados.
