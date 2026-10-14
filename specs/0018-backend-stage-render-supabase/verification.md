@@ -78,7 +78,7 @@ Render e Cloudflare ainda não tinham sido provisionados nessa conferência inic
 depende de manter a conta Render sem forma de pagamento e de implantar apenas
 instâncias Free; o excedente pode interromper o stage.
 
-## Promoção e primeiro deploy externo
+## Promoção e primeiro deploy externo (registro histórico de 13/10)
 
 Em 13/10/2026, a PR [#61](https://github.com/SamiaLuvanice/bestprice/pull/61)
 foi integrada em `develop` (`16c8235`); a PR
@@ -136,3 +136,28 @@ ou health público pode ser atribuído a essa correção neste ponto.
 Os testes locais e o CI não substituem a validação pública. O Pages está publicado,
 mas o primeiro deploy da API falhou; migrations, health, proxy, cookie e rollback
 permanecem pendentes.
+
+## Atualização de stage em 14/10/2026
+
+As PRs [#66](https://github.com/SamiaLuvanice/bestprice/pull/66) (correção de start) e [#67](https://github.com/SamiaLuvanice/bestprice/pull/67) (promoção para `stage`, merge `7639d85`) foram integradas com CI verde. A sincronização reversa [#63](https://github.com/SamiaLuvanice/bestprice/pull/63) entrou em `develop` (`d530e94`) sem diferença de arquivos. O Render mostra `bestprice-stage-api` Docker Free **Live**, com health path `/api/health` e `Auto-Deploy: After CI Checks Pass`. O Supabase recebeu migrations até `20261009safe`, criando dez tabelas `public`. A API HTTPS direta e a rota de mesma origem no Pages retornaram 200 com `{"status":"ok","database":"ok"}`; a raiz do Pages retornou 200. `GET /api/auth/me` sem cookie retornou 401 seguro nas duas origens, sem abrir CORS.
+
+Login de uma conta QA descartável pela origem Pages retornou 200 e cookie `bestprice_session` com `Secure`, `HttpOnly`, `SameSite=Lax` e `Path=/api`. Conta e sessão foram apagadas, com consulta confirmando zero linhas QA. Senha e cookie não foram registrados.
+
+O Blueprint iniciou o deploy de #67 às 12:13:57 UTC, antes de o CI dessa revisão concluir às 12:14:40 UTC. O Blueprint passou a **Auto Sync: No**; o serviço manteve **After CI Checks Pass**. A ordem checks→deploy precisa ser aferida na próxima promoção sem mudança em `render.yaml`.
+
+Após o deploy, a inspeção do Supabase mostrou dez tabelas `public` com RLS desligado e grants `SELECT`/`INSERT` para `anon`, inclusive `users` e `operator_credentials`. Com autorização explícita do responsável, foram aplicados dez `ALTER TABLE ... ENABLE ROW LEVEL SECURITY`, sem políticas. A verificação retornou **10/10** com RLS ativo, **0** desabilitadas, **0** políticas em `public` e `row_security_active=true` para `anon` e `authenticated` em `users` e `operator_credentials`. O health público direto e via Pages permaneceu 200.
+
+A branch `feature/0018-issue-60-supabase-rls` acrescenta a migration `20261014rls` para reproduzir a proteção. O teste local direcionado retornou **1 passed, 1 skipped**; o teste PostgreSQL foi pulado por ausência de `TEST_DATABASE_URL`. Ruff e `git diff --check` passaram. A revisão independente não encontrou achado bloqueante após o teste passar a comparar todas as tabelas `public`. CI com PostgreSQL e aplicação desta migration pelo deploy ainda estão pendentes. O downgrade exige procedimento manual de segurança, pois desabilitar RLS reabriria as tabelas a papéis com grants existentes.
+
+### Estado dos critérios após esta atualização
+
+| Critério | Evidência e limite |
+|---|---|
+| Render Free, branch `stage`, checks antes do deploy | Serviço Live e configuração de checks conferidos. A ordem checks→deploy após desligar Auto Sync ainda não foi demonstrada. |
+| Pages, três planos Free e custo | Pages publicou `stage`; Supabase Free/Nano sem add-ons e com spend cap; Render Free sem cartão e pipeline limitado a US$ 0; Cloudflare Free sem pagamento. Esgotar cotas pode interromper o serviço. |
+| Proxy, Supabase isolado, migrations e health | Proxy Pages e API direta retornaram 200 com banco `ok`; projeto Supabase exclusivo, `DATABASE_URL` no Render com `sslmode=require`; migrations até `20261009safe` aplicadas. Migration RLS ainda aguarda promoção. |
+| Cookie de sessão | Login HTTPS via Pages comprovou `Secure` e `HttpOnly`; conta QA removida. |
+| Falha de banco e rollback | 503 foi comprovado somente no Compose local. Falha pública, reação do Render e rollback real não foram exercitados. |
+| Promoção posterior | #67 atualizou `stage`, sem alteração de `main`; nova promoção precisa confirmar a ordem checks→deploy. |
+
+A spec permanece `pronta` e a Issue #60 aberta até os critérios restantes serem demonstrados.
