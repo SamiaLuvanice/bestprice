@@ -3,7 +3,7 @@ numero: 0022
 titulo: Conexão resiliente ao banco
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [backend]
 depende_de: []
 ---
