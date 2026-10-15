@@ -35,6 +35,12 @@ as superfícies afetadas e a spec responsável.
 | Botão pílula de largura total (`.btn-pill`), reaproveitando `.primary-button` e os tokens `--color-action`, `--color-action-text` e `--color-action-hover` | Dar destaque à ação única do formulário sem criar uma cor nova | Botão "Entrar" |
 | Card ilustrativo de vidro sem dados (ícone e frase de benefício, sem produto, preço, percentual, contagem ou horário); superfície sólida por padrão e `--color-glass-translucent` com desfoque só em `@supports` | `login.html` mostra produto e preços fictícios; a aplicação não pode exibir dados ilustrativos (`frontend.md`, AC29 da 0012) | Coluna visual da área de login |
 
+| Extensão da spec 0019 | Motivo | Superfícies |
+|---|---|---|
+| Anel de foco dos campos (`outline: 2px solid var(--color-focus)` com recuo de 2px), além da cor da borda | Indicador de foco com contraste mínimo de 3:1, sem depender só da cor da borda | Campos E-mail e Senha do login |
+| Mensagem de validação em texto (`.field-error`, `--color-danger-text`, 14px) e borda `--color-danger-text` no campo inválido (`aria-invalid`), sem `role="alert"` | Substituir o balão nativo por texto associado ao campo (`aria-describedby`), mantendo o alerta do servidor como único `alert` | Login |
+| Botão em envio com `aria-disabled`/`aria-busy`, fundo `--color-surface`, texto `--color-muted` e cursor de progresso | Aparência distinta sem usar `disabled`, que tira o foco do botão | Botão "Entrar" |
+
 ## Abrir o protótipo
 
 Abra `index.html` diretamente no navegador, ou execute `python -m http.server 8000` nesta pasta e acesse `http://localhost:8000/`. A página usa CSS e JavaScript embutidos e não precisa da API, do banco nem de dependências de rede para a demonstração.

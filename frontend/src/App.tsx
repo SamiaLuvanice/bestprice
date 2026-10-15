@@ -86,7 +86,7 @@ export function App({ clock = systemClock }: Props) {
   if (sessionState === 'guest') {
     return <div className="page">
       <main className="page-main">
-        <LoginForm busy={busy} error={guestMessage} onSubmit={login} />
+        <LoginForm busy={busy} error={guestMessage} onSubmit={login} onValidationFail={() => setGuestMessage(null)} />
       </main>
       <footer>BestPrice · Acompanhe com clareza</footer>
     </div>

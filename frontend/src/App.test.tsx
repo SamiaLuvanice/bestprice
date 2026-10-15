@@ -539,7 +539,9 @@ it('mostra Entrando… sem reenviar, preserva os campos após 401, foca a Senha 
   fillLogin('pessoa@example.com', 'errada')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   const busyButton = await screen.findByRole('button', { name: 'Entrando…' })
-  expect(busyButton).toBeDisabled()
+  expect(busyButton).toHaveAttribute('aria-disabled', 'true')
+  expect(busyButton).toHaveAttribute('aria-busy', 'true')
+  expect(busyButton).not.toBeDisabled()
   expect(screen.getByRole('button', { name: 'Mostrar senha' })).toHaveAttribute('aria-pressed', 'false')
   fireEvent.click(busyButton)
   fireEvent.submit(busyButton.closest('form') as HTMLFormElement)
@@ -555,6 +557,21 @@ it('mostra Entrando… sem reenviar, preserva os campos após 401, foca a Senha 
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   expect(await screen.findByText('pessoa@example.com')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
+})
+
+// 0019/AC07: nova falha de validação remove o alerta do servidor anterior e não chama a API.
+it('remove o alerta do servidor quando um novo envio falha na validação, sem chamar a API', async () => {
+  const mockFetch = guestThenLogin(() => reply(401, apiError('invalid_credentials', 'E-mail ou senha inválidos.')))
+  render(<App />)
+  await screen.findByRole('button', { name: 'Entrar' })
+  fillLogin('pessoa@example.com', 'errada')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.'))
+  fillLogin('pessoa@example.com', '')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByText('Informe sua senha.')).toBeInTheDocument()
+  expect(callsTo(mockFetch, '/api/auth/login', 'POST')).toHaveLength(1)
 })
 
 it('mostra falha de conexão no login como alerta e mantém os campos', async () => {
