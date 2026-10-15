@@ -16,22 +16,67 @@ function submitUrl() {
 // Pessoa autenticada com o dublê compartilhado (src/test/fakeApi.ts), que também responde às não lidas do sino.
 const signedIn = fakeApi
 
-it('exibe a proposta do BestPrice e pede sessão antes de monitorar', async () => {
+// 0020/AC01: no estado de visitante o cabeçalho de marca não precede o login.
+it('não mostra o cabeçalho de marca ao visitante', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
   })))
   render(<App />)
-  expect(screen.getByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })).toBeInTheDocument()
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
-  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument()
+  expect(screen.queryByRole('banner')).not.toBeInTheDocument()
 })
 
-it('mostra a logo oficial inteira e com nome acessível na entrada', async () => {
+// 0020/AC01: no estado de visitante o formulário de link não precede o login.
+it('não mostra o formulário de monitoramento por link ao visitante', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
+    error: { code: 'unauthenticated', message: 'Entre para continuar.' },
+  })))
+  render(<App />)
+  expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })).not.toBeInTheDocument()
+  expect(screen.queryByPlaceholderText('https://www.mercadolivre.com.br/...')).not.toBeInTheDocument()
+})
+
+// 0020/AC01: o primeiro elemento do main é a área de login.
+it('tem o login como primeiro elemento do conteúdo principal do visitante', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
   })))
   render(<App />)
   await screen.findByRole('button', { name: 'Entrar' })
+  const first = screen.getByRole('main').firstElementChild
+  expect(first).not.toBeNull()
+  expect(first).toContainElement(screen.getByLabelText('E-mail'))
+  expect(first).toHaveAccessibleName('Bem-vindo de volta')
+})
+
+// 0020/AC02: "Bem-vindo de volta" é o único h1 e nenhum h2 o antecede.
+it('tem Bem-vindo de volta como único título de nível 1, sem h2 anterior', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
+    error: { code: 'unauthenticated', message: 'Entre para continuar.' },
+  })))
+  const { container } = render(<App />)
+  await screen.findByRole('button', { name: 'Entrar' })
+  expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Bem-vindo de volta'])
+  const headings = Array.from(container.querySelectorAll('h1, h2, h3, h4, h5, h6'))
+  expect(headings[0].tagName).toBe('H1')
+})
+
+// 0020/AC04: as telas de carregamento e de sessão indisponível mantêm o visual atual.
+it('mantém cabeçalho e hero enquanto verifica a sessão e quando ela está indisponível', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))))
+  render(<App />)
+  expect(screen.getByRole('banner')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })).toBeInTheDocument()
+  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  expect(await screen.findByText('Serviço temporariamente indisponível.')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
+})
+
+it('mostra a logo oficial inteira e com nome acessível enquanto verifica a sessão', () => {
+  vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise(() => undefined)))
+  render(<App />)
   const logos = within(screen.getByRole('banner')).getAllByRole('img', { name: 'BestPrice' })
   expect(logos).toHaveLength(1)
   expect(logos[0].getAttribute('src')).toContain('logo-bestprice.png')
@@ -494,7 +539,9 @@ it('mostra Entrando… sem reenviar, preserva os campos após 401, foca a Senha 
   fillLogin('pessoa@example.com', 'errada')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   const busyButton = await screen.findByRole('button', { name: 'Entrando…' })
-  expect(busyButton).toBeDisabled()
+  expect(busyButton).toHaveAttribute('aria-disabled', 'true')
+  expect(busyButton).toHaveAttribute('aria-busy', 'true')
+  expect(busyButton).not.toBeDisabled()
   expect(screen.getByRole('button', { name: 'Mostrar senha' })).toHaveAttribute('aria-pressed', 'false')
   fireEvent.click(busyButton)
   fireEvent.submit(busyButton.closest('form') as HTMLFormElement)
@@ -505,11 +552,26 @@ it('mostra Entrando… sem reenviar, preserva os campos após 401, foca a Senha 
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
   expect(screen.getByLabelText('Senha')).toHaveValue('errada')
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
-  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument()
   fillLogin('pessoa@example.com', 'certa')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   expect(await screen.findByText('pessoa@example.com')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
+})
+
+// 0020/AC07: nova falha de validação remove o alerta do servidor anterior e não chama a API.
+it('remove o alerta do servidor quando um novo envio falha na validação, sem chamar a API', async () => {
+  const mockFetch = guestThenLogin(() => reply(401, apiError('invalid_credentials', 'E-mail ou senha inválidos.')))
+  render(<App />)
+  await screen.findByRole('button', { name: 'Entrar' })
+  fillLogin('pessoa@example.com', 'errada')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.'))
+  fillLogin('pessoa@example.com', '')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(screen.getByText('Informe sua senha.')).toBeInTheDocument()
+  expect(callsTo(mockFetch, '/api/auth/login', 'POST')).toHaveLength(1)
 })
 
 it('mostra falha de conexão no login como alerta e mantém os campos', async () => {
