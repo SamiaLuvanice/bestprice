@@ -15,11 +15,13 @@ $ruleset = @{
         @{ type = 'deletion' },
         @{ type = 'non_fast_forward' },
         @{ type = 'pull_request'; parameters = @{
-            required_approving_review_count = 1
+            required_approving_review_count = 0
             dismiss_stale_reviews_on_push = $true
+            required_reviewers = @()
             require_code_owner_review = $false
-            require_last_push_approval = $true
+            require_last_push_approval = $false
             required_review_thread_resolution = $true
+            require_extra_approval_for_unattributed_changes = $false
         } },
         @{ type = 'required_status_checks'; parameters = @{
             required_status_checks = @(@{ context = 'CI'; integration_id = 15368 })
@@ -61,4 +63,4 @@ $tagMethod = 'POST'
 if ($tagExisting.Count -eq 1) { $tagEndpoint += "/$($tagExisting[0].id)"; $tagMethod = 'PUT' }
 $tagJson | gh api --method $tagMethod $tagEndpoint --input - --silent
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao aplicar proteção das tags de entrega.' }
-Write-Output 'Rulesets ativos: branches exigem PR/revisão/CI; tags de entrega não podem ser apagadas ou movidas.'
+Write-Output 'Rulesets ativos: branches exigem PR/CI e conversas resolvidas; tags de entrega não podem ser apagadas ou movidas.'

@@ -7,8 +7,7 @@ flowchart LR
   I[Issue e aceite] --> B[Branch vinculada e commits Refs]
   B --> R[PR: Closes e spec]
   R --> C[CI: backend, frontend e automações]
-  C --> A[Aprovação independente]
-  A --> D[Merge em develop]
+  C --> D[Merge em develop]
   D --> F[Issue fechada; Project opcional]
   D --> S[PR develop para stage]
   S --> H[Health da API e Pages]
@@ -50,15 +49,17 @@ registros substitui as evidências de verificação.
    spec e evidências. Branches aceitas: `feature|fix|chore|docs/`, número de spec
    opcional, `issue-123-descricao`. A referência deve ser uma Issue local aberta.
    Commits de merge usados para atualizar a branch são dispensados do rodapé.
-6. Aguarde CI e solicite revisão a outra pessoa com permissão de escrita. Resolva
-   conversas e atualize a branch se develop avançar. Faça merge pelo GitHub.
+6. Aguarde CI. Quando houver outra pessoa com permissão de escrita disponível,
+   solicite revisão independente. Resolva conversas e atualize a branch se
+   develop
+   avançar. Faça merge pelo GitHub.
 
 Promoções e sincronizações reversas aceitam develop ↔ stage do mesmo repositório. Esses dois
 fluxos dispensam Issue nova e rodapés dos commits históricos. Use **merge commit** nas
 promoções para preservar a ancestralidade entre branches duradouras. Uma correção
 de release volta ao fluxo de tarefa em develop. Após uma promoção, abra as PRs
 reversas necessárias para a origem conter o commit atual da base antes da próxima
-promoção. Elas exigem os mesmos checks e aprovação; não faça push direto. Isso
+promoção. Elas exigem os mesmos checks; não faça push direto. Isso
 evita que a exigência de branch atualizada impeça a próxima release. Não há merge automático.
 
 Se uma nova feature entrar em develop antes de uma promoção ou sincronização terminar,
@@ -106,9 +107,10 @@ gh repo edit SamiaLuvanice/bestprice --default-branch develop
 .\scripts\configure-github.ps1 -Apply   # criar/atualizar ruleset integration-branches
 ```
 
-O ruleset exige em `develop` e `stage` PR, uma aprovação independente, aprovação após
-o último push, descarte de aprovações antigas, conversas resolvidas e **CI** atual
-em relação à base. Proíbe remoção e force push; não configura bypass de administrador.
+O ruleset exige em `develop` e `stage` PR, conversas resolvidas e **CI** atual
+em relação à base. A aprovação humana é opcional para permitir o trabalho solo;
+quando houver outra pessoa disponível, solicite revisão independente. Proíbe
+remoção e force push; não configura bypass de administrador.
 O script preserva outros rulesets. Um administrador precisa autorizar Actions e
 as Actions fixadas nos YAMLs se houver uma allowlist da organização.
 
@@ -118,10 +120,9 @@ na branch padrão. O workflow de release então aceita tags SemVer; o dispatch d
 usa `stage` e uma tag existente. Não copie workflows isolados diretamente para branches
 protegidas nem use bypass para instalar o próprio fluxo.
 
-Um repositório com uma única pessoa não consegue satisfazer uma aprovação própria.
-É necessário convidar um colaborador com permissão de escrita. A confirmação em
-chat não cria uma aprovação no GitHub; políticas mais flexíveis exigem uma decisão
-explícita e alteração revisada da configuração.
+O ruleset mantém aprovação mínima zero e não exige aprovação após o último push.
+Essa configuração permite que a única pessoa do projeto integre PRs depois do CI.
+Para exigir revisão humana no futuro, atualize o ruleset e este script juntos.
 
 ## Configurar o Project (permissão adicional)
 
