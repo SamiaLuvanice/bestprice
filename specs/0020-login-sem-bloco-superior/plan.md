@@ -81,7 +81,7 @@ inválidas nunca chegam à API.
 | Contraste 4,5:1 sobre gradiente translúcido não é medido pelo DevTools | Amostrar pixels de captura, em > 840 e ≤ 840 px (AC10). |
 | Foco: `disabled`→`aria-disabled` pode permitir duplo envio | Guarda `busy` no handler + teste de cliques ignorados e Enter. |
 | `LoginForm` hoje tem testes que esperam `required` nativo/balão | Atualizar para as mensagens em texto; contar execuções > 0. |
-| Capturas AC05 não são versionadas | Anexar à PR/issue e referenciar por link em `verification.md`. |
+| Capturas AC05 não são versionadas | Resolvido: o AC05 foi emendado em 15/10/2026 para aceitar a comparação por valores medidos em `verification.md`. |
 | Branch 8 commits atrás de develop | Rebase antes do primeiro commit; rodar suíte completa depois. |
 
 ## Gates

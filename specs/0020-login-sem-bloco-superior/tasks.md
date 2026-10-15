@@ -28,7 +28,7 @@ Cada tarefa só fecha com a evidência indicada, registrada em `verification.md`
 - [x] T13 — Commit `feat(frontend)` do grupo 3.
 
 ## Integração e QA no navegador
-- [ ] T14 (valores medidos e sem diferença; faltam as capturas anexadas à PR/issue) — Comparar loading/unavailable com a base `b431134` em 320/768/1280 px (AC05): capturas anexadas à PR/issue, links em `verification.md`.
+- [x] T14 (comparação por valores medidos, 0 diferenças; capturas dispensadas pela emenda do AC05) — Comparar loading/unavailable com a base `b431134` em 320/768/1280 px (AC05): capturas anexadas à PR/issue, links em `verification.md`.
 - [x] T15 — Medir AC03 (sem rolagem, 640 px de altura), AC06 (contraste ≥ 3:1 do foco), AC10 (≥ 4,5:1 por amostragem de pixels, > 840 e ≤ 840 px), AC11 (propriedades computadas em 840/841 px), AC12/AC14 (uma logo por vez, ≤ 32 px), AC16 (teclado, `prefers-reduced-motion`, 44 × 44 px). Valores reais em `verification.md`.
 
 ## Quality-gates

@@ -3,7 +3,7 @@ numero: 0020
 titulo: Login direto, sem bloco superior
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend]
 depende_de: [0017]
 ---
@@ -96,13 +96,14 @@ de backend (0011) não mudam.
 - [x] **AC04** — Dado o estado de carregamento da sessão ou o de sessão indisponível, quando
       a tela renderiza, então o cabeçalho de marca e o hero com o status continuam
       presentes (comprovado por teste automatizado).
-- [ ] **AC05** — Dado o estado de carregamento ou o de sessão indisponível, quando
+- [x] **AC05** — Dado o estado de carregamento ou o de sessão indisponível, quando
       conferido no navegador em 320, 768 e 1280 px, então o layout é igual ao da base
-      `b431134`: sem deslocamento, corte ou rolagem horizontal novos. A comparação usa
-      capturas de tela da base e da mudança, referenciadas em `verification.md` por
-      link, com as imagens anexadas ao PR ou à issue (não são versionadas). Os estados de
-      carregamento e de sessão indisponível são obtidos limitando a rede e derrubando o
-      backend local.
+      `b431134`: sem deslocamento, corte ou rolagem horizontal novos. A comparação usa os
+      retângulos de todos os elementos e os pixels de capturas de página inteira da base e
+      da mudança, com os valores medidos registrados em `verification.md`; as imagens não
+      são versionadas nem exigidas como anexo. Os estados de carregamento e de sessão
+      indisponível são obtidos por requisição que não responde e por resposta 503 ou
+      conexão recusada na API.
 
 ### Acessibilidade e validação
 
@@ -204,6 +205,11 @@ de backend (0011) não mudam.
 - 14/10/2026 — Valem as exclusões da 0017 ("Esqueceu a senha?", "Criar conta").
 - 14/10/2026 — A voz dos textos novos segue o design system (marca em terceira pessoa e
   "você"), e não "a gente" nem "avisamos".
+
+- 15/10/2026 — O AC05 passa a aceitar a comparação por valores medidos (retângulos e
+  pixels, 0 diferenças em 9 de 9 combinações) em vez de capturas anexadas ao PR ou à
+  issue, e a simulação dos estados por interceptação de rota em vez de limitar a rede e
+  derrubar o backend. Decisão do responsável; a medição foi em Chrome headless.
 
 ## Perguntas em aberto
 
