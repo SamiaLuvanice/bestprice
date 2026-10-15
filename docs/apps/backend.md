@@ -4,6 +4,8 @@
 
 O FastAPI mantém `GET /api/health` e acrescenta sessão BestPrice, monitoramentos MLB, histórico, dashboard, alertas e notificações. `backend/app/main.py` registra os roteadores e um formato de erro com `error.code` e `error.message`. SQLAlchemy acessa PostgreSQL pelo `backend/app/db.py`; Alembic mantém o esquema em `backend/alembic/`.
 
+O engine de domínio (`create_database_engine`, cacheado) reaproveita conexões e as mantém utilizáveis sem intervenção: revalida a conexão ao retirá-la (`pool_pre_ping`), descarta a que passou de `pool_recycle=300 s` desde a abertura, reutiliza primeiro as mais recentes (`pool_use_lifo`), limita a espera por uma conexão do conjunto em `pool_timeout=10 s` e a abertura de conexão nova em `connect_timeout=5 s`. Os valores ficam como constantes em `backend/app/db.py`. O health e o Alembic usam conexões próprias (não o conjunto de domínio) e não seguem esses limites. Detalhes e limites em [verification da spec 0022](../../specs/0022-conexao-resiliente-ao-banco/verification.md).
+
 | Área | Rotas |
 |---|---|
 | Sessão | `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout` |
