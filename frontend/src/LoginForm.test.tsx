@@ -37,14 +37,13 @@ it('mantém a coluna visual fora da árvore de acessibilidade, sem dígitos e co
   expect(logo?.getAttribute('alt')).toBe('')
   expect(logo?.getAttribute('src')).toContain('logo-bestprice.png')
   expect(screen.queryByRole('img', { name: 'BestPrice' })).not.toBeInTheDocument()
-  expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument()
   expect(screen.getAllByRole('heading')).toHaveLength(1)
 })
 
 // AC03: título e campos obrigatórios com rótulo acessível.
 it('mostra o título Bem-vindo de volta e os campos obrigatórios de e-mail e senha', () => {
   renderForm()
-  expect(screen.getByRole('heading', { level: 2, name: 'Bem-vindo de volta' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { level: 1, name: 'Bem-vindo de volta' })).toBeInTheDocument()
   expect(emailField()).toHaveAttribute('type', 'email')
   expect(emailField()).toHaveAttribute('autocomplete', 'email')
   expect(emailField()).toBeRequired()

@@ -38,6 +38,31 @@ it('não mostra o formulário de monitoramento por link ao visitante', async () 
   expect(screen.queryByPlaceholderText('https://www.mercadolivre.com.br/...')).not.toBeInTheDocument()
 })
 
+// 0019/AC01: o primeiro elemento do main é a área de login.
+it('tem o login como primeiro elemento do conteúdo principal do visitante', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
+    error: { code: 'unauthenticated', message: 'Entre para continuar.' },
+  })))
+  render(<App />)
+  await screen.findByRole('button', { name: 'Entrar' })
+  const first = screen.getByRole('main').firstElementChild
+  expect(first).not.toBeNull()
+  expect(first).toContainElement(screen.getByLabelText('E-mail'))
+  expect(first).toHaveAccessibleName('Bem-vindo de volta')
+})
+
+// 0019/AC02: "Bem-vindo de volta" é o único h1 e nenhum h2 o antecede.
+it('tem Bem-vindo de volta como único título de nível 1, sem h2 anterior', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
+    error: { code: 'unauthenticated', message: 'Entre para continuar.' },
+  })))
+  const { container } = render(<App />)
+  await screen.findByRole('button', { name: 'Entrar' })
+  expect(screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent)).toEqual(['Bem-vindo de volta'])
+  const headings = Array.from(container.querySelectorAll('h1, h2, h3, h4, h5, h6'))
+  expect(headings[0].tagName).toBe('H1')
+})
+
 // 0019/AC04: as telas de carregamento e de sessão indisponível mantêm o visual atual.
 it('mantém cabeçalho e hero enquanto verifica a sessão e quando ela está indisponível', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))))

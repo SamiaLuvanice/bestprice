@@ -55,7 +55,7 @@ export function LoginForm({ busy, error, onSubmit }: Props) {
     <div className="login-card">
       <LoginVisual />
       <div className="login-form-side">
-        <h2 id="login-title">Bem-vindo de volta</h2>
+        <h1 id="login-title">Bem-vindo de volta</h1>
         <p className="login-subtitle">Acesse sua conta para acompanhar seus anúncios e alertas.</p>
         {error && <p role="alert" className="error-box login-error">{error}</p>}
         <form onSubmit={submit} className="login-fields">
