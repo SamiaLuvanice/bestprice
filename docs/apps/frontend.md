@@ -34,10 +34,11 @@ e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
 [`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
 
-## Tela de entrada — spec 0017
+## Tela de entrada — specs 0017 e 0020
 
-Sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) abaixo
-do hero com o campo de link. O componente segue a composição de
+Sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) direto,
+sem o cabeçalho (masthead) nem o hero com o campo de link (spec 0020, que revoga o
+trecho da 0017 que os mantinha acima do login); só o rodapé acompanha. O componente segue a composição de
 `designsystem/login.html` com os tokens de `designsystem/index.html`:
 
 - **Casca e vidro:** `.login-shell` contém dois brilhos ambientes (verde e rosa, em
@@ -48,18 +49,26 @@ do hero com o campo de link. O componente segue a composição de
   `--color-glass-translucent`, `--color-glow-action` e `--color-glow-primary`
   (registrados em [`designsystem/README.md`](../../designsystem/README.md)).
 - **Coluna visual:** acima de 840 px o card tem duas colunas. A coluna da esquerda é
-  decorativa (`aria-hidden="true"`, logo com `alt=""`) e traz frase de benefício e um
-  card ilustrativo sem dados (sem produto, preço, percentual, contagem ou horário).
-  Até 840 px ela fica oculta e o card mostra só o formulário.
-- **Formulário:** título “Bem-vindo de volta”, subtítulo, E-mail (`type="email"`,
-  `required`, `autocomplete="email"`) e Senha (`required`,
-  `autocomplete="current-password"`). A validação é a nativa do navegador: campo vazio
-  ou inválido não envia requisição.
+  traz a logo com nome acessível (`alt="BestPrice"`), a frase “Cole o link uma vez. A
+  BestPrice acompanha o preço.” e um card ilustrativo sem dados (sem produto, preço,
+  percentual, contagem ou horário); frase e card são `aria-hidden`. Até 840 px a coluna
+  fica oculta e o card mostra só o formulário, com uma logo reduzida
+  (`.login-brand-compact`, 32 px de altura, sem distorção) acima do título; nessa faixa
+  o card usa a superfície sólida, sem desfoque nem brilhos.
+- **Formulário:** título “Bem-vindo de volta” (`h1`, a única da tela), subtítulo,
+  E-mail (`type="email"`, `autocomplete="email"`) e Senha (`autocomplete="current-password"`).
+  O `<form>` usa `noValidate`: a validação é própria e acontece no envio
+  (`validateLogin`). O e-mail ignora espaços nas pontas e exige `texto@domínio.ext`; a
+  senha só não pode ser vazia. Campo inválido não envia requisição: mostra mensagem em
+  texto (`.field-error`) ligada por `aria-describedby`, marca `aria-invalid`, move o foco
+  ao primeiro campo inválido e remove o alerta do servidor anterior. A mensagem some
+  quando o campo volta a ser válido.
 - **Mostrar senha:** botão com nome fixo “Mostrar senha” e `aria-pressed`, que alterna
   o `type` entre `password` e `text` sem perder o valor. Ao enviar, a senha volta a
   ficar oculta.
 - **Envio:** botão pílula verde de largura total (`.primary-button.btn-pill`). Durante o
-  envio, exibe “Entrando…” e fica desabilitado; um segundo clique ou Enter não gera
+  envio, exibe “Entrando…” com `aria-disabled` e `aria-busy` (sem `disabled`, para não
+  perder o foco); um segundo clique ou Enter não gera
   outro `POST /api/auth/login`. `App` controla `busy` e chama `api.login`; os valores
   dos campos ficam no `LoginForm`.
 - **Falha e foco:** erro de login ou aviso de sessão encerrada aparece como um único
@@ -71,18 +80,19 @@ do hero com o campo de link. O componente segue a composição de
 
 A verificação (QA em Chrome headless com axe, larguras de 320, 768 e 1280 px, com
 desfoque e em modo sólido simulado) e os limites estão em
-[`verification.md`](../../specs/0017-redesign-pagina-login/verification.md).
+[`verification.md` da 0017](../../specs/0017-redesign-pagina-login/verification.md); a 0020 está em
+[`verification.md`](../../specs/0020-login-sem-bloco-superior/verification.md).
 
 ## Fluxo atual nesta branch
 
-A SPA consome o contrato REST da spec 0013 sem alterá-lo; a área do usuário da spec 0012 é somente interface. `frontend/src/App.tsx` é o portão de sessão: consulta `GET /api/auth/me` ao abrir e decide entre a tela de entrada e a área autenticada (`AccountArea`). Somente 401 é tratado como ausência de sessão e apresenta o formulário de entrada; se `/auth/me` falhar por indisponibilidade da API ou da rede, a tela mostra a mensagem de erro e o botão “Tentar novamente”, sem enviar a pessoa ao login. Sem sessão, o hero com o campo de link continua visível e pede que a pessoa entre para monitorar. A conta precisa ser provisionada no backend antes do login. Não há cadastro público nem roteamento client-side.
+A SPA consome o contrato REST da spec 0013 sem alterá-lo; a área do usuário da spec 0012 é somente interface. `frontend/src/App.tsx` é o portão de sessão: consulta `GET /api/auth/me` ao abrir e decide entre a tela de entrada e a área autenticada (`AccountArea`). Somente 401 é tratado como ausência de sessão e apresenta o formulário de entrada; se `/auth/me` falhar por indisponibilidade da API ou da rede, a tela mostra a mensagem de erro e o botão “Tentar novamente”, sem enviar a pessoa ao login. Sem sessão, a tela mostra só o login (sem cabeçalho nem hero); o campo de link aparece após a entrada. A conta precisa ser provisionada no backend antes do login. Não há cadastro público nem roteamento client-side.
 
 Com sessão, a área é uma página única com cabeçalho (marca, navegação Início/Produtos/Alertas por âncora com foco no título da seção, sino de notificações e menu da conta com o e-mail e “Sair”) e, em ordem: hero com o campo de link, indicadores do resumo, “Boas oportunidades”, tabela “Seus produtos”, “Atualizações recentes” e a seção “Alertas”. Sem produtos monitorados, o hero ganha destaque com um estado vazio e as seções de produtos ficam ocultas. Cadastrar distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e insere o produto no topo da lista. Cada linha de “Seus produtos” traz preço atual, variação, menor preço, disponibilidade e horário do preço observado; a linha secundária mostra anterior, maior, última consulta, última alteração, alerta ativo e avisos. O menu da linha oferece “Atualizar agora”, “Ver anúncio no Mercado Livre” (nova aba) e “Parar de monitorar”. O detalhe, aberto por “Ver detalhes”, por uma oportunidade ou por “Ver produto” num evento da linha do tempo cujo produto ainda não foi carregado, mantém histórico paginado, instantes, alerta (criar, editar, pausar, excluir) e “Atualizar agora”. Os botões “Carregar mais”, “Carregar mais preços” e “Carregar mais notificações” usam `next_cursor` e acrescentam itens sem repetir IDs; o foco vai ao primeiro item novo ou, sem item novo, ao título da seção.
 
 | Arquivo | Responsabilidade |
 |---|---|
 | `frontend/src/App.tsx` | Portão de sessão: carregando, indisponível, entrada ou área autenticada; recebe o relógio injetável (`clock`); controla o envio do login |
-| `frontend/src/LoginForm.tsx` | Tela de entrada (spec 0017): coluna visual decorativa, campos, “Mostrar senha”, envio único e foco em Senha após falha |
+| `frontend/src/LoginForm.tsx` | Tela de entrada (specs 0017 e 0020): coluna visual, validação própria no envio, campos, “Mostrar senha”, envio único e foco em Senha após falha |
 | `frontend/src/dashboard/AccountArea.tsx` | Orquestra estado e ações da área; os componentes de apresentação não chamam `fetch` |
 | `frontend/src/dashboard/AppHeader.tsx`, `AccountMenu.tsx` | Cabeçalho, navegação de página única e menu da conta |
 | `frontend/src/dashboard/NotificationBell.tsx`, `useNotifications.ts` | Sino com contador e painel das não lidas; páginas da seção Alertas; marcar como lida |
