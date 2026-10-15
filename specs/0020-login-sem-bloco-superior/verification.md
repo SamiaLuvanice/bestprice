@@ -44,16 +44,38 @@ síncrono antes de `aria-describedby` aplicado pode afetar anúncio em alguns le
 tela; filete de sombra interna residual em ≤ 840 px; contraste de "Entrando…" com
 `opacity: .65` não medido.
 
-## Pendências explícitas (QA no navegador dispensado pelo responsável)
+## QA no navegador (issue #83)
 
-Nada abaixo foi medido; os critérios **não** estão comprovados:
+Método e limites: Google Chrome instalado em modo headless via `playwright-core`
+(nenhuma ferramenta de navegador estava disponível na sessão), viewport de 640 px de altura,
+zoom 100%. `/api/auth/me` e `/api/auth/login` simulados por interceptação de rota, sem
+backend nem PostgreSQL. Valores vêm de propriedades computadas e de pixels de capturas, não
+do DevTools manual. Capturas e scripts ficaram no scratchpad da sessão (não versionados).
 
-- AC03 — sem rolagem vertical/horizontal em 320, 768 e 1280 px com 640 px de altura.
-- AC05 — igualdade de layout de loading/unavailable com a base `b431134`.
-- AC06 — contraste ≥ 3:1 do anel de foco (`--color-focus` `#c7005e`).
-- AC08 — aparência distinta do botão ocupado.
-- AC10 — contraste ≥ 4,5:1 contra o ponto mais claro do fundo, acima e abaixo de 840 px.
-- AC11 — `backdrop-filter` e brilhos ausentes em ≤ 840 px; comportamento da 0017 em 841 px.
-- AC12 (unicidade) e AC14 (altura ≤ 32 px, sem distorção) — apenas uma logo visível por vez.
-- AC16 — teclado, `prefers-reduced-motion` e alvo de 44 × 44 px.
-- Fluxo ponta a ponta contra o backend local não foi executado.
+| AC | Valor medido | Situação |
+|---|---|---|
+| AC03 | Botão "Entrar" termina em 462,9 / 469,3 / 486,9 px (320 / 768 / 1280) no estado limpo; com alerta ou validação, alerta e primeira mensagem inteiros na janela; `scrollWidth` = `clientWidth` | Passa |
+| AC05 | Base `b431134` × mudança em loading, 503 e conexão recusada, 320/768/1280 px: 0 retângulos e 0 pixels diferentes em 9 de 9 combinações | Medido sem diferença; **capturas não anexadas** à PR/issue como o critério pede, e rede simulada (sem throttling real) |
+| AC06 | Outline 2 px `rgb(199,0,94)` com recuo de 2 px; contraste do anel 5,45–5,85:1 | Passa |
+| AC08 | Ocupado: fundo `rgb(245,245,247)`, texto `rgb(98,98,103)`, borda interna, cursor `progress`; `aria-busy`/`aria-disabled`; foco mantido; 1 requisição com 3 Enter/cliques; foco na senha após falha | Passa |
+| AC10 | Subtítulo 5,82–6,07; rótulos ≥ 15,6; h1 ≥ 16,2; mensagens ≥ 6,92; alerta 6,79; "Entrar" 15,49. **"Entrando…": 2,68–2,71:1 (falhou) → 5,57–5,67:1 após remover `opacity: .65`** (commit `786f627`) | Passa após correção |
+| AC11 | ≤ 840 px: `backdrop-filter: none`, glows `display:none`; 841/1280 px: `blur(24px) saturate(1.8)` e glows visíveis | Passa |
+| AC12 | Uma única `img alt="BestPrice"` visível em 320, 768, 840, 841 e 1280 px | Passa |
+| AC14 | Logo reduzida 32×32 px, proporção 1:1, `object-fit: contain` | Passa |
+| AC16 | Tab: e-mail, senha, "Mostrar senha", "Entrar"; alvos 238–441×50 e 44×44 px; `reduce` leva as transições a ~0 | Passa |
+
+Após a correção do contraste: `npm run lint` limpo, `npm test -- --run` 24 arquivos e 277
+testes passando, `npm run build` verde. A correção é só de CSS e não tem teste automatizado
+(o jsdom não avalia CSS); a prova é a remedição acima.
+
+## Pendências
+
+- Anexar as capturas do AC05 à PR/issue e referenciá-las aqui por link; até lá o AC05 fica
+  desmarcado e a spec continua `pronta`.
+- Fluxo ponta a ponta contra o backend local não executado (API simulada).
+- Medição fora do DevTools manual, em um único navegador (Chrome headless); sem scrollbar
+  clássica nem dispositivo físico.
+- Achados baixos do `arch-reviewer` não aplicados: foco síncrono antes de `aria-describedby`
+  (anúncio por leitor de tela), filete de sombra interna em ≤ 840 px.
+- A distinção do botão ocupado em relação ao fundo do card é sutil (apoia-se em borda,
+  texto e cursor); a spec não exige contraste da borda.

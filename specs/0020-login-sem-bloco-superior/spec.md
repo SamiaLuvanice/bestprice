@@ -78,14 +78,14 @@ de backend (0011) não mudam.
 
 ### Remoção do bloco superior
 
-- [ ] **AC01** — Dado um visitante não autenticado, quando a tela de login renderiza, então
+- [x] **AC01** — Dado um visitante não autenticado, quando a tela de login renderiza, então
       o cabeçalho de marca e o formulário de monitoramento por link não fazem parte da
       página, e o primeiro elemento dentro do conteúdo principal (`main`) é a área de
       login.
-- [ ] **AC02** — Dado um visitante não autenticado, quando a tela renderiza, então
+- [x] **AC02** — Dado um visitante não autenticado, quando a tela renderiza, então
       "Bem-vindo de volta" é o único título de nível 1 da página e não existe título de
       nível 2 anterior a ele.
-- [ ] **AC03** — Dado um visitante não autenticado, sem alerta de erro, sem alerta de sessão
+- [x] **AC03** — Dado um visitante não autenticado, sem alerta de erro, sem alerta de sessão
       encerrada e sem mensagens de validação visíveis, quando a tela renderiza em larguras
       de 320, 768 e 1280 px com viewport de 640 px de altura (emulação de dispositivo do
       DevTools), então os campos E-mail e Senha
@@ -93,7 +93,7 @@ de backend (0011) não mudam.
       rodapé pode ficar abaixo da dobra; e não há rolagem horizontal. Com alerta ou
       mensagens de validação visíveis, o botão pode ficar abaixo da dobra, mas o alerta ou
       a primeira mensagem aparece inteiro na janela e não há rolagem horizontal.
-- [ ] **AC04** — Dado o estado de carregamento da sessão ou o de sessão indisponível, quando
+- [x] **AC04** — Dado o estado de carregamento da sessão ou o de sessão indisponível, quando
       a tela renderiza, então o cabeçalho de marca e o hero com o status continuam
       presentes (comprovado por teste automatizado).
 - [ ] **AC05** — Dado o estado de carregamento ou o de sessão indisponível, quando
@@ -106,10 +106,10 @@ de backend (0011) não mudam.
 
 ### Acessibilidade e validação
 
-- [ ] **AC06** — Dado o foco por teclado em E-mail ou Senha, então o campo mostra um
+- [x] **AC06** — Dado o foco por teclado em E-mail ou Senha, então o campo mostra um
       indicador de foco além da cor da borda (contorno, anel ou espessura, à escolha do
       plano), com contraste de pelo menos 3:1 contra o fundo do card.
-- [ ] **AC07** — Dado um envio com campos inválidos, então a API não é chamada e a validação
+- [x] **AC07** — Dado um envio com campos inválidos, então a API não é chamada e a validação
       acontece apenas no envio, não ao sair do campo. Os espaços nas pontas do e-mail são
       desconsiderados. Cada campo inválido mostra, em texto junto a ele, uma destas
       mensagens (sem o balão nativo do navegador):
@@ -128,15 +128,15 @@ de backend (0011) não mudam.
       As mensagens são texto associado ao campo, sem papel de alerta, para que o alerta
       único do AC15 continue sendo o do servidor. Se um novo envio falha na validação, o
       alerta de erro do servidor anterior é removido.
-- [ ] **AC08** — Dado um envio em andamento, então o botão mostra "Entrando…", é anunciado
+- [x] **AC08** — Dado um envio em andamento, então o botão mostra "Entrando…", é anunciado
       como ocupado e indisponível, tem aparência distinta do estado normal (0017/AC05),
       ignora novos cliques e Enter, e permanece com o foco de teclado se o tinha. Quando o
       envio falha, o foco vai ao campo Senha, como na 0017/AC06. Quando tem sucesso, a
       tela de visitante deixa de existir e o foco segue o que a tela autenticada já faz,
       sem exigência nova nesta spec.
-- [ ] **AC09** — Dado o campo E-mail, então ele não pede capitalização automática da
+- [x] **AC09** — Dado o campo E-mail, então ele não pede capitalização automática da
       primeira letra nem verificação ortográfica do endereço.
-- [ ] **AC10** — Dado o texto da tela (subtítulo, rótulos, mensagens de validação, alerta e
+- [x] **AC10** — Dado o texto da tela (subtítulo, rótulos, mensagens de validação, alerta e
       coluna visual), então o contraste é de pelo menos 4,5:1 medido contra o pior caso do
       fundo realmente exibido: o ponto de maior brilho atrás do texto. Como o DevTools não
       mede contraste sobre gradiente com vidro translúcido, a medição amostra pixels de
@@ -146,31 +146,31 @@ de backend (0011) não mudam.
 
 ### Marca, texto e efeitos
 
-- [ ] **AC11** — Dado uma largura de até 840 px, então o card não aplica desfoque de fundo
+- [x] **AC11** — Dado uma largura de até 840 px, então o card não aplica desfoque de fundo
       nem exibe os brilhos decorativos; acima de 840 px (testado em 840 e 841 px) o
       comportamento da 0017 se mantém. Comprova-se pelas propriedades computadas no
       DevTools. Este critério confere o comportamento visual, e não promete ganho de
       desempenho medido.
-- [ ] **AC12** — Dado a logo oficial da tela de login, então ela tem o nome acessível
+- [x] **AC12** — Dado a logo oficial da tela de login, então ela tem o nome acessível
       "BestPrice" (teste automatizado). Em qualquer largura aparece apenas uma logo: a da
       coluna visual acima de 840 px e a reduzida do AC14 em até 840 px (QA no navegador).
       O resto da coluna visual continua decorativo, fora da árvore de acessibilidade.
-- [ ] **AC13** — Dado a coluna visual em telas acima de 840 px, então o título é "Cole o
+- [x] **AC13** — Dado a coluna visual em telas acima de 840 px, então o título é "Cole o
       link uma vez. A BestPrice acompanha o preço.", o parágrafo de apoio da coluna é
       removido e o cartão de destaque diz "Você é avisado quando o preço cair.". Os dois
       textos usam a voz do design system: a marca na terceira pessoa e "você".
-- [ ] **AC14** — Dado uma largura de até 840 px, onde a coluna visual está oculta, então a
+- [x] **AC14** — Dado uma largura de até 840 px, onde a coluna visual está oculta, então a
       logo oficial aparece em tamanho reduzido acima do título, com altura de até 32 px,
       sem violar o AC03 (QA no navegador); o teste automatizado confere apenas que a logo
       reduzida existe com o nome acessível do AC12.
 
 ### Regressão e acessibilidade geral
 
-- [ ] **AC15** — Dado o novo arranjo, quando a suíte de login do frontend roda, então
+- [x] **AC15** — Dado o novo arranjo, quando a suíte de login do frontend roda, então
       continuam comprovados, com os testes atualizados, o foco na senha após falha, o
       alerta único, o mostrar/ocultar senha com rótulo "Mostrar senha" e a entrada
       bem-sucedida, e a contagem de testes executados é maior que zero.
-- [ ] **AC16** — Dado o novo arranjo, quando avaliado o acesso, então operação por teclado,
+- [x] **AC16** — Dado o novo arranjo, quando avaliado o acesso, então operação por teclado,
       `prefers-reduced-motion: reduce` e área de toque de ao menos 44 × 44 px (medida no
       botão "Entrar" e no controle de mostrar senha) seguem atendidos como na 0017.
 
