@@ -10,7 +10,7 @@ $ruleset = @{
     target = 'branch'
     enforcement = 'active'
     bypass_actors = @()
-    conditions = @{ ref_name = @{ include = @('refs/heads/develop', 'refs/heads/stage', 'refs/heads/main'); exclude = @() } }
+    conditions = @{ ref_name = @{ include = @('refs/heads/develop', 'refs/heads/stage'); exclude = @() } }
     rules = @(
         @{ type = 'deletion' },
         @{ type = 'non_fast_forward' },

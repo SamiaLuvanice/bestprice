@@ -21,8 +21,8 @@ function closingIssue(body = '') {
 function validatePullRequest(pr) {
   const base = pr.base.ref;
   const source = pr.head.ref;
-  if (base === 'stage' || base === 'main' || (base === 'develop' && source === 'stage')) {
-    const expected = base === 'stage' ? ['develop', 'main'] : ['stage'];
+  if (base === 'stage' || (base === 'develop' && source === 'stage')) {
+    const expected = base === 'stage' ? ['develop'] : ['stage'];
     if (!expected.includes(source)) throw new Error(`Promoção/sincronização para ${base} deve partir de ${expected.join(' ou ')}.`);
     if (pr.head.repo?.full_name !== pr.base.repo.full_name) throw new Error('Promoção/sincronização exige o mesmo repositório.');
     return null;

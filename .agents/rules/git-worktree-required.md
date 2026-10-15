@@ -5,10 +5,10 @@ alwaysApply: true
 
 # Worktree e fluxo de branches
 
-O repositório é um monorepo. `main` é a linha estável de release, `develop` é a integração
-diária de features e `stage` é a linha de validação de release candidate. CI valida
-as três; entrega de imagens e releases ocorre na main. Implantação externa ainda
-não está configurada. Veja `docs/github-workflow.md`.
+O repositório é um monorepo. `develop` é a branch padrão e linha diária de integração;
+`stage` valida release candidates. CI valida ambas. Tags `vMAJOR.MINOR.PATCH` no SHA
+validado em `stage` publicam imagens e releases. Stage tem implantação externa; DEV e
+PROD ainda não estão configurados. Veja `docs/github-workflow.md`.
 
 ## Regra
 
@@ -20,9 +20,9 @@ não está configurada. Veja `docs/github-workflow.md`.
    Correções fora de uma spec usam `fix/issue-<numero>-<slug>`; outros tipos seguem `.agents/rules/git.md`.
 4. A base da feature e o destino do PR são `develop`. Antes, execute `git fetch origin`
    e confirme que `refs/remotes/origin/develop` existe. Se não existir, pare e reporte;
-   não use `stage` nem `main` como fallback.
-5. O checkout principal permanece em `develop` para o trabalho diário. `stage` e `main`
-   são atualizadas apenas pelo fluxo de promoção de release via PR.
+   não use `stage` como fallback.
+5. O checkout principal permanece em `develop` para o trabalho diário. `stage` é
+   atualizada por PR de promoção; releases são disparadas por tags SemVer no SHA validado.
 6. Instale os hooks locais com `pre-commit install --hook-type pre-commit --hook-type commit-msg`;
    não use `--no-verify` para contorná-los. A proteção no GitHub continua sendo necessária.
 
@@ -52,6 +52,7 @@ Confirme que o diretório atual termina em `.worktrees/<slug>` antes de editar.
 
 ## Promoção de release
 
-Quando uma release for solicitada, promova por PR `develop` → `stage` para validação
-e, após aceite, `stage` → `main`. Isso dispara a entrega de imagens/release após os
-gates. A implantação externa depende de uma configuração futura explícita.
+Quando uma release for solicitada, promova por PR `develop` → `stage` e valide a implantação
+e o health. Crie a tag `vMAJOR.MINOR.PATCH` na ponta atual de `stage` antes da próxima
+promoção. O workflow valida a tag, health, gates e publica as duas imagens e a release;
+esta publicação não implanta PROD.

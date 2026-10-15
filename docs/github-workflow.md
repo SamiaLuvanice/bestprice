@@ -11,14 +11,13 @@ flowchart LR
   A --> D[Merge em develop]
   D --> F[Issue fechada; Project opcional]
   D --> S[PR develop para stage]
-  S --> M[PR stage para main]
-  M --> Q[Gates de entrega]
+  S --> H[Health da API e Pages]
+  H --> T[Tag vMAJOR.MINOR.PATCH]
+  T --> Q[Gates de qualidade e publicação]
   Q --> G[GHCR e release com digests]
 ```
 
-`develop` é a branch padrão e a base das tarefas. `stage` valida candidatas e
-tem implantação externa em Render, Supabase e Cloudflare Pages pela spec 0018;
-`main` publica releases no GHCR, sem destino de implantação de produção. A spec descreve o comportamento; a Issue identifica a
+Após concluir a migração da spec 0019, `develop` será a branch padrão e a base das tarefas. Até que a PR seja integrada e as configurações externas sejam aplicadas, a branch padrão e os settings do GitHub ainda podem apontar para `main`; consulte o progresso da spec antes de executar uma release. `stage` valida candidatas e tem implantação externa em Render, Supabase e Cloudflare Pages pela spec 0018. Com o fluxo novo ativo, uma tag `vMAJOR.MINOR.PATCH` no SHA da ponta atual de `stage` publica imagens e release no GHCR; não há implantação de produção. A spec descreve o comportamento; a Issue identifica a
 tarefa e, se configurado, o Project organiza prioridade, responsáveis e progresso. Nenhum desses
 registros substitui as evidências de verificação.
 
@@ -54,8 +53,7 @@ registros substitui as evidências de verificação.
 6. Aguarde CI e solicite revisão a outra pessoa com permissão de escrita. Resolva
    conversas e atualize a branch se develop avançar. Faça merge pelo GitHub.
 
-Promoções aceitam develop → stage e stage → main do mesmo repositório.
-Sincronizações reversas aceitam main → stage e stage → develop. Esses quatro
+Promoções e sincronizações reversas aceitam develop ↔ stage do mesmo repositório. Esses dois
 fluxos dispensam Issue nova e rodapés dos commits históricos. Use **merge commit** nas
 promoções para preservar a ancestralidade entre branches duradouras. Uma correção
 de release volta ao fluxo de tarefa em develop. Após uma promoção, abra as PRs
@@ -75,8 +73,7 @@ git -C .worktrees/chore-issue-123-sync-stage push origin HEAD
 gh pr create --base develop --head chore/issue-123-sync-stage --title 'chore(ci): sincroniza stage com develop' --body 'Refs #123'
 ```
 
-Depois do merge dessa PR, repita develop → stage. Para divergência envolvendo main,
-incorpore também `origin/main` na branch temporária antes de abrir a PR para develop.
+Depois do merge dessa PR, repita develop → stage. Para divergência de stage, incorpore também `origin/stage` na branch temporária antes de abrir a PR para develop.
 Esse procedimento promove o develop atual, incluindo features novas; se a release
 precisar ser congelada, crie uma decisão explícita de produto antes de prosseguir.
 
@@ -84,10 +81,10 @@ precisar ser congelada, crie uma decisão explícita de produto antes de prosseg
 
 | Workflow | Evento | Resultado e permissões |
 |---|---|---|
-| CI | PR aberta, atualizada, reaberta, editada ou pronta para revisão; push em develop/stage/main | Quality + política de PR; token de leitura; sem secrets |
-| Quality | Chamado por CI e Delivery | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/build; testes Node e actionlint |
+| CI | PR aberta, atualizada, reaberta, editada ou pronta para revisão; push em develop/stage | Quality + política de PR; token de leitura; sem secrets |
+| Quality | Chamado por CI e Release | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/build; testes Node e actionlint |
 | Project sync | Issue aberta/reaberta/fechada/atribuída/desatribuída; ciclo de draft/revisão/fechamento de PR; push em `feature/**` que altera `specs/*/spec.md` | Adiciona item e atualiza Status, com PROJECT_TOKEN |
-| Delivery | Push em main; execução manual na main | Repete Quality, publica duas imagens GHCR e cria release após ambas |
+| Release | Push de tag `v*`; execução manual em `stage` para tag existente | Valida tag, SHA de stage, health, Quality; publica as imagens e cria release |
 
 O check obrigatório chama-se **CI**. Ele falha se qualquer gate falhar ou for
 cancelado. Não usamos filtros de caminhos que deixariam checks obrigatórios
@@ -95,8 +92,8 @@ pendentes. A política de PR é repetida quando o corpo é editado. A Issue deve
 permanecer aberta até o merge; mudança externa da Issue após CI pode exigir rerun.
 
 O fechamento é nativo do GitHub: `Closes #123` só fecha ao integrar na branch
-padrão. Alterar a padrão para main adia esse fechamento e a ativação dos eventos
-de Issues até que os workflows cheguem à main. Fechar a Issue não significa que
+padrão. Alterar a padrão para outra branch adia esse fechamento e a ativação dos eventos
+de Issues até que os workflows cheguem à branch padrão. Fechar a Issue não significa que
 a feature já foi implantada: significa que foi integrada na linha diária.
 
 ## Proteções e ativação inicial
@@ -109,17 +106,16 @@ gh repo edit SamiaLuvanice/bestprice --default-branch develop
 .\scripts\configure-github.ps1 -Apply   # criar/atualizar ruleset integration-branches
 ```
 
-O ruleset exige nas três branches PR, uma aprovação independente, aprovação após
+O ruleset exige em `develop` e `stage` PR, uma aprovação independente, aprovação após
 o último push, descarte de aprovações antigas, conversas resolvidas e **CI** atual
 em relação à base. Proíbe remoção e force push; não configura bypass de administrador.
 O script preserva outros rulesets. Um administrador precisa autorizar Actions e
 as Actions fixadas nos YAMLs se houver uma allowlist da organização.
 
 **Bootstrap:** o CI da PR pode rodar antes do merge dos workflows. Ative a proteção
-após confirmar o primeiro check CI, ainda antes de integrar a PR inicial. Templates,
-eventos de Issues e workflow_dispatch ficam disponíveis quando os arquivos entram
-na branch padrão. Delivery automático só começa quando a implementação chega a
-main pelo fluxo de promoção. Não copie workflows isolados diretamente para branches
+após confirmar o primeiro check CI, ainda antes de integrar a PR inicial. Templates, eventos de Issues e workflow_dispatch ficam disponíveis quando os arquivos entram
+na branch padrão. O workflow de release então aceita tags SemVer; o dispatch de recuperação
+usa `stage` e uma tag existente. Não copie workflows isolados diretamente para branches
 protegidas nem use bypass para instalar o próprio fluxo.
 
 Um repositório com uma única pessoa não consegue satisfazer uma aprovação própria.
@@ -139,7 +135,7 @@ configuração; nenhum token de sessão é copiado para Actions.
    `gh project create --owner SamiaLuvanice --title bestprice --format json`.
    Guarde seu número, associe o repositório pela interface ou `gh project link`.
 2. O campo **Status** usa as opções existentes **Backlog**, **Ready**, **In progress**,
-   **In review**, **Develop**, **Stage** e **Main**. A sincronização não cria opções;
+   **In review**, **Develop**, **Stage** e **Released**. `Released` preserva os itens que estavam em `Main` quando a opção foi renomeada; eventos futuros do sync não atribuem esse estado. A sincronização não cria opções;
    `Ready` é definido pela spec da branch da feature (ver abaixo), e um `Ready`
    manual é sobrescrito no próximo evento sincronizado. Crie **Priority** com P0/P1/P2/P3
    e uma visão Board por Status.
@@ -171,7 +167,7 @@ configuração; nenhum token de sessão é copiado para Actions.
 | PR | Aberta pronta para revisão | In review |
 | PR | Merge em develop | Develop |
 | PR | Merge em stage | Stage |
-| PR | Merge em main | Main |
+| Issue/PR | Status `Main` antes da migração | `Released` após renomear a opção no Project |
 | PR | Fechada sem merge | Backlog |
 
 **Ready pela spec (0014).** A branch `feature/<spec>-issue-<n>-<slug>` liga a Issue
@@ -197,7 +193,7 @@ forks não disparam `push` aqui. O gatilho só existe em branches que já contê
 workflow atualizado.
 
 Issues e PRs aparecem como itens separados. O status de uma PR mergeada vem de sua
-`base.ref`, e bases diferentes de `develop`, `stage` ou `main` causam erro explícito
+`base.ref`, e bases diferentes de `develop` ou `stage` causam erro explícito
 antes de alterar o Project. Para uma Issue fechada, a reconciliação consulta os
 `ClosedEvent` da timeline GraphQL e o campo `closer`, que identifica diretamente a PR
 que causou cada fechamento. O fechamento atual é o `ClosedEvent` mais recente; ele só
@@ -208,7 +204,7 @@ reconciliação usa `Develop` somente quando esse evento tem uma PR mergeada (`m
 a API não garante. Assim, outras PRs vinculadas ou merges antigos não são confundidos
 com a causa do fechamento: uma Issue reaberta e fechada manualmente não herda a PR de
 um fechamento anterior. Se o GitHub não retornar uma PR causal correspondente, a Issue
-fechada volta para `Backlog`, sem inferir `Main` ou atribuir um fechamento manual a
+fechada volta para `Backlog`, sem inferir `Released` ou atribuir um fechamento manual a
 uma PR antiga. Referência: [tipo
 ClosedEvent na API GraphQL](https://docs.github.com/en/graphql/reference/issues#closedevent).
 
@@ -223,19 +219,18 @@ retroativa automática.
 
 ## Entrega e implantação
 
-Cada push aprovado em main dispara Delivery. Quality valida o mesmo SHA; os jobs
+Com a migração ativa, cada push de tag `vMAJOR.MINOR.PATCH` dispara Release. Antes de criar a tag, confirme no painel Render que o deploy Live corresponde à ponta atual de `stage` e valide API e Pages. O workflow exige que a tag esteja no SHA exato dessa ponta, valida health e executa Quality; os jobs
 publicam `ghcr.io/samialuvanice/bestprice-backend` e `bestprice-frontend` com tags
-`sha-SHA_COMPLETO` e `build-SHA12`. Uma release `build-SHA12` só é criada quando as
-duas imagens terminam e contém seus **digests**. SBOM e provenance são gerados
+SemVer e `sha-SHA_COMPLETO`. Tags `build-*` identificam imagens e não criam releases. A release só é criada quando as duas imagens terminam e contém seus **digests**. SBOM e provenance são gerados
 pelo BuildKit. São imagens Linux amd64; frontend servido por nginx.
 
-Opcionalmente, execute na main para uma versão escolhida:
+Para recuperar uma execução de release, dispare manualmente na branch `stage` para uma tag existente:
 
 ```powershell
-gh workflow run release.yml --ref main -f version=v1.0.0
+gh workflow run release.yml --ref stage -f version=v1.0.0
 ```
 
-Versões existentes não são sobrescritas. O job `prepare` cria a tag no SHA testado,
+Versões existentes não são sobrescritas. O job `prepare` valida a tag preexistente e o SHA testado,
 o job final a consulta novamente antes de criar a release e o ruleset `delivery-tags`
 impede apagar ou mover tags `v*`/`build-*`. Se a tag mudar entre a consulta final e
 o POST da release, o GitHub pode ainda rejeitar a operação; a release deve então ser
@@ -256,7 +251,7 @@ Se um pacote já existe, permita acesso de Actions deste repositório. Consumido
 de pacote privado precisam de credencial própria com `read:packages`.
 
 **Implantação externa de stage:** a [spec 0018](../specs/0018-backend-stage-render-supabase/spec.md)
-configura Render, Supabase e Cloudflare Pages fora do workflow Delivery. As PRs
+configura Render, Supabase e Cloudflare Pages fora do workflow Release. As PRs
 [#68](https://github.com/SamiaLuvanice/bestprice/pull/68) e
 [#69](https://github.com/SamiaLuvanice/bestprice/pull/69) integraram a migration
 RLS e promoveram a revisão `0b5aea4` para `stage`. O CI da revisão terminou às
@@ -268,7 +263,7 @@ borda; o restore recuperou o health 200. O controle de rollback do Render foi
 exercitado com um deploy anterior do mesmo commit #67, antes da migration;
 reversão entre versões e rollback Pages não foram testados. O procedimento e os
 limites estão na [verificação 0018](../specs/0018-backend-stage-render-supabase/verification.md).
-A entrega de `main` por este workflow termina em GHCR e release; produção continua
+A entrega por tag termina em GHCR e release; produção continua
 sem destino de implantação. Não reutilize credenciais de estudo em infraestrutura
 pública.
 
