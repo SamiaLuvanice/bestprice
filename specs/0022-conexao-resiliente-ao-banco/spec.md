@@ -23,7 +23,7 @@ O conjunto de conexões deve se manter utilizável ao longo do tempo sem interve
 - Enquanto houver conexões íntegras disponíveis, elas são reaproveitadas em vez de abrir conexões novas, mantendo limitado o número de conexões abertas no banco.
 - Uma conexão que atingiu um limite de idade — contado desde o momento em que foi aberta — é descartada e substituída por uma nova no próximo uso, em vez de ser reutilizada indefinidamente.
 - Obter uma conexão é limitado por prazo, em dois momentos distintos: (a) a espera por uma conexão do conjunto quando todas estão em uso e (b) a abertura de uma conexão nova quando o banco não responde. Em ambos, a falha ocorre dentro do prazo, em vez de esperar indefinidamente.
-- Quando a obtenção de conexão falha por estourar o prazo, a requisição termina de forma rápida e segura, com o formato de erro já usado pela API quando o banco está indisponível, sem expor detalhes internos.
+- Quando a obtenção de conexão falha por estourar o prazo, a requisição termina rapidamente com a resposta de erro já existente para falha de consulta — sem expor detalhes internos e sem alterar o contrato de erro da API — em vez de esperar indefinidamente.
 - O comportamento observável de hoje é preservado: com o banco disponível, o health responde 200 `{"status":"ok","database":"ok"}`; sem banco, responde 503 com o contrato seguro; as consultas de domínio continuam funcionando.
 
 O health usa uma conexão direta, com prazo próprio, e **não** faz parte do conjunto: os limites de idade e de prazo desta spec não se aplicam a ele.
@@ -34,7 +34,7 @@ O health usa uma conexão direta, com prazo próprio, e **não** faz parte do co
 - [ ] Dada carga repetida dentro do limite do conjunto, quando conexões íntegras estão disponíveis, então nenhuma conexão nova é aberta e o total de conexões abertas no banco não cresce além do limite do conjunto.
 - [ ] Dado que todas as conexões do conjunto estão em uso, quando uma consulta espera por uma conexão, então a espera é limitada por um prazo, sem espera indefinida.
 - [ ] Dado o banco inacessível, quando é preciso abrir uma conexão nova, então a abertura falha dentro de um prazo, sem espera indefinida.
-- [ ] Dado que a obtenção de conexão falha por estourar o prazo, quando a consulta não obtém conexão, então a requisição termina rapidamente com o formato de erro seguro já usado pela API, sem expor detalhes internos.
+- [ ] Dado que a obtenção de conexão falha por estourar o prazo, quando a consulta não obtém conexão, então a requisição termina rapidamente, sem expor detalhes internos e sem alterar o contrato de erro da API.
 - [ ] Dado o banco disponível, quando a aplicação opera normalmente, então `GET /api/health` responde 200 com `status` e `database` iguais a `ok`, e sem banco responde 503 com o contrato seguro já definido.
 - [ ] Dado o esquema atual, quando a mudança é aplicada, então nenhuma migration é necessária e o head do esquema permanece o mesmo.
 
