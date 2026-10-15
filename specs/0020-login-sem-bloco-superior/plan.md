@@ -1,4 +1,4 @@
-# Plano — Spec 0019 (login direto, sem bloco superior)
+# Plano — Spec 0020 (login direto, sem bloco superior)
 
 Issue [#75](https://github.com/SamiaLuvanice/bestprice/issues/75). Mudança só de frontend,
 sobre a tela da 0017. A base da branch (`b431134`) está 8 commits atrás de `origin/develop`;
@@ -27,7 +27,7 @@ inválidas nunca chegam à API.
 | `frontend/src/styles.css` | Anel de foco nos campos; estilo de mensagem de validação e de campo inválido; estado ocupado do botão; logo reduzida; em ≤ 840 px sem `backdrop-filter` e sem brilhos; contraste revisto contra o ponto mais claro do fundo. |
 | `frontend/src/App.test.tsx`, `LoginForm.test.tsx` | Testes Vitest dos AC01, 02, 04, 07, 08, 09, 12–15. |
 | `designsystem/README.md` | Registrar extensões antes de adotá-las: anel de foco dos campos, mensagem de validação em texto, logo reduzida na tela estreita. |
-| `specs/0019-login-sem-bloco-superior/verification.md`, `docs/PROGRESS.md` | Evidência real e andamento. |
+| `specs/0020-login-sem-bloco-superior/verification.md`, `docs/PROGRESS.md` | Evidência real e andamento. |
 
 ## Decisões
 
@@ -70,15 +70,13 @@ inválidas nunca chegam à API.
   outros formulários podem herdar.
 - **Redação dos textos (AC13)**: voz do design system fixada na spec; mudar depois exige
   nova revisão de spec.
-- **Numeração duplicada**: já existe `specs/0019-releases-por-tag-sem-main` em `develop`.
-  Renomear esta spec depois de abrir a PR altera diretório, branch, comentários `0019/ACxx`
-  no código e a issue; decidir antes do primeiro commit (ver Riscos).
+- **Numeração**: a spec nasceu como 0019, número já usado por `0019-releases-por-tag-sem-main`; foi renumerada para 0020 antes da PR (diretório, branch, comentários `0020/ACxx` e issue).
 
 ## Riscos
 
 | Risco | Mitigação |
 |---|---|
-| Duas specs `0019` (releases e login) | Perguntar ao responsável se renumera esta spec antes de commitar; sem decisão, manter o número e prefixar comentários/commits com o slug. |
+| Duas specs `0019` (releases e login) | Resolvido: esta spec virou 0020. |
 | Trabalho parcial sem commit no worktree cobre uma versão antiga da spec | Reaproveitar `App.tsx`/`App.test.tsx` como ponto de partida, mas refazer Red/Green contra os 16 AC; reescrever `verification.md`. |
 | Contraste 4,5:1 sobre gradiente translúcido não é medido pelo DevTools | Amostrar pixels de captura, em > 840 e ≤ 840 px (AC10). |
 | Foco: `disabled`→`aria-disabled` pode permitir duplo envio | Guarda `busy` no handler + teste de cliques ignorados e Enter. |

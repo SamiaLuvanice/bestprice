@@ -1,9 +1,9 @@
-# Tarefas — 0019 Login direto, sem bloco superior
+# Tarefas — 0020 Login direto, sem bloco superior
 
 Cada tarefa só fecha com a evidência indicada, registrada em `verification.md`.
 
 ## Preparação
-- [ ] T01 — Resolver a numeração duplicada com `0019-releases-por-tag-sem-main` (decisão do responsável). Rebasear a branch em `origin/develop` (8 commits atrás) e commitar o trabalho parcial passando pelos hooks. Evidência: `git log origin/develop..HEAD` e `git status` limpo.
+- [x] T01 — Numeração duplicada resolvida: spec renumerada para 0020 (autorizado pelo responsável). Antes era: resolver a numeração duplicada com `0019-releases-por-tag-sem-main` (decisão do responsável). Rebasear a branch em `origin/develop` (8 commits atrás) e commitar o trabalho parcial passando pelos hooks. Evidência: `git log origin/develop..HEAD` e `git status` limpo.
 
 ## Contrato
 - [ ] T02 — Confirmar que não há mudança de REST: `git diff origin/develop -- backend frontend/src/api.ts` vazio ao final. Registrar a nota do `email` com `trim`.

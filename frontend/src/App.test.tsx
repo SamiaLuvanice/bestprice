@@ -16,7 +16,7 @@ function submitUrl() {
 // Pessoa autenticada com o dublê compartilhado (src/test/fakeApi.ts), que também responde às não lidas do sino.
 const signedIn = fakeApi
 
-// 0019/AC01: no estado de visitante o cabeçalho de marca não precede o login.
+// 0020/AC01: no estado de visitante o cabeçalho de marca não precede o login.
 it('não mostra o cabeçalho de marca ao visitante', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
@@ -27,7 +27,7 @@ it('não mostra o cabeçalho de marca ao visitante', async () => {
   expect(screen.queryByRole('banner')).not.toBeInTheDocument()
 })
 
-// 0019/AC01: no estado de visitante o formulário de link não precede o login.
+// 0020/AC01: no estado de visitante o formulário de link não precede o login.
 it('não mostra o formulário de monitoramento por link ao visitante', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
@@ -38,7 +38,7 @@ it('não mostra o formulário de monitoramento por link ao visitante', async () 
   expect(screen.queryByPlaceholderText('https://www.mercadolivre.com.br/...')).not.toBeInTheDocument()
 })
 
-// 0019/AC01: o primeiro elemento do main é a área de login.
+// 0020/AC01: o primeiro elemento do main é a área de login.
 it('tem o login como primeiro elemento do conteúdo principal do visitante', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
@@ -51,7 +51,7 @@ it('tem o login como primeiro elemento do conteúdo principal do visitante', asy
   expect(first).toHaveAccessibleName('Bem-vindo de volta')
 })
 
-// 0019/AC02: "Bem-vindo de volta" é o único h1 e nenhum h2 o antecede.
+// 0020/AC02: "Bem-vindo de volta" é o único h1 e nenhum h2 o antecede.
 it('tem Bem-vindo de volta como único título de nível 1, sem h2 anterior', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
@@ -63,7 +63,7 @@ it('tem Bem-vindo de volta como único título de nível 1, sem h2 anterior', as
   expect(headings[0].tagName).toBe('H1')
 })
 
-// 0019/AC04: as telas de carregamento e de sessão indisponível mantêm o visual atual.
+// 0020/AC04: as telas de carregamento e de sessão indisponível mantêm o visual atual.
 it('mantém cabeçalho e hero enquanto verifica a sessão e quando ela está indisponível', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))))
   render(<App />)
@@ -559,7 +559,7 @@ it('mostra Entrando… sem reenviar, preserva os campos após 401, foca a Senha 
   expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
 })
 
-// 0019/AC07: nova falha de validação remove o alerta do servidor anterior e não chama a API.
+// 0020/AC07: nova falha de validação remove o alerta do servidor anterior e não chama a API.
 it('remove o alerta do servidor quando um novo envio falha na validação, sem chamar a API', async () => {
   const mockFetch = guestThenLogin(() => reply(401, apiError('invalid_credentials', 'E-mail ou senha inválidos.')))
   render(<App />)

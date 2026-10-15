@@ -21,8 +21,8 @@ const PASSWORD_EMPTY = 'Informe sua senha.'
 // texto@domínio com um único @, sem espaço, domínio com ponto e sem rótulo vazio.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/
 
-/** 0019/AC07: validação do envio. O e-mail ignora espaços nas pontas; a senha só não pode ser vazia. */
-// Função pura exportada para teste direto (plan 0019, decisão 3).
+/** 0020/AC07: validação do envio. O e-mail ignora espaços nas pontas; a senha só não pode ser vazia. */
+// Função pura exportada para teste direto (plan 0020, decisão 3).
 // eslint-disable-next-line react-refresh/only-export-components
 export function validateLogin(email: string, password: string): LoginErrors {
   const errors: LoginErrors = {}
@@ -33,7 +33,7 @@ export function validateLogin(email: string, password: string): LoginErrors {
   return errors
 }
 
-/** Coluna visual (0017/AC02, 0019/AC12): só a logo tem nome acessível; o restante é decorativo e sem dados ilustrativos. */
+/** Coluna visual (0017/AC02, 0020/AC12): só a logo tem nome acessível; o restante é decorativo e sem dados ilustrativos. */
 function LoginVisual() {
   return <div className="login-visual">
     <img className="login-visual-logo" src={bestPriceLogo} alt="BestPrice" />
@@ -47,7 +47,7 @@ function LoginVisual() {
   </div>
 }
 
-/** Entrada da tela de visitante (spec 0017), com validação própria no envio (0019/AC07). */
+/** Entrada da tela de visitante (spec 0017), com validação própria no envio (0020/AC07). */
 export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

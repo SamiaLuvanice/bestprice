@@ -25,7 +25,7 @@ function submitForm() {
   fireEvent.submit(form)
 }
 
-// 0019/AC12: a logo tem o nome "BestPrice"; o resto da coluna continua decorativo.
+// 0020/AC12: a logo tem o nome "BestPrice"; o resto da coluna continua decorativo.
 it('dá o nome BestPrice às logos e mantém o resto da coluna fora da árvore de acessibilidade', () => {
   renderForm()
   const logos = screen.getAllByRole('img', { name: 'BestPrice' })
@@ -38,7 +38,7 @@ it('dá o nome BestPrice às logos e mantém o resto da coluna fora da árvore d
   expect(screen.getAllByRole('heading')).toHaveLength(1)
 })
 
-// 0019/AC14: em tela estreita a logo reduzida aparece acima do título, com o mesmo nome acessível.
+// 0020/AC14: em tela estreita a logo reduzida aparece acima do título, com o mesmo nome acessível.
 it('mostra a logo reduzida antes do título, com o nome BestPrice', () => {
   const { container } = renderForm()
   const compact = container.querySelector('.login-brand-compact')
@@ -48,7 +48,7 @@ it('mostra a logo reduzida antes do título, com o nome BestPrice', () => {
   expect(compact?.compareDocumentPosition(title)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
 })
 
-// 0019/AC13: textos da coluna, sem parágrafo de apoio e sem dados de preço.
+// 0020/AC13: textos da coluna, sem parágrafo de apoio e sem dados de preço.
 it('mostra os textos novos da coluna e remove o parágrafo de apoio', () => {
   renderForm()
   expect(screen.getByText('Cole o link uma vez. A BestPrice acompanha o preço.')).toBeInTheDocument()
@@ -74,7 +74,7 @@ const EMAIL_EMPTY = 'Informe seu e-mail.'
 const EMAIL_INVALID = 'Informe um e-mail válido, como nome@exemplo.com.'
 const PASSWORD_EMPTY = 'Informe sua senha.'
 
-// 0019/AC07: formato de e-mail aceito (função pura).
+// 0020/AC07: formato de e-mail aceito (função pura).
 it.each(['nome@exemplo.com', '  nome@exemplo.com  ', 'a.b+c@sub.exemplo.com.br'])('valida como correto o e-mail %j', (value) => {
   expect(validateLogin(value, 'x')).toEqual({})
 })
@@ -89,7 +89,7 @@ it('distingue e-mail vazio de inválido e aceita senha só com espaços', () => 
   expect(validateLogin('nome@exemplo.com', '   ')).toEqual({})
 })
 
-// 0019/AC07: validação própria, sem balão nativo, só no envio.
+// 0020/AC07: validação própria, sem balão nativo, só no envio.
 it('usa validação própria: o formulário tem novalidate e nada é validado ao sair do campo', () => {
   renderForm()
   expect(screen.getByRole('button', { name: 'Entrar' }).closest('form')).toHaveAttribute('novalidate')
@@ -147,7 +147,7 @@ it('avisa o App quando a validação falha e envia o e-mail sem espaços nas pon
   expect(onSubmit).toHaveBeenCalledWith('pessoa@example.com', '  ')
 })
 
-// 0019/AC09: o e-mail não pede capitalização nem correção ortográfica.
+// 0020/AC09: o e-mail não pede capitalização nem correção ortográfica.
 it('desliga capitalização automática e verificação ortográfica no e-mail', () => {
   renderForm()
   expect(emailField()).toHaveAttribute('autocapitalize', 'none')
@@ -183,7 +183,7 @@ it('envia e-mail e senha e volta a ocultar a senha ao disparar a tentativa', () 
   expect(passwordField()).toHaveAttribute('type', 'password')
 })
 
-// 0019/AC08: durante o envio o botão fica ocupado e indisponível, mas mantém o foco e ignora cliques e Enter.
+// 0020/AC08: durante o envio o botão fica ocupado e indisponível, mas mantém o foco e ignora cliques e Enter.
 it('mostra Entrando… ocupado e indisponível, ignora novos envios e mantém o foco do botão', () => {
   const onSubmit = vi.fn()
   const { rerender } = render(<LoginForm busy={false} error={null} onSubmit={onSubmit} />)

@@ -82,7 +82,7 @@ export function App({ clock = systemClock }: Props) {
     </div>
   }
 
-  // 0019/AC01: o visitante vê o login direto; o cabeçalho e o hero não o precedem.
+  // 0020/AC01: o visitante vê o login direto; o cabeçalho e o hero não o precedem.
   if (sessionState === 'guest') {
     return <div className="page">
       <main className="page-main">

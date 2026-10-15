@@ -1,8 +1,8 @@
-# Verificação — Spec 0019
+# Verificação — Spec 0020
 
 Base: `b431134` de `origin/develop` (worktree
-`.worktrees/feature-0019-issue-75-login-sem-bloco-superior`, branch
-`feature/0019-issue-75-login-sem-bloco-superior`).
+`.worktrees/feature-0020-issue-75-login-sem-bloco-superior`, branch
+`feature/0020-issue-75-login-sem-bloco-superior`).
 Issue [#75](https://github.com/SamiaLuvanice/bestprice/issues/75).
 
 ## Mudança

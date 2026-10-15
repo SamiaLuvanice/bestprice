@@ -1,5 +1,5 @@
 ---
-numero: 0019
+numero: 0020
 titulo: Login direto, sem bloco superior
 tipo: melhoria
 prioridade: P2
@@ -8,7 +8,7 @@ toca: [frontend]
 depende_de: [0017]
 ---
 
-# 0019 — Login direto, sem bloco superior
+# 0020 — Login direto, sem bloco superior
 
 Issue: https://github.com/SamiaLuvanice/bestprice/issues/75
 
