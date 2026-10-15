@@ -50,8 +50,7 @@ registros substitui as evidências de verificação.
    opcional, `issue-123-descricao`. A referência deve ser uma Issue local aberta.
    Commits de merge usados para atualizar a branch são dispensados do rodapé.
 6. Aguarde CI. Quando houver outra pessoa com permissão de escrita disponível,
-   solicite revisão independente. Resolva conversas e atualize a branch se
-   develop
+   solicite revisão independente. Resolva conversas e atualize a branch se `develop`
    avançar. Faça merge pelo GitHub.
 
 Promoções e sincronizações reversas aceitam develop ↔ stage do mesmo repositório. Esses dois
