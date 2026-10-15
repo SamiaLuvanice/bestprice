@@ -18,12 +18,13 @@ test('Issue aberta sem responsável e com spec pronta vai para Ready', () => {
   assert.equal(projectStatus('issue', { state: 'closed', state_reason: 'not_planned', specReady: true }), 'Backlog');
 });
 
-test('PR draft, revisão, fechamento e merge seguem a branch-base', () => {
+test('PR draft, revisão, fechamento e merge seguem develop e stage', () => {
   assert.equal(projectStatus('pr', { state: 'open', draft: true }), 'In progress');
   assert.equal(projectStatus('pr', { state: 'open', draft: false }), 'In review');
   assert.equal(projectStatus('pr', { state: 'closed', merged: false }), 'Backlog');
   assert.equal(projectStatus('pr', { state: 'closed', merged: true, base: { ref: 'develop' } }), 'Develop');
   assert.equal(projectStatus('pr', { state: 'closed', merged: true, base: { ref: 'stage' } }), 'Stage');
-  assert.equal(projectStatus('pr', { state: 'closed', merged: true, base: { ref: 'main' } }), 'Main');
-  assert.throws(() => projectStatus('pr', { state: 'closed', merged: true, base: { ref: 'release' } }), /branch-base 'release' não suportada/);
+  for (const ref of ['main', 'release']) {
+    assert.throws(() => projectStatus('pr', { state: 'closed', merged: true, base: { ref } }), new RegExp(`branch-base '${ref}' não suportada`));
+  }
 });

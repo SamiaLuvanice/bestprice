@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const sync = require('./sync-project.cjs');
 
-const options = ['Backlog', 'Ready', 'In progress', 'In review', 'Develop', 'Stage', 'Main']
+const options = ['Backlog', 'Ready', 'In progress', 'In review', 'Develop', 'Stage', 'Released']
   .map((name, index) => ({ id: `option-${index}`, name }));
 const READY = 'option-1';
 const notFound = () => Object.assign(new Error('Not Found'), { status: 404 });
@@ -181,6 +181,14 @@ test('Issue não planejada retorna a Backlog e informa falta de Canceled', async
   assert.match(summaries[0], /não tem opção Canceled/);
 });
 
+test('base aposentada main falha antes de alterar o Project', async () => {
+  process.env.PROJECT_OWNER = 'owner';
+  process.env.PROJECT_NUMBER = '1';
+  const { args, project, calls } = fixture({ item: { state: 'closed', merged: true, base: { ref: 'main' }, node_id: 'PR_1' } });
+  await assert.rejects(sync(args), /branch-base 'main' não suportada/);
+  assert.equal(project.added, false);
+  assert.equal(calls.length, 0);
+});
 test('branch-base não suportada falha antes de descobrir ou alterar o Project', async () => {
   process.env.PROJECT_OWNER = 'owner';
   process.env.PROJECT_NUMBER = '1';

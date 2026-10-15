@@ -21,20 +21,21 @@ test('referência em comentário ou bloco de código não fecha tarefa', () => {
   assert.throws(() => validatePullRequest(pull({ body: '~~~text\nCloses #12\n~~~' })), /Closes/);
 });
 
-test('promoções só aceitam a branch anterior do mesmo repositório', () => {
-  assert.equal(validatePullRequest(pull({ base: { ref: 'main', repo: { full_name: 'owner/repo' } },
-    head: { ref: 'stage', repo: { full_name: 'owner/repo' } }, body: '' })), null);
-  assert.throws(() => validatePullRequest(pull({ base: { ref: 'main', repo: { full_name: 'owner/repo' } } })), /stage/);
+test('promoção para stage só aceita develop do mesmo repositório', () => {
+  assert.equal(validatePullRequest(pull({ base: { ref: 'stage', repo: { full_name: 'owner/repo' } },
+    head: { ref: 'develop', repo: { full_name: 'owner/repo' } }, body: '' })), null);
+  assert.throws(() => validatePullRequest(pull({ base: { ref: 'stage', repo: { full_name: 'owner/repo' } } })), /develop/);
+  assert.throws(() => validatePullRequest(pull({ base: { ref: 'main', repo: { full_name: 'owner/repo' } },
+    head: { ref: 'stage', repo: { full_name: 'owner/repo' } }, body: '' })), /Tarefas devem ter develop/);
   assert.throws(() => validatePullRequest(pull({ base: { ref: 'stage', repo: { full_name: 'owner/repo' } },
     head: { ref: 'develop', repo: { full_name: 'fork/repo' } } })), /mesmo repositório/);
 });
 
-test('sincronização reversa preserva a ancestralidade das branches protegidas', () => {
+test('sincronização reversa stage para develop é permitida no mesmo repositório', () => {
   const sync = (base, head, repository = 'owner/repo') => pull({
     base: { ref: base, repo: { full_name: 'owner/repo' } },
     head: { ref: head, repo: { full_name: repository } }, body: '',
   });
-  assert.equal(validatePullRequest(sync('stage', 'main')), null);
   assert.equal(validatePullRequest(sync('develop', 'stage')), null);
   assert.throws(() => validatePullRequest(sync('develop', 'stage', 'fork/repo')), /mesmo repositório/);
 });

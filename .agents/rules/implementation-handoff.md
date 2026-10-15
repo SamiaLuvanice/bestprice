@@ -30,6 +30,6 @@ Ao terminar a implementação:
    `.agents/skills/task-cleanup/SKILL.md`. Não remova worktree ou branch durante revisão.
 
 Promoção de release é um fluxo separado: PR `develop` → `stage`, validação local e depois
-PR `stage` → `main`. O GitHub Project acompanha Issues/PRs quando a credencial estiver
-configurada. A entrega publica imagens e release após validação na main; não presume
-implantação. Reporte separadamente qualquer automação pendente de permissão.
+tag SemVer na ponta atual de `stage`. O GitHub Project acompanha Issues/PRs quando a credencial estiver
+configurada. A entrega publica imagens e release após validar health e gates; não presume
+implantação em PROD. Reporte separadamente qualquer automação pendente de permissão.
