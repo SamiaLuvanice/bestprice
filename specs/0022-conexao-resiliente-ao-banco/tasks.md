@@ -43,9 +43,10 @@ Refactor, com comandos e resultados reais em `verification.md`.
   no Compose isolado (AC06) e ausência de migration (AC07).
 - [x] **T09 — QA:** validar AC01–AC07 em matriz com resultado por critério e comando
   real; separar teste unitário, integração PostgreSQL e Compose.
-- [ ] **T10 — arch-reviewer:** revisar diff e evidências independentemente; devolver
+- [x] **T10 — arch-reviewer:** revisar diff e evidências independentemente; devolver
   achados ao backend e confirmar correções. Reexecutar somente gates afetados.
-- [ ] **T11 — doc-sync-onboarding:** após último código/gates/revisão, sincronizar
+  Parecer: **aprovado**, sem bloqueadores (só notas menores).
+- [x] **T11 — doc-sync-onboarding:** após último código/gates/revisão, sincronizar
   `docs/database.md` e demais docs afetados, conferir `AGENTS.md`/`CLAUDE.md`/`docs` e
   registrar resultado. Se o código mudar depois, repetir como última etapa.
 - [ ] **T12 — coordenação:** preparar commits com `Refs #101` e PR para `develop` com
