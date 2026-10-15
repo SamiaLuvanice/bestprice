@@ -16,22 +16,42 @@ function submitUrl() {
 // Pessoa autenticada com o dublê compartilhado (src/test/fakeApi.ts), que também responde às não lidas do sino.
 const signedIn = fakeApi
 
-it('exibe a proposta do BestPrice e pede sessão antes de monitorar', async () => {
+// 0019/AC01: no estado de visitante o cabeçalho de marca não precede o login.
+it('não mostra o cabeçalho de marca ao visitante', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
   })))
   render(<App />)
-  expect(screen.getByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })).toBeInTheDocument()
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
-  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument()
+  expect(screen.queryByRole('banner')).not.toBeInTheDocument()
 })
 
-it('mostra a logo oficial inteira e com nome acessível na entrada', async () => {
+// 0019/AC01: no estado de visitante o formulário de link não precede o login.
+it('não mostra o formulário de monitoramento por link ao visitante', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(401, {
     error: { code: 'unauthenticated', message: 'Entre para continuar.' },
   })))
   render(<App />)
-  await screen.findByRole('button', { name: 'Entrar' })
+  expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })).not.toBeInTheDocument()
+  expect(screen.queryByPlaceholderText('https://www.mercadolivre.com.br/...')).not.toBeInTheDocument()
+})
+
+// 0019/AC04: as telas de carregamento e de sessão indisponível mantêm o visual atual.
+it('mantém cabeçalho e hero enquanto verifica a sessão e quando ela está indisponível', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))))
+  render(<App />)
+  expect(screen.getByRole('banner')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })).toBeInTheDocument()
+  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  expect(await screen.findByText('Serviço temporariamente indisponível.')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
+})
+
+it('mostra a logo oficial inteira e com nome acessível enquanto verifica a sessão', () => {
+  vi.stubGlobal('fetch', vi.fn().mockReturnValue(new Promise(() => undefined)))
+  render(<App />)
   const logos = within(screen.getByRole('banner')).getAllByRole('img', { name: 'BestPrice' })
   expect(logos).toHaveLength(1)
   expect(logos[0].getAttribute('src')).toContain('logo-bestprice.png')
@@ -505,7 +525,7 @@ it('mostra Entrando… sem reenviar, preserva os campos após 401, foca a Senha 
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
   expect(screen.getByLabelText('Senha')).toHaveValue('errada')
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
-  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Bem-vindo de volta' })).toBeInTheDocument()
   fillLogin('pessoa@example.com', 'certa')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   expect(await screen.findByText('pessoa@example.com')).toBeInTheDocument()
