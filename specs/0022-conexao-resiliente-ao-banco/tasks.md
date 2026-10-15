@@ -21,27 +21,27 @@ Refactor, com comandos e resultados reais em `verification.md`.
 
 ## Implementação backend, em sequência
 
-- [ ] **T05 — configuração do engine (AC01, AC02, AC03, AC04):** expor as constantes
+- [x] **T05 — configuração do engine (AC01, AC02, AC03, AC04):** expor as constantes
   (`POOL_RECYCLE_SECONDS`, `POOL_TIMEOUT_SECONDS`, `CONNECT_TIMEOUT_SECONDS`) e aplicar
   `pool_recycle`, `pool_use_lifo`, `pool_timeout` e `connect_args={"connect_timeout":...}`
   em `create_database_engine()`, mantendo `pool_pre_ping`. As constantes são lidas em
   tempo de chamada. Provar por teste unitário de configuração (Red → Green), sem tocar
   banco, preferindo atributos públicos (`engine.pool` e `engine.connect_args`).
-- [ ] **T06 — comportamento com PostgreSQL real (AC01, AC02):** provar reciclo por
+- [x] **T06 — comportamento com PostgreSQL real (AC01, AC02):** provar reciclo por
   idade (PID novo após o limite, com `sleep` curto e margem documentada) e reuso sem
   crescimento (mesmo PID; nenhuma conexão nova além do conjunto) usando
   `TEST_DATABASE_URL`, com `dispose()`+`cache_clear()` no `finally`.
-- [ ] **T07 — prazos (AC03, AC04, AC05):** provar que a espera por conexão
+- [x] **T07 — prazos (AC03, AC04, AC05):** provar que a espera por conexão
   (`pool_timeout`) e a abertura de conexão nova (`connect_timeout`, apontando para IP
   não roteável `192.0.2.1:5432`) falham dentro do prazo, e que a requisição termina
   rápido sem expor detalhes internos, sem adicionar handler de erro novo.
 
 ## Validação e entrega
 
-- [ ] **T08 — backend/QA:** rodar `ruff check` e `pytest` na worktree com PostgreSQL
+- [x] **T08 — backend/QA:** rodar `ruff check` e `pytest` na worktree com PostgreSQL
   isolado; registrar versões, comandos e contagens positivas; confirmar health 200/503
   no Compose isolado (AC06) e ausência de migration (AC07).
-- [ ] **T09 — QA:** validar AC01–AC07 em matriz com resultado por critério e comando
+- [x] **T09 — QA:** validar AC01–AC07 em matriz com resultado por critério e comando
   real; separar teste unitário, integração PostgreSQL e Compose.
 - [ ] **T10 — arch-reviewer:** revisar diff e evidências independentemente; devolver
   achados ao backend e confirmar correções. Reexecutar somente gates afetados.
