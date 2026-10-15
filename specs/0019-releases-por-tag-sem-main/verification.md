@@ -10,7 +10,8 @@
 | `./.agents/sync.ps1` | Passou; projeções `.claude` reconciliadas e arquivos gerados reportados pelo script. |
 | `git diff --check` | Sem erros de whitespace; Git reporta avisos de conversão LF→CRLF no checkout Windows. |
 | Revisão YAML por QA | QA reportou parse válido dos quatro workflows. |
-| actionlint local | Não executado: binário indisponível neste ambiente. O workflow `quality.yml` instala e executa actionlint no CI; aguarda check remoto da PR. |
+| actionlint local | Não executado: binário indisponível neste ambiente. No CI remoto da PR #78, `quality / Automation` passou, incluindo a etapa actionlint de `quality.yml`. |
+| Checks remotos PR #78 | CI, Backend, Frontend, Automation/actionlint, PR policy, Project sync e Cloudflare Pages passaram. A PR permanece aberta, sem aprovação independente registrada. |
 
 ## Revisões
 
@@ -20,6 +21,6 @@
 
 ## Critérios ainda pendentes
 
-A confirmação do SHA Live no Render e health da API/Pages, branch padrão `develop`, aplicação remota dos rulesets, renomeação de `Main` para `Released` com reconciliação dos itens, execução de uma release real com imagens/digests e remoção da branch remota `main` dependem de configuração/observação após a integração da PR. A branch `main` não deve ser removida antes dessas evidências; a remoção requer confirmação explícita no momento da ação.
+A confirmação do SHA Live no Render e health da API/Pages, branch padrão `develop`, aplicação remota dos rulesets, renomeação de `Main` para `Released` com reconciliação dos itens, execução de uma release real com imagens/digests e remoção da branch remota `main` dependem de configuração/observação após a integração da PR #78; a aprovação independente ainda está pendente. A branch `main` não deve ser removida antes dessas evidências; a remoção requer confirmação explícita no momento da ação.
 
 A workflow valida tag SemVer, igualdade entre tag, SHA da execução e ponta de `stage`, health da API e Pages e repete a ponta de `stage` antes da release. O endpoint público não comprova sozinho qual SHA está implantado; registrar no momento da primeira publicação o SHA Live consultado no painel Render, o SHA de `stage`, os dois health checks e o horário.
