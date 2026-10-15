@@ -38,7 +38,11 @@ rotas de domínio via `get_session()`. O health (`backend/app/health.py`) e as m
    `POOL_TIMEOUT_SECONDS`, `CONNECT_TIMEOUT_SECONDS`), no mesmo estilo de `health.py`.
    Motivo: permitir que os testes usem valores curtos por `monkeypatch` + `cache_clear`,
    exercitando o **mesmo caminho de produção**, sem introduzir um novo conjunto de
-   variáveis de ambiente nem parâmetros na função.
+   variáveis de ambiente nem parâmetros na função. `create_database_engine()` deve ler
+   as constantes em tempo de chamada (não como default de argumento, que o `monkeypatch`
+   não alcança). Todo teste que reconstrói o engine faz `dispose()` e `cache_clear()` em
+   `finally`, seguindo o padrão já existente em
+   `backend/tests/test_review_fixes_integration.py:225-233`.
 3. **Contrato REST preservado.** Sem rota, status ou formato de erro novo. A falha por
    estourar o prazo cai no erro já existente para falha de consulta (hoje o FastAPI
    devolve 500 genérico, sem detalhes internos); a única mudança observável é **falhar
@@ -97,16 +101,21 @@ usam PostgreSQL real via `TEST_DATABASE_URL` (padrão já usado no repositório,
 
 | Risco | Demonstração planejada |
 |---|---|
-| Reciclo não ocorre (conexão velha reutilizada) | Engine com `POOL_RECYCLE_SECONDS` curto; capturar `pg_backend_pid()`, esperar além do limite, retirar de novo e observar PID novo |
+| Reciclo não ocorre (conexão velha reutilizada) | Engine com `POOL_RECYCLE_SECONDS` curto; capturar `pg_backend_pid()`, esperar além do limite, retirar de novo e observar PID novo. O `sleep` é curto (ex.: recycle 1 s, espera ~2 s) para não tensionar a regra de "sem relógio real"; a margem fica documentada no teste |
 | Reuso abre conexões novas (conjunto não limita) | Vários checkouts/checkins em sequência dentro do `pool_size`; mesmo PID e `checkedout()==0` ao final |
 | Espera indefinida ao retirar conexão | Engine própria com `pool_size=1`, `max_overflow=0` e `POOL_TIMEOUT_SECONDS` curto; segundo checkout estoura em prazo previsível |
-| Espera indefinida ao abrir conexão | Engine com `CONNECT_TIMEOUT_SECONDS` curto apontando para host/porta inalcançável; falha dentro do prazo |
+| Espera indefinida ao abrir conexão | Engine com `CONNECT_TIMEOUT_SECONDS` curto apontando para **IP não roteável** (ex.: `192.0.2.1:5432`, RFC 5737); falha dentro do prazo. Usar `localhost` + porta fechada **não serve**: falha rápido por recusa mesmo sem `connect_timeout`, então não haveria Red. Como o Red dessa fatia é lento (o kernel tenta sem prazo sem `connect_timeout`), a garantia é provada primeiro pelo teste unitário de configuração (T05) e depois confirmada pela integração com prazo folgado |
+| Erro de prazo vaza detalhe ou vira contrato novo | AC05 demonstrado com `TestClient(app, raise_server_exceptions=False)` e asserção sobre o texto da resposta base, sem adicionar handler de `SQLAlchemyError` (isso mudaria o contrato) |
 | Regressão em health, migrations ou boot | `test_health.py`, `test_health_integration.py`, `test_domain_migration_integration.py`, `test_stage_start.py` e `alembic upgrade head` continuam passando |
+| Bloqueio no `pre_ping` (residual) | Aceito e fora de escopo: se uma conexão TCP estagnar sem RST/FIN (pooler pausado), o checkout pode bloquear no `pre_ping` sem prazo; cobrir exigiria `statement_timeout`/keepalive, deliberadamente fora desta spec. Registrar como risco residual |
+| Resolução DNS sem prazo (residual) | Aceito: `connect_timeout` do libpq não cobre `getaddrinfo`; com hostname no `DATABASE_URL` resta um hang teórico, na prática curto. Registrar como limite |
 
 Gates da implementação: `ruff check` e `pytest` no backend com PostgreSQL isolado
-(TEST_DATABASE_URL), conforme `quality-gates`, incluindo os testes de integração que não
-podem ser pulados; health 200/503 conferido no Compose isolado. QA registra cada
-critério de aceite individualmente em `verification.md`. Revisão independente precede
-`doc-sync-onboarding`, que é a última etapa após alterações de código; repetir se houver
-correção posterior. A PR desta implementação tem base `develop`; promoção a `stage` é
-fluxo separado.
+(TEST_DATABASE_URL), conforme `quality-gates`. Sem `TEST_DATABASE_URL` os testes de
+integração pulam (padrão do repositório, ex.: `test_health_integration.py:12-14`); por
+isso T08 deve exigir **contagem positiva** de testes de integração executados (não
+aceitar 0 passados) e o CI fornece a variável. Health 200/503 conferido no Compose
+isolado. QA registra cada critério de aceite individualmente em `verification.md`.
+Revisão independente precede `doc-sync-onboarding`, que é a última etapa após alterações
+de código; repetir se houver correção posterior. A PR desta implementação tem base
+`develop`; promoção a `stage` é fluxo separado.

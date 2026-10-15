@@ -11,24 +11,30 @@ Refactor, com comandos e resultados reais em `verification.md`.
 - [x] **T02 — spec-reviewer:** revisar a spec independentemente; resolvidos os achados
   (prazo distinguido entre espera por conexão e abertura de conexão nova, reuso com
   resultado observável, idade desde a abertura e caminho de erro). Status `pronta`.
-- [ ] **T03 — backend:** registrar contrato preservado, camadas, decisões e riscos no
+- [x] **T03 — backend:** registrar contrato preservado, camadas, decisões e riscos no
   plano (`plan.md`/`tasks.md`). Sem código nesta etapa.
-- [ ] **T04 — arch-reviewer:** revisar independentemente plano e rastreabilidade dos
-  sete critérios; resolver achados antes de iniciar código.
+- [x] **T04 — arch-reviewer:** revisar independentemente plano e rastreabilidade dos
+  sete critérios; achados resolvidos no plano (M1 host não roteável; m1 mecânica do
+  AC05; m2 contagem positiva de integração; m3 margem do reciclo; m4 constantes em
+  tempo de chamada e `dispose()`+`cache_clear()`; N1/N2 riscos residuais). Sem
+  bloqueadores.
 
 ## Implementação backend, em sequência
 
 - [ ] **T05 — configuração do engine (AC01, AC02, AC03, AC04):** expor as constantes
   (`POOL_RECYCLE_SECONDS`, `POOL_TIMEOUT_SECONDS`, `CONNECT_TIMEOUT_SECONDS`) e aplicar
   `pool_recycle`, `pool_use_lifo`, `pool_timeout` e `connect_args={"connect_timeout":...}`
-  em `create_database_engine()`, mantendo `pool_pre_ping`. Provar por teste unitário de
-  configuração (Red → Green), sem tocar banco.
+  em `create_database_engine()`, mantendo `pool_pre_ping`. As constantes são lidas em
+  tempo de chamada. Provar por teste unitário de configuração (Red → Green), sem tocar
+  banco, preferindo atributos públicos (`engine.pool` e `engine.connect_args`).
 - [ ] **T06 — comportamento com PostgreSQL real (AC01, AC02):** provar reciclo por
-  idade (PID novo após o limite) e reuso sem crescimento (mesmo PID; nenhuma conexão
-  nova além do conjunto) usando `TEST_DATABASE_URL`.
+  idade (PID novo após o limite, com `sleep` curto e margem documentada) e reuso sem
+  crescimento (mesmo PID; nenhuma conexão nova além do conjunto) usando
+  `TEST_DATABASE_URL`, com `dispose()`+`cache_clear()` no `finally`.
 - [ ] **T07 — prazos (AC03, AC04, AC05):** provar que a espera por conexão
-  (`pool_timeout`) e a abertura de conexão nova (`connect_timeout`) falham dentro do
-  prazo, e que a requisição termina rápido sem expor detalhes internos.
+  (`pool_timeout`) e a abertura de conexão nova (`connect_timeout`, apontando para IP
+  não roteável `192.0.2.1:5432`) falham dentro do prazo, e que a requisição termina
+  rápido sem expor detalhes internos, sem adicionar handler de erro novo.
 
 ## Validação e entrega
 
