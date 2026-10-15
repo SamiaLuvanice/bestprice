@@ -49,9 +49,10 @@ Refactor, com comandos e resultados reais em `verification.md`.
 - [x] **T11 — doc-sync-onboarding:** após último código/gates/revisão, sincronizar
   `docs/database.md` e demais docs afetados, conferir `AGENTS.md`/`CLAUDE.md`/`docs` e
   registrar resultado. Se o código mudar depois, repetir como última etapa.
-- [ ] **T12 — coordenação:** preparar commits com `Refs #101` e PR para `develop` com
-  `Closes #101`, plano e evidências; conferir CI, sem bypass.
-- [ ] **T13 — coordenação:** após integração em `develop` e critérios comprovados,
+- [x] **T12 — coordenação:** preparar commits com `Refs #101` e PR para `develop` com
+  `Closes #101`, plano e evidências; conferir CI, sem bypass. PR
+  [#102](https://github.com/SamiaLuvanice/bestprice/pull/102) integrada (`f354e6a`).
+- [x] **T13 — coordenação:** após integração em `develop` e critérios comprovados,
   atualizar status/evidências e aplicar `task-cleanup` aos recursos exclusivos,
   preservando volumes e recursos ainda necessários à verificação.
 
