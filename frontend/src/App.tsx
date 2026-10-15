@@ -82,6 +82,16 @@ export function App({ clock = systemClock }: Props) {
     </div>
   }
 
+  // 0020/AC01: o visitante vê o login direto; o cabeçalho e o hero não o precedem.
+  if (sessionState === 'guest') {
+    return <div className="page">
+      <main className="page-main">
+        <LoginForm busy={busy} error={guestMessage} onSubmit={login} onValidationFail={() => setGuestMessage(null)} />
+      </main>
+      <footer>BestPrice · Acompanhe com clareza</footer>
+    </div>
+  }
+
   return <div className="page">
     <header className="masthead">
       <img className="brand-logo" src={bestPriceLogo} alt="BestPrice" />
@@ -98,7 +108,6 @@ export function App({ clock = systemClock }: Props) {
         <button type="button" className="primary-button" onClick={retrySession}>Tentar novamente</button>
       </div>
     </section>}
-    {sessionState === 'guest' && <LoginForm busy={busy} error={guestMessage} onSubmit={login} />}
     </main>
     <footer>BestPrice · Acompanhe com clareza</footer>
   </div>
