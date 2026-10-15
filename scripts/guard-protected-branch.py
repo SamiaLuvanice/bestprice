@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-PROTECTED_BRANCHES = {"develop", "stage", "main"}
+PROTECTED_BRANCHES = {"develop", "stage"}
 
 
 def current_branch() -> str | None:
@@ -35,7 +35,7 @@ def main() -> int:
     print(
         f"\nCommit recusado na branch protegida '{branch}'.\n"
         "Crie/entre na worktree da feature e abra um PR para develop;\n"
-        "promoções para stage e main também devem ocorrer via PR.\n"
+        "promoções entre develop e stage também devem ocorrer via PR.\n"
         "Veja .agents/rules/git-worktree-required.md.\n",
         file=sys.stderr,
     )

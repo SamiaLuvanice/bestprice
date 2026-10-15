@@ -2,7 +2,7 @@
 
 ## Visão geral
 
-Esta parte é a montagem do sistema: o Compose liga banco, API e interface no computador do desenvolvedor; os containers empacotam cada aplicação; e o GitHub Actions verifica as mudanças e publica imagens quando chegam à branch `main`. A publicação termina no registry e não instala a aplicação em um servidor de produção.
+Esta parte é a montagem do sistema: o Compose liga banco, API e interface no computador do desenvolvedor; os containers empacotam cada aplicação; e o workflow `release.yml` desta mudança verifica e publica imagens quando uma tag SemVer aponta para a ponta validada de `stage`. A ativação depende de integrar a mudança e concluir as configurações externas descritas no [fluxo GitHub](../github-workflow.md). A publicação termina no registry e não instala a aplicação em um servidor de produção.
 
 A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações independentes e rollback, está no [contexto do produto](../product-context.md). A spec 0018 acrescenta stage em Supabase, Render e Cloudflare Pages. Os três serviços estão publicados: API e proxy respondem health 200 com banco saudável. A falha controlada do banco e a recuperação do Render foram verificadas; a ação de rollback reimplantou um deploy anterior do mesmo commit. DEV e PROD não têm implantação configurada.
 
@@ -23,7 +23,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
 | `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, Node tests e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
-| `.github/workflows/release.yml` | Em `main`, publica imagens e cria release com digests |
+| `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
 
 ### Regras das automações GitHub
@@ -31,7 +31,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | Código | Responsabilidade observada |
 |---|---|
 | `policy.cjs` — `closingIssue`, `validatePullRequest`, `checkPullRequest` | Exige uma única linha de fechamento `Closes #n`, branch/base válidas, Issue aberta do repositório e referência à Issue nos commits (exceto commits de merge); limita validação a 250 commits |
-| `project-state.cjs` — `projectStatus` | Mapeia Issue/PR para Backlog, Ready, In progress, In review, Develop, Stage ou Main; Issue aberta sem responsável e com `specReady` vai a Ready |
+| `project-state.cjs` — `projectStatus` | Mapeia eventos futuros para Backlog, Ready, In progress, In review, Develop ou Stage; `Released` é preservado pela renomeação da opção histórica `Main`, não é calculado pelo sync. Issue aberta sem responsável e com `specReady` vai a Ready |
 | `spec-status.cjs` — `parseFeatureBranch`, `parseSpecStatus`, `specChanged`, `issueSpecState` | Liga `feature/<spec>-issue-<n>-<slug>` à Issue `#n`, lê o `status:` de `specs/<spec>-*/spec.md` no SHA atual de cada branch da Issue e indica se alguma está `pronta`; spec ilegível ou pasta ambígua vira aviso |
 | `sync-project.cjs` — função exportada, `pushChangedSpec` e `wasClosedByDefaultBranchPr` | Em push de branch de feature, resolve a Issue pela branch e só segue se a spec da própria branch mudou (primeiro push e force-push contam); busca estado atual do item, preenche `specReady` para Issue aberta, consulta o `ClosedEvent` mais recente da Issue (aceito a até 60 s do `closed_at`), localiza campo/opção Status no Project e atualiza via GraphQL |
 | `*.test.cjs` | Exercita regras de PR, mapeamento de status e sincronização com GraphQL simulado |
@@ -61,20 +61,20 @@ O isolamento de projeto cria nomes e volumes distintos por worktree. As portas a
 
 ```mermaid
 graph LR
-  PR[PR para develop/stage/main] --> CI[Workflow CI]
+  PR[PR para develop/stage] --> CI[Workflow CI]
   CI --> Quality[Quality]
   CI --> Policy[Política da PR]
   Quality --> Required[Check obrigatório CI]
   Policy --> Required
-  Main[Push em main] --> Delivery[Release workflow]
-  Delivery --> Quality2[Quality novamente]
-  Quality2 --> Images[Backend e frontend no GHCR]
+  Tag[Tag SemVer na ponta atual de stage] --> Delivery[Release workflow]
+  Delivery --> Health[Health de API e Pages + Quality]
+  Health --> Images[Backend e frontend no GHCR]
   Images --> Release[Release GitHub com digests]
 ```
 
 Quality usa Python 3.13 e PostgreSQL 17 para testes do backend; Node 22 para lint, testes e build do frontend; testes `node --test .github/scripts/*.test.cjs`; e actionlint. O workflow `CI` é o check agregado exigido e falha se algum gate necessário falhar ou for cancelado.
 
-Em `main`, `release.yml` cria ou valida uma tag `build-<sha12>` ou uma versão `vMAJOR.MINOR.PATCH`, executa Quality e publica as duas imagens no GHCR com tags da versão e SHA. Gera SBOM/proveniência e cria release contendo os digests das imagens. Imagens Linux são montadas para o ambiente padrão do workflow. Uma falha parcial pode deixar uma imagem publicada sem release completa.
+Em tags `vMAJOR.MINOR.PATCH`, `release.yml` exige que a tag existente aponte para o SHA da ponta atual de `stage`, valida health da API Render e do Pages, executa Quality e publica as duas imagens no GHCR com tags da versão e SHA. Tags `build-*` não disparam releases. Gera SBOM/proveniência e cria release contendo os digests das imagens. Imagens Linux são montadas para o ambiente padrão do workflow. Uma falha parcial pode deixar uma imagem publicada sem release completa.
 
 ## Integrações operacionais
 
@@ -106,7 +106,7 @@ O comportamento **local** da preparação inicial foi verificado: Ruff; 149 test
 - Banco isolado: `docker compose up -d db`.
 - Worktree Windows: `./scripts/compose-worktree.ps1 up --build` e `./scripts/compose-worktree.ps1 down`.
 - Consultar logs: `docker compose logs -f db backend worker frontend`.
-- Publicação: ocorre no fluxo de promoção e merge em `main`; não é implantação em cloud.
+- Publicação: ocorre por tag SemVer na ponta validada de `stage`; não é implantação em cloud.
 
 ## Pegadinhas e dívidas
 

@@ -15,7 +15,7 @@ Registre a branch da tarefa, a worktree exata e o número da PR. Confirme no pro
 
 - a PR está `MERGED`, tem base `develop` e corresponde à branch que será removida;
 - `origin/develop` contém o commit final da branch (depois de `git fetch origin`);
-- a branch não é `main`, `stage`, `develop` nem outra branch protegida;
+- a branch não é `stage`, `develop` nem outra branch protegida;
 - a worktree fica sob o diretório `.worktrees/` do projeto e é a worktree desta tarefa.
 
 Se qualquer identidade não puder ser confirmada, pare antes de apagar. Não inferir propriedade
