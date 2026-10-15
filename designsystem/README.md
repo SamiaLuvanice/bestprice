@@ -40,6 +40,7 @@ as superfícies afetadas e a spec responsável.
 | Anel de foco dos campos (`outline: 2px solid var(--color-focus)` com recuo de 2px), além da cor da borda | Indicador de foco com contraste mínimo de 3:1, sem depender só da cor da borda | Campos E-mail e Senha do login |
 | Mensagem de validação em texto (`.field-error`, `--color-danger-text`, 14px) e borda `--color-danger-text` no campo inválido (`aria-invalid`), sem `role="alert"` | Substituir o balão nativo por texto associado ao campo (`aria-describedby`), mantendo o alerta do servidor como único `alert` | Login |
 | Botão em envio com `aria-disabled`/`aria-busy`, fundo `--color-surface`, texto `--color-muted` e cursor de progresso | Aparência distinta sem usar `disabled`, que tira o foco do botão | Botão "Entrar" |
+| Logo reduzida (`.login-brand-compact`, altura de 32px, mesma imagem oficial sem distorção) acima do título, só até 840px; nessa faixa o card usa a superfície sólida `--color-glass`, sem `backdrop-filter` nem brilhos | A coluna visual some em telas estreitas e a marca ficaria ausente; desfoque e brilhos são decisão de design para a tela estreita, não ganho de desempenho medido | Login em até 840px |
 
 ## Abrir o protótipo
 

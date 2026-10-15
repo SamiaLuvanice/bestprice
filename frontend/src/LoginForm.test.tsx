@@ -25,19 +25,37 @@ function submitForm() {
   fireEvent.submit(form)
 }
 
-// AC02: a coluna visual é decorativa e não traz dados ilustrativos.
-it('mantém a coluna visual fora da árvore de acessibilidade, sem dígitos e com logo decorativa', () => {
+// 0019/AC12: a logo tem o nome "BestPrice"; o resto da coluna continua decorativo.
+it('dá o nome BestPrice às logos e mantém o resto da coluna fora da árvore de acessibilidade', () => {
   renderForm()
-  const phrase = screen.getByText('Acompanhe preços com a calma de uma vitrine.')
-  const visual = phrase.closest('[aria-hidden="true"]')
-  expect(visual).not.toBeNull()
-  expect(visual?.textContent).not.toMatch(/\d/)
-  const logo = visual?.querySelector('img')
-  expect(logo).not.toBeNull()
-  expect(logo?.getAttribute('alt')).toBe('')
-  expect(logo?.getAttribute('src')).toContain('logo-bestprice.png')
-  expect(screen.queryByRole('img', { name: 'BestPrice' })).not.toBeInTheDocument()
+  const logos = screen.getAllByRole('img', { name: 'BestPrice' })
+  expect(logos.length).toBeGreaterThanOrEqual(1)
+  logos.forEach((logo) => expect(logo.getAttribute('src')).toContain('logo-bestprice.png'))
+  const decorative = screen.getByText('Cole o link uma vez. A BestPrice acompanha o preço.').closest('[aria-hidden="true"]')
+  expect(decorative).not.toBeNull()
+  expect(decorative?.textContent).not.toMatch(/\d/)
+  expect(decorative?.querySelector('img')).toBeNull()
   expect(screen.getAllByRole('heading')).toHaveLength(1)
+})
+
+// 0019/AC14: em tela estreita a logo reduzida aparece acima do título, com o mesmo nome acessível.
+it('mostra a logo reduzida antes do título, com o nome BestPrice', () => {
+  const { container } = renderForm()
+  const compact = container.querySelector('.login-brand-compact')
+  expect(compact).not.toBeNull()
+  expect(compact).toHaveAccessibleName('BestPrice')
+  const title = screen.getByRole('heading', { level: 1, name: 'Bem-vindo de volta' })
+  expect(compact?.compareDocumentPosition(title)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+})
+
+// 0019/AC13: textos da coluna, sem parágrafo de apoio e sem dados de preço.
+it('mostra os textos novos da coluna e remove o parágrafo de apoio', () => {
+  renderForm()
+  expect(screen.getByText('Cole o link uma vez. A BestPrice acompanha o preço.')).toBeInTheDocument()
+  expect(screen.getByText('Você é avisado quando o preço cair.')).toBeInTheDocument()
+  expect(screen.queryByText(/Acompanhe preços com a calma/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/Cole o link do anúncio uma vez/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/Avisamos quando/)).not.toBeInTheDocument()
 })
 
 // AC03: título e campos obrigatórios com rótulo acessível.

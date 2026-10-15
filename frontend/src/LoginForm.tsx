@@ -33,17 +33,16 @@ export function validateLogin(email: string, password: string): LoginErrors {
   return errors
 }
 
-/** Coluna decorativa (spec 0017, AC02): fora da árvore de acessibilidade e sem dados ilustrativos. */
+/** Coluna visual (0017/AC02, 0019/AC12): só a logo tem nome acessível; o restante é decorativo e sem dados ilustrativos. */
 function LoginVisual() {
-  return <div className="login-visual" aria-hidden="true">
-    <img className="login-visual-logo" src={bestPriceLogo} alt="" />
-    <div className="login-visual-copy">
-      <p className="login-visual-title">Acompanhe preços com a calma de uma vitrine.</p>
-      <p className="login-visual-text">Cole o link do anúncio uma vez e o acompanhamento do preço passa a ser automático.</p>
+  return <div className="login-visual">
+    <img className="login-visual-logo" src={bestPriceLogo} alt="BestPrice" />
+    <div className="login-visual-copy" aria-hidden="true">
+      <p className="login-visual-title">Cole o link uma vez. A BestPrice acompanha o preço.</p>
     </div>
-    <div className="login-illustration">
+    <div className="login-illustration" aria-hidden="true">
       <span className="login-illustration-icon"><ArrowDownIcon /></span>
-      <p>Avisamos quando o preço cair.</p>
+      <p>Você é avisado quando o preço cair.</p>
     </div>
   </div>
 }
@@ -97,6 +96,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
     <div className="login-card">
       <LoginVisual />
       <div className="login-form-side">
+        <img className="login-brand-compact" src={bestPriceLogo} alt="BestPrice" />
         <h1 id="login-title">Bem-vindo de volta</h1>
         <p className="login-subtitle">Acesse sua conta para acompanhar seus anúncios e alertas.</p>
         {error && <p role="alert" className="error-box login-error">{error}</p>}
