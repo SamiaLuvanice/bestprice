@@ -3,7 +3,7 @@ numero: 0019
 titulo: Releases por tags sem branch main
 tipo: melhoria
 prioridade: P1
-status: pronta
+status: implementada
 toca: [infraestrutura, docs]
 depende_de: [0018]
 ---
@@ -40,37 +40,37 @@ implica implantação em PROD; esse ambiente ainda não está configurado.
 
 ## Critérios de aceite
 
-- [ ] Dada a configuração de branches após a mudança, quando as branches permanentes
+- [x] Dada a configuração de branches após a mudança, quando as branches permanentes
   forem consultadas, então `develop` e `stage` existem, `main` não existe e `develop`
   é a branch padrão do repositório.
-- [ ] Antes da remoção de `main`, quando a migração for verificada, então o fluxo de
+- [x] Antes da remoção de `main`, quando a migração for verificada, então o fluxo de
   release por tags está ativo, as proteções de `develop`, `stage` e tags estão
   aplicadas, a branch padrão é `develop` e CI, entrega e sincronização do Project não
   exigem `main`.
-- [ ] Dada uma pull request para `develop` ou `stage`, quando a integração contínua
+- [x] Dada uma pull request para `develop` ou `stage`, quando a integração contínua
   executar, então os checks obrigatórios continuam aplicados sem exigir que `main`
   exista.
-- [ ] Dado um commit implantado em `stage` com CI e validação de saúde aprovados,
+- [x] Dado um commit implantado em `stage` com CI e validação de saúde aprovados,
   quando uma tag `vMAJOR.MINOR.PATCH` for publicada após confirmação operacional de que a revisão de `stage` está implantada e saudável, então seu SHA é igual à ponta atual de `stage` e a entrega executa os gates para esse mesmo SHA.
-- [ ] Dada uma tag `vMAJOR.MINOR.PATCH`, quando o formato da versão for validado,
+- [x] Dada uma tag `vMAJOR.MINOR.PATCH`, quando o formato da versão for validado,
   então versões com sufixo de pré-release ou metadados de build SemVer são rejeitadas;
   tags técnicas `build-*` não iniciam publicação de release.
-- [ ] Dado um SHA de release elegível, quando a entrega for concluída, então as imagens
+- [x] Dado um SHA de release elegível, quando a entrega for concluída, então as imagens
   de backend e frontend publicadas correspondem ao mesmo SHA.
-- [ ] Dada uma falha nos gates ou na publicação de qualquer uma das duas imagens,
+- [x] Dada uma falha nos gates ou na publicação de qualquer uma das duas imagens,
   quando a entrega terminar, então nenhuma release da versão é apresentada como
   concluída.
-- [ ] Dada uma entrega bem-sucedida, quando a release for consultada, então ela
+- [x] Dada uma entrega bem-sucedida, quando a release for consultada, então ela
   identifica a versão SemVer, o SHA validado e os digests das duas imagens publicadas.
-- [ ] Dada uma tag SemVer já usada para uma release, quando alguém tentar movê-la ou
+- [x] Dada uma tag SemVer já usada para uma release, quando alguém tentar movê-la ou
   removê-la, então a proteção do repositório rejeita a operação.
-- [ ] Dado o Project após a migração, quando opções e itens forem consultados, então
+- [x] Dado o Project após a migração, quando opções e itens forem consultados, então
   `Main` não é mais um status ativo, `Released` existe, todas as Issues e PRs antes em
   `Main` estão em `Released`, e os itens, associações e registros históricos continuam
   acessíveis.
-- [ ] Dada uma sincronização futura de Issue ou PR com o Project, quando seu status for
+- [x] Dada uma sincronização futura de Issue ou PR com o Project, quando seu status for
   calculado, então a sincronização nunca grava `Main`.
-- [ ] Dada uma release por tag, quando seu resultado for consultado, então nenhuma
+- [x] Dada uma release por tag, quando seu resultado for consultado, então nenhuma
   implantação em PROD é iniciada ou declarada como concluída.
 
 ## Fora de escopo
