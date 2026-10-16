@@ -173,3 +173,19 @@ Atualizou `README.md`, `docs/architecture.md`, `docs/apps/frontend.md`,
 `docs/apps/infraestrutura.md`, `docs/PROGRESS.md`, este registro e `tasks.md` para
 descrever as rotas, os estados e os limites verificados. Os quatro arquivos
 conferidos não exigiram edição. `git diff --check` passou após essa sincronização.
+
+## Revalidação após atualização de `develop`
+
+O merge `33346ed` incorporou `origin/develop`, incluindo a suíte backend da spec
+0022, sem alterar o comportamento da navegação da 0021. Na primeira tentativa de
+revalidar, o Docker Desktop estava parado; após recuperá-lo, a coordenação executou
+os gates na worktree. Frontend: **288 passed/288 em 26 arquivos**, lint e build
+passaram. Backend: Ruff passou e pytest terminou com **158 passed, 2 skipped,
+1 warning**. A suíte de automação terminou com **50/50**. A interrupção
+inicial foi de infraestrutura local e não representa falha desses gates.
+
+O agente `doc-sync-onboarding` reviu `AGENTS.md`, `CLAUDE.md`, `docs/index.md`,
+`frontend/nginx.conf` e a documentação afetada após o merge. As orientações de
+onboarding não mudaram; `docs/apps/backend.md` e `docs/database.md` já documentam
+a spec 0022 incorporada. As contagens da 0021 foram atualizadas neste registro e
+em `docs/PROGRESS.md`. AC06 permanece pendente de verificação em `stage`.
