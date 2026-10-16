@@ -34,6 +34,8 @@ Refactor, com comandos e resultados reais em `verification.md`.
 - [ ] **T08 — regressão e acessibilidade (AC05, AC15, AC17–AC18):** adaptar a suíte
   existente à navegação mantendo cobertura de domínio e foco; conferir responsividade,
   título de aba, teclado, novas abas e histórico real. Conferir logout com bfcache.
+  Enter, foco, título, seção ativa e abertura direta em nova aba foram observados
+  no IAB; Ctrl+clique não abriu aba e bfcache não foi reproduzido. A tarefa segue aberta.
 
 ## Validação e entrega
 

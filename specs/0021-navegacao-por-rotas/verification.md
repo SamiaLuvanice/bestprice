@@ -142,8 +142,8 @@ separados dessas observações.
 | 02 | Testes de guard e navegador visitante com retorno para detalhe após login. | Após logout, voltar a detalhe protegido redirecionou ao login sem dados e o login retornou ao ID; entrada inicial visitante em cada rota não foi observada. |
 | 03 | Login direto e login já autenticado no navegador. | Navegador pendente. |
 | 04 | Testes de allowlist para destino externo, codificado, desconhecido e `/login`. | Suíte frontend final verde; casos específicos de allowlist estão em `returnTo.test.ts`, sem inspeção manual desta rodada. |
-| 05 | Voltar/avançar real por Início, Produtos, detalhe e Alertas, com seção ativa. | Voltar/avançar observado no navegador; ordem completa e seção ativa não foram descritas individualmente. |
-| 06 | Abertura direta e recarga no Nginx local e na revisão implantada em stage. | Fallback HTTP local e detalhe direto no navegador observados; recarga de login com query observada; stage pendente. |
+| 05 | Voltar/avançar real por Início, Produtos, detalhe e Alertas, com seção ativa. | Voltar/avançar observado no navegador; Produtos marcado no detalhe em inspeção adicional. Ordem completa não descrita individualmente. |
+| 06 | Abertura direta e recarga no Nginx local e na revisão implantada em stage. | Fallback HTTP local, detalhe direto em nova aba autenticada e recarga de login com query observados; stage pendente. |
 | 07 | Dashboard, oportunidades, atualizações e formulário com dados/vazio. | Fixtures prontas; navegador pendente. |
 | 08 | Produtos, carregar mais e formulário só por link. | 23 fixtures prontas; navegador pendente. |
 | 09 | Cadastro sucesso/erro/duplicidade por teste; operação real depende do Mercado Livre. | Limite externo pendente; navegador/resultado de testes a registrar. |
@@ -152,9 +152,9 @@ separados dessas observações.
 | 12 | Sino e notificações abrem ID do monitoramento sem marcar leitura. | Notificação antiga do Produto 23 abriu seu detalhe, e sino permaneceu com duas não lidas; marcar como lida separadamente não foi observado. |
 | 13 | UUID inválido, ausente e alheio sem dados; falha transitória com retry. | HTTP fallback comprovado, estado de UI pendente. |
 | 14 | 401 em sessão ativa e falha temporária de `/auth/me`; retorno e retry. | Navegador/simulação pendentes. |
-| 15 | Logout, voltar/avançar, recarga e restauração por bfcache em navegador real. | Logout de Produtos foi a login; voltar a detalhe protegido não exibiu dados. Avançar, recarga de rota protegida e bfcache não foram descritos individualmente. |
+| 15 | Logout, voltar/avançar, recarga e restauração por bfcache em navegador real. | Logout de Produtos foi a login; voltar a detalhe protegido não exibiu dados. Na aba adicional, voltar após logout mostrou `about:blank`, avançar voltou ao login e abrir diretamente o detalhe redirecionou ao login sem dados. Bfcache não foi reproduzido. |
 | 16 | Rota desconhecida para visitante e autenticado, sem loop. | Autenticado: página 404, link para Início e foco no h1 observados; visitante não observado no navegador. |
-| 17 | Teclado, nova aba, foco, títulos e `aria-current` em navegador real. | Foco e títulos conferidos; acionamento por teclado, nova aba e `aria-current` não foram descritos individualmente. |
+| 17 | Teclado, nova aba, foco, títulos e `aria-current` em navegador real. | Enter no link de Produtos abriu detalhe; h1 focado, título da aba com produto e `aria-current` em Produtos. Nova aba aberta diretamente no detalhe repetiu foco/título. Ctrl+clique não abriu aba no IAB, logo esse gesto não foi comprovado. |
 | 18 | Viewports 320, 768 e 1280 px sem overflow ou corte. | Início, Produtos, detalhe e Alertas sem overflow horizontal nas três larguras; login e acesso a todas as ações principais não foram descritos. |
 | 19 | Recarregar login com `returnTo` e rejeitar retorno para `/login`. | Recarga preservou query e login retornou ao detalhe 23; destino `/login` testado na suíte, sem observação manual. |
 | 20 | Parada com confirmação, cancelamento, sucesso/falha, anúncio e foco. | Produto 01 com alerta ativo: efeito no alerta mostrado; cancelamento manteve URL/foco; confirmação enviou `DELETE`, levou a Produtos, anunciou sucesso e focou o título. Falha de parada não observada no navegador. |
@@ -198,9 +198,31 @@ e a interação com o menu da conta. `frontend/src/navigation/routes.test.tsx`
 passou a esperar que o `h1` receba foco antes de abrir o menu; não houve mudança
 de comportamento de produção. Após a correção, a coordenação repetiu localmente
 o comando `npm test -- --run`: **288 passed/288**; `npm run lint` também passou.
-O CI remoto da nova revisão ainda precisa ser executado e verificado; não há
-evidência de CI verde para esta correção.
+O CI remoto da revisão `3c548ab` passou em todos os checks observados da PR:
+quality / Frontend, Backend, Automation, PR policy, CI agregado, sync/resolve
+e Cloudflare Pages. A falha da execução anterior fica registrada acima como
+histórico; o rerun remoto confirmou a correção do teste.
 
 O agente `doc-sync-onboarding` conferiu novamente `AGENTS.md`, `CLAUDE.md`,
 `docs/index.md` e os documentos afetados. Apenas este registro e
 `docs/PROGRESS.md` precisaram de atualização. AC06 em `stage` segue pendente.
+
+## QA adicional no navegador local
+
+Na tela `/produtos` do IAB, Enter no link “Ver detalhes de QA 0021 Produto 02”
+abriu `/produtos/00210002-0000-4000-8000-000000000002`. O detalhe carregou
+com `h1` focado, título da aba “QA 0021 Produto 02 · BestPrice” e item Produtos
+com `aria-current`. Uma nova aba aberta diretamente na URL do detalhe carregou
+com a sessão e apresentou o mesmo foco e título. Ctrl+clique no link não abriu
+aba nesse IAB; esse gesto não foi demonstrado.
+
+Logout na aba adicional levou a `/login`; Voltar mostrou `about:blank` e Avançar
+voltou ao login. Abrir diretamente a URL do detalhe depois do logout redirecionou
+a `/login?returnTo=...`; recarregar esse login preservou o destino e não mostrou
+dados do produto. A aba temporária foi fechada e a original foi recarregada em
+`/login?returnTo=%2Fprodutos`. O histórico observado não restaurou o detalhe por
+bfcache, então esse caso de T08 e AC15 permanece sem reprodução específica.
+
+O agente `doc-sync-onboarding` atualizou esta matriz, `tasks.md` e
+`docs/PROGRESS.md` com a evidência local. O preview/CI verde não substitui a
+abertura direta e a recarga em `stage`: AC06 permanece parcial.
