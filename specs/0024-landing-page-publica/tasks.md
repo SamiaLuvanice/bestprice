@@ -8,4 +8,6 @@
 - [x] Revisar diff local, corrigir e revalidar os dois P2 da revisão independente; QA independente 5/5; registrar evidências em `verification.md`.
 - [x] Sincronizar documentação e conferir `AGENTS.md` e `CLAUDE.md` como última etapa.
 - [x] Abrir [Issue #111](https://github.com/SamiaLuvanice/bestprice/issues/111) e renomear a branch para `feature/0024-issue-111-landing-page`.
-- [ ] Atualizar a branch com `origin/develop`, abrir PR para `develop` e obter CI remoto; depois integrar conforme o fluxo GitHub.
+- [x] Rebasear sem conflito sobre `origin/develop` (`cbb61c3`), publicar `a61f9ee` e abrir [PR #115](https://github.com/SamiaLuvanice/bestprice/pull/115) para `develop` com `Closes #111`.
+- [x] Conferir CI remoto: run 38974873433 com dez checks verdes e preview Cloudflare Pages publicado.
+- [ ] Integrar a PR conforme o fluxo GitHub; validação em `stage` é separada do preview da PR.

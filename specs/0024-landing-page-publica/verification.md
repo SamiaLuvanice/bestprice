@@ -43,7 +43,7 @@ de 5,37:1 sobre branco e 5,11:1 no selo; `#funcionalidades` recebe
 `scroll-margin-top: 94px`. O apontamento P3 sobre o título da aba foi descartado
 após conferir os efeitos existentes de `App.tsx`/`LandingPage.tsx` e o teste que
 verifica o título da landing, do login e do painel. O QA independente revalidou
-5/5 itens; isso não substitui CI remoto nem a revisão de uma PR.
+5/5 itens. A PR e os checks remotos foram verificados depois, conforme abaixo.
 
 ## Critérios de aceite
 
@@ -58,13 +58,22 @@ verifica o título da landing, do login e do painel. O QA independente revalidou
 | AC07 | Teste novo confirma a substituição da landing pelo painel com sessão válida e título próprio; o código guarda as rotas internas. Login real e API não foram executados nesta verificação. |
 | AC08 | Um H1 e descrições de imagens conferidos no componente/teste; CSS define foco visível e `prefers-reduced-motion`. Verde de leitura com contraste calculado de 5,37:1 sobre branco e 5,11:1 no selo. Auditoria automatizada de acessibilidade não executada. |
 
-## Pendências de entrega
+## Handoff e checks remotos
 
 A [Issue #111](https://github.com/SamiaLuvanice/bestprice/issues/111) foi criada
-e a branch passou a `feature/0024-issue-111-landing-page`. A referência local
-`origin/develop` foi atualizada para `cbb61c3`; no momento deste registro, a
-branch ainda está quatro commits atrás e será rebaseada após o commit da feature.
-PR, CI remoto, merge e validação em `stage` permanecem pendentes. Login com
-conta real, API, backend, PostgreSQL, teclado real no navegador e auditoria axe
-não foram executados nesta verificação. `actionlint` não está instalado e não
-foi executado. Implementação entregue localmente; aguarda PR e integração.
+e a branch `feature/0024-issue-111-landing-page` foi rebaseada sem conflito
+sobre `origin/develop` em `cbb61c3`, publicada no commit `a61f9ee`. A
+[PR #115](https://github.com/SamiaLuvanice/bestprice/pull/115) foi aberta para
+`develop` com `Closes #111`, sem conflitos e pronta para merge na consulta.
+No GitHub, o run de CI [38974873433](https://github.com/SamiaLuvanice/bestprice/actions/runs/38974873433)
+ficou verde, incluindo o check obrigatório `CI / CI`, `PR policy`, `Automation`,
+`Backend` e `Frontend`. Na PR, `Project sync / resolve` e `sync` também ficaram
+verdes; ao todo, dez checks bem-sucedidos. Cloudflare Pages registrou
+`Deployed successfully` para o preview da PR; isso não é validação do
+ambiente `stage`.
+
+Merge, fechamento da Issue e validação em `stage` ainda não ocorreram nesta
+verificação. Login com conta real, API, backend e PostgreSQL locais, teclado
+real no navegador e auditoria axe não foram executados nesta verificação.
+`actionlint` não está instalado localmente. Implementação entregue; aguarda
+integração da PR conforme o fluxo GitHub.
