@@ -1,4 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
 import { useDisclosure } from '../lib/focus'
 import { BellIcon } from './Icons'
@@ -11,7 +12,6 @@ type Props = {
   unread: UnreadView
   onRetry: () => Promise<void>
   onMarkRead: (id: string) => Promise<string | null>
-  onSeeAll: () => void
 }
 
 function counterOf(unread: UnreadView): { text: string | null; label: string } {
@@ -26,7 +26,7 @@ function counterOf(unread: UnreadView): { text: string | null; label: string } {
 type FocusRequest = { previous: string[]; index: number } | 'title' | null
 
 /** Sino com contador de não lidas e painel (disclosure) com as 5 mais recentes. */
-export function NotificationBell({ unread, onRetry, onMarkRead, onSeeAll }: Props) {
+export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
   const panel = useDisclosure()
   const panelId = useId()
   const titleId = useId()
@@ -71,12 +71,6 @@ export function NotificationBell({ unread, onRetry, onMarkRead, onSeeAll }: Prop
     setFocusRequest('title')
   }
 
-  function seeAll(event: MouseEvent<HTMLAnchorElement>) {
-    event.preventDefault()
-    panel.close()
-    onSeeAll()
-  }
-
   return <div className="disclosure bell" ref={panel.containerRef} onKeyDown={panel.onKeyDown} onBlur={panel.onBlur}>
     <button ref={panel.buttonRef} type="button" className="icon-button bell-button" aria-expanded={panel.open} aria-controls={panelId} onClick={panel.toggle}>
       <BellIcon />
@@ -99,12 +93,13 @@ export function NotificationBell({ unread, onRetry, onMarkRead, onSeeAll }: Prop
             Preço observado: {formatMoney(item.observed_price) ?? 'Desconhecido'} · Alvo: {formatMoney(item.target_price) ?? 'Desconhecido'}
           </span>
           <RelativeTime iso={item.created_at} receivedAt={unread.receivedAt} />
+          <Link className="link-button" to={`/produtos/${item.tracked_product_id}`} onClick={() => panel.close()}>Abrir produto</Link>
           <button type="button" className="link-button" data-notification-id={item.id} aria-disabled={pending === item.id || undefined}
             onClick={() => void markRead(item.id)}>
             Marcar como lida<span className="sr-only">: {item.product_title}</span>
           </button>
         </li>)}</ul>)}
-      <a className="panel-link" href="#alertas" onClick={seeAll}>Ver todas as notificações</a>
+      <Link className="panel-link" to="/alertas" onClick={() => panel.close()}>Ver todas as notificações</Link>
     </section>}
   </div>
 }

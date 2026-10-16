@@ -40,7 +40,14 @@ as superfícies afetadas e a spec responsável.
 | Anel de foco dos campos (`outline: 2px solid var(--color-focus)` com recuo de 2px), além da cor da borda | Indicador de foco com contraste mínimo de 3:1, sem depender só da cor da borda | Campos E-mail e Senha do login |
 | Mensagem de validação em texto (`.field-error`, `--color-danger-text`, 14px) e borda `--color-danger-text` no campo inválido (`aria-invalid`), sem `role="alert"` | Substituir o balão nativo por texto associado ao campo (`aria-describedby`), mantendo o alerta do servidor como único `alert` | Login |
 | Botão em envio com `aria-disabled`/`aria-busy`, fundo `--color-surface`, texto `--color-muted` e cursor de progresso | Aparência distinta sem usar `disabled`, que tira o foco do botão | Botão "Entrar" |
-| Logo reduzida (`.login-brand-compact`, altura de 32px, mesma imagem oficial sem distorção) acima do título, só até 840px; nessa faixa o card usa a superfície sólida `--color-glass`, sem `backdrop-filter` nem brilhos | A coluna visual some em telas estreitas e a marca ficaria ausente; desfoque e brilhos são decisão de design para a tela estreita, não ganho de desempenho medido | Login em até 840px |
+| Logo reduzida (`.login-brand-compact`, mesma imagem oficial sem distorção) acima do título, só até 840px; altura original de 32px e superfície sólida sem desfoque nem brilhos | A coluna visual some em telas estreitas e a marca ficaria ausente | Login em até 840px na spec 0020; altura atualizada pela 0023 |
+
+| Extensão da spec 0023 | Motivo | Superfícies |
+|---|---|---|
+| Arte `imagem-lateral.png` fornecida pelo responsável, sem logo, texto ou card sobrepostos; imagem de fundo com escala `cover` e prioridade ao topo apenas acima de 840px | Preservar a marca e a mensagem incorporadas à peça no recorte de janelas largas e baixas sem baixar a arte em telas estreitas | Metade esquerda do login acima de 840px |
+| Composição em duas metades com formulário sobre branco; em até 840px, arte oculta e logo oficial compacta antes do título | Aproximar a entrada da referência de composição sem criar controles de cadastro, recuperação ou Google | Login responsivo da spec 0023 |
+
+As regras de vidro, brilhos e card ilustrativo das specs 0017 e 0020 acima foram substituídas **somente no login** pela spec 0023. A logo compacta passa a 40px na entrada estreita. Os produtos, preços e percentuais da arte são ilustração estática, sem vínculo com anúncios reais ou com a conta da pessoa.
 
 ## Abrir o protótipo
 

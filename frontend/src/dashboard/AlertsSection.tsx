@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type Ref } from 'react'
+import { Link } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
 import { RelativeTime } from './RelativeTime'
 import type { AllNotifications } from './useNotifications'
@@ -54,7 +55,7 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
 
   return <section id="alertas" aria-labelledby="alerts-title" className="card-section alerts-section">
     <div className="section-heading">
-      <h2 id="alerts-title" ref={headingRef} tabIndex={-1}>Alertas</h2>
+      <h2 id="alerts-title" ref={headingRef} tabIndex={-1}>Notificações recebidas</h2>
       <p className="section-subtitle">Notificações de preço-alvo atingido.</p>
     </div>
     {notifications.status === 'loading' && <p role="status" className="loading-status">Carregando notificações…</p>}
@@ -74,6 +75,7 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
           <RelativeTime iso={notification.created_at} receivedAt={receivedAt} />
         </div>
         <span className="read-state">{notification.read_at ? 'Lida' : 'Não lida'}</span>
+        <Link className="text-button" to={`/produtos/${notification.tracked_product_id}`}>Abrir produto</Link>
         {!notification.read_at && <button type="button" className="secondary-button" data-notification-id={notification.id}
           aria-disabled={pending === notification.id || undefined} onClick={() => void markRead(notification.id)}>
           Marcar como lida<span className="sr-only">: {notification.product_title}</span>

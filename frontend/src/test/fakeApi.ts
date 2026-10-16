@@ -106,6 +106,11 @@ export function fakeApi(route: Route = () => undefined, dashboard: unknown = emp
     if (method === 'GET') {
       if (url === '/api/auth/me') return Promise.resolve(reply(200, sessionUser))
       if (url === '/api/dashboard') return Promise.resolve(reply(200, dashboard))
+      if (url === '/api/tracked-products') {
+        const page = typeof dashboard === 'object' && dashboard !== null && 'tracked_products' in dashboard
+          ? dashboard.tracked_products : { items: [], next_cursor: null }
+        return Promise.resolve(reply(200, page))
+      }
       if (url === '/api/notifications' || url === unreadUrl) return Promise.resolve(emptyPage())
     }
     // O cliente traduziria o erro em “falha de rede” silenciosa; a rota fica registrada e o

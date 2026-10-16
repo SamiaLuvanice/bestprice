@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { formatMoney, formatPercentage } from '../lib/format'
 import { ArrowDownIcon, ArrowUpIcon } from './Icons'
 import { attemptResult, availabilityLabel } from './labels'
@@ -11,7 +12,6 @@ import type { TrackedEntry } from './trackedList'
 type Props = {
   entry: TrackedEntry
   state: RowState
-  onOpen: (id: string) => void
   /** Conteúdo da coluna Ações além de “Ver detalhes” (menu da linha). */
   actions?: ReactNode
 }
@@ -35,7 +35,7 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
  * Um produto em “Seus produtos”: linha principal (colunas) e linha secundária (anterior, maior,
  * horários, alerta, avisos e região anunciada da própria linha). Empilhado por CSS em telas estreitas.
  */
-export function TrackedProductRow({ entry, state, onOpen, actions }: Props) {
+export function TrackedProductRow({ entry, state, actions }: Props) {
   const titleId = useId()
   const { tracked, receivedAt } = entry
   const product = tracked.product
@@ -57,9 +57,9 @@ export function TrackedProductRow({ entry, state, onOpen, actions }: Props) {
       <td role="cell" {...label(4)}><span className={`availability availability-${product.availability}`}>{availabilityLabel(product.availability)}</span></td>
       <td role="cell" {...label(5)}><RelativeTime iso={product.last_price_observed_at} receivedAt={receivedAt} /></td>
       <td role="cell" {...label(6)} className="cell-actions">
-        <button type="button" className="secondary-button" data-row-details={tracked.id} disabled={state.busy} onClick={() => onOpen(tracked.id)}>
+        <Link className="secondary-button" to={`/produtos/${tracked.id}`} data-row-details={tracked.id}>
           Ver detalhes{' '}<span className="sr-only">de {product.title}</span>
-        </button>
+        </Link>
         {actions}
       </td>
     </tr>

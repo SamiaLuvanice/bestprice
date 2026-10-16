@@ -38,9 +38,27 @@ def _pin_utc_timezone(dbapi_connection, _connection_record) -> None:
         dbapi_connection.autocommit = previous
 
 
+POOL_RECYCLE_SECONDS = 300
+POOL_TIMEOUT_SECONDS = 10
+CONNECT_TIMEOUT_SECONDS = 5
+
+
+def engine_kwargs() -> dict[str, object]:
+    # Read the constants at call time so tests can shrink the limits via monkeypatch and
+    # exercise the same production path. pool_recycle measures the connection's age
+    # since it was opened, discarding connections the shared pooler may have dropped.
+    return {
+        "pool_pre_ping": True,
+        "pool_recycle": POOL_RECYCLE_SECONDS,
+        "pool_use_lifo": True,
+        "pool_timeout": POOL_TIMEOUT_SECONDS,
+        "connect_args": {"connect_timeout": CONNECT_TIMEOUT_SECONDS},
+    }
+
+
 @lru_cache(maxsize=1)
 def create_database_engine():
-    engine = create_engine(database_url(), pool_pre_ping=True)
+    engine = create_engine(database_url(), **engine_kwargs())
     event.listen(engine, "connect", _pin_utc_timezone)
     return engine
 

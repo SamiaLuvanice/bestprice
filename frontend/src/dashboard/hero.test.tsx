@@ -13,14 +13,15 @@ const clock = () => new Date('2026-10-11T18:00:00Z')
 const existing = trackedFixture()
 const created = trackedFixture({ id: 'product-2', title: 'Cafeteira elétrica' }, { id: 'tracking-2' })
 
-async function renderHero(trackRoute: Route, extra: Route = () => undefined) {
+async function renderHero(trackRoute: Route, extra: Route = () => undefined, initialPath = '/produtos') {
+  window.history.replaceState(null, '', initialPath)
   const mockFetch = fakeApi((url, init) => {
     if (url === '/api/tracked-products' && init?.method === 'POST') return trackRoute(url, init)
     return extra(url, init)
   }, dashboardWith([existing]))
   const user = userEvent.setup()
   render(<App clock={clock} />)
-  await screen.findByRole('heading', { name: 'Seus produtos' })
+  await screen.findByRole('heading', { level: 1 })
   return { user, mockFetch }
 }
 
@@ -40,7 +41,7 @@ const validUrl = 'https://produto.mercadolivre.com.br/MLB-2222222222-cafeteira-_
 
 describe('hero', () => {
   it('exibe exatamente os textos da spec, sem card de produto, preço ou estrelas', async () => {
-    await renderHero(() => undefined)
+    await renderHero(() => undefined, () => undefined, '/')
     const hero = within(screen.getByRole('region', { name: 'Acompanhe o preço. Compre na hora certa.' }))
     expect(hero.getByRole('heading', { level: 1 })).toHaveTextContent('Acompanhe o preço. Compre na hora certa.')
     expect(hero.getByText('Compre na hora certa.')).toHaveClass('hero-highlight')
@@ -62,7 +63,7 @@ describe('envio do link', () => {
     await submit(user, validUrl)
     expect(await screen.findByText('Localizando produto...')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: /Ver detalhes/ })).toBeEnabled()
+    expect(screen.getByRole('link', { name: /Ver detalhes/ })).toBeInTheDocument()
     expect(within(screen.getByRole('banner')).getByRole('button', { name: /pessoa@example\.com/ })).toBeEnabled()
     response.resolve(reply(201, created))
     expect(await screen.findByText('Produto adicionado ao monitoramento.')).toBeInTheDocument()
@@ -70,7 +71,7 @@ describe('envio do link', () => {
     expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeEnabled()
   })
 
-  it('limpa o campo e mostra o novo produto em Seus produtos sem recarregar a página', async () => {
+  it('limpa o campo e mostra o novo produto em Produtos sem recarregar a página', async () => {
     const { user } = await renderHero(() => reply(201, created))
     await submit(user, validUrl)
     expect(await screen.findByText('Produto adicionado ao monitoramento.')).toBeInTheDocument()
@@ -124,8 +125,9 @@ describe('envio do link', () => {
     })
     await submit(user, validUrl)
     expect(await screen.findByRole('alert')).toHaveTextContent('Você já monitora este anúncio.')
-    await user.click(screen.getByRole('button', { name: 'Ver produto' }))
-    expect(await screen.findByRole('dialog', { name: 'Detalhes de Liquidificador' })).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: 'Ver produto' }))
+    expect(window.location.pathname).toBe('/produtos/tracking-9')
+    expect(await screen.findByRole('heading', { name: 'Liquidificador' })).toBeInTheDocument()
   })
 
   it('acrescenta o prazo de nova tentativa ao 429', async () => {

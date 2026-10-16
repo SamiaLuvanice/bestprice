@@ -8,6 +8,7 @@ export type DashboardView =
 
 type Options = {
   clock: () => Date
+  enabled?: boolean
   /** Chamado só para respostas que prevalecem (não descartadas), com o instante de chegada. */
   onLoaded: (data: Dashboard, receivedAt: Date) => void
   onUnauthenticated: (failure: ApiFailure) => void
@@ -20,7 +21,7 @@ const fallbackMessage = 'Não foi possível concluir a operação. Tente novamen
  * sequência e só a mais recente pode alterar o estado. Depois da primeira resposta válida, uma falha
  * de recarga mantém os dados exibidos e expõe `refreshError`.
  */
-export function useDashboard({ clock, onLoaded, onUnauthenticated }: Options): { view: DashboardView; reload: () => Promise<void> } {
+export function useDashboard({ clock, enabled = true, onLoaded, onUnauthenticated }: Options): { view: DashboardView; reload: () => Promise<void> } {
   const [view, setView] = useState<DashboardView>({ status: 'loading' })
   const sequence = useRef(0)
   const callbacks = useRef({ clock, onLoaded, onUnauthenticated })
@@ -44,7 +45,7 @@ export function useDashboard({ clock, onLoaded, onUnauthenticated }: Options): {
     }
   }, [])
 
-  useEffect(() => { void reload() }, [reload])
+  useEffect(() => { if (enabled) void reload() }, [reload, enabled])
 
   return { view, reload }
 }

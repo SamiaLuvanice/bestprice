@@ -17,12 +17,18 @@ export function product(id: string, title: string, overrides: Record<string, unk
   return trackedFixture({ id: `product-${id}`, title, ...recentTimes, ...overrides }, { id: `tracking-${id}`, ...tracked })
 }
 
-export async function renderArea(dashboard: unknown, route: Route = () => undefined) {
+export async function renderArea(dashboard: unknown, route: Route = () => undefined, initialPath = '/produtos') {
   const mockFetch = fakeApi(route, dashboard)
   const user = userEvent.setup()
+  window.history.replaceState({}, '', initialPath)
   render(<App clock={clock} />)
-  await screen.findByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })
-  await waitFor(() => expect(screen.queryByText('Carregando seu painel…')).not.toBeInTheDocument())
+  await screen.findByRole('navigation', { name: 'Principal' })
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
+  if (initialPath === '/produtos') {
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Seus produtos' })).toHaveAttribute('aria-busy', 'false'))
+  } else if (initialPath === '/') {
+    await waitFor(() => expect(screen.queryByText('Carregando seu painel…')).not.toBeInTheDocument())
+  }
   return { user, mockFetch }
 }
 

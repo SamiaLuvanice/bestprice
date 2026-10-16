@@ -20,7 +20,8 @@ function unread(count: number) {
 type UnreadSource = () => unknown
 
 /** Pessoa autenticada; `unreadSource` decide a resposta de cada consulta de não lidas. */
-async function renderWithUnread(unreadSource: UnreadSource, extra: Route = () => undefined) {
+async function renderWithUnread(unreadSource: UnreadSource, extra: Route = () => undefined, initialPath = '/produtos') {
+  window.history.replaceState(null, '', initialPath)
   const mockFetch = fakeApi((url, init) => {
     const custom = extra(url, init)
     if (custom !== undefined) return custom
@@ -29,7 +30,7 @@ async function renderWithUnread(unreadSource: UnreadSource, extra: Route = () =>
   }, dashboardWith([trackedFixture()]))
   const user = userEvent.setup()
   render(<App clock={clock} />)
-  await screen.findByRole('heading', { name: 'Seus produtos' })
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
   return { user, mockFetch }
 }
 
@@ -105,9 +106,10 @@ describe('painel do sino', () => {
     expect(items[0]).toHaveTextContent(/R\$\s*90,00/)
     expect(within(items[0]).getByText('Há 10 min')).toBeInTheDocument()
     await user.click(panel().getByRole('link', { name: 'Ver todas as notificações' }))
-    expect(screen.getByRole('heading', { name: 'Alertas' })).toHaveFocus()
+    expect(window.location.pathname).toBe('/alertas')
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Alertas' })).toHaveFocus())
     expect(screen.queryByRole('region', { name: 'Notificações não lidas' })).not.toBeInTheDocument()
-    expect(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Alertas' })).toHaveAttribute('aria-current', 'location')
+    expect(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Alertas' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('informa quando não há não lidas', async () => {
@@ -146,8 +148,8 @@ describe('painel do sino', () => {
         return reply(200, { ...notice, read_at: readAt })
       }
       return undefined
-    })
-    const section = within(screen.getByRole('region', { name: 'Alertas' }))
+    }, '/alertas')
+    const section = within(screen.getByRole('region', { name: 'Notificações recebidas' }))
     expect(await section.findByText('Não lida')).toBeInTheDocument()
     await waitFor(() => expect(bell()).toHaveAccessibleName('Notificações, 1 não lida'))
     await user.click(bell())
@@ -163,9 +165,11 @@ describe('painel do sino', () => {
     bell().focus()
     await user.keyboard('{Enter}')
     expect(bell()).toHaveAttribute('aria-expanded', 'true')
-    // O instante não é parada de Tab (QA 0012, M10): a primeira parada é o botão do item.
+    // O instante não é parada de Tab; o link do produto é a primeira parada.
     await user.tab()
     expect(panel().getAllByText('Há 10 min')[0].closest('time')).not.toHaveAttribute('tabindex')
+    expect(panel().getAllByRole('link', { name: 'Abrir produto' })[0]).toHaveFocus()
+    await user.tab()
     expect(panel().getByRole('button', { name: 'Marcar como lida: Produto 1' })).toHaveFocus()
     await user.keyboard('{ArrowDown}')
     expect(panel().getByRole('button', { name: 'Marcar como lida: Produto 1' })).toHaveFocus()
