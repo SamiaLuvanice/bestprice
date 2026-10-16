@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type User } from './api'
 import { LoginForm } from './LoginForm'
+import { LandingPage } from './landing/LandingPage'
 import { AccountArea } from './dashboard/AccountArea'
 import { HeroTrackForm, type TrackFeedback } from './dashboard/HeroTrackForm'
 import { safeReturnTo } from './navigation/returnTo'
@@ -109,6 +110,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     setGuestTrackError({ message: 'Entre na sua conta para monitorar este anúncio.', trackedProductId: null })
     return false
   }
+  if (location.pathname === '/' && sessionState !== 'ready') return <LandingPage />
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
     <header className="masthead"><img className="brand-logo" src={bestPriceLogo} alt="BestPrice" /></header>
     <main className="page-main">

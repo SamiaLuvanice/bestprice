@@ -37,7 +37,7 @@ PostgreSQL isolados. Os resultados e limites estão em
 
 ## Tela de entrada — specs 0017, 0020 e 0023
 
-Sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) direto,
+Na rota `/login`, sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) direto,
 sem o cabeçalho (masthead) nem o hero com o campo de link (spec 0020, que revoga o
 trecho da 0017 que os mantinha acima do login); só o rodapé acompanha. A spec 0023
 substitui a antiga casca de vidro e a coluna ilustrativa pela imagem fornecida,
@@ -87,14 +87,40 @@ desfoque e em modo sólido simulado) e os limites estão em
 A verificação da composição atual, inclusive em 320, 768 e 1280 × 640 px, está na
 [`verification.md` da 0023](../../specs/0023-login-com-imagem-lateral/verification.md).
 
-## Rotas e fluxo atual — spec 0021
+## Landing pública — spec 0024
 
-A SPA usa `react-router-dom` e mantém o contrato REST da spec 0013. `App.tsx` consulta `GET /api/auth/me` ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante; falha de rede ou indisponibilidade mostra “Tentar novamente” sem encerrar a sessão. A conta precisa ser provisionada no backend antes do login; não há cadastro público.
+Em `/`, enquanto a sessão está pendente, depois de um 401 ou se a consulta de
+sessão falhar, `App.tsx` mostra `LandingPage`. Se `GET /api/auth/me` confirmar a
+sessão, a mesma URL mostra o painel autenticado. A landing é conteúdo estático:
+não busca anúncios, preços, categorias ou métricas na API. A arte do hero e do
+banner e as sete imagens de categoria são WebP locais em
+`frontend/src/assets/landing/`. O recorte CSS do hero mostra a parte ilustrativa
+da imagem, sem repetir o texto que já está incorporado à sua esquerda; os
+textos navegáveis e acessíveis são elementos React. Produtos e preços dentro das
+artes são ilustrativos, não resultados reais.
+
+A página apresenta marca oficial, proposta de valor, quatro benefícios, quatro
+etapas, sete categorias ilustrativas, banner final e rodapé. Links do cabeçalho
+levam às seções da própria página. Em telas estreitas, o menu abre e fecha por
+botão com `aria-expanded`; há link para pular ao conteúdo, foco visível e redução
+de movimento conforme a preferência do sistema. A âncora `#funcionalidades`
+tem `scroll-margin-top: 94px` para permanecer visível sob o cabeçalho fixo.
+O verde de leitura `#087c1e` mantém contraste calculado de 5,37:1 sobre branco
+e 5,11:1 no selo; o botão principal conserva o verde de ação com texto escuro.
+As ações “Entrar” levam a
+`/login`. “Criar conta gratuita” exibe um aviso local com link para entrar, sem
+trocar de rota: o cadastro público ainda não existe. `frontend/index.html`
+contém a descrição de busca da aplicação. Consulte a
+[verificação da 0024](../../specs/0024-landing-page-publica/verification.md).
+
+## Rotas e fluxo atual — specs 0021 e 0024
+
+A SPA usa `react-router-dom` e mantém o contrato REST da spec 0013. `App.tsx` consulta `GET /api/auth/me` ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha de rede ou indisponibilidade mostra a landing em `/`; nas demais rotas, preserva o estado de erro com “Tentar novamente”, sem encerrar a sessão. A conta precisa ser provisionada no backend antes do login; não há cadastro público.
 
 | URL | Conteúdo e acesso |
 |---|---|
 | `/login` | Entrada pública; uma sessão válida segue para Início. |
-| `/` | Início autenticado: formulário por link, resumo, oportunidades e atualizações recentes. |
+| `/` | Landing pública para visitante, inclusive durante carga/falha da sessão; com sessão válida, Início autenticado com formulário por link, resumo, oportunidades e atualizações recentes. |
 | `/produtos` | Lista autenticada de monitoramentos, paginação e formulário por link. |
 | `/produtos/:id` | Página autenticada do monitoramento próprio, com histórico, alerta e ações. |
 | `/alertas` | Alertas configurados e notificações recebidas, em grupos distintos. |
@@ -108,6 +134,8 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | Arquivo | Responsabilidade |
 |---|---|
 | `frontend/src/App.tsx` | `BrowserRouter`, rotas, consulta e revalidação de sessão, login, retorno seguro e títulos; recebe o relógio injetável (`clock`) |
+| `frontend/src/landing/LandingPage.tsx`, `LandingPage.css` | Landing pública, navegação por âncoras, menu móvel, aviso local de cadastro e apresentação responsiva |
+| `frontend/src/assets/landing/` | Nove WebP locais: hero, banner e sete categorias ilustrativas |
 | `frontend/src/LoginForm.tsx` | Tela de entrada (specs 0017, 0020 e 0023): arte lateral, validação própria no envio, campos, “Mostrar senha”, envio único e foco em Senha após falha |
 | `frontend/src/navigation/returnTo.ts` | Allowlist de destinos internos após login ou expiração de sessão |
 | `frontend/src/dashboard/AccountArea.tsx` | Orquestra as telas autenticadas, dados, ações e foco; componentes de apresentação não chamam `fetch` |
