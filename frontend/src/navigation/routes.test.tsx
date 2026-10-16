@@ -211,7 +211,8 @@ it('logout limpa a área da conta e substitui a URL por login', async () => {
   fakeApi((url, init) => url === '/api/auth/logout' && init?.method === 'POST' ? reply(204, null) : undefined,
     dashboardFixture())
   visit('/produtos')
-  await screen.findByRole('heading', { name: 'Produtos', level: 1 })
+  const heading = await screen.findByRole('heading', { name: 'Produtos', level: 1 })
+  await waitFor(() => expect(heading).toHaveFocus())
   const user = userEvent.setup()
   await user.click(screen.getByRole('button', { name: /Conta:.*pessoa@example.com/ }))
   await user.click(screen.getByRole('button', { name: 'Sair' }))

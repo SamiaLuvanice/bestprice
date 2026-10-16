@@ -189,3 +189,18 @@ O agente `doc-sync-onboarding` reviu `AGENTS.md`, `CLAUDE.md`, `docs/index.md`,
 onboarding não mudaram; `docs/apps/backend.md` e `docs/database.md` já documentam
 a spec 0022 incorporada. As contagens da 0021 foram atualizadas neste registro e
 em `docs/PROGRESS.md`. AC06 permanece pendente de verificação em `stage`.
+
+## Correção do teste de logout após CI da PR #105
+
+No CI da [PR #105](https://github.com/SamiaLuvanice/bestprice/pull/105), um dos
+288 testes frontend falhou por corrida entre o foco inicial do título “Produtos”
+e a interação com o menu da conta. `frontend/src/navigation/routes.test.tsx`
+passou a esperar que o `h1` receba foco antes de abrir o menu; não houve mudança
+de comportamento de produção. Após a correção, a coordenação repetiu localmente
+o comando `npm test -- --run`: **288 passed/288**; `npm run lint` também passou.
+O CI remoto da nova revisão ainda precisa ser executado e verificado; não há
+evidência de CI verde para esta correção.
+
+O agente `doc-sync-onboarding` conferiu novamente `AGENTS.md`, `CLAUDE.md`,
+`docs/index.md` e os documentos afetados. Apenas este registro e
+`docs/PROGRESS.md` precisaram de atualização. AC06 em `stage` segue pendente.
