@@ -23,6 +23,7 @@ const withoutImage = trackedFixture({
 }, { id: 'tracking-2' })
 
 async function renderOverview(dashboard: unknown) {
+  window.history.replaceState(null, '', '/')
   fakeApi((url) => {
     if (url === '/api/tracked-products/tracking-2') return reply(200, withoutImage)
     if (url === '/api/tracked-products/tracking-2/history') return reply(200, { items: [], next_cursor: null })
@@ -30,7 +31,7 @@ async function renderOverview(dashboard: unknown) {
   }, dashboard)
   const user = userEvent.setup()
   render(<App clock={clock} />)
-  await screen.findByRole('heading', { name: 'Seus produtos' })
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
   await waitFor(() => expect(screen.queryByText('Carregando seu painel…')).not.toBeInTheDocument())
   return { user }
 }
@@ -63,7 +64,7 @@ describe('boas oportunidades', () => {
     const section = within(region)
     expect(section.getByText('Produtos monitorados que tiveram redução de preço recentemente.')).toBeInTheDocument()
     const cards = section.getAllByRole('listitem')
-    expect(cards.map((card) => within(card).getByRole('button').textContent)).toEqual(['Cafeteira elétrica', 'Fone sem fio'])
+    expect(cards.map((card) => within(card).getByRole('link').textContent)).toEqual(['Cafeteira elétrica', 'Fone sem fio'])
 
     const first = within(cards[1])
     expect(cards[1].querySelector('img')).toHaveAttribute('src', 'https://http2.mlstatic.com/fone.jpg')
@@ -83,10 +84,13 @@ describe('boas oportunidades', () => {
 
   it('abre o detalhe ao ativar o card', async () => {
     const { user } = await renderOverview(dashboardFixture({ items: [withImage, withoutImage], opportunities: [withoutImage] }))
-    const card = within(screen.getByRole('region', { name: 'Boas oportunidades' })).getByRole('button', { name: 'Cafeteira elétrica' })
+    const card = within(screen.getByRole('region', { name: 'Boas oportunidades' })).getByRole('link', { name: 'Cafeteira elétrica' })
     card.focus()
+    expect(card).toHaveFocus()
     await user.keyboard('{Enter}')
-    expect(await screen.findByRole('dialog', { name: 'Detalhes de Cafeteira elétrica' })).toBeInTheDocument()
+    await waitFor(() => expect(window.location.pathname).toBe('/produtos/tracking-2'))
+    expect(await screen.findByRole('heading', { name: 'Cafeteira elétrica' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Detalhes de Cafeteira elétrica' })).not.toBeInTheDocument()
   })
 
   it('não mostra selo vazio sem percentual e identifica preço anterior desconhecido', async () => {

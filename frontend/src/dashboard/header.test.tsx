@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
@@ -11,11 +11,12 @@ afterEach(() => {
 
 const clock = () => new Date('2026-10-11T18:00:00Z')
 
-async function renderArea(route: Parameters<typeof fakeApi>[0] = () => undefined) {
+async function renderArea(route: Parameters<typeof fakeApi>[0] = () => undefined, initialPath = '/produtos') {
+  window.history.replaceState(null, '', initialPath)
   const mockFetch = fakeApi(route, dashboardWith([trackedFixture()]))
   const user = userEvent.setup()
   render(<App clock={clock} />)
-  await screen.findByRole('heading', { name: 'Seus produtos' })
+  await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
   return { user, mockFetch }
 }
 
@@ -35,25 +36,30 @@ describe('cabeçalho', () => {
     expect(banner.getByRole('button', { name: /pessoa@example\.com/ })).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('leva o foco às seções e marca somente o item ativado como atual', async () => {
-    const { user } = await renderArea()
-    const [home, products, alerts] = ['Início', 'Produtos', 'Alertas'].map((name) => nav().getByRole('link', { name }))
+  it('leva o foco às páginas e marca somente a rota ativada como atual', async () => {
+    const { user } = await renderArea(() => undefined, '/')
+    const home = () => nav().getByRole('link', { name: 'Início' })
+    const products = () => nav().getByRole('link', { name: 'Produtos' })
+    const alerts = () => nav().getByRole('link', { name: 'Alertas' })
 
-    await user.click(products)
-    expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus()
-    expect(products).toHaveAttribute('aria-current', 'location')
-    expect(home).not.toHaveAttribute('aria-current')
-    expect(alerts).not.toHaveAttribute('aria-current')
+    await user.click(products())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos' })).toHaveFocus())
+    expect(window.location.pathname).toBe('/produtos')
+    expect(products()).toHaveAttribute('aria-current', 'page')
+    expect(home()).not.toHaveAttribute('aria-current')
+    expect(alerts()).not.toHaveAttribute('aria-current')
 
-    await user.click(alerts)
-    expect(screen.getByRole('heading', { name: 'Alertas' })).toHaveFocus()
-    expect(alerts).toHaveAttribute('aria-current', 'location')
-    expect(products).not.toHaveAttribute('aria-current')
+    await user.click(alerts())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Alertas', level: 1 })).toHaveFocus())
+    expect(window.location.pathname).toBe('/alertas')
+    expect(alerts()).toHaveAttribute('aria-current', 'page')
+    expect(products()).not.toHaveAttribute('aria-current')
 
-    await user.click(home)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveFocus()
-    expect(home).toHaveAttribute('aria-current', 'location')
-    expect(alerts).not.toHaveAttribute('aria-current')
+    await user.click(home())
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
+    expect(window.location.pathname).toBe('/')
+    expect(home()).toHaveAttribute('aria-current', 'page')
+    expect(alerts()).not.toHaveAttribute('aria-current')
   })
 
   it('sai da conta e mostra a entrada quando o encerramento tem sucesso', async () => {
@@ -61,6 +67,7 @@ describe('cabeçalho', () => {
     await user.click(screen.getByRole('button', { name: /pessoa@example\.com/ }))
     await user.click(screen.getByRole('button', { name: 'Sair' }))
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/login')
     expect(callsTo(mockFetch, '/api/auth/logout', 'POST')).toHaveLength(1)
   })
 
@@ -72,13 +79,15 @@ describe('cabeçalho', () => {
     await user.click(screen.getByRole('button', { name: /pessoa@example\.com/ }))
     await user.click(screen.getByRole('button', { name: 'Sair' }))
     expect(await within(screen.getByRole('banner')).findByRole('alert')).toHaveTextContent(text)
-    expect(screen.getByRole('heading', { name: 'Seus produtos' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Produtos' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/produtos')
     expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
   })
 
   it('opera o menu da conta pelo teclado', async () => {
     const { user } = await renderArea()
     const account = screen.getByRole('button', { name: /pessoa@example\.com/ })
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos' })).toHaveFocus())
     account.focus()
     await user.keyboard('{Enter}')
     expect(account).toHaveAttribute('aria-expanded', 'true')

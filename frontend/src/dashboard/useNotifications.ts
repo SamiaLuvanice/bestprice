@@ -16,7 +16,7 @@ export type AllNotifications = {
   loadingMore: boolean
 }
 
-type Options = { clock: () => Date; onUnauthenticated: (failure: ApiFailure) => void }
+type Options = { clock: () => Date; onUnauthenticated: (failure: ApiFailure) => void; loadAll?: boolean }
 
 const fallbackMessage = 'Não foi possível concluir a operação. Tente novamente.'
 
@@ -32,7 +32,7 @@ function isUnauthenticated(failure: unknown): failure is ApiFailure {
  * Notificações: `unread` vem de uma única consulta de não lidas (limite 100) e alimenta contador e
  * painel do sino; `all` são as páginas da seção Alertas. O contador é sempre recalculado pela API.
  */
-export function useNotifications({ clock, onUnauthenticated }: Options) {
+export function useNotifications({ clock, onUnauthenticated, loadAll = true }: Options) {
   const [unread, setUnread] = useState<UnreadView>({ status: 'loading' })
   const [all, setAll] = useState<AllNotifications>({ status: 'loading', message: null, items: [], nextCursor: null, loadingMore: false })
   const unreadSequence = useRef(0)
@@ -122,13 +122,13 @@ export function useNotifications({ clock, onUnauthenticated }: Options) {
 
   /** Após ações que podem gerar ou resolver notificações (alerta, Atualizar agora). */
   const refreshAfterAction = useCallback(async () => {
-    await Promise.all([reloadUnread(), reloadAll(true)])
-  }, [reloadUnread, reloadAll])
+    await Promise.all([reloadUnread(), ...(loadAll ? [reloadAll(true)] : [])])
+  }, [reloadUnread, reloadAll, loadAll])
 
   useEffect(() => {
     void reloadUnread()
-    void reloadAll()
-  }, [reloadUnread, reloadAll])
+  }, [reloadUnread])
+  useEffect(() => { if (loadAll) void reloadAll() }, [reloadAll, loadAll])
 
   return { unread, all, reloadUnread, reloadAll, loadMoreAll, markRead, refreshAfterAction }
 }

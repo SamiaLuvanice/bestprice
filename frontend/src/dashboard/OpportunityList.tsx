@@ -1,10 +1,11 @@
 import type { TrackedProduct } from '../api'
+import { Link } from 'react-router-dom'
 import { formatMoney, formatPercentage } from '../lib/format'
 import { ArrowDownIcon } from './Icons'
 import { ProductImage } from './ProductImage'
 import { RelativeTime } from './RelativeTime'
 
-type Props = { items: TrackedProduct[]; receivedAt: Date; onOpen: (id: string) => void }
+type Props = { items: TrackedProduct[]; receivedAt: Date }
 
 // Valor absoluto do percentual formatado, só para o texto do selo de queda (sem cálculo numérico).
 function dropText(percentage: string | null): string | null {
@@ -13,7 +14,7 @@ function dropText(percentage: string | null): string | null {
 }
 
 /** Cards de “Boas oportunidades” na ordem recebida da API (até 5); ativar o título abre o detalhe. */
-export function OpportunityList({ items, receivedAt, onOpen }: Props) {
+export function OpportunityList({ items, receivedAt }: Props) {
   if (items.length === 0) return <p className="empty">Nenhuma oportunidade de queda nas últimas 24 horas.</p>
   return <ul className="opportunities">
     {items.map((item) => {
@@ -25,7 +26,7 @@ export function OpportunityList({ items, receivedAt, onOpen }: Props) {
           {drop && <span className="drop-badge"><ArrowDownIcon /><span className="sr-only">Queda de </span>{drop}</span>}
         </div>
         <h3 className="opportunity-title">
-          <button type="button" className="card-link" onClick={() => onOpen(item.id)}>{product.title}</button>
+          <Link className="card-link" to={`/produtos/${item.id}`}>{product.title}</Link>
         </h3>
         <p className="opportunity-prices">
           {formatMoney(product.previous_price)

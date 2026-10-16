@@ -62,7 +62,7 @@ describe('Parar de monitorar pela linha', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Ações de Fone sem fio' })).toHaveFocus())
   })
 
-  it('remove só o produto, preserva a página 2, recalcula indicadores, anuncia e foca o título', async () => {
+  it('remove só o produto, preserva a página 2, anuncia e foca o título', async () => {
     const { user } = await renderArea(dashboardFixture({ items: [first, second], nextCursor: 'page-2' }), server([first, second], () => reply(204, null), {
       '/api/tracked-products?cursor=page-2': reply(200, { items: [third], next_cursor: null }),
     }, 'page-2'))
@@ -76,7 +76,7 @@ describe('Parar de monitorar pela linha', () => {
     expect(productRow('Liquidificador')).toBeInTheDocument()
     expect(screen.getByTestId('products-status')).toHaveTextContent('Você parou de monitorar este produto.')
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos' })).toHaveFocus())
-    await waitFor(() => expect(within(screen.getByRole('region', { name: 'Resumo do monitoramento' })).getByText('11')).toBeInTheDocument())
+    expect(window.location.pathname).toBe('/produtos')
   })
 
   it('leva o foco ao campo de link e anuncia globalmente quando era o único produto', async () => {

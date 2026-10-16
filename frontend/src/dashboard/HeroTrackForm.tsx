@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent, type ReactNode, type Ref } from 'react'
+import { Link } from 'react-router-dom'
 import { ArrowRightIcon, InfoIcon, LinkIcon } from './Icons'
 
 export type TrackFeedback = { message: string; trackedProductId: string | null }
@@ -9,11 +10,12 @@ type Props = {
   submitting: boolean
   error: TrackFeedback | null
   success: string | null
-  onViewProduct?: (id: string) => void
+  successId?: string | null
   headingRef?: Ref<HTMLHeadingElement>
   inputRef?: Ref<HTMLInputElement>
   /** Sem produtos monitorados: o hero ganha prioridade visual (AC23). */
   priority?: boolean
+  pageTitle?: string
   /** Conteúdo extra abaixo do formulário (ex.: estado vazio). */
   children?: ReactNode
 }
@@ -34,7 +36,7 @@ function HeroIllustration() {
  * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
-export function HeroTrackForm({ onSubmit, submitting, error, success, onViewProduct, headingRef, inputRef, priority = false, children }: Props) {
+export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, children }: Props) {
   const hintId = useId()
   const errorId = useId()
   // O valor do campo fica aqui: digitar não re-renderiza a área inteira (tabela, linha do tempo…).
@@ -48,8 +50,8 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, onViewProd
     <div className="hero-inner">
       <div className="hero-copy">
         <h1 id="page-title" ref={headingRef} tabIndex={-1}>
-          <span className="hero-line">Acompanhe o preço.</span>{' '}
-          <span className="hero-line hero-highlight">Compre na hora certa.</span>
+          {pageTitle ?? <><span className="hero-line">Acompanhe o preço.</span>{' '}
+          <span className="hero-line hero-highlight">Compre na hora certa.</span></>}
         </h1>
         <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>
         <form onSubmit={(event) => void submit(event)} className="track-form">
@@ -64,11 +66,10 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, onViewProd
         </form>
         <p id={hintId} className="hero-hint"><InfoIcon /> Copie o link do anúncio no Mercado Livre e cole aqui.</p>
         <div role="status" className="hero-status">{submitting ? 'Localizando produto...' : success}</div>
+        {successId && <Link className="text-button" to={`/produtos/${successId}`}>Ver produto</Link>}
         {error && <div className="hero-error">
           <p id={errorId} role="alert" className="error-box">{error.message}</p>
-          {error.trackedProductId && onViewProduct && <button type="button" className="text-button" onClick={() => {
-            if (error.trackedProductId) onViewProduct(error.trackedProductId)
-          }}>Ver produto</button>}
+          {error.trackedProductId && <Link className="text-button" to={`/produtos/${error.trackedProductId}`}>Ver produto</Link>}
         </div>}
         <p className="hero-note">Os preços exibidos vêm das consultas do BestPrice ao Mercado Livre e podem diferir do valor no checkout.</p>
         {children}
