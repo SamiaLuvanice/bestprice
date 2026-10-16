@@ -2,6 +2,32 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-16 — O par literal stage ↔ develop é o único caminho isento do PR policy
+
+**Contexto:** três PRs de sincronização/promoção (#87, #108 e #110) foram encerradas
+sem merge. O conteúdo estava correto, mas o cabeçalho era uma branch auxiliar
+(`chore/sync-*`, `chore/promocao-*`), que a política de PR trata pela regra genérica
+de naming e reprovava. A PR #112, com head literal `stage` e base `develop`, passou
+direto na política e integrou o histórico em minutos.
+
+**Princípio:** sincronização reversa sem divergência usa a própria branch `stage` como
+head da PR; a isenção de Issue, `Closes` e rodapés vale só para o par literal
+`stage` → `develop` / `develop` → `stage`. Branch temporária é recurso de recuperação
+quando há divergência, não o caminho padrão. Como o check obrigatório é avaliado pelo
+nome no SHA, um run antigo de `push` falho no mesmo SHA da PR continua bloqueando o
+merge: resolva com `gh run rerun <id> --failed` antes de criar outra branch.
+
+**Anti-pattern:** criar branch auxiliar e Issue nova para uma sync sem divergência,
+contornando a regra que já isenta o fluxo, e tentar reabrir a PR com outro nome de
+branch em vez de ler a política (`.github/scripts/policy.cjs`).
+
+**Referências:** `.github/scripts/policy.cjs`, `.github/workflows/ci.yml`,
+PRs [#87](https://github.com/SamiaLuvanice/bestprice/pull/87),
+[#108](https://github.com/SamiaLuvanice/bestprice/pull/108),
+[#110](https://github.com/SamiaLuvanice/bestprice/pull/110) e
+[#112](https://github.com/SamiaLuvanice/bestprice/pull/112),
+`docs/github-workflow.md`.
+
 ## 2026-10-14 — Testar o comando de entrada no contrato do provedor
 
 **Contexto:** o primeiro deploy da API da spec 0018 no Render falhou antes da
