@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
 import { retryHint } from '../lib/format'
 import { AlertsSection } from './AlertsSection'
 import { AppHeader, type SectionKey } from './AppHeader'
 import { ConfirmStopDialog } from './ConfirmStopDialog'
+import { ConfiguredAlerts } from './ConfiguredAlerts'
 import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
 import { attemptResult } from './labels'
 import { initialTrackedList, trackedListReducer } from './trackedList'
@@ -52,13 +54,23 @@ type Props = {
 
 /** Área autenticada: orquestra estado e ações; componentes de apresentação não chamam fetch. */
 export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Props) {
+  const location = useLocation()
+  const navigateTo = useNavigate()
+  const detailId = location.pathname.startsWith('/produtos/') ? location.pathname.slice('/produtos/'.length) : null
+  const currentSection: SectionKey = location.pathname === '/alertas' ? 'alerts' : location.pathname.startsWith('/produtos') ? 'products' : 'home'
   const [list, dispatchList] = useReducer(trackedListReducer, initialTrackedList)
+  const mounted = useRef(true)
+  useEffect(() => {
+    mounted.current = true
+    return () => { mounted.current = false }
+  }, [])
   // Lista mais recente para ações assíncronas que decidem foco depois de a resposta chegar.
   const listRef = useRef(list)
   useEffect(() => { listRef.current = list }, [list])
   const [submitting, setSubmitting] = useState(false)
   const [trackError, setTrackError] = useState<TrackFeedback | null>(null)
   const [trackSuccess, setTrackSuccess] = useState<string | null>(null)
+  const [trackSuccessId, setTrackSuccessId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null)
@@ -66,6 +78,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const [productsMessage, setProductsMessage] = useState<string | null>(null)
   const [globalMessage, setGlobalMessage] = useState<string | null>(null)
   const [pendingFocus, setPendingFocus] = useState<PendingFocus>(null)
+  const [focusAfterStop, setFocusAfterStop] = useState(false)
   const [detailMode, setDetailMode] = useState<DetailMode>('detail')
   const [detailStopBusy, setDetailStopBusy] = useState(false)
   const [stopRequest, setStopRequest] = useState<{ id: string; title: string; alertActive: boolean; busy: boolean } | null>(null)
@@ -79,20 +92,24 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const pageHeading = useRef<HTMLHeadingElement>(null)
   const linkInput = useRef<HTMLInputElement>(null)
   const alertsHeading = useRef<HTMLHeadingElement>(null)
-  const [currentSection, setCurrentSection] = useState<SectionKey>('home')
   const [logoutError, setLogoutError] = useState<string | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
   const detailOpen = selected !== null
   // Produto do diálogo aberto, lido por requisições que terminam depois de a pessoa fechar ou trocar o detalhe.
   const openDetailId = useRef<string | null>(null)
   const openSequence = useRef(0)
+  const detailStopSequence = useRef(0)
   useEffect(() => { openDetailId.current = selected?.id ?? null }, [selected])
 
-  const endSession = useCallback((failure: ApiFailure) => onUnauthenticated(failure.message), [onUnauthenticated])
+  const endSession = useCallback((failure: ApiFailure) => {
+    if (mounted.current) onUnauthenticated(failure.message)
+  }, [onUnauthenticated])
   const onDashboardLoaded = useCallback((data: Dashboard, receivedAt: Date) => {
     dispatchList({ type: 'dashboard', page: data.tracked_products, receivedAt })
   }, [])
-  const { view: dashboardView, reload: reloadDashboard } = useDashboard({ clock, onLoaded: onDashboardLoaded, onUnauthenticated: endSession })
+  const { view: dashboardView, reload: reloadDashboard } = useDashboard({
+    clock, enabled: !detailId && currentSection !== 'alerts', onLoaded: onDashboardLoaded, onUnauthenticated: endSession,
+  })
   const dashboard = dashboardView.status === 'ready' ? dashboardView.data : null
   const loading = dashboardView.status === 'loading'
   const dashboardError = dashboardView.status === 'error' ? dashboardView.message
@@ -106,7 +123,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     return known
   }, [dashboard, list.items])
   const showProductSections = !isEmpty && dashboardView.status !== 'error'
-  const notifications = useNotifications({ clock, onUnauthenticated: endSession })
+  const notifications = useNotifications({ clock, onUnauthenticated: endSession, loadAll: currentSection === 'alerts' })
   const focusAlertsHeading = useCallback(() => alertsHeading.current?.focus(), [])
 
   // Ao fechar o detalhe, o foco volta ao elemento que o abriu; se ele saiu da página, ao título da lista
@@ -138,7 +155,6 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     }
   }, [pendingFocus])
 
-  const closeDetail = useCallback(() => setSelected(null), [])
 
   // Somente 401 encerra a sessão BestPrice; falhas da integração (503) e de rede mantêm a pessoa no painel.
   const fail = useCallback((failure: unknown) => {
@@ -169,11 +185,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   async function track(url: string): Promise<boolean> {
     setTrackError(null)
     setTrackSuccess(null)
+    setTrackSuccessId(null)
     setSubmitting(true)
     try {
       const result = await api.track(url)
       dispatchList({ type: 'upsert', tracked: result.tracked, receivedAt: clock() })
       setTrackSuccess(result.outcome === 'created' ? 'Produto adicionado ao monitoramento.' : 'Você voltou a monitorar este produto.')
+      setTrackSuccessId(result.tracked.id)
       // Indicadores recalculados pela API; a lista já carregada permanece.
       void reloadDashboard()
       return true
@@ -185,9 +203,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }
 
   async function open(id: string) {
-    const opening = !selected
-    if (opening && document.activeElement instanceof HTMLElement) detailOpener.current = document.activeElement
     setError(null)
+    setSelected(null)
+    setHistory([])
+    setHistoryCursor(null)
+    setTarget('')
     // Vale a última abertura: resposta de uma abertura anterior que chega depois é descartada.
     const current = ++openSequence.current
     try {
@@ -199,21 +219,32 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     } catch (failure) {
       if (current !== openSequence.current) return
       // Se o diálogo não chegou a abrir, não há foco a devolver depois.
-      if (opening) detailOpener.current = null
-      fail(failure)
+      if (unauthenticated(failure)) { endSession(failure); return }
+      setError(failure instanceof ApiFailure && (failure.status === 404 || failure.status === 422)
+        ? { message: 'Produto não encontrado ou indisponível.', trackedProductId: null } : feedback(failure))
     }
   }
 
   async function loadMoreHistory() {
     if (!selected || !historyCursor) return
+    const id = selected.id
+    const cursor = historyCursor
+    const sequence = openSequence.current
     setBusy(true)
     setError(null)
     try {
-      const page = await api.history(selected.id, historyCursor)
+      const page = await api.history(id, cursor)
+      if (!mounted.current || sequence !== openSequence.current || openDetailId.current !== id ||
+        window.location.pathname !== `/produtos/${id}`) return
       setHistory((current) => [...current, ...page.items.filter((item) => !current.some((existing) => existing.id === item.id))])
       setHistoryCursor(page.next_cursor)
-    } catch (failure) { fail(failure) }
-    finally { setBusy(false) }
+    } catch (failure) {
+      if (unauthenticated(failure)) endSession(failure)
+      else if (mounted.current && sequence === openSequence.current && openDetailId.current === id &&
+        window.location.pathname === `/produtos/${id}`) fail(failure)
+    } finally {
+      if (mounted.current && sequence === openSequence.current && openDetailId.current === id) setBusy(false)
+    }
   }
 
   // Fecha o detalhe de um produto que deixou de ser monitorado e aplica a convenção de produto removido.
@@ -223,6 +254,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     if (openDetailId.current === id) {
       detailOpener.current = null
       setSelected(null)
+      if (detailId === id) navigateTo('/produtos', { replace: true })
     }
     removeTracked(id, text)
     recalculate()
@@ -319,16 +351,22 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   async function confirmDetailStop() {
     if (!selected || detailStopBusy) return
     const id = selected.id
+    const sequence = detailStopSequence.current
     setDetailStopBusy(true)
     const failure = await stopTrackingRequest(id)
+    if (!mounted.current || sequence !== detailStopSequence.current || openDetailId.current !== id ||
+      window.location.pathname !== `/produtos/${id}`) return
     setDetailStopBusy(false)
     if (failure) {
       setError({ message: failure, trackedProductId: null })
       setDetailMode('detail')
+      window.setTimeout(() => document.querySelector<HTMLElement>('.detail-actions button')?.focus(), 0)
       return
     }
     detailOpener.current = null
     setSelected(null)
+    setFocusAfterStop(true)
+    navigateTo('/produtos')
   }
 
   async function refreshSelected() {
@@ -391,11 +429,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     if (remaining > 0 || current.nextCursor !== null) {
       setGlobalMessage(null)
       setProductsMessage(text)
-      if (!otherDialogOpen) setPendingFocus({ kind: 'productsHeading' })
+      if (!otherDialogOpen && !detailId) setPendingFocus({ kind: 'productsHeading' })
     } else {
       setProductsMessage(null)
       setGlobalMessage(text)
-      if (!otherDialogOpen) setPendingFocus({ kind: 'linkInput' })
+      if (!otherDialogOpen && !detailId) setPendingFocus({ kind: 'linkInput' })
     }
   }
 
@@ -471,11 +509,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   async function stopTrackingRequest(id: string): Promise<string | null> {
     try {
       await api.stop(id)
+      if (!mounted.current) return null
       removeTracked(id, 'Você parou de monitorar este produto.')
       void reloadDashboard()
       return null
     } catch (failure) {
-      if (unauthenticated(failure)) { endSession(failure); return null }
+      if (!mounted.current) return message(failure)
+      if (unauthenticated(failure)) { endSession(failure); return failure.message }
       // 404: o vínculo já não existe para a pessoa — segue a convenção de produto removido (plano D10).
       if (failure instanceof ApiFailure && failure.status === 404) {
         removeTracked(id, failure.message)
@@ -511,35 +551,73 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     }
   }
 
-  function navigate(section: SectionKey) {
-    setCurrentSection(section)
-    // Sem a seção “Seus produtos” (lista vazia), Produtos leva ao campo de link.
-    const productsTarget = trackedHeading.current ?? linkInput.current
-    const target = { home: pageHeading.current, products: productsTarget, alerts: alertsHeading.current }[section]
-    target?.focus()
-  }
+  useEffect(() => {
+    ++detailStopSequence.current
+    setDetailStopBusy(false)
+    setBusy(false)
+    setDetailMode('detail')
+    if (detailId) void open(detailId)
+    else { ++openSequence.current; setSelected(null) }
+    // A URL é a fonte da seleção; mudanças locais de dados não devem recarregar o detalhe.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailId])
+
+  useEffect(() => {
+    document.title = currentSection === 'home' ? 'Início · BestPrice' : currentSection === 'alerts'
+      ? 'Alertas · BestPrice' : detailId ? 'Produto · BestPrice' : 'Produtos · BestPrice'
+    const frame = window.requestAnimationFrame(() => {
+      if (detailId) document.getElementById('detail-title')?.focus()
+      else if (currentSection === 'alerts') document.getElementById('alerts-page-title')?.focus()
+      else pageHeading.current?.focus()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [location.pathname, currentSection, detailId])
+
+  const selectedId = selected?.id
+  const selectedTitle = selected?.id === detailId ? selected.product.title : null
+  useEffect(() => {
+    if (selectedTitle) document.title = `${selectedTitle} · BestPrice`
+  }, [selectedTitle])
+  useEffect(() => {
+    if (selectedId && selectedId === detailId) {
+      document.getElementById('detail-title')?.focus()
+    }
+  }, [selectedId, detailId])
+  useEffect(() => {
+    if (detailId && error && !selected) {
+      document.title = 'Produto indisponível · BestPrice'
+      document.querySelector<HTMLElement>('.region-error h1')?.focus()
+    }
+  }, [detailId, error, selected])
+
+  useEffect(() => {
+    if (!focusAfterStop || location.pathname !== '/produtos' || !list.loaded || loading) return
+    setFocusAfterStop(false)
+    if (list.items.length > 0) trackedHeading.current?.focus()
+    else linkInput.current?.focus()
+  }, [focusAfterStop, location.pathname, list.loaded, list.items.length, loading])
 
   return <>
-    <AppHeader email={user.email} current={currentSection} onNavigate={navigate}
+    <AppHeader key={location.pathname} email={user.email} current={currentSection}
       bell={<NotificationBell unread={notifications.unread} onRetry={notifications.reloadUnread}
-        onMarkRead={notifications.markRead} onSeeAll={() => navigate('alerts')} />}
+        onMarkRead={notifications.markRead} />}
       logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
 
     <main id="conteudo" className="page-main">
-    <HeroTrackForm onSubmit={track} submitting={submitting}
-      error={trackError} success={trackSuccess} onViewProduct={(id) => void open(id)} headingRef={pageHeading}
-      inputRef={linkInput} priority={isEmpty}>
+    {(currentSection === 'home' || (currentSection === 'products' && !detailId)) && <HeroTrackForm onSubmit={track} submitting={submitting}
+      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={pageHeading}
+      inputRef={linkInput} priority={isEmpty} pageTitle={currentSection === 'products' ? 'Produtos' : undefined}>
       {isEmpty && <div className="empty-state">
         <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
         <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
       </div>}
-    </HeroTrackForm>
+    </HeroTrackForm>}
     <div className="content global-messages">
       <p role="status" data-testid="global-status" className={globalMessage ? 'global-status' : 'sr-only'}>{globalMessage}</p>
-      {error && !selected && <p role="alert" className="error-box">{error.message}</p>}
+      {error && !selected && !detailId && <p role="alert" className="error-box">{error.message}</p>}
     </div>
 
-    <div className="content dashboard-content">
+    {currentSection === 'home' && <div className="content dashboard-content">
       {/* Fora das regiões aria-busy, para o anúncio não ser suprimido. */}
       <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
       <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
@@ -557,35 +635,56 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
           <p className="section-subtitle">Produtos monitorados que tiveram redução de preço recentemente.</p>
         </div>
         {loading && <OpportunitiesSkeleton />}
-        {dashboardView.status === 'ready' && <OpportunityList items={dashboardView.data.opportunities} receivedAt={dashboardView.receivedAt} onOpen={(id) => void open(id)} />}
+        {dashboardView.status === 'ready' && <OpportunityList items={dashboardView.data.opportunities} receivedAt={dashboardView.receivedAt} />}
       </section>}
-
-      {showProductSections && <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
-        loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)} onOpen={(id) => void open(id)}
-        renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
-          disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
-        message={productsMessage} headingRef={trackedHeading} skeleton={loading ? <ProductsSkeleton /> : undefined} />}
 
       {showProductSections && <section aria-labelledby="updates-title" aria-busy={loading}>
         <div className="section-heading"><span className="eyebrow">HISTÓRICO RECENTE</span><h2 id="updates-title">Atualizações recentes</h2></div>
         {loading && <TimelineSkeleton />}
         {dashboardView.status === 'ready' && <RecentUpdatesTimeline events={dashboardView.data.recent_updates}
-          receivedAt={dashboardView.receivedAt} known={knownProducts} onOpen={(id) => void open(id)} />}
+          receivedAt={dashboardView.receivedAt} known={knownProducts} />}
       </section>}
+    </div>}
 
+    {currentSection === 'products' && !detailId && <div className="content dashboard-content">
+      {dashboardError && <div className="region-error"><p role="alert" className="error-box">{dashboardError}</p>
+        <button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</button></div>}
+      <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
+        loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)}
+        renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
+          disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
+        message={productsMessage} headingRef={trackedHeading} skeleton={loading ? <ProductsSkeleton /> : undefined} />
+    </div>}
+
+    {detailId && <div className="content dashboard-content">
+      {selected?.id !== detailId && !error && <p role="status">Carregando produto…</p>}
+      {selected?.id !== detailId && error && <div className="region-error">
+        <h1 tabIndex={-1}>Produto indisponível</h1>
+        <p role="alert" className="error-box">{error.message}</p>
+        <button type="button" className="secondary-button" onClick={() => void open(detailId)}>Tentar novamente</button>
+        <Link className="text-button" to="/produtos">Ir para Produtos</Link>
+      </div>}
+      {selected?.id === detailId && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}
+        target={target} onTargetChange={setTarget} onRefresh={() => void refreshSelected()}
+        onLoadMoreHistory={() => void loadMoreHistory()} onCreateAlert={(event) => void createAlert(event)}
+        onUpdateAlert={() => void updateAlert()} onRemoveAlert={() => void removeAlert()}
+        onRequestStop={() => { setError(null); setDetailMode('confirm') }} />}
+    </div>}
+
+    {currentSection === 'alerts' && <div className="content dashboard-content">
+      <h1 id="alerts-page-title" tabIndex={-1}>Alertas</h1>
+      <ConfiguredAlerts onUnauthenticated={(text) => onUnauthenticated(text)} />
       <AlertsSection notifications={notifications.all} headingRef={alertsHeading} focusHeading={focusAlertsHeading}
         onMarkRead={notifications.markRead} onLoadMore={notifications.loadMoreAll} onRetry={() => void notifications.reloadAll()} />
-    </div>
+    </div>}
     </main>
 
     {stopRequest && <ConfirmStopDialog title={stopRequest.title} alertActive={stopRequest.alertActive} busy={stopRequest.busy}
       onCancel={cancelStop} onConfirm={() => void confirmStop()} />}
 
-    {selected && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}
-      target={target} onTargetChange={setTarget} onClose={closeDetail} onRefresh={() => void refreshSelected()}
-      onLoadMoreHistory={() => void loadMoreHistory()} onCreateAlert={(event) => void createAlert(event)}
-      onUpdateAlert={() => void updateAlert()} onRemoveAlert={() => void removeAlert()}
-      mode={detailMode} stopBusy={detailStopBusy} onRequestStop={() => { setError(null); setDetailMode('confirm') }}
-      onCancelStop={() => setDetailMode('detail')} onConfirmStop={() => void confirmDetailStop()} />}
+    {detailId && selected?.id === detailId && detailMode === 'confirm' && <ConfirmStopDialog title={selected.product.title}
+      alertActive={Boolean(selected.alert?.enabled)} busy={detailStopBusy}
+      onCancel={() => { setDetailMode('detail'); window.setTimeout(() => document.querySelector<HTMLElement>('.detail-actions button')?.focus(), 0) }}
+      onConfirm={() => void confirmDetailStop()} />}
   </>
 }

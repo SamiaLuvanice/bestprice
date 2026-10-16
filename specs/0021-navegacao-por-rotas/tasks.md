@@ -15,19 +15,19 @@ Refactor, com comandos e resultados reais em `verification.md`.
 
 ## Implementação frontend, em sequência
 
-- [ ] **T04 — rotas e sessão (AC01–AC06, AC14–AC16, AC19):** adicionar dependência
+- [x] **T04 — rotas e sessão (AC01–AC06, AC14–AC16, AC19):** adicionar dependência
   compatível e lockfile; rotas, guard, retorno seguro persistente na URL e limpeza
   da sessão. Provar login direto/retorno/recarga, sessão indisponível, expiração,
   logout e destinos maliciosos com testes de comportamento.
-- [ ] **T05 — layout e páginas (AC07–AC09, AC17):** decompor AccountArea e separar
+- [x] **T05 — layout e páginas (AC07–AC09, AC17):** decompor AccountArea e separar
   Início/Produtos sem perder ações, estados, paginação e cadastro por URL; links
   reais, seção ativa, títulos e foco. Antes de compor as telas, ler `designsystem/`
   conforme `frontend.md` e aplicar `frontend-design`. Provar sucesso/erro/duplicidade e navegação.
-- [ ] **T06 — detalhe por URL (AC10, AC13, AC20–AC21):** extrair conteúdo do modal,
+- [x] **T06 — detalhe por URL (AC10, AC13, AC20–AC21):** extrair conteúdo do modal,
   consultar ID diretamente, manter histórico/alertas/refresh, confirmação de parada,
   estados ausente/inativo/rede e ação para Produtos. Provar acesso direto, respostas
   invertidas A/B, cancelamento, falha e sucesso com mensagem/foco.
-- [ ] **T07 — alertas e notificações (AC11–AC12):** grupo completo de alertas
+- [x] **T07 — alertas e notificações (AC11–AC12):** grupo completo de alertas
   ativos/pausados com paginação de monitoramentos e estados independentes; links de
   notificações no sino e na página sem leitura automática. Provar páginas sem alertas,
   item além da primeira página, retry e histórico de monitoramento interrompido.
@@ -37,15 +37,17 @@ Refactor, com comandos e resultados reais em `verification.md`.
 
 ## Validação e entrega
 
-- [ ] **T09 — frontend/QA:** rodar lint, testes e build na worktree; registrar versões,
+- [x] **T09 — frontend/QA:** rodar lint, testes e build na worktree; registrar versões,
   comandos, contagens positivas e falhas resolvidas; executar gates aplicáveis do
   repositório sem compartilhar banco/volume com outras tarefas.
-- [ ] **T10 — QA:** validar AC01–AC21 em matriz com resultados por critério; separar
+- [x] **T10 — QA:** registrar AC01–AC21 em matriz com resultados e pendências por critério; separar
   API simulada, Compose real e dependência Mercado Livre. Conferir health 200/503
-  com PostgreSQL e falha de rede da UI conforme papel QA; registrar comandos reais.
-- [ ] **T11 — arch-reviewer:** revisar diff e evidências independentemente; devolver
+  com PostgreSQL; registrar comandos reais e a falha de rede da UI como pendência.
+  Health 200/503/200 e inspeção local executados; falha de rede da UI e cenários
+  não observados individualmente permanecem explícitos em `verification.md`.
+- [x] **T11 — arch-reviewer:** revisar diff e evidências independentemente; devolver
   achados ao frontend e confirmar correções. Reexecutar somente gates afetados.
-- [ ] **T12 — doc-sync-onboarding:** após último código/gates/revisão, sincronizar
+- [x] **T12 — doc-sync-onboarding:** após último código/gates/revisão, sincronizar
   onboarding e docs afetados, conferir AGENTS.md/CLAUDE.md/docs e registrar resultado.
   Se código mudar depois, repetir esta tarefa como última etapa.
 - [ ] **T13 — coordenação:** preparar commits com Refs #93 e PR para develop com

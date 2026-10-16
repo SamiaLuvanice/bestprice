@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import type { RecentUpdate } from '../api'
 import { compareDecimal } from '../lib/decimal'
 import { formatMoney } from '../lib/format'
@@ -13,7 +14,6 @@ type Props = {
   receivedAt: Date
   /** Produtos já carregados (lista e oportunidades), por id do vínculo: o evento não traz título nem imagem. */
   known: Map<string, KnownProduct>
-  onOpen: (id: string) => void
 }
 
 type Description = { text: ReactNode; direction: 'up' | 'down' | null }
@@ -35,7 +35,7 @@ function describe(event: RecentUpdate): Description {
 }
 
 /** Linha do tempo de recent_updates, na ordem da API (mais recentes primeiro), sem “Ver todas”. */
-export function RecentUpdatesTimeline({ events, receivedAt, known, onOpen }: Props) {
+export function RecentUpdatesTimeline({ events, receivedAt, known }: Props) {
   if (events.length === 0) return <p className="empty">As mudanças confirmadas de preço e disponibilidade aparecerão aqui.</p>
   return <ol className="timeline">
     {events.map((event) => {
@@ -49,7 +49,7 @@ export function RecentUpdatesTimeline({ events, receivedAt, known, onOpen }: Pro
         <div className="timeline-body">
           <p><strong>{productInfo?.title ?? 'Um produto monitorado'}</strong>{text}</p>
           <RelativeTime iso={event.observed_at} receivedAt={receivedAt} />
-          {!productInfo && <button type="button" className="link-button" onClick={() => onOpen(event.tracked_product_id)}>Ver produto</button>}
+          <Link className="link-button" to={`/produtos/${event.tracked_product_id}`}>Ver produto</Link>
         </div>
       </li>
     })}

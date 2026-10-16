@@ -10,7 +10,9 @@ Pré-requisitos: Python 3.13, uv, Node.js 22, npm e Docker Compose.
 2. Suba o banco com `docker compose up -d db`.
 3. Em `backend/`, rode `uv sync --locked --extra dev`. Configure `DATABASE_URL` para o banco local, por exemplo `postgresql://bestprice:SENHA@localhost:5433/bestprice`, e execute `uv run alembic upgrade head`.
 4. Ainda em `backend/`, crie uma conta com `uv run python -m app.auth.provision EMAIL`; a senha é solicitada sem eco. Inicie a API com `uv run uvicorn app.main:app --reload --port 8000`.
-5. Em `frontend/`, rode `npm ci` e `npm run dev`. Abra <http://localhost:5173>. O Vite encaminha `/api` para a API local.
+5. Em `frontend/`, rode `npm ci` e `npm run dev`. Abra <http://localhost:5173/login>. O Vite encaminha `/api` para a API local.
+
+Após entrar, a interface usa `/` (Início), `/produtos`, `/produtos/:id` (detalhe de um monitoramento próprio) e `/alertas`. As telas podem ser abertas por URL, atualizadas e percorridas com voltar/avançar; visitantes retornam à rota protegida solicitada depois do login. No Compose, Nginx entrega `index.html` aos caminhos da SPA e mantém `/api/*` no proxy da API. A verificação das rotas da spec 0021 foi feita localmente; a mesma abertura direta em `stage` ainda depende de promoção e validação naquele ambiente.
 
 Também é possível subir a stack com `docker compose up --build`. Nesse modo, o backend aplica Alembic antes de iniciar; o worker espera o backend ficar saudável. Em worktree Windows, use `./scripts/compose-worktree.ps1 up --build` para isolar portas e volume. `docker compose down` preserva os dados.
 
@@ -22,6 +24,6 @@ O código dispõe de armazenamento cifrado e renovação OAuth da conta operador
 
 ## Verificar
 
-Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`. Resultados e limites estão nas verificações das specs [0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md) (API e integração) e [0012](specs/0012-area-usuario-monitoramento/verification.md) (área do usuário).
+Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`. Resultados e limites estão nas verificações das specs [0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md) (API e integração), [0012](specs/0012-area-usuario-monitoramento/verification.md) (área do usuário) e [0021](specs/0021-navegacao-por-rotas/verification.md) (navegação por URL).
 
 A [documentação de onboarding](docs/index.md) detalha arquitetura, esquema, módulos e infraestrutura. O processo de contribuição usa spec, plano, implementação, verificação, PR para `develop` e revisão independente. A spec 0019 define releases no GHCR por tag SemVer no SHA validado em `stage`; o fluxo só fica ativo após integrar a mudança e aplicar as configurações externas descritas em [docs/github-workflow.md](docs/github-workflow.md). A publicação não configura implantação em produção.

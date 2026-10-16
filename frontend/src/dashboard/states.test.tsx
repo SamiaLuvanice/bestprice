@@ -15,15 +15,19 @@ function dashboardRegions() {
   return [
     screen.getByRole('region', { name: 'Resumo do monitoramento' }),
     screen.getByRole('region', { name: 'Boas oportunidades' }),
-    screen.getByRole('region', { name: 'Seus produtos' }),
     screen.getByRole('region', { name: 'Atualizações recentes' }),
   ]
+}
+
+function at(path: string) {
+  window.history.replaceState(null, '', path)
 }
 
 describe('carregamento do painel', () => {
   it('mostra esqueletos anunciados como carregando, sem números nem textos de vazio, até a resposta chegar', async () => {
     const response = deferred()
     fakeApi((url) => url === '/api/dashboard' ? response.promise : undefined)
+    at('/')
     render(<App clock={clock} />)
     const loadingStatus = (await screen.findByText('Carregando seu painel…')).closest('[role="status"]')
     expect(loadingStatus).not.toBeNull()
@@ -53,6 +57,7 @@ describe('estado vazio', () => {
   it('prioriza o hero, mostra os textos de vazio e oculta oportunidades, produtos e atualizações', async () => {
     fakeApi(() => undefined, emptyDashboard)
     const user = userEvent.setup()
+    at('/')
     render(<App clock={clock} />)
     expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
     expect(screen.getByText('Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.')).toBeInTheDocument()
@@ -63,9 +68,9 @@ describe('estado vazio', () => {
     for (const name of ['Boas oportunidades', 'Seus produtos', 'Atualizações recentes']) {
       expect(screen.queryByRole('region', { name })).not.toBeInTheDocument()
     }
-    expect(screen.getByRole('region', { name: 'Alertas' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Notificações recebidas' })).not.toBeInTheDocument()
     await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Produtos' }))
-    expect(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).toHaveFocus()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos', level: 1 })).toHaveFocus())
   })
 })
 
@@ -88,6 +93,7 @@ describe('respostas concorrentes do painel', () => {
       return undefined
     })
     const user = userEvent.setup()
+    at('/')
     render(<App clock={clock} />)
     const summary = () => within(screen.getByRole('region', { name: 'Resumo do monitoramento' }))
     await waitFor(() => expect(summary().getByText('1')).toBeInTheDocument())
@@ -121,6 +127,7 @@ describe('falhas por região', () => {
       return undefined
     })
     const user = userEvent.setup()
+    at('/')
     render(<App clock={clock} />)
     const summary = within(await screen.findByRole('region', { name: 'Resumo do monitoramento' }))
     expect(await summary.findByRole('alert')).toHaveTextContent(message)
@@ -130,7 +137,7 @@ describe('falhas por região', () => {
     const notificationCalls = callsTo(mockFetch, '/api/notifications').length
     fail = false
     await user.click(summary.getByRole('button', { name: 'Tentar novamente' }))
-    expect(await screen.findByRole('rowgroup', { name: 'Fone sem fio' })).toBeInTheDocument()
+    await waitFor(() => expect(within(screen.getByRole('region', { name: 'Resumo do monitoramento' })).getByText('1')).toBeInTheDocument())
     expect(callsTo(mockFetch, '/api/notifications')).toHaveLength(notificationCalls)
   })
 
@@ -142,6 +149,7 @@ describe('falhas por região', () => {
       return undefined
     })
     const user = userEvent.setup()
+    at('/')
     render(<App clock={clock} />)
     const summary = () => within(screen.getByRole('region', { name: 'Resumo do monitoramento' }))
     await waitFor(() => expect(summary().getByText('1')).toBeInTheDocument())
@@ -150,7 +158,6 @@ describe('falhas por região', () => {
     await user.click(screen.getByRole('button', { name: 'Monitorar preço' }))
     expect(await summary().findByRole('alert')).toHaveTextContent('Serviço temporariamente indisponível.')
     expect(summary().getByText('1')).toBeInTheDocument()
-    expect(screen.getByRole('rowgroup', { name: 'Cafeteira elétrica' })).toBeInTheDocument()
     fail = false
     await user.click(summary().getByRole('button', { name: 'Tentar novamente' }))
     await waitFor(() => expect(summary().queryByRole('alert')).not.toBeInTheDocument())
@@ -161,16 +168,17 @@ describe('falhas por região', () => {
     ['rede', () => Promise.reject(new TypeError('Failed to fetch'))],
   ])('mostra a falha das notificações no sino e na seção Alertas, sem bloquear o hero (%s)', async (_case, failure) => {
     fakeApi((url) => url.startsWith('/api/notifications') ? failure() : undefined, dashboardFixture({ items: [trackedFixture()] }))
+    at('/alertas')
     render(<App clock={clock} />)
-    const alerts = within(await screen.findByRole('region', { name: 'Alertas' }))
+    const alerts = within(await screen.findByRole('region', { name: 'Notificações recebidas' }))
     expect(await alerts.findByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
     await waitFor(() => expect(within(screen.getByRole('banner')).getByRole('button', { name: /^Notificações/ })).toHaveAccessibleName('Notificações indisponíveis'))
-    expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeEnabled()
-    expect(await screen.findByRole('rowgroup', { name: 'Fone sem fio' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Alertas', level: 1 })).toBeInTheDocument()
   })
 
   it.each([['/api/dashboard'], ['/api/notifications'], [unreadUrl]])('volta à entrada com 401 em %s', async (target) => {
     fakeApi((url) => url === target ? reply(401, apiError('unauthenticated', 'Sua sessão expirou. Entre novamente.')) : undefined, dashboardFixture({ items: [trackedFixture()] }))
+    at(target === '/api/dashboard' ? '/' : '/alertas')
     render(<App clock={clock} />)
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
@@ -193,18 +201,19 @@ describe('tempo relativo com relógio controlado', () => {
     const items = rows.map(([observed], index) => trackedFixture(
       { id: `product-${index}`, title: `Produto ${index}`, last_price_observed_at: observed }, { id: `tracking-${index}` }))
     fakeApi(() => undefined, dashboardFixture({ items }))
-    const user = userEvent.setup()
+    at('/produtos')
     render(<App clock={() => now} />)
     await screen.findByRole('rowgroup', { name: 'Produto 0' })
     const observedText = (index: number) => within(screen.getByRole('rowgroup', { name: `Produto ${index}` })).getAllByRole('cell')[5].querySelector('time > span')?.textContent
     rows.forEach(([, expected], index) => expect(observedText(index)).toBe(expected))
     now = new Date('2026-10-12T18:00:00Z')
-    await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Alertas' }))
+    await new Promise((resolve) => setTimeout(resolve, 0))
     rows.forEach(([, expected], index) => expect(observedText(index)).toBe(expected))
   })
 
   it('mostra “Ontem, HH:mm” no dia civil anterior', async () => {
     fakeApi(() => undefined, dashboardFixture({ items: [trackedFixture({ last_price_observed_at: '2026-10-10T11:15:00Z' })] }))
+    at('/produtos')
     render(<App clock={() => new Date('2026-10-11T12:00:00Z')} />)
     const row = await screen.findByRole('rowgroup', { name: 'Fone sem fio' })
     expect(within(row).getAllByRole('cell')[5].querySelector('time > span')?.textContent).toBe('Ontem, 08:15')

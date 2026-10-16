@@ -125,7 +125,7 @@ describe('tabela Seus produtos', () => {
       url === '/api/tracked-products?cursor=page-2' ? reply(200, { items: [second], next_cursor: 'page-3' }) : undefined)
     screen.getByRole('button', { name: 'Carregar mais produtos' }).focus()
     await user.keyboard('{Enter}')
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Ver detalhes de Cafeteira elétrica' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Ver detalhes de Cafeteira elétrica' })).toHaveFocus())
     expect(screen.getByRole('button', { name: 'Carregar mais produtos' })).toBeInTheDocument()
   })
 
@@ -138,7 +138,7 @@ describe('tabela Seus produtos', () => {
     expect(await screen.findByRole('rowgroup', { name: 'Cafeteira elétrica' })).toBeInTheDocument()
     expect(screen.getAllByRole('rowgroup', { name: 'Fone sem fio' })).toHaveLength(1)
     // Na última página o botão some: o foco vai ao primeiro item recém-carregado, não ao body.
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Ver detalhes de Cafeteira elétrica' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Ver detalhes de Cafeteira elétrica' })).toHaveFocus())
     expect(screen.queryByRole('button', { name: 'Carregar mais produtos' })).not.toBeInTheDocument()
     expect(callsTo(mockFetch, '/api/tracked-products?cursor=page-2')).toHaveLength(1)
   })
@@ -154,14 +154,17 @@ describe('ações da linha', () => {
     return undefined
   }
 
-  it('abre o detalhe da 0013 por Ver detalhes, com histórico, instantes e alerta', async () => {
+  it('abre a rota do detalhe por Ver detalhes, com histórico, instantes e alerta', async () => {
     const { user } = await renderProducts(dashboardFixture({ items: [item] }), detailRoutes)
-    await user.click(screen.getByRole('button', { name: 'Ver detalhes de Fone sem fio' }))
-    const dialog = within(await screen.findByRole('dialog', { name: 'Detalhes de Fone sem fio' }))
-    expect(dialog.getByRole('heading', { name: 'Histórico de preços' })).toBeInTheDocument()
-    expect(dialog.getByText(/Última tentativa:/)).toBeInTheDocument()
-    expect(dialog.getByRole('heading', { name: 'Alerta de preço' })).toBeInTheDocument()
-    const external = dialog.getByRole('link', { name: 'Ver anúncio no Mercado Livre (abre em nova aba)' })
+    const detailLink = screen.getByRole('link', { name: 'Ver detalhes de Fone sem fio' })
+    expect(detailLink).toHaveAttribute('href', '/produtos/tracking-1')
+    await user.click(detailLink)
+    expect(await screen.findByRole('heading', { level: 1, name: 'Fone sem fio' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/produtos/tracking-1')
+    expect(screen.getByRole('heading', { name: 'Histórico de preços' })).toBeInTheDocument()
+    expect(screen.getByText(/Última tentativa:/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Alerta de preço' })).toBeInTheDocument()
+    const external = screen.getByRole('link', { name: 'Ver anúncio no Mercado Livre (abre em nova aba)' })
     expect(external).toHaveAttribute('href', item.product.canonical_url)
     expect(external).toHaveAttribute('target', '_blank')
   })

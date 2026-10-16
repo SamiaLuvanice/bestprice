@@ -9,4 +9,7 @@ configure({ asyncUtilTimeout: 3000 })
 
 // Rota não prevista no dublê reprova o teste em vez de virar falha de rede silenciosa.
 beforeEach(() => { takeUnexpectedCalls() })
-afterEach(() => { expect(takeUnexpectedCalls(), 'rotas não previstas no dublê da API').toEqual([]) })
+afterEach(() => {
+  expect(takeUnexpectedCalls(), 'rotas não previstas no dublê da API').toEqual([])
+  window.history.replaceState({}, '', '/')
+})

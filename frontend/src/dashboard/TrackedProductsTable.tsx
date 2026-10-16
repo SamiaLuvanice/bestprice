@@ -10,7 +10,6 @@ type Props = {
   loadingMore: boolean
   loadMoreError: string | null
   onLoadMore: () => void
-  onOpen: (id: string) => void
   renderActions?: (entry: TrackedEntry) => ReactNode
   message: string | null
   headingRef: Ref<HTMLHeadingElement>
@@ -20,7 +19,7 @@ type Props = {
 const idle: RowState = { busy: false, message: null }
 
 /** Seção “Seus produtos”: tabela semântica com papéis explícitos, para manter a semântica empilhada. */
-export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore, loadMoreError, onLoadMore, onOpen, renderActions, message, headingRef, skeleton }: Props) {
+export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore, loadMoreError, onLoadMore, renderActions, message, headingRef, skeleton }: Props) {
   return <section id="seus-produtos" aria-labelledby="tracked-title" aria-busy={Boolean(skeleton)} className="card-section products-section">
     <div className="section-heading">
       <h2 id="tracked-title" ref={headingRef} tabIndex={-1}>Seus produtos</h2>
@@ -35,7 +34,7 @@ export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore,
           <tr role="row">{productColumns.map((column) => <th role="columnheader" scope="col" key={column}>{column}</th>)}</tr>
         </thead>
         {entries.map((entry) => <TrackedProductRow key={entry.tracked.id} entry={entry} state={rowStates[entry.tracked.id] ?? idle}
-          onOpen={onOpen} actions={renderActions?.(entry)} />)}
+          actions={renderActions?.(entry)} />)}
       </table>
       <p className="table-note">Menor e maior preço desde o primeiro registro no BestPrice.</p>
       {loadMoreError && <p role="alert" className="error-box">{loadMoreError}</p>}
