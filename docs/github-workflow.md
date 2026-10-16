@@ -61,8 +61,25 @@ reversas necessárias para a origem conter o commit atual da base antes da próx
 promoção. Elas exigem os mesmos checks; não faça push direto. Isso
 evita que a exigência de branch atualizada impeça a próxima release. Não há merge automático.
 
+Quando não há divergência — `stage` já contém `develop`, ou seja, o segundo número de
+`git rev-list --left-right --count origin/develop...origin/stage` é `0` — a sincronização
+reversa é a PR direta da própria branch `stage`. A política de PR (`.github/scripts/policy.cjs`)
+só dispensa Issue, `Closes` e rodapés para o par literal `stage` → `develop` (e
+`develop` → `stage`); uma branch auxiliar como `chore/sync-*` cai na regra de naming e
+exige Issue aberta, uma linha `Closes #N` no corpo da PR e `Refs #N` em cada commit.
+Não apague a branch de origem no merge:
+
+```powershell
+gh pr create --base develop --head stage --title 'chore(release): sincroniza stage com develop' --body-file corpo.md
+gh pr merge --merge --delete-branch=false
+```
+
+Esse caminho não move conteúdo: ele devolve apenas o merge commit da promoção, como
+fez a PR #112 (zero mudança de arquivos, árvores idênticas).
+
 Se uma nova feature entrar em develop antes de uma promoção ou sincronização terminar,
-use este procedimento de recuperação, sempre em uma branch temporária e com merge commit:
+deixando `stage` atrás da base, use este procedimento de recuperação, sempre em uma
+branch temporária e com merge commit:
 
 ```powershell
 gh issue develop 123 --base develop --name chore/issue-123-sync-stage
@@ -70,7 +87,7 @@ git fetch origin
 git worktree add .worktrees/chore-issue-123-sync-stage --track -b chore/issue-123-sync-stage origin/chore/issue-123-sync-stage
 git -C .worktrees/chore-issue-123-sync-stage merge --no-ff origin/stage
 git -C .worktrees/chore-issue-123-sync-stage push origin HEAD
-gh pr create --base develop --head chore/issue-123-sync-stage --title 'chore(ci): sincroniza stage com develop' --body 'Refs #123'
+gh pr create --base develop --head chore/issue-123-sync-stage --title 'chore(ci): sincroniza stage com develop' --body 'Closes #123'
 ```
 
 Depois do merge dessa PR, repita develop → stage. Para divergência de stage, incorpore também `origin/stage` na branch temporária antes de abrir a PR para develop.
@@ -90,6 +107,9 @@ O check obrigatório chama-se **CI**. Ele falha se qualquer gate falhar ou for
 cancelado. Não usamos filtros de caminhos que deixariam checks obrigatórios
 pendentes. A política de PR é repetida quando o corpo é editado. A Issue deve
 permanecer aberta até o merge; mudança externa da Issue após CI pode exigir rerun.
+Como o check é avaliado pelo nome no SHA da head, um run antigo de `push` com `CI`
+falho no mesmo SHA de uma PR mantém o merge bloqueado mesmo com o run da PR verde;
+reexecute os jobs falhos com `gh run rerun <run-id> --failed` (observado na PR #112).
 
 O fechamento é nativo do GitHub: `Closes #123` só fecha ao integrar na branch
 padrão. Alterar a padrão para outra branch adia esse fechamento e a ativação dos eventos
