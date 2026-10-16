@@ -29,6 +29,16 @@ retornou 200 para Vite na 5174. Nenhuma conta real foi usada.
 | Navegador integrado em 320 px, envio vazio, depois credenciais fictícias inválidas | Mensagens de e-mail/senha junto aos campos, foco no e-mail, sem rolagem horizontal. Login real retornou "E-mail ou senha inválidos.", preservou os campos e focou a senha. Tab levou ao controle de senha e depois ao botão com anel visível. | Sucesso com usuário real não foi exercitado; testes automatizados cobrem esse fluxo sem credenciais externas. |
 | Cores computadas em 320 px e cálculo WCAG | Subtítulo/branco **6,07:1**; erro/superfície **6,79:1**; botão preto/verde **15,49:1**; borda do campo/branco **3,62:1**; anel rosa/branco **5,85:1**. Botão com 50 px de altura e controle de senha com 44 px. | Valores medidos para os elementos alterados e estados observados; não é auditoria automatizada de toda a página. |
 
+## PR e CI remoto
+
+A [PR #107](https://github.com/SamiaLuvanice/bestprice/pull/107) está aberta para
+`develop`, com fechamento da Issue #106 previsto após integração. A revisão
+independente do código foi concluída antes da abertura da PR. No SHA `380b8b7`,
+os checks obrigatórios do GitHub **CI / CI**, **Frontend**, **Backend**,
+**Automation** e **PR policy** passaram. O check do Cloudflare Pages ainda estava
+em andamento na consulta; o comentário de deploy informava sucesso, mas isso
+não equivale à conclusão do check. A PR não foi integrada neste registro.
+
 ## Critérios de aceite
 
 | Critério | Situação | Evidência e pendência |

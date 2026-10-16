@@ -17,5 +17,5 @@
   gates/QA afetados até o aceite.
 - [x] **T09** — Executar `doc-sync-onboarding` por último, após a última edição de
   código; conferir `AGENTS.md`, `CLAUDE.md`, `docs/` e atualizar `docs/PROGRESS.md`.
-- [ ] **T10** — Preparar PR para `develop` com `Closes #106`, evidências e pendências;
+- [x] **T10** — Preparar PR para `develop` com `Closes #106`, evidências e pendências;
   acompanhar CI e revisão antes de qualquer merge.
