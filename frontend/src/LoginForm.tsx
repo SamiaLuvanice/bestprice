@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ArrowDownIcon, EyeIcon, EyeOffIcon } from './dashboard/Icons'
+import { EyeIcon, EyeOffIcon } from './dashboard/Icons'
 import bestPriceLogo from './assets/logo-bestprice.png'
 
 type Props = {
@@ -33,18 +33,10 @@ export function validateLogin(email: string, password: string): LoginErrors {
   return errors
 }
 
-/** Coluna visual (0017/AC02, 0020/AC12): só a logo tem nome acessível; o restante é decorativo e sem dados ilustrativos. */
+/** A arte 0023 já contém marca e mensagem. O texto alternativo resume sua proposta sem anunciar preços ilustrativos. */
 function LoginVisual() {
-  return <div className="login-visual">
-    <img className="login-visual-logo" src={bestPriceLogo} alt="BestPrice" />
-    <div className="login-visual-copy" aria-hidden="true">
-      <p className="login-visual-title">Cole o link uma vez. A BestPrice acompanha o preço.</p>
-    </div>
-    <div className="login-illustration" aria-hidden="true">
-      <span className="login-illustration-icon"><ArrowDownIcon /></span>
-      <p>Você é avisado quando o preço cair.</p>
-    </div>
-  </div>
+  return <div className="login-visual" role="img"
+    aria-label="BestPrice: mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar." />
 }
 
 /** Entrada da tela de visitante (spec 0017), com validação própria no envio (0020/AC07). */
@@ -91,8 +83,6 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
   }
 
   return <section className="login-shell" aria-labelledby="login-title">
-    <span className="ambient-glow ambient-glow--green" aria-hidden="true" />
-    <span className="ambient-glow ambient-glow--pink" aria-hidden="true" />
     <div className="login-card">
       <LoginVisual />
       <div className="login-form-side">

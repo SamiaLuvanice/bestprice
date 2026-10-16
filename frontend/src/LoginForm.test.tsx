@@ -25,16 +25,14 @@ function submitForm() {
   fireEvent.submit(form)
 }
 
-// 0020/AC12: a logo tem o nome "BestPrice"; o resto da coluna continua decorativo.
-it('dá o nome BestPrice às logos e mantém o resto da coluna fora da árvore de acessibilidade', () => {
-  renderForm()
-  const logos = screen.getAllByRole('img', { name: 'BestPrice' })
-  expect(logos.length).toBeGreaterThanOrEqual(1)
-  logos.forEach((logo) => expect(logo.getAttribute('src')).toContain('logo-bestprice.png'))
-  const decorative = screen.getByText('Cole o link uma vez. A BestPrice acompanha o preço.').closest('[aria-hidden="true"]')
-  expect(decorative).not.toBeNull()
-  expect(decorative?.textContent).not.toMatch(/\d/)
-  expect(decorative?.querySelector('img')).toBeNull()
+// 0023/AC01–AC03: a arte fornecida é a única peça promocional da coluna.
+it('mostra a arte lateral fornecida com descrição breve e sem sobreposições', () => {
+  const { container } = renderForm()
+  const visual = container.querySelector('.login-visual')
+  const artwork = screen.getByRole('img', { name: /BestPrice.*boas escolhas.*alertas de preço/i })
+  expect(visual).toBe(artwork)
+  expect(visual?.querySelectorAll('img')).toHaveLength(0)
+  expect(visual?.textContent).toBe('')
   expect(screen.getAllByRole('heading')).toHaveLength(1)
 })
 
@@ -48,14 +46,13 @@ it('mostra a logo reduzida antes do título, com o nome BestPrice', () => {
   expect(compact?.compareDocumentPosition(title)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
 })
 
-// 0020/AC13: textos da coluna, sem parágrafo de apoio e sem dados de preço.
-it('mostra os textos novos da coluna e remove o parágrafo de apoio', () => {
+// 0023/AC05: só os controles de autenticação existentes são expostos.
+it('mantém apenas os controles de login existentes', () => {
   renderForm()
-  expect(screen.getByText('Cole o link uma vez. A BestPrice acompanha o preço.')).toBeInTheDocument()
-  expect(screen.getByText('Você é avisado quando o preço cair.')).toBeInTheDocument()
-  expect(screen.queryByText(/Acompanhe preços com a calma/)).not.toBeInTheDocument()
-  expect(screen.queryByText(/Cole o link do anúncio uma vez/)).not.toBeInTheDocument()
-  expect(screen.queryByText(/Avisamos quando/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/Cole o link uma vez/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/Você é avisado quando o preço cair/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/Criar conta|Esqueceu a senha|Continuar com o Google|^ou$/i)).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Entrar' })).toBeInTheDocument()
 })
 
 // AC03: título e campos obrigatórios com rótulo acessível.
