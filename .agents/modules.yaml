@@ -35,6 +35,7 @@ profiles:
     rules:
       - architecture.md
       - backend.md
+      - complexity.md
       - errors.md
       - frontend.md
       - datetime-pipeline.md
@@ -49,6 +50,7 @@ profiles:
       - fastapi-templates
       - frontend-design
       - react-vite-performance
+      - cyclomatic-complexity
 integrations:
   github:
     documentation: docs/github-workflow.md

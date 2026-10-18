@@ -7,7 +7,7 @@ description: Rodar e interpretar lint, testes, build e automações da stack Fas
 
 Na worktree, após instalar dependências:
 
-- backend/: uv sync --locked --extra dev; uv run ruff check .; uv run pytest -q
+- backend/: uv sync --locked --extra dev; uv run ruff check .; uv run pytest -q; python .agents/skills/cyclomatic-complexity/scripts/complexity_report.py (falha em rank >= D; use --baseline .complexity-baseline.json quando houver baseline versionada)
 - frontend/: npm ci; npm run lint; npm test -- --run; npm run build
 - raiz: node --test .github/scripts/*.test.cjs; actionlint nos workflows, quando instalado
 - integração: PostgreSQL real via TEST_DATABASE_URL para pytest e Compose para o fluxo ponta a ponta.

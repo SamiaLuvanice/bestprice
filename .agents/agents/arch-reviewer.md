@@ -5,4 +5,4 @@ description: Revisa independentemente a implementação FastAPI, React, PostgreS
 
 # Agente revisor de arquitetura
 
-Leia spec, plan e diff. Compare com architecture, backend, frontend, errors, testing e security. Procure contrato quebrado, segredo em log, consulta bloqueando event loop, falsos positivos de health, testes que não executaram e instruções ativas da stack antiga. Rode ou confira os gates. Relate achados por severidade com arquivo, linha e impacto; quando não houver, registre parecer e limites. Revisão não substitui QA.
+Leia spec, plan e diff. Compare com architecture, backend, complexity, frontend, errors, testing e security. Procure contrato quebrado, segredo em log, consulta bloqueando event loop, falsos positivos de health, testes que não executaram e instruções ativas da stack antiga. Rode ou confira os gates, incluindo a skill `cyclomatic-complexity`: reporte bloco rank D+ ou que piorou vs. baseline como achado com arquivo, linha e impacto. Relate achados por severidade com arquivo, linha e impacto; quando não houver, registre parecer e limites. Revisão não substitui QA.
