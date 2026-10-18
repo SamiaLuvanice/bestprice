@@ -12,8 +12,10 @@ Prefira HTML semântico, texto de erro acessível e testes orientados ao comport
 
 Antes de criar uma tela ou alterar visualmente uma existente, consulte o design system em
 `designsystem/index.html`, a referência de entrada em `designsystem/login.html`, a logo
-original `designsystem/logo-bestprice.png` e as observações de uso em
-`designsystem/README.md`. Preserve a logo sem redesenhá-la ou distorcê-la. Aplique a skill
+original `designsystem/logo-bestprice.png`, as observações de uso em
+`designsystem/README.md` e as regras automatizáveis de
+`designsystem/agent-guidelines.md` (toque 44 × 44 px, HTML semântico, contraste
+AA/AAA e busca nas skills de design). Preserve a logo sem redesenhá-la ou distorcê-la. Aplique a skill
 `frontend-design` ao trabalho de interface; a identidade da referência prevalece sobre
 preferências visuais genéricas da skill. Em divergências entre referências, `index.html`
 governa a identidade; `login.html` orienta somente composição. Preserve os requisitos de

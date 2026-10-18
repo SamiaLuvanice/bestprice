@@ -12,6 +12,12 @@ Conforme a spec 0015, `index.html` governa a identidade visual e seus tokens;
 prevalece `index.html`. Consulte a skill `frontend-design` e a regra ativa
 `.agents/rules/frontend.md` antes de criar ou alterar uma tela.
 
+A partir da spec 0025, `agent-guidelines.md` publica as regras automatizáveis
+obrigatórias para agentes (toque 44 × 44 px, HTML semântico, contraste AA/AAA) e os
+comandos das skills de design instaladas; `brand-spec.md` é o Brand Asset Protocol
+lido pelas ferramentas de geração visual; `prototypes/` recebe os artefatos
+gerados, fora do código da SPA.
+
 Esta orientação rege a SPA da spec 0015. O protótipo continua separado da aplicação.
 Produtos, preços, gráficos e controles da demonstração não autorizam novos recursos.
 Os contratos e a acessibilidade da aplicação continuam obrigatórios.
