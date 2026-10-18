@@ -46,3 +46,7 @@ dist/
 .claude/commands
 .opencode/
 .cursor/
+
+# Projeções de outros assistentes criadas pelo CLI skills (não gerenciadas pelo sync)
+.junie/
+.kiro/

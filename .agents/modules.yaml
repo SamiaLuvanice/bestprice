@@ -51,6 +51,9 @@ profiles:
       - frontend-design
       - react-vite-performance
       - cyclomatic-complexity
+      - ui-ux-pro-max
+      - huashu-design
+      - impeccable
 integrations:
   github:
     documentation: docs/github-workflow.md
