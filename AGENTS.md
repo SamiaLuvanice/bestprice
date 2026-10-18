@@ -18,7 +18,7 @@ Leia antes de qualquer tarefa: .agents/rules/workspace.md, evidencia.md, task-do
 
 ## Regras por tema
 
-Backend: .agents/rules/architecture.md, backend.md, errors.md. Frontend: frontend.md. Transversais: naming.md, testing.md, security.md.
+Backend: .agents/rules/architecture.md, backend.md, complexity.md, errors.md. Frontend: frontend.md. Transversais: naming.md, testing.md, security.md.
 
 ## Skills, agents e comandos
 
