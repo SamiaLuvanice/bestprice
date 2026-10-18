@@ -11,7 +11,14 @@ A classe `.brand-logo` exibe a imagem inteira (`object-fit: contain`, sem
 para leitores de tela; a imagem fornece o nome acessível.
 `designsystem/index.html` orienta os tokens; a composição atual da entrada segue
 a referência fornecida na spec 0023. As extensões aplicadas estão registradas em
-[`designsystem/README.md`](../../designsystem/README.md).
+[`designsystem/README.md`](../../designsystem/README.md). A partir da spec 0025,
+criar ou alterar HTML/CSS também exige ler
+[`designsystem/agent-guidelines.md`](../../designsystem/agent-guidelines.md), que
+publica as regras automatizáveis obrigatórias (toque de 44 × 44 px, HTML semântico,
+contraste AA/AAA, tokens de cor, `prefers-reduced-motion` e ausência de rolagem
+horizontal) e os comandos das skills de design instaladas (`ui-ux-pro-max`,
+`huashu-design` e `impeccable`); a identidade de `index.html` continua prevalecendo
+sobre sugestões dessas ferramentas.
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
@@ -192,4 +199,16 @@ Com a integração Mercado Livre desligada, o backend ainda valida a URL, inform
 
 Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build`. Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 3 s (`vite.config.ts` e `src/test-setup.ts`); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código da interface; dados de exemplo existem apenas nos testes. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
 
-A inspeção em navegador (Playwright + axe, WCAG 2.1 AA, larguras de 320 a 1280 px, sobre Compose isolado com fixtures sintéticas) é manual e roda fora do repositório: não há scripts nem dependências dela no código, e ela não faz parte do CI. Só Chromium foi inspecionado, sem leitor de tela nem dispositivo real; método e resultados estão na [evidência da spec 0012](../../specs/0012-area-usuario-monitoramento/verification.md).
+A regressão visual (spec 0025) roda por Playwright com `npm run test:visual`.
+`frontend/playwright.config.ts` sobe o Vite em `http://127.0.0.1:5173` e define os
+projetos `viewport-320`, `viewport-768` e `viewport-1280`;
+`frontend/tests/visual/public-pages.spec.ts` captura landing, login e página não
+encontrada, com `GET /api/auth/me` interceptado em 401 para um estado de visitante
+determinístico, sem backend, e com o esquema de cor claro/escuro emulado pelo
+Playwright (a SPA permanece no tema claro fixo descrito acima). Os baselines ficam em
+`frontend/tests/visual/__screenshots__/` e mudam só por revisão explícita
+(`--update-snapshots`, com o diff mostrado); o Vitest exclui `tests/visual/**`.
+A suíte é local: não roda no CI e os baselines dependem das fontes da máquina.
+A evidência está na [verificação da spec 0025](../../specs/0025-harness-design-tooling/verification.md).
+
+A inspeção em navegador com axe (WCAG 2.1 AA, larguras de 320 a 1280 px, sobre Compose isolado com fixtures sintéticas) é manual e roda fora do repositório: não faz parte do CI nem dos scripts versionados (o Playwright presente em `frontend/` cobre apenas snapshots de regressão visual, sem axe). Só Chromium foi inspecionado, sem leitor de tela nem dispositivo real; método e resultados estão na [evidência da spec 0012](../../specs/0012-area-usuario-monitoramento/verification.md).
