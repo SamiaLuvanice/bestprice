@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
@@ -12,6 +12,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     restoreMocks: true,
+    // Regressão visual roda no Playwright (playwright.config.ts), não no Vitest.
+    exclude: [...configDefaults.exclude, 'tests/visual/**'],
     // Fuso fixo: textos de tempo relativo e datas civis não dependem da máquina que roda os testes.
     env: { TZ: 'America/Sao_Paulo' },
     // Testes de integração da área renderizam a App inteira com user-event; sob carga paralela
