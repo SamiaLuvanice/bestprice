@@ -8,12 +8,12 @@ reais de autorização OAuth e seus resultados estão registrados ao final deste
 
 | Critério | Estado | Evidência e limite |
 |---|---|---|
-| AC01 OAuth e renovação reais | Pendente operacional | Callback HTTPS implantado; duas tentativas reais chegaram a `status=failed` e o banco Stage segue sem credencial operadora. Troca, persistência e rotação reais ainda não foram demonstradas. |
+| AC01 OAuth e renovação reais | Pendente operacional | Callback HTTPS em Stage; três tentativas reais chegaram a `status=failed`. A terceira foi diagnosticada como `invalid_state`, antes da troca; `operator_credentials` segue sem credencial. Troca, persistência e rotação reais ainda não foram demonstradas. |
 | AC02 anúncios de terceiros/preço/contexto | Pendente operacional | A sonda valida os três cenários usando o `MercadoLivreClient` oficial e relata preço, BRL, contexto e disponibilidade. Sem IDs autorizados, não foi executada. |
 | AC03 cadastro, atualização, falha, rate limit e recuperação | Parcial | Testes backend existentes simulam as falhas e recuperação e a sonda cobre só leituras. Não foram exercitados cadastro/worker com a API real nem observado limite real. Não provocar 429. |
 | AC04 evidências seguras e procedimento | Parcial | O JSON da sonda omite token, título e URL e contém horário UTC, IDs e campos normalizados. Tentativas OAuth e ausência de persistência foram registradas sem segredos; falta resultado operacional da sonda. |
 | AC05 integração desativada | Demonstrado no código | `.env.example` mantém `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; a sonda recusa execução se o flag estiver `true`, sem alterar configuração. `test_live_validation_refuses_to_run_after_integration_flag_is_enabled` passou. |
-| AC06 testes sem rede/credenciais | Demonstrado | 12 testes da sonda e 6 testes do callback passaram sem rede/credenciais; cobrem confirmação, flag, cenários, sanitização, state inválido/expirado/adulterado, redirect incompatível, troca mockada, persistência Fernet e redação do access log. |
+| AC06 testes sem rede/credenciais | Demonstrado | 12 testes da sonda e 20 testes do callback passaram sem rede/credenciais; cobrem confirmação, flag, cenários, sanitização, estados inválidos/expirados/adulterados, redirect incompatível, troca mockada, persistência Fernet e redação dos logs. |
 
 ## Comandos e resultados
 
@@ -29,9 +29,9 @@ reais de autorização OAuth e seus resultados estão registrados ao final deste
 - Complexidade final: `backend/.venv/Scripts/python.exe .agents/skills/cyclomatic-complexity/scripts/complexity_report.py --baseline .complexity-baseline.json` (na raiz) — passou sem nova violação rank D+; `exchange_authorization_code` foi dividida após a primeira medição apontar CC22.
 - Diff: `git diff --check` — passou, sem espaços ou marcadores inválidos.
 - `actionlint --version` — não executado; binário não instalado.
-- GitHub: PR [#134](https://github.com/SamiaLuvanice/bestprice/pull/134), em rascunho para `develop`; CI obrigatório, Backend, Frontend, Automation, PR policy e Project sync terminaram com sucesso no [run 39272176176](https://github.com/SamiaLuvanice/bestprice/actions/runs/39272176176). O preview do Cloudflare Pages também reportou sucesso. A Issue #127 permanece aberta.
+- GitHub: PR [#138](https://github.com/SamiaLuvanice/bestprice/pull/138) integrada em `develop` (`49fd8da`) e PR [#139](https://github.com/SamiaLuvanice/bestprice/pull/139) integrada em `stage` (`de2861b`); ambas passaram no CI. A Issue #127 foi reaberta para continuar o diagnóstico operacional.
 - Frontend: não executado; sem alteração no frontend.
-- Integração real no primeiro checkpoint: não executada. A rota callback respondeu 404 antes da promoção para Stage. O deploy posterior e as duas tentativas OAuth estão registrados abaixo. Nenhuma consulta de anúncio foi executada e o flag permanece `false`.
+- Integração real no primeiro checkpoint: não executada. A rota callback respondeu 404 antes da promoção para Stage. O deploy posterior e as três tentativas OAuth estão registrados abaixo. Nenhuma consulta de anúncio foi executada e o flag permanece `false`.
 - Revisão independente de arquitetura identificou e ajudou a corrigir a classificação de intervenção manual e a precedência de falha real em resultado misto; a CLI emite `requires_manual_action` com códigos específicos para IDs, seleção de cenário, credenciais e renovação não observada, preservando `failed` quando qualquer consulta falha. A re-revisão não encontrou bloqueadores adicionais. QA confirmou AC05–AC06 demonstrados, AC01–AC02 pendentes e AC03–AC04 parciais sem operação real; não cabe marcar a spec implementada.
 
 ## Limitações e próximo passo
@@ -191,5 +191,31 @@ estava ausente, de modo que o gate não executou a integração PostgreSQL.
 backend/app --changed origin/develop` — 22 blocos, média CC 4, rank A, sem
 blocos C+; `git diff --check` passou. Revisão independente do diff: sem
 bloqueador; observou apenas lacunas menores de cobertura de redirect ausente
-e parâmetros duplicados/longos. Nenhuma nova tentativa real foi feita após
-essa mudança, que ainda requer deploy Stage.
+e parâmetros duplicados/longos. Naquele checkpoint não houve nova tentativa;
+a atualização aguardava deploy em Stage, feito depois pelo PR #139.
+
+O PR [#138](https://github.com/SamiaLuvanice/bestprice/pull/138) passou no CI
+e foi integrado em `develop` (`49fd8da`); a Issue #127 foi reaberta por ser
+entrega diagnóstica parcial. O PR de promoção
+[#139](https://github.com/SamiaLuvanice/bestprice/pull/139) passou no CI e foi
+integrado em `stage` (`de2861b`). O Render implantou esse commit automaticamente,
+ficou `Live` e `/api/health` respondeu `{"status":"ok","database":"ok"}`.
+Terceira URL oficial gerada com `state` novo; o retorno ainda foi
+`/api/marketplace/oauth/complete?status=failed`. O novo log seguro registrou
+`invalid_state` antes da troca de token. Uma leitura posterior do Render
+confirmou que o Client ID e redirect URI salvos são exatos e que a chave
+Fernet de Stage é idêntica à chave local. O `state` gerado localmente tem
+270 caracteres; não há evidência de limite de tamanho no provedor. A causa
+específica da rejeição de `state` ainda precisa ser determinada; nenhuma
+consulta de anúncio foi feita e o flag segue desativado (`false`).
+
+## TDD e gates do diagnóstico final
+
+Red da matriz de causas do state — **5 failed**; Green do
+callback — **19 passed**. Ao rejeitar explicitamente `state` duplicado, Red —
+**1 failed**; Green — **20 passed** no teste direcionado do callback. A suíte
+backend final passou com **162 passed, 31 skipped, 1 warning**; os skips incluem
+integração que exige `TEST_DATABASE_URL`, ausente. Ruff, relatório de
+complexidade contra baseline e `git diff --check` passaram. A revisão
+independente final foi aprovada sem achados. A autorização OAuth continua sem
+sucesso e o motivo de `invalid_state` ainda precisa ser determinado.
