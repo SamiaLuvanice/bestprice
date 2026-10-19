@@ -20,6 +20,10 @@ DEFAULT_RETRY_AFTER_SECONDS = 60
 NOT_SENT_ERRORS = (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout, httpx.UnsupportedProtocol)
 
 
+def is_bearer_token_type(value: object) -> bool:
+    return isinstance(value, str) and value.casefold() == "bearer"
+
+
 def _cipher(key: bytes) -> Fernet:
     try:
         return Fernet(key)
@@ -124,10 +128,11 @@ class OperatorTokenManager:
         access_token = payload.get("access_token")
         new_refresh_token = payload.get("refresh_token")
         lifetime = payload.get("expires_in")
+        token_type = payload.get("token_type")
         if (
             not isinstance(access_token, str) or not access_token
             or not isinstance(new_refresh_token, str) or not new_refresh_token
-            or payload.get("token_type") != "Bearer"
+            or not is_bearer_token_type(token_type)
             or isinstance(lifetime, bool) or not isinstance(lifetime, int) or lifetime <= 300
         ):
             row.refresh_blocked = True

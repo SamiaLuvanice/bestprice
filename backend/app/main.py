@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from app.auth.routes import router as auth_router
 from app.errors import ApiError, api_error_handler, validation_error_handler
 from app.health import database_available
+from app.marketplace.oauth_routes import router as marketplace_oauth_router
 from app.products.routes import dashboard_router
 from app.products.routes import router as product_router
 
@@ -21,6 +22,7 @@ app.add_exception_handler(RequestValidationError, validation_error_handler)
 app.include_router(auth_router)
 app.include_router(product_router)
 app.include_router(dashboard_router)
+app.include_router(marketplace_oauth_router)
 
 
 @app.get("/api/health", response_model=HealthResponse)
