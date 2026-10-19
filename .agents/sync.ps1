@@ -45,14 +45,34 @@ function Project-McpConfig {
     $mcp = [ordered]@{}
     foreach ($prop in $def.mcpServers.PSObject.Properties) {
         $srv = $prop.Value
-        $command = @($srv.command)
-        if ($srv.args) { $command += @($srv.args) }
-        $entry = [ordered]@{
-            type    = 'local'
-            command = $command
-            enabled = -not ($srv.disabled -eq $true)
+        if ($srv.url) {
+            $entry = [ordered]@{
+                type    = 'remote'
+                url     = $srv.url
+                enabled = -not ($srv.disabled -eq $true)
+            }
+            if ($srv.headers) {
+                $headers = [ordered]@{}
+                foreach ($header in $srv.headers.PSObject.Properties) {
+                    $headers[$header.Name] = [regex]::Replace(
+                        [string]$header.Value,
+                        '\$\{([A-Za-z_][A-Za-z0-9_]*)\}',
+                        '{env:$1}'
+                    )
+                }
+                $entry.headers = $headers
+                $entry.oauth = $false
+            }
+        } else {
+            $command = @($srv.command)
+            if ($srv.args) { $command += @($srv.args) }
+            $entry = [ordered]@{
+                type    = 'local'
+                command = $command
+                enabled = -not ($srv.disabled -eq $true)
+            }
+            if ($srv.env) { $entry.environment = $srv.env }
         }
-        if ($srv.env) { $entry.environment = $srv.env }
         $mcp[$prop.Name] = $entry
     }
     $config = [ordered]@{
