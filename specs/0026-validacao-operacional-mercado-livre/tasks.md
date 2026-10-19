@@ -10,3 +10,10 @@
 - [x] Executar o agente `doc-sync-onboarding` após as mudanças na CLI; atualizou README e guia backend para explicar estados agregados, ações manuais e precedência das falhas. Reconfirmou `AGENTS.md`, `CLAUDE.md`, índice de docs e os demais guias/configuração sem necessidade de ajuste.
 - [x] Publicar a branch e abrir a PR [#134](https://github.com/SamiaLuvanice/bestprice/pull/134) em rascunho para `develop`; hooks passaram e o corpo registra critérios ainda pendentes.
 - [ ] Concluir a validação operacional autorizada, atualizar evidências/PR e só então tirar de rascunho; AC01–AC04 dependem de credenciais OAuth e IDs de anúncios permitidos.
+- [x] Fixar o contrato HTTPS do callback OAuth no plano antes de alterar o backend ou a configuração Stage.
+- [x] Escrever testes de estado inválido/expirado, URL oficial de autorização, troca de código, persistência cifrada e remoção de query sensível dos logs; Red observado antes de criar `oauth_routes.py`.
+- [x] Implementar o gerador local da URL de autorização e o callback Stage protegido por `state`, mantendo a integração desligada.
+- [x] Atualizar variáveis de ambiente e documentação de operação para o callback Stage. O app ainda não foi criado no DevCenter; o redirect está pronto para registro.
+- [x] Revisar arquitetura/segurança e executar gates locais; a revisão independente não encontrou bloqueador.
+- [x] Executar o agente `doc-sync-onboarding` por último após adicionar o fluxo OAuth; conferiu README, guias backend/infraestrutura, arquitetura, progresso, configuração Compose/Render, `AGENTS.md`, `CLAUDE.md` e índice de docs. Documentação coerente; sem ajustes adicionais nesta sincronização.
+- [ ] Implantar o callback via fluxo de promoção Stage, criar/configurar o app no DevCenter e executar a autorização real e a sonda com IDs permitidos; AC01–AC04 permanecem pendentes até haver evidência operacional.

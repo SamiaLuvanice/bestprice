@@ -10,6 +10,27 @@ real. Esta entrega adiciona uma sonda operacional somente de leitura, e o
 procedimento para executá-la; ela não substitui a autorização do operador nem
 libera a integração.
 
+## Contrato de autorização OAuth da conta operadora
+
+- O comando `docker compose run --rm backend python -m app.marketplace.authorize_operator` gera uma URL
+  oficial de autorização com `response_type=code`, `client_id`, redirect URI HTTPS
+  fixa e `state` assinado com expiração curta. A URL não contém `client_secret`.
+- `GET /api/marketplace/oauth/callback?code=…&state=…` valida o estado antes de
+  qualquer chamada externa, troca o código em
+  `https://api.mercadolibre.com/oauth/token` com o redirect URI configurado e
+  persiste tokens cifrados pelo mecanismo existente. Em sucesso ou falha, responde
+  `303` para `/api/marketplace/oauth/complete?status=authorized|failed`; detalhes
+  externos e tokens nunca entram na resposta.
+- `GET /api/marketplace/oauth/complete?status=…` retorna uma página simples sem
+  credenciais nem recursos externos, com `Cache-Control: no-store` e
+  `Referrer-Policy: no-referrer`.
+- `MERCADOLIVRE_REDIRECT_URI` deve ser HTTPS e corresponder exatamente ao URI do
+  DevCenter. Em Stage, usar
+  `https://bestprice-stage-api.onrender.com/api/marketplace/oauth/callback`.
+- O filtro da aplicação remove a query string do callback no logger
+  `uvicorn.access`, para não registrar códigos de autorização ou `state`. Não foi
+  verificado se a borda/proxy Render registra a URL original.
+
 ## Contrato da ferramenta operacional
 
 - Executar em `backend/` com `uv run python -m app.marketplace.validate_live`.
@@ -44,6 +65,10 @@ libera a integração.
 - `backend/app/marketplace/validate_live.py`: CLI operacional, validação de
   variáveis e IDs, integração com gestor OAuth/cliente oficial e relatório
   sanitizado.
+- `backend/app/marketplace/oauth_routes.py` e `authorize_operator.py`: callback
+  HTTPS e CLI de início do fluxo authorization-code da conta operadora.
+- `backend/tests/test_marketplace_oauth_callback.py`: contrato do callback,
+  validade de state, troca, persistência cifrada e sanitização de logs.
 - `backend/tests/test_marketplace_live_validation.py`: cobertura de argumentos,
   configuração, cenários, sanitização e código de saída com dependências
   simuladas; nenhuma credencial/rede real.
@@ -55,9 +80,14 @@ libera a integração.
 
 ## Decisões e riscos
 
-- Uma CLI restrita à leitura evita adicionar endpoint público/admin e não pode
-  alterar o estado de ativação; o operador continua responsável por observar os
-  fluxos persistentes de cadastro/worker separadamente.
+- O callback é público por exigência do redirect OAuth, mas só processa um código
+  após validar `state` assinado, associado ao redirect URI e não expirado. A CLI
+  local inicia a autorização; a API não expõe rotas para emitir URLs ou consultar
+  credenciais. O segredo fica no servidor, tokens são cifrados no banco e a query
+  OAuth é removida do access log.
+- O fluxo de autorização grava tokens somente no banco do serviço cujo callback foi
+  configurado. Em Stage, a URL pertence ao Render e a validação não liga o flag de
+  integração. O deploy dessa rota ainda precisa ocorrer por promoção aprovada.
 - Um 429 real não será provocado. Simulações verificam a recuperação do código;
   cadência oficial e um ciclo periódico real só podem ser confirmados com conta,
   anúncios permitidos e limites informados pelo Mercado Livre.
