@@ -92,15 +92,24 @@ project_mcp() {
     return 0
   fi
   MCP_SRC="$canonical" MCP_OUT="$ROOT/opencode.json" "$py" - <<'PY'
-import json, os
+import json, os, re
 with open(os.environ["MCP_SRC"], encoding="utf-8") as f:
     data = json.load(f)
 mcp = {}
 for name, srv in (data.get("mcpServers") or {}).items():
-    command = [srv["command"]] + list(srv.get("args") or [])
-    entry = {"type": "local", "command": command, "enabled": srv.get("disabled") is not True}
-    if srv.get("env"):
-        entry["environment"] = srv["env"]
+    if srv.get("url"):
+        entry = {"type": "remote", "url": srv["url"], "enabled": srv.get("disabled") is not True}
+        if srv.get("headers"):
+            entry["headers"] = {
+                key: re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", r"{env:\1}", value)
+                for key, value in srv["headers"].items()
+            }
+            entry["oauth"] = False
+    else:
+        command = [srv["command"]] + list(srv.get("args") or [])
+        entry = {"type": "local", "command": command, "enabled": srv.get("disabled") is not True}
+        if srv.get("env"):
+            entry["environment"] = srv["env"]
     mcp[name] = entry
 config = {"$schema": "https://opencode.ai/config.json", "mcp": mcp}
 with open(os.environ["MCP_OUT"], "w", encoding="utf-8") as f:
