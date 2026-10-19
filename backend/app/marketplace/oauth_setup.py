@@ -15,7 +15,11 @@ from cryptography.fernet import Fernet
 from sqlalchemy.orm import Session
 
 from app.marketplace.client import IntegrationError
-from app.marketplace.oauth import TOKEN_URL, provision_operator_tokens
+from app.marketplace.oauth import (
+    TOKEN_URL,
+    is_bearer_token_type,
+    provision_operator_tokens,
+)
 
 AUTHORIZATION_URL = "https://auth.mercadolivre.com.br/authorization"
 STATE_TTL = timedelta(minutes=10)
@@ -166,10 +170,11 @@ def _validated_token_values(
     access_token = payload.get("access_token")
     refresh_token = payload.get("refresh_token")
     lifetime = payload.get("expires_in")
+    token_type = payload.get("token_type")
     if (
         not isinstance(access_token, str) or not access_token
         or not isinstance(refresh_token, str) or not refresh_token
-        or payload.get("token_type") != "Bearer"
+        or not is_bearer_token_type(token_type)
         or isinstance(lifetime, bool) or not isinstance(lifetime, int) or lifetime <= 300
     ):
         raise IntegrationError("integration_invalid_response")

@@ -52,3 +52,48 @@ ambiente que executará `app.marketplace.authorize_operator`, promover a branch
 até Stage e então concluir o consentimento. Nenhum segredo deve ser registrado
 nesta evidência. A redação foi verificada no logger `uvicorn.access`; logs da
 borda/proxy Render não foram inspecionados.
+
+## Revisão de permissões e compatibilidade OAuth
+
+Revisão feita em 2026-10-19 após inspecionar os endpoints externos usados em
+`backend/app/marketplace/` e comparar com a documentação oficial do Mercado
+Livre. O sistema atualmente chama `GET /items/{id}` e
+`GET /items/{id}/sale_price?context=channel_marketplace&quantity=1`, além de
+`POST /oauth/token` para autorização e rotação. O restante do monitoramento,
+alertas, histórico, usuários e notificações é processado pelo próprio BestPrice;
+não há chamadas externas para pedidos, mensagens, pagamentos, anúncios graváveis
+ou webhooks.
+
+| Configuração DevCenter | Necessidade atual | Motivo |
+|---|---|---|
+| Unidade de negócio Mercado Livre | Obrigatória | O cliente usa domínios e recursos do marketplace MLB. Mercado Pago deve permanecer em aplicativo separado. |
+| Autorização `Authorization Code` | Obrigatória | É o fluxo de servidor implementado pelo callback HTTPS. |
+| Publicação e sincronização: somente leitura | Necessária para anúncios | Os recursos de itens e preços são consultados por GET; não habilitar escrita. |
+| Acesso offline / `offline_access` (Refresh Token) | Obrigatório para operação contínua | O access token expira e o gestor troca o refresh token de uso único. |
+| Usuários (default) | Pode permanecer no padrão obrigatório | A plataforma informa que vem ativa para todos os apps; o código atual não consulta nem modifica `/users`. |
+| Client Credentials | Desnecessária | O sistema atua em nome da conta operadora via OAuth Authorization Code. |
+| PKCE | Desligado nesta versão | O código implementa `state`, mas não gera `code_challenge` nem envia `code_verifier`; se habilitado, o fluxo atual falhará. |
+| Escrita, comunicações, publicidade, vendas/envios, métricas, promoções, faturamento e Mercado Pago | Desnecessárias | Nenhum endpoint dessas áreas é chamado no código atual. |
+| Callback de notificações/tópicos | Desnecessários no polling atual | O worker consulta periodicamente; não há webhook do Mercado Livre implementado. |
+
+O modo somente leitura deve cobrir os GETs de itens e preços. Se a API responder
+403 por política apesar desses scopes, registrar o recurso específico e
+reavaliar a documentação/DevCenter antes de solicitar qualquer escrita. Para
+futuros webhooks, tópicos de itens/preços e URL de notificações exigem mudança de
+escopo separada.
+
+A documentação OAuth oficial também retorna `token_type` como `bearer` minúsculo,
+enquanto o código aceitava apenas `Bearer`. Testes parametrizados agora cobrem
+ambas as grafias na troca de código e renovação. Red observado: os dois casos
+`bearer` falharam com `integration_invalid_response`. Green: `backend/.venv/Scripts/python.exe
+-m pytest tests/test_marketplace_oauth_callback.py tests/test_operator_oauth.py
+tests/test_operator_oauth_integration.py -q` (em `backend/`) — 18 passaram,
+1 skipped. Após extrair a validação reutilizável para manter a complexidade, os
+gates finais foram executados novamente: `backend/.venv/Scripts/ruff.exe check
+backend` — passou; `backend/.venv/Scripts/python.exe -m pytest -q --tb=short`
+(em `backend/`, com permissão para criar os temporários exigidos) — 149 passed,
+31 skipped, 1 warning de depreciação Starlette/httpx; `backend/.venv/Scripts/python.exe
+.agents/skills/cyclomatic-complexity/scripts/complexity_report.py --baseline
+.complexity-baseline.json` (na raiz) — sem nova violação rank D+; `git diff
+--check` — passou. O teste de processo de worker ficou skipped por não haver
+PostgreSQL de teste configurado.

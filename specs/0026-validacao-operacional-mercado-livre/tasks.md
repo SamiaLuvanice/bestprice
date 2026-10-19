@@ -15,5 +15,5 @@
 - [x] Implementar o gerador local da URL de autorização e o callback Stage protegido por `state`, mantendo a integração desligada.
 - [x] Atualizar variáveis de ambiente e documentação de operação para o callback Stage. O app ainda não foi criado no DevCenter; o redirect está pronto para registro.
 - [x] Revisar arquitetura/segurança e executar gates locais; a revisão independente não encontrou bloqueador.
-- [x] Executar o agente `doc-sync-onboarding` por último após adicionar o fluxo OAuth; conferiu README, guias backend/infraestrutura, arquitetura, progresso, configuração Compose/Render, `AGENTS.md`, `CLAUDE.md` e índice de docs. Documentação coerente; sem ajustes adicionais nesta sincronização.
+- [x] Executar o agente `doc-sync-onboarding` após as mudanças OAuth; conferiu README, guias backend/infraestrutura, arquitetura, progresso, configuração Compose/Render, `AGENTS.md`, `CLAUDE.md` e índice de docs. Repetido após a aceitação case-insensitive de `token_type` e a revisão de escopos; `docs/PROGRESS.md` e `verification.md` registram as alterações e evidências, sem outros ajustes necessários.
 - [ ] Implantar o callback via fluxo de promoção Stage, criar/configurar o app no DevCenter e executar a autorização real e a sonda com IDs permitidos; AC01–AC04 permanecem pendentes até haver evidência operacional.

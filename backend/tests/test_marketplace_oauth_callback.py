@@ -3,6 +3,7 @@ from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
+import pytest
 from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -54,7 +55,8 @@ def test_authorization_state_rejects_tampering_and_redirect_mismatch() -> None:
     assert not verify_authorization_state(state, key, "https://other.example/callback", now=NOW)
 
 
-def test_code_exchange_posts_registered_redirect_and_persists_encrypted_tokens() -> None:
+@pytest.mark.parametrize("token_type", ["Bearer", "bearer"])
+def test_code_exchange_posts_registered_redirect_and_persists_encrypted_tokens(token_type: str) -> None:
     engine = create_engine(
         "sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool,
     )
@@ -74,7 +76,7 @@ def test_code_exchange_posts_registered_redirect_and_persists_encrypted_tokens()
         return httpx.Response(200, json={
             "access_token": "access-secret",
             "refresh_token": "refresh-secret",
-            "token_type": "Bearer",
+            "token_type": token_type,
             "expires_in": 21600,
         })
 

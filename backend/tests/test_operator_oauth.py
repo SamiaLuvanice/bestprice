@@ -35,7 +35,8 @@ def test_operator_token_is_encrypted_and_reused_before_expiry() -> None:
     assert manager.get_access_token() == "access-initial"
 
 
-def test_expiring_token_is_rotated_once_and_persisted() -> None:
+@pytest.mark.parametrize("token_type", ["Bearer", "bearer"])
+def test_expiring_token_is_rotated_once_and_persisted(token_type: str) -> None:
     engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)
     key = Fernet.generate_key()
@@ -54,7 +55,7 @@ def test_expiring_token_is_rotated_once_and_persisted() -> None:
         }
         return httpx.Response(200, json={
             "access_token": "access-rotated", "refresh_token": "refresh-rotated",
-            "token_type": "Bearer", "expires_in": 21600,
+            "token_type": token_type, "expires_in": 21600,
         })
 
     manager = OperatorTokenManager(
