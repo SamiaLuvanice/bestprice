@@ -82,6 +82,46 @@ reavaliar a documentação/DevCenter antes de solicitar qualquer escrita. Para
 futuros webhooks, tópicos de itens/preços e URL de notificações exigem mudança de
 escopo separada.
 
+### Matriz das ações de quem usa o BestPrice
+
+Conferência adicional em 2026-10-19 do cliente React, das rotas FastAPI, do
+serviço de produtos, do worker e do formulário ainda não salvo no DevCenter:
+
+| Ação no BestPrice | Chamada ao Mercado Livre | Permissão necessária |
+|---|---|---|
+| Entrar/sair e consultar a própria sessão | Nenhuma; autenticação local | Nenhuma adicional |
+| Colar link para monitorar anúncio novo ou desatualizado | `GET /items/{id}` e `GET /items/{id}/sale_price` | Publicação e sincronização: Leitura |
+| Retomar monitoramento com produto recente em cache | Nenhuma nessa solicitação; uma consulta posterior pode ocorrer | Mesma leitura para a consulta posterior |
+| Atualizar agora e monitoramento automático | Os mesmos dois GETs, sujeitos a cadência e backoff | Mesma leitura |
+| Ver painel, lista, detalhe, histórico, métricas e abrir link do anúncio | Dados locais; o link abre o site do Mercado Livre no navegador | Nenhuma adicional |
+| Criar/alterar/excluir alerta, interromper monitoramento e ler notificações | Operações no banco BestPrice | Nenhuma adicional |
+| Renovar a autorização da conta operadora | `POST /oauth/token` | Authorization Code e Refresh Token/acesso offline; não é uma ação de cada usuário BestPrice |
+
+O formulário DevCenter ainda mostra `Authorization Code` e `Refresh Token`
+marcados, `Publicação e sincronização: Leitura`, Mercado Livre marcado,
+`Client Credentials`/PKCE/VIS desmarcados, demais permissões sem acesso e
+nenhum tópico de notificação selecionado. `Usuários` aparece forçadamente como
+`Leitura e escrita`; o código não usa esse recurso. A opção `Leitura` governa
+os dois GETs mesmo que a descrição genérica da categoria cite criação e edição
+de anúncios. As notificações `items` do Mercado Livre descrevem mudanças em
+anúncios publicados pela conta autorizada; não substituem o polling de anúncios
+de terceiros monitorados pelo BestPrice.
+
+**Conclusão do contrato, não da operação real:** nenhuma ação implementada de
+usuário requer escrita, mensagens, vendas, pagamentos ou outros scopes. A
+concessão efetiva de `offline_access` e o acesso com token da conta operadora
+ao preço de anúncios de outros vendedores continuam sem prova externa. A
+documentação do preço informa que, para anúncio de outro vendedor, os metadados
+promocionais não são retornados; o cliente BestPrice não depende deles. Ainda é
+necessário criar o app, autorizar a conta, conferir o grant/refresh token e
+consultar IDs permitidos. `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false` continua
+bloqueando as consultas normais até a validação.
+
+Fontes oficiais consultadas: [permissões funcionais](https://developers.mercadolivre.com.br/pt_br/permissoes-funcionais/),
+[preços de produtos](https://developers.mercadolivre.com.br/devcenter/api-de-precos),
+[notificações](https://developers.mercadolivre.com.br/pt_br/produto-consulta-de-usuarios/produto-receba-notificacoes)
+e [guia de OAuth e acesso offline](https://developers.mercadolivre.com.br/devcenter/desenvolvimento-in-house).
+
 A documentação OAuth oficial também retorna `token_type` como `bearer` minúsculo,
 enquanto o código aceitava apenas `Bearer`. Testes parametrizados agora cobrem
 ambas as grafias na troca de código e renovação. Red observado: os dois casos
