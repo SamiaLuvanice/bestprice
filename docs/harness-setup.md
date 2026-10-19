@@ -4,4 +4,4 @@ Pré-requisitos deste perfil: Python 3.13, uv, Node.js 22/npm, Docker Compose, G
 
 Rode scripts/diagnose-harness.ps1 para conferir referências. Não copie segredos, volumes ou arquivos .env para outro projeto. Se adaptar o harness, edite .agents/ e config/harness.example.yaml; os links gerados não são fonte.
 
-O servidor MCP oficial do Mercado Livre é remoto e exige um access token. Defina `MERCADOLIBRE_ACCESS_TOKEN` no ambiente do cliente MCP antes de iniciar uma sessão; a configuração envia esse valor no cabeçalho `Authorization` e não armazena credenciais no repositório.
+O servidor MCP oficial do Mercado Livre é remoto e exige um access token. Defina `MERCADOLIBRE_ACCESS_TOKEN` no ambiente do cliente MCP antes de iniciar uma sessão; a configuração envia esse valor no cabeçalho `Authorization` e não armazena credenciais no repositório. No `.mcp.json`, a referência usa `${MERCADOLIBRE_ACCESS_TOKEN}`; o sincronizador converte a referência para `{env:MERCADOLIBRE_ACCESS_TOKEN}` no `opencode.json`.
