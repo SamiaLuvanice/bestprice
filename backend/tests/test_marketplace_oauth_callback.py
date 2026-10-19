@@ -13,6 +13,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.auth.routes import get_session
 from app.db import Base
+from app.marketplace.client import IntegrationError
 from app.marketplace.oauth import provision_operator_tokens
 from app.marketplace.oauth_routes import OAuthCallbackAccessLogFilter, router
 from app.marketplace.oauth_setup import (
@@ -96,7 +97,7 @@ def test_code_exchange_posts_registered_redirect_and_persists_encrypted_tokens(t
         assert row.expires_at.replace(tzinfo=UTC) == NOW + timedelta(seconds=21600)
 
 
-def test_callback_rejects_invalid_state_without_exchange(monkeypatch) -> None:
+def test_callback_rejects_invalid_state_without_exchange(monkeypatch, caplog) -> None:
     key = Fernet.generate_key()
     app = FastAPI()
     app.include_router(router)
@@ -116,7 +117,10 @@ def test_callback_rejects_invalid_state_without_exchange(monkeypatch) -> None:
     monkeypatch.setenv("MERCADOLIVRE_REDIRECT_URI", REDIRECT_URI)
     monkeypatch.setattr("app.marketplace.oauth_routes.exchange_authorization_code", unexpected_exchange)
 
-    with TestClient(app, follow_redirects=False) as client:
+    with (
+        caplog.at_level(logging.WARNING, logger="app.marketplace.oauth_routes"),
+        TestClient(app, follow_redirects=False) as client,
+    ):
         response = client.get("/api/marketplace/oauth/callback?code=one-time-code&state=invalid")
 
     assert response.status_code == 303
@@ -124,6 +128,63 @@ def test_callback_rejects_invalid_state_without_exchange(monkeypatch) -> None:
     assert response.headers["cache-control"] == "no-store"
     assert response.headers["referrer-policy"] == "no-referrer"
     assert "one-time-code" not in response.text
+    assert [record.getMessage() for record in caplog.records] == [
+        "Mercado Livre OAuth callback failed: invalid_state",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("missing_config", "query", "expected_code"),
+    [
+        (True, {"code": "private-code"}, "integration_not_configured"),
+        (False, {}, "authorization_response_invalid"),
+        (False, {"error": "private-error"}, "authorization_response_invalid"),
+    ],
+)
+def test_callback_logs_safe_category_for_invalid_request(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    missing_config: bool,
+    query: dict[str, str],
+    expected_code: str,
+) -> None:
+    key = Fernet.generate_key()
+    app = FastAPI()
+    app.include_router(router)
+
+    def session_dependency():
+        with Session(create_engine("sqlite+pysqlite:///:memory:")) as session:
+            yield session
+
+    def unexpected_exchange(*_args, **_kwargs) -> None:
+        raise AssertionError("invalid callback must not exchange an OAuth code")
+
+    app.dependency_overrides[get_session] = session_dependency
+    state = parse_qs(urlsplit(build_authorization_url("client-id", REDIRECT_URI, key)).query)["state"][0]
+    monkeypatch.setenv("MERCADOLIVRE_OAUTH_KEY", key.decode())
+    monkeypatch.setenv("MERCADOLIVRE_REDIRECT_URI", REDIRECT_URI)
+    query = query.copy()
+    if missing_config:
+        monkeypatch.delenv("MERCADOLIVRE_OAUTH_KEY")
+    else:
+        query["state"] = state
+    monkeypatch.setattr("app.marketplace.oauth_routes.exchange_authorization_code", unexpected_exchange)
+
+    with (
+        caplog.at_level(logging.WARNING, logger="app.marketplace.oauth_routes"),
+        TestClient(app, follow_redirects=False) as client,
+    ):
+        response = client.get("/api/marketplace/oauth/callback", params=query)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/api/marketplace/oauth/complete?status=failed"
+    assert [record.getMessage() for record in caplog.records] == [
+        f"Mercado Livre OAuth callback failed: {expected_code}",
+    ]
+    assert all(record.exc_info is None for record in caplog.records)
+    assert "private-code" not in caplog.text
+    assert "private-error" not in caplog.text
+    assert state not in caplog.text
 
 
 def test_callback_exchanges_valid_code_and_redirects_without_query_credentials(monkeypatch) -> None:
@@ -178,3 +239,57 @@ def test_callback_access_log_filter_removes_oauth_query_values() -> None:
     assert "secret" not in record.getMessage()
     assert "private" not in record.getMessage()
     assert "/api/marketplace/oauth/callback" in record.getMessage()
+
+
+@pytest.mark.parametrize(
+    ("failure", "expected_code"),
+    [
+        (IntegrationError("integration_auth_required"), "integration_auth_required"),
+        (IntegrationError("private-code-and-token"), "integration_unknown_error"),
+        (RuntimeError("private-code-and-token"), "unexpected_error"),
+    ],
+)
+def test_callback_logs_only_safe_failure_category(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    failure: Exception,
+    expected_code: str,
+) -> None:
+    key = Fernet.generate_key()
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    app = FastAPI()
+    app.include_router(router)
+
+    def session_dependency():
+        with Session(engine) as session:
+            yield session
+
+    def failed_exchange(*_args, **_kwargs) -> None:
+        raise failure
+
+    app.dependency_overrides[get_session] = session_dependency
+    state = parse_qs(urlsplit(build_authorization_url("client-id", REDIRECT_URI, key)).query)["state"][0]
+    monkeypatch.setenv("MERCADOLIVRE_OAUTH_KEY", key.decode())
+    monkeypatch.setenv("MERCADOLIVRE_CLIENT_ID", "client-id")
+    monkeypatch.setenv("MERCADOLIVRE_CLIENT_SECRET", "client-secret")
+    monkeypatch.setenv("MERCADOLIVRE_REDIRECT_URI", REDIRECT_URI)
+    monkeypatch.setattr("app.marketplace.oauth_routes.exchange_authorization_code", failed_exchange)
+
+    with (
+        caplog.at_level(logging.WARNING, logger="app.marketplace.oauth_routes"),
+        TestClient(app, follow_redirects=False) as client,
+    ):
+        response = client.get(
+            "/api/marketplace/oauth/callback",
+            params={"code": "private-code-and-token", "state": state},
+        )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/api/marketplace/oauth/complete?status=failed"
+    assert [record.getMessage() for record in caplog.records] == [
+        f"Mercado Livre OAuth callback failed: {expected_code}",
+    ]
+    assert all(record.exc_info is None for record in caplog.records)
+    assert "private-code-and-token" not in caplog.text
+    assert state not in caplog.text
+    assert "client-secret" not in caplog.text
