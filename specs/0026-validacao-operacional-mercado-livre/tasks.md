@@ -13,7 +13,7 @@
 - [x] Fixar o contrato HTTPS do callback OAuth no plano antes de alterar o backend ou a configuração Stage.
 - [x] Escrever testes de estado inválido/expirado, URL oficial de autorização, troca de código, persistência cifrada e remoção de query sensível dos logs; Red observado antes de criar `oauth_routes.py`.
 - [x] Implementar o gerador local da URL de autorização e o callback Stage protegido por `state`, mantendo a integração desligada.
-- [x] Atualizar variáveis de ambiente e documentação de operação para o callback Stage. O app foi criado no DevCenter; falta confirmar as configurações persistidas após a verificação da conta.
+- [x] Atualizar variáveis de ambiente e documentação de operação para o callback Stage. O app foi criado no DevCenter; redirect, fluxos OAuth e permissões persistidos foram conferidos após a verificação da conta.
 - [x] Revisar arquitetura/segurança e executar gates locais; a revisão independente não encontrou bloqueador.
 - [x] Executar o agente `doc-sync-onboarding` após as mudanças OAuth; conferiu README, guias backend/infraestrutura, arquitetura, progresso, configuração Compose/Render, `AGENTS.md`, `CLAUDE.md` e índice de docs. Repetido após a aceitação case-insensitive de `token_type` e a revisão de escopos; `docs/PROGRESS.md` e `verification.md` registram as alterações e evidências, sem outros ajustes necessários.
-- [ ] Implantar o callback via fluxo de promoção Stage, confirmar/configurar o app criado no DevCenter e executar a autorização real e a sonda com IDs permitidos; AC01–AC04 permanecem pendentes até haver evidência operacional.
+- [ ] Implantar o callback via fluxo de promoção Stage, configurar as credenciais no ambiente e executar a autorização real e a sonda com IDs permitidos; AC01–AC04 permanecem pendentes até haver evidência operacional.
