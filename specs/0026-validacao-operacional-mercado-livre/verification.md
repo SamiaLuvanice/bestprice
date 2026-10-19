@@ -1,18 +1,17 @@
 # Verificação — 0026
 
-Data de execução: 2026-10-19 (America/Sao_Paulo). A validação da API externa não
-foi executada: nenhuma credencial OAuth operacional, chave Fernet operacional ou
-ID de anúncio permitido foi usado nesta validação. Nenhuma chamada foi feita ao
-Mercado Livre.
+Data de execução: 2026-10-19 (America/Sao_Paulo). A sonda de anúncios da API
+externa ainda não foi executada; IDs permitidos não foram fornecidos. As tentativas
+reais de autorização OAuth e seus resultados estão registrados ao final deste arquivo.
 
 ## Critérios
 
 | Critério | Estado | Evidência e limite |
 |---|---|---|
-| AC01 OAuth e renovação reais | Pendente operacional | Implementado callback HTTPS com state assinado/expirável, troca pelo endpoint oficial e persistência cifrada; testes simulados passaram. App criado e callback, fluxos OAuth e permissões conferidos no DevCenter. A rota Stage respondeu 404; nenhuma autorização/rotação real ocorreu. |
+| AC01 OAuth e renovação reais | Pendente operacional | Callback HTTPS implantado; duas tentativas reais chegaram a `status=failed` e o banco Stage segue sem credencial operadora. Troca, persistência e rotação reais ainda não foram demonstradas. |
 | AC02 anúncios de terceiros/preço/contexto | Pendente operacional | A sonda valida os três cenários usando o `MercadoLivreClient` oficial e relata preço, BRL, contexto e disponibilidade. Sem IDs autorizados, não foi executada. |
 | AC03 cadastro, atualização, falha, rate limit e recuperação | Parcial | Testes backend existentes simulam as falhas e recuperação e a sonda cobre só leituras. Não foram exercitados cadastro/worker com a API real nem observado limite real. Não provocar 429. |
-| AC04 evidências seguras e procedimento | Parcial | O JSON da sonda omite token, título e URL e contém horário UTC, IDs e campos normalizados. Procedimento/documentação adicionados; falta resultado operacional para registrar. |
+| AC04 evidências seguras e procedimento | Parcial | O JSON da sonda omite token, título e URL e contém horário UTC, IDs e campos normalizados. Tentativas OAuth e ausência de persistência foram registradas sem segredos; falta resultado operacional da sonda. |
 | AC05 integração desativada | Demonstrado no código | `.env.example` mantém `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; a sonda recusa execução se o flag estiver `true`, sem alterar configuração. `test_live_validation_refuses_to_run_after_integration_flag_is_enabled` passou. |
 | AC06 testes sem rede/credenciais | Demonstrado | 12 testes da sonda e 6 testes do callback passaram sem rede/credenciais; cobrem confirmação, flag, cenários, sanitização, state inválido/expirado/adulterado, redirect incompatível, troca mockada, persistência Fernet e redação do access log. |
 
@@ -32,7 +31,7 @@ Mercado Livre.
 - `actionlint --version` — não executado; binário não instalado.
 - GitHub: PR [#134](https://github.com/SamiaLuvanice/bestprice/pull/134), em rascunho para `develop`; CI obrigatório, Backend, Frontend, Automation, PR policy e Project sync terminaram com sucesso no [run 39272176176](https://github.com/SamiaLuvanice/bestprice/actions/runs/39272176176). O preview do Cloudflare Pages também reportou sucesso. A Issue #127 permanece aberta.
 - Frontend: não executado; sem alteração no frontend.
-- Integração real: não executada; o app foi criado no DevCenter após estes gates, mas não houve configuração de credenciais no Stage, deploy do callback, consentimento OAuth nem consulta real. `GET https://bestprice-stage-api.onrender.com/api/marketplace/oauth/callback` respondeu HTTP 404 em 2026-10-19, confirmando que a rota ainda não está disponível no Stage. O flag de integração permanece `false`.
+- Integração real no primeiro checkpoint: não executada. A rota callback respondeu 404 antes da promoção para Stage. O deploy posterior e as duas tentativas OAuth estão registrados abaixo. Nenhuma consulta de anúncio foi executada e o flag permanece `false`.
 - Revisão independente de arquitetura identificou e ajudou a corrigir a classificação de intervenção manual e a precedência de falha real em resultado misto; a CLI emite `requires_manual_action` com códigos específicos para IDs, seleção de cenário, credenciais e renovação não observada, preservando `failed` quando qualquer consulta falha. A re-revisão não encontrou bloqueadores adicionais. QA confirmou AC05–AC06 demonstrados, AC01–AC02 pendentes e AC03–AC04 parciais sem operação real; não cabe marcar a spec implementada.
 
 ## Limitações e próximo passo
@@ -146,3 +145,51 @@ backend` — passou; `backend/.venv/Scripts/python.exe -m pytest -q --tb=short`
 .complexity-baseline.json` (na raiz) — sem nova violação rank D+; `git diff
 --check` — passou. O teste de processo de worker ficou skipped por não haver
 PostgreSQL de teste configurado.
+
+## Tentativas operacionais em Stage — 2026-10-19
+
+O Render `bestprice-stage-api` recebeu `MERCADOLIVRE_CLIENT_ID`,
+`MERCADOLIVRE_REDIRECT_URI`, `MERCADOLIVRE_CLIENT_SECRET` e
+`MERCADOLIVRE_OAUTH_KEY`; o deploy de alteração de ambiente terminou `Live`
+e os health checks internos retornaram 200. A chave Fernet salva no Render
+foi comparada à chave local por SHA-256, sem registrar seu valor, e coincidiu.
+O Client Secret estava preenchido, mas seu valor não pôde ser comparado
+independentemente ao DevCenter. O flag `MERCADOLIVRE_THIRD_PARTY_VALIDATED`
+permaneceu `false`.
+
+A URL oficial foi gerada duas vezes por `python -m app.marketplace.authorize_operator`
+com `state` de dez minutos e redirect Stage. Na primeira, a operadora concluiu
+o consentimento no navegador; o Render acordou durante o callback. A segunda
+foi iniciada com `/api/health` respondendo `{"status":"ok","database":"ok"}`
+antes da abertura da URL. Ambas chegaram a
+`/api/marketplace/oauth/complete?status=failed`. Nos logs da segunda implantação,
+`GET /api/marketplace/oauth/callback` retornou 303, sem query sensível no access
+log. A consulta somente de contagem
+`SELECT COUNT(*) ... FROM public.operator_credentials WHERE id = 1` no banco
+Stage retornou **0** após cada tentativa; nenhum token foi persistido. O callback
+então implantado suprimia a causa interna e por isso não permitia distinguir falha de troca
+OAuth de falha de persistência. Após as tentativas, o serviço permaneceu Live e
+`/api/health` retornou 200; o flag continuou `false`. AC01 permanece pendente;
+nenhuma consulta de anúncio foi executada, AC02 permanece pendente e AC03–AC04
+seguem parciais conforme a matriz acima. Não registrar códigos,
+tokens, segredo, chave ou a URL com `state` nesta evidência.
+
+Para diagnosticar a falha sem expor o callback, `oauth_routes.py` passou a emitir
+somente categorias fixas de falha para configuração, `state`, resposta de autorização,
+erros conhecidos de integração e exceção inesperada. A resposta pública permanece
+genérica. TDD: Red inicial do teste de log na troca OAuth — **2 failed, 7 deselected**;
+Green — **2 passed, 7 deselected**. Red dos retornos antecipados — **4 failed,
+9 deselected**; Green final do callback — **13 passed**. Comandos executados em
+`backend/`: `.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider
+tests/test_marketplace_oauth_callback.py`, `.venv/Scripts/ruff.exe check
+app/marketplace/oauth_routes.py tests/test_marketplace_oauth_callback.py` —
+**All checks passed**; `.venv/Scripts/python.exe -m pytest -q -p
+no:cacheprovider` — **155 passed, 31 skipped, 1 warning** (fora do sandbox
+Windows após bloqueio de acesso ao diretório temporário). `TEST_DATABASE_URL`
+estava ausente, de modo que o gate não executou a integração PostgreSQL.
+`python .agents/skills/cyclomatic-complexity/scripts/complexity_report.py
+backend/app --changed origin/develop` — 22 blocos, média CC 4, rank A, sem
+blocos C+; `git diff --check` passou. Revisão independente do diff: sem
+bloqueador; observou apenas lacunas menores de cobertura de redirect ausente
+e parâmetros duplicados/longos. Nenhuma nova tentativa real foi feita após
+essa mudança, que ainda requer deploy Stage.

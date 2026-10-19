@@ -8,6 +8,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import PlainTextResponse, RedirectResponse
 
 from app.auth.routes import SessionDep
+from app.marketplace.client import IntegrationError
 from app.marketplace.oauth_setup import (
     CALLBACK_PATH,
     exchange_authorization_code,
@@ -16,6 +17,14 @@ from app.marketplace.oauth_setup import (
 
 router = APIRouter(prefix="/api/marketplace/oauth", tags=["marketplace-oauth"])
 COMPLETION_PATH = "/api/marketplace/oauth/complete"
+LOGGER = logging.getLogger(__name__)
+SAFE_OAUTH_ERROR_CODES = frozenset({
+    "integration_not_configured",
+    "integration_unavailable",
+    "integration_rate_limited",
+    "integration_auth_required",
+    "integration_invalid_response",
+})
 
 
 class OAuthCallbackAccessLogFilter(logging.Filter):
@@ -40,6 +49,14 @@ def _redirect(status: str) -> RedirectResponse:
     return response
 
 
+def _log_exchange_failure(exc: Exception) -> None:
+    if isinstance(exc, IntegrationError):
+        category = exc.code if exc.code in SAFE_OAUTH_ERROR_CODES else "integration_unknown_error"
+    else:
+        category = "unexpected_error"
+    LOGGER.warning("Mercado Livre OAuth callback failed: %s", category)
+
+
 @router.get("/callback", include_in_schema=False)
 def oauth_callback(request: Request, session: SessionDep) -> RedirectResponse:
     params = request.query_params
@@ -49,16 +66,22 @@ def oauth_callback(request: Request, session: SessionDep) -> RedirectResponse:
     state = states[0] if len(states) == 1 else ""
     key = os.environ.get("MERCADOLIVRE_OAUTH_KEY", "").encode()
     redirect_uri = os.environ.get("MERCADOLIVRE_REDIRECT_URI", "")
-    if not key or not verify_authorization_state(state, key, redirect_uri):
+    if not key or not redirect_uri:
+        LOGGER.warning("Mercado Livre OAuth callback failed: integration_not_configured")
+        return _redirect("failed")
+    if not verify_authorization_state(state, key, redirect_uri):
+        LOGGER.warning("Mercado Livre OAuth callback failed: invalid_state")
         return _redirect("failed")
     if params.get("error") or not code or len(code) > 2048:
+        LOGGER.warning("Mercado Livre OAuth callback failed: authorization_response_invalid")
         return _redirect("failed")
     client_id = os.environ.get("MERCADOLIVRE_CLIENT_ID", "")
     client_secret = os.environ.get("MERCADOLIVRE_CLIENT_SECRET", "")
     try:
         exchange_authorization_code(session, key, client_id, client_secret, code, redirect_uri)
-    except Exception:  # noqa: BLE001 - callback never exposes provider or database details.
+    except Exception as exc:  # noqa: BLE001 - callback never exposes provider or database details.
         session.rollback()
+        _log_exchange_failure(exc)
         return _redirect("failed")
     return _redirect("authorized")
 
