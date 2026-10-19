@@ -91,31 +91,56 @@ def build_authorization_url(
     return f"{AUTHORIZATION_URL}?{query}"
 
 
-def verify_authorization_state(
+def _state_payload_failure(
+    payload: Mapping[str, object], redirect_uri: str, now: datetime | None,
+) -> str | None:
+    expires_at = payload.get("expires_at")
+    nonce = payload.get("nonce")
+    if (
+        payload.get("version") != 1
+        or isinstance(expires_at, bool) or not isinstance(expires_at, int)
+        or not isinstance(nonce, str) or not nonce
+    ):
+        return "state_invalid_format"
+    if payload.get("redirect_uri") != redirect_uri:
+        return "state_redirect_mismatch"
+    observed = now or datetime.now(UTC)
+    if observed.tzinfo is None:
+        return "state_invalid_clock"
+    if int(observed.astimezone(UTC).timestamp()) > expires_at:
+        return "state_expired"
+    return None
+
+
+def authorization_state_failure(
     state: str, key: bytes, redirect_uri: str, *, now: datetime | None = None,
-) -> bool:
-    if not state or len(state) > 2048 or not _redirect_uri_is_valid(redirect_uri):
-        return False
+) -> str | None:
+    """Return a safe reason code, or None when the signed state is valid."""
+    if not state:
+        return "state_missing"
+    if len(state) > 2048 or not _redirect_uri_is_valid(redirect_uri):
+        return "state_invalid_format"
     try:
         encoded, signature = state.split(".", maxsplit=1)
         expected = hmac.new(_signing_key(key), encoded.encode("ascii"), hashlib.sha256).digest()
-        if not hmac.compare_digest(expected, _decode(signature)):
-            return False
+        received = _decode(signature)
+    except (binascii.Error, ValueError, TypeError, UnicodeError):
+        return "state_invalid_format"
+    if not hmac.compare_digest(expected, received):
+        return "state_invalid_signature"
+    try:
         payload = json.loads(_decode(encoded))
-        expires_at = payload.get("expires_at")
-        nonce = payload.get("nonce")
-        if (
-            payload.get("version") != 1 or payload.get("redirect_uri") != redirect_uri
-            or isinstance(expires_at, bool) or not isinstance(expires_at, int)
-            or not isinstance(nonce, str) or not nonce
-        ):
-            return False
-        observed = now or datetime.now(UTC)
-        if observed.tzinfo is None:
-            return False
-        return int(observed.astimezone(UTC).timestamp()) <= expires_at
     except (binascii.Error, ValueError, TypeError, UnicodeError, json.JSONDecodeError):
-        return False
+        return "state_invalid_format"
+    if not isinstance(payload, Mapping):
+        return "state_invalid_format"
+    return _state_payload_failure(payload, redirect_uri, now)
+
+
+def verify_authorization_state(
+    state: str, key: bytes, redirect_uri: str, *, now: datetime | None = None,
+) -> bool:
+    return authorization_state_failure(state, key, redirect_uri, now=now) is None
 
 
 def _validate_exchange_configuration(

@@ -129,8 +129,82 @@ def test_callback_rejects_invalid_state_without_exchange(monkeypatch, caplog) ->
     assert response.headers["referrer-policy"] == "no-referrer"
     assert "one-time-code" not in response.text
     assert [record.getMessage() for record in caplog.records] == [
-        "Mercado Livre OAuth callback failed: invalid_state",
+        "Mercado Livre OAuth callback failed: state_invalid_format",
     ]
+
+
+@pytest.mark.parametrize(
+    ("state_case", "expected_code"),
+    [
+        ("missing", "state_missing code_present=True error_present=False"),
+        ("missing_error", "state_missing code_present=False error_present=True"),
+        ("missing_empty", "state_missing code_present=False error_present=False"),
+        ("duplicate", "state_invalid_format"),
+        ("invalid_signature", "state_invalid_signature"),
+        ("redirect_mismatch", "state_redirect_mismatch"),
+        ("expired", "state_expired"),
+    ],
+)
+def test_callback_logs_precise_state_failure_without_sensitive_values(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    state_case: str,
+    expected_code: str,
+) -> None:
+    key = Fernet.generate_key()
+    app = FastAPI()
+    app.include_router(router)
+
+    def session_dependency():
+        with Session(create_engine("sqlite+pysqlite:///:memory:")) as session:
+            yield session
+
+    def unexpected_exchange(*_args, **_kwargs) -> None:
+        raise AssertionError("invalid state must not exchange an OAuth code")
+
+    app.dependency_overrides[get_session] = session_dependency
+    issued_at = datetime.now(UTC)
+    uri = "https://other.example/callback" if state_case == "redirect_mismatch" else REDIRECT_URI
+    if state_case == "expired":
+        issued_at -= timedelta(minutes=11)
+    state = parse_qs(urlsplit(build_authorization_url("client-id", uri, key, now=issued_at)).query)[
+        "state"
+    ][0]
+    if state_case.startswith("missing"):
+        state = ""
+    elif state_case == "invalid_signature":
+        encoded, signature = state.split(".")
+        state = f"{encoded}.{'A' if signature[0] != 'A' else 'B'}{signature[1:]}"
+
+    monkeypatch.setenv("MERCADOLIVRE_OAUTH_KEY", key.decode())
+    monkeypatch.setenv("MERCADOLIVRE_REDIRECT_URI", REDIRECT_URI)
+    monkeypatch.setattr("app.marketplace.oauth_routes.exchange_authorization_code", unexpected_exchange)
+    params = {"code": "private-code", "state": state}
+    if state_case == "missing_error":
+        params = {"error": "private-error"}
+    elif state_case == "missing_empty":
+        params = {}
+    elif state_case == "duplicate":
+        params = [("code", "private-code"), ("state", state), ("state", "private-duplicate")]
+    with (
+        caplog.at_level(logging.WARNING, logger="app.marketplace.oauth_routes"),
+        TestClient(app, follow_redirects=False) as client,
+    ):
+        response = client.get(
+            "/api/marketplace/oauth/callback", params=params,
+        )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/api/marketplace/oauth/complete?status=failed"
+    assert [record.getMessage() for record in caplog.records] == [
+        f"Mercado Livre OAuth callback failed: {expected_code}",
+    ]
+    assert all(record.exc_info is None for record in caplog.records)
+    assert "private-code" not in caplog.text
+    assert "private-error" not in caplog.text
+    assert "private-duplicate" not in caplog.text
+    if state:
+        assert state not in caplog.text
 
 
 @pytest.mark.parametrize(
