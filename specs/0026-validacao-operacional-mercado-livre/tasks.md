@@ -7,5 +7,6 @@
 - [x] Executar testes e gates disponíveis; registrar comandos e limitações em `verification.md`. Validação real permanece pendente por falta de credenciais/IDs.
 - [x] Preparar procedimento e documentação de execução; conferir `AGENTS.md`, `CLAUDE.md` e `docs/`.
 - [x] Revisar o diff contra `architecture.md`, segurança e critérios da spec; aceite operacional continua pendente.
-- [x] Executar o agente `doc-sync-onboarding` por último; confirmou coerência de README, guias, arquitetura, progresso, `.env.example`, Compose, `AGENTS.md`, `CLAUDE.md` e índice de docs, sem ajustes adicionais.
-- [ ] Handoff e PR para `develop` após concluir a validação operacional; a implementação local permanece sem commit/PR e aguarda credenciais OAuth e IDs de anúncios autorizados para demonstrar AC01–AC04.
+- [x] Executar o agente `doc-sync-onboarding` após as mudanças na CLI; atualizou README e guia backend para explicar estados agregados, ações manuais e precedência das falhas. Reconfirmou `AGENTS.md`, `CLAUDE.md`, índice de docs e os demais guias/configuração sem necessidade de ajuste.
+- [x] Publicar a branch e abrir a PR [#134](https://github.com/SamiaLuvanice/bestprice/pull/134) em rascunho para `develop`; hooks passaram e o corpo registra critérios ainda pendentes.
+- [ ] Concluir a validação operacional autorizada, atualizar evidências/PR e só então tirar de rascunho; AC01–AC04 dependem de credenciais OAuth e IDs de anúncios permitidos.

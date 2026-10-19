@@ -26,6 +26,7 @@ foi executada: nenhuma credencial OAuth, chave Fernet, ID de anúncio de teste o
 - Automação: `node --test .github/scripts/*.test.cjs` — **50 passed**.
 - Diff: `git diff --check` — passou, sem espaços ou marcadores inválidos.
 - `actionlint --version` — não executado; binário não instalado.
+- GitHub: PR [#134](https://github.com/SamiaLuvanice/bestprice/pull/134), em rascunho para `develop`; CI obrigatório, Backend, Frontend, Automation, PR policy e Project sync terminaram com sucesso no [run 39272176176](https://github.com/SamiaLuvanice/bestprice/actions/runs/39272176176). O preview do Cloudflare Pages também reportou sucesso. A Issue #127 permanece aberta.
 - Frontend: não executado; sem alteração no frontend.
 - Integração real: não executada; ver dependências operacionais no início deste arquivo.
 - Revisão independente de arquitetura identificou e ajudou a corrigir a classificação de intervenção manual e a precedência de falha real em resultado misto; a CLI emite `requires_manual_action` com códigos específicos para IDs, seleção de cenário, credenciais e renovação não observada, preservando `failed` quando qualquer consulta falha. A re-revisão não encontrou bloqueadores adicionais. QA confirmou AC05–AC06 demonstrados, AC01–AC02 pendentes e AC03–AC04 parciais sem operação real; não cabe marcar a spec implementada.
