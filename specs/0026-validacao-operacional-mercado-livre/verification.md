@@ -8,10 +8,10 @@ reais de autorização OAuth e seus resultados estão registrados ao final deste
 
 | Critério | Estado | Evidência e limite |
 |---|---|---|
-| AC01 OAuth e renovação reais | Pendente operacional | Callback HTTPS em Stage; três tentativas reais chegaram a `status=failed`. A terceira foi diagnosticada como `invalid_state`, antes da troca; `operator_credentials` segue sem credencial. Troca, persistência e rotação reais ainda não foram demonstradas. |
+| AC01 OAuth e renovação reais | Parcial | A quarta tentativa concluiu o authorization-code em Stage e `operator_credentials` contém uma credencial; `MAX(expires_at)` retornou `2026-10-20 04:31:06.880723+00`. Tokens não foram lidos. A renovação por refresh token ainda não foi demonstrada. |
 | AC02 anúncios de terceiros/preço/contexto | Pendente operacional | A sonda valida os três cenários usando o `MercadoLivreClient` oficial e relata preço, BRL, contexto e disponibilidade. Sem IDs autorizados, não foi executada. |
 | AC03 cadastro, atualização, falha, rate limit e recuperação | Parcial | Testes backend existentes simulam as falhas e recuperação e a sonda cobre só leituras. Não foram exercitados cadastro/worker com a API real nem observado limite real. Não provocar 429. |
-| AC04 evidências seguras e procedimento | Parcial | O JSON da sonda omite token, título e URL e contém horário UTC, IDs e campos normalizados. Tentativas OAuth e ausência de persistência foram registradas sem segredos; falta resultado operacional da sonda. |
+| AC04 evidências seguras e procedimento | Parcial | A quarta autorização e a persistência foram confirmadas por contagem e validade máxima, sem ler tokens. O procedimento e as evidências estão registrados sem segredos; falta resultado operacional da sonda e do refresh. |
 | AC05 integração desativada | Demonstrado no código | `.env.example` mantém `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; a sonda recusa execução se o flag estiver `true`, sem alterar configuração. `test_live_validation_refuses_to_run_after_integration_flag_is_enabled` passou. |
 | AC06 testes sem rede/credenciais | Demonstrado | 12 testes da sonda e 20 testes do callback passaram sem rede/credenciais; cobrem confirmação, flag, cenários, sanitização, estados inválidos/expirados/adulterados, redirect incompatível, troca mockada, persistência Fernet e redação dos logs. |
 
@@ -29,20 +29,20 @@ reais de autorização OAuth e seus resultados estão registrados ao final deste
 - Complexidade final: `backend/.venv/Scripts/python.exe .agents/skills/cyclomatic-complexity/scripts/complexity_report.py --baseline .complexity-baseline.json` (na raiz) — passou sem nova violação rank D+; `exchange_authorization_code` foi dividida após a primeira medição apontar CC22.
 - Diff: `git diff --check` — passou, sem espaços ou marcadores inválidos.
 - `actionlint --version` — não executado; binário não instalado.
-- GitHub: PR [#138](https://github.com/SamiaLuvanice/bestprice/pull/138) integrada em `develop` (`49fd8da`) e PR [#139](https://github.com/SamiaLuvanice/bestprice/pull/139) integrada em `stage` (`de2861b`); ambas passaram no CI. A Issue #127 foi reaberta para continuar o diagnóstico operacional.
+- GitHub: PR [#138](https://github.com/SamiaLuvanice/bestprice/pull/138) integrada em `develop` (`49fd8da`); promoção [#139](https://github.com/SamiaLuvanice/bestprice/pull/139) integrada em `stage` (`de2861b`). PRs [#140](https://github.com/SamiaLuvanice/bestprice/pull/140) e [#142](https://github.com/SamiaLuvanice/bestprice/pull/142) integradas em `develop` (`a856c2f` e `f196d4f`); PR #141 fechada porque seu head ficou behind. A promoção [#143](https://github.com/SamiaLuvanice/bestprice/pull/143) integrou em `stage` (`2eb6dc7`). PR [#144](https://github.com/SamiaLuvanice/bestprice/pull/144) sincronizou `stage` de volta em `develop` (`8504a28`) com checks verdes.
 - Frontend: não executado; sem alteração no frontend.
-- Integração real no primeiro checkpoint: não executada. A rota callback respondeu 404 antes da promoção para Stage. O deploy posterior e as três tentativas OAuth estão registrados abaixo. Nenhuma consulta de anúncio foi executada e o flag permanece `false`.
-- Revisão independente de arquitetura identificou e ajudou a corrigir a classificação de intervenção manual e a precedência de falha real em resultado misto; a CLI emite `requires_manual_action` com códigos específicos para IDs, seleção de cenário, credenciais e renovação não observada, preservando `failed` quando qualquer consulta falha. A re-revisão não encontrou bloqueadores adicionais. QA confirmou AC05–AC06 demonstrados, AC01–AC02 pendentes e AC03–AC04 parciais sem operação real; não cabe marcar a spec implementada.
+- Integração real no primeiro checkpoint: não executada. A rota callback respondeu 404 antes da promoção para Stage. O deploy posterior e as três tentativas OAuth estão registrados abaixo. Nenhuma consulta de anúncio foi executada; naquele checkpoint o último valor conhecido do flag era `false`.
+- Revisão independente de arquitetura identificou e ajudou a corrigir a classificação de intervenção manual e a precedência de falha real em resultado misto; a CLI emite `requires_manual_action` com códigos específicos para IDs, seleção de cenário, credenciais e renovação não observada, preservando `failed` quando qualquer consulta falha. A re-revisão não encontrou bloqueadores adicionais. Na verificação anterior à quarta autorização, QA registrou AC05–AC06 demonstrados, AC01–AC02 pendentes e AC03–AC04 parciais; a autorização inicial concluída depois atualiza AC01 para parcial, mas não conclui a spec.
 
 ## Limitações e próximo passo
 
-Configure OAuth e três anúncios MLB permitidos no `.env` local, sem incluir
-valores secretos em evidências. Execute a sonda quando o access token estiver a
-até cinco minutos do vencimento para que ocorra uma rotação real. Depois, registre
-o resultado sanitizado e complete o exercício isolado de cadastro/atualização e
-recuperação segundo a cadência indicada oficialmente. O `MERCADOLIVRE_THIRD_PARTY_VALIDATED`
-deve permanecer `false` durante todo esse trabalho. A spec permanece `rascunho`
-até os critérios operacionais serem demonstrados.
+OAuth inicial está configurado em Stage e foi concluído; não copiar tokens para
+arquivos ou ambientes locais. Ainda é necessário demonstrar a renovação com a
+credencial autorizada, obter IDs MLB cuja consulta esteja permitida e executar a
+sonda e os exercícios isolados de cadastro/atualização e recuperação, respeitando
+a cadência oficial. Registre somente resultados sanitizados. O
+`MERCADOLIVRE_THIRD_PARTY_VALIDATED` deve permanecer `false` durante esse trabalho.
+A spec permanece `rascunho` até os critérios operacionais serem demonstrados.
 
 Para começar a autorização em Stage, configurar `MERCADOLIVRE_CLIENT_ID`,
 `MERCADOLIVRE_CLIENT_SECRET` e a mesma `MERCADOLIVRE_OAUTH_KEY` no Stage e no
@@ -169,9 +169,9 @@ log. A consulta somente de contagem
 Stage retornou **0** após cada tentativa; nenhum token foi persistido. O callback
 então implantado suprimia a causa interna e por isso não permitia distinguir falha de troca
 OAuth de falha de persistência. Após as tentativas, o serviço permaneceu Live e
-`/api/health` retornou 200; o flag continuou `false`. AC01 permanece pendente;
-nenhuma consulta de anúncio foi executada, AC02 permanece pendente e AC03–AC04
-seguem parciais conforme a matriz acima. Não registrar códigos,
+`/api/health` retornou 200; o flag continuou `false`. Àquele checkpoint, AC01
+permanecia pendente; nenhuma consulta de anúncio foi executada, AC02 permanecia
+pendente e AC03–AC04 seguiam parciais conforme a matriz acima. Não registrar códigos,
 tokens, segredo, chave ou a URL com `state` nesta evidência.
 
 Para diagnosticar a falha sem expor o callback, `oauth_routes.py` passou a emitir
@@ -194,20 +194,35 @@ bloqueador; observou apenas lacunas menores de cobertura de redirect ausente
 e parâmetros duplicados/longos. Naquele checkpoint não houve nova tentativa;
 a atualização aguardava deploy em Stage, feito depois pelo PR #139.
 
-O PR [#138](https://github.com/SamiaLuvanice/bestprice/pull/138) passou no CI
-e foi integrado em `develop` (`49fd8da`); a Issue #127 foi reaberta por ser
-entrega diagnóstica parcial. O PR de promoção
-[#139](https://github.com/SamiaLuvanice/bestprice/pull/139) passou no CI e foi
-integrado em `stage` (`de2861b`). O Render implantou esse commit automaticamente,
-ficou `Live` e `/api/health` respondeu `{"status":"ok","database":"ok"}`.
-Terceira URL oficial gerada com `state` novo; o retorno ainda foi
-`/api/marketplace/oauth/complete?status=failed`. O novo log seguro registrou
-`invalid_state` antes da troca de token. Uma leitura posterior do Render
-confirmou que o Client ID e redirect URI salvos são exatos e que a chave
-Fernet de Stage é idêntica à chave local. O `state` gerado localmente tem
-270 caracteres; não há evidência de limite de tamanho no provedor. A causa
-específica da rejeição de `state` ainda precisa ser determinada; nenhuma
-consulta de anúncio foi feita e o flag segue desativado (`false`).
+A PR [#138](https://github.com/SamiaLuvanice/bestprice/pull/138) integrou a
+categorização segura de falhas em `develop` (`49fd8da`); a PR
+[#139](https://github.com/SamiaLuvanice/bestprice/pull/139) promoveu-a a
+Stage (`de2861b`), onde Render ficou Live e `/api/health` retornou 200. Na
+terceira tentativa OAuth, o callback redirecionou com `status=failed` e o log
+registrou `invalid_state` antes da troca do código. A conferência no Render
+confirmou Client ID e redirect URI exatos e hash Fernet igual ao local; o
+`state` gerado tinha 270 caracteres, observação sem evidência de que seja a
+causa da rejeição. A causa específica permaneceu indeterminada.
+
+As PRs #140 (`a856c2f`) e #142 (`f196d4f`) foram integradas em `develop`; a
+tentativa de sincronização direta pela #141 foi fechada porque seu head ficou
+behind. A PR #143 promoveu `develop` para `stage` em `2eb6dc7`. O Render fez
+deploy automático e também foi conferido o deploy manual do mesmo SHA; ambos
+ficaram Live. No Chrome, `/api/health` respondeu
+`{"status":"ok","database":"ok"}`.
+
+A quarta URL oficial, com `state` novo, concluiu o fluxo e redirecionou para
+`/api/marketplace/oauth/complete?status=authorized`; a página confirmou o
+armazenamento cifrado dos tokens. No Supabase, uma consulta limitada a
+`COUNT(*)` e `MAX(expires_at)` em `public.operator_credentials` para `id = 1`
+retornou **1** e `2026-10-20 04:31:06.880723+00`. Nenhum token foi lido. Isso
+comprova autorização inicial e persistência; não demonstra renovação por refresh
+token nem acesso a anúncios. Naquele checkpoint, o último valor conhecido do
+flag Stage era `false`.
+
+A PR [#144](https://github.com/SamiaLuvanice/bestprice/pull/144) sincronizou
+`stage` de volta em `develop` (`8504a28`) com checks verdes. A sincronização não alterou variáveis de ambiente;
+o valor `false` conhecido antes dela não foi relido após a integração.
 
 ## TDD e gates do diagnóstico final
 
@@ -217,5 +232,6 @@ callback — **19 passed**. Ao rejeitar explicitamente `state` duplicado, Red �
 backend final passou com **162 passed, 31 skipped, 1 warning**; os skips incluem
 integração que exige `TEST_DATABASE_URL`, ausente. Ruff, relatório de
 complexidade contra baseline e `git diff --check` passaram. A revisão
-independente final foi aprovada sem achados. A autorização OAuth continua sem
-sucesso e o motivo de `invalid_state` ainda precisa ser determinado.
+independente final foi aprovada sem achados. A autorização inicial foi
+demonstrada; a renovação por refresh token, a consulta de anúncios permitidos e
+os exercícios operacionais restantes seguem pendentes.
