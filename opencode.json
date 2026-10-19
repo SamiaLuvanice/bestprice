@@ -9,6 +9,15 @@
         "chrome-devtools-mcp@latest"
       ],
       "enabled": true
+    },
+    "mercadolibre-mcp-server": {
+      "type": "remote",
+      "url": "https://mcp.mercadolibre.com/mcp",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:MERCADOLIBRE_ACCESS_TOKEN}"
+      },
+      "oauth": false
     }
   }
 }

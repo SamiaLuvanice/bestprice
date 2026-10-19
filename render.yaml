@@ -15,5 +15,7 @@ services:
         value: stage
       - key: MERCADOLIVRE_THIRD_PARTY_VALIDATED
         value: "false"
+      - key: MERCADOLIVRE_REDIRECT_URI
+        value: https://bestprice-stage-api.onrender.com/api/marketplace/oauth/callback
       - key: DATABASE_URL
         sync: false
