@@ -9,7 +9,7 @@ Mercado Livre.
 
 | Critério | Estado | Evidência e limite |
 |---|---|---|
-| AC01 OAuth e renovação reais | Pendente operacional | Implementado callback HTTPS com state assinado/expirável, troca pelo endpoint oficial e persistência cifrada; 6 testes simulados passaram. App ainda não foi criado/configurado no DevCenter, callback não foi implantado em Stage e nenhuma autorização/rotação real ocorreu. |
+| AC01 OAuth e renovação reais | Pendente operacional | Implementado callback HTTPS com state assinado/expirável, troca pelo endpoint oficial e persistência cifrada; testes simulados passaram. App criado no DevCenter, mas a revisão das configurações efetivas exige concluir a verificação da conta; callback não implantado em Stage e nenhuma autorização/rotação real ocorreu. |
 | AC02 anúncios de terceiros/preço/contexto | Pendente operacional | A sonda valida os três cenários usando o `MercadoLivreClient` oficial e relata preço, BRL, contexto e disponibilidade. Sem IDs autorizados, não foi executada. |
 | AC03 cadastro, atualização, falha, rate limit e recuperação | Parcial | Testes backend existentes simulam as falhas e recuperação e a sonda cobre só leituras. Não foram exercitados cadastro/worker com a API real nem observado limite real. Não provocar 429. |
 | AC04 evidências seguras e procedimento | Parcial | O JSON da sonda omite token, título e URL e contém horário UTC, IDs e campos normalizados. Procedimento/documentação adicionados; falta resultado operacional para registrar. |
@@ -32,7 +32,7 @@ Mercado Livre.
 - `actionlint --version` — não executado; binário não instalado.
 - GitHub: PR [#134](https://github.com/SamiaLuvanice/bestprice/pull/134), em rascunho para `develop`; CI obrigatório, Backend, Frontend, Automation, PR policy e Project sync terminaram com sucesso no [run 39272176176](https://github.com/SamiaLuvanice/bestprice/actions/runs/39272176176). O preview do Cloudflare Pages também reportou sucesso. A Issue #127 permanece aberta.
 - Frontend: não executado; sem alteração no frontend.
-- Integração real: não executada; nenhum app foi criado no DevCenter, não houve configuração de credenciais no Stage, deploy do callback, consentimento OAuth nem consulta real. O endereço Stage está declarado no Render e o flag de integração permanece `false`.
+- Integração real: não executada; o app foi criado no DevCenter após estes gates, mas não houve configuração de credenciais no Stage, deploy do callback, consentimento OAuth nem consulta real. O endereço Stage está declarado no Render e o flag de integração permanece `false`.
 - Revisão independente de arquitetura identificou e ajudou a corrigir a classificação de intervenção manual e a precedência de falha real em resultado misto; a CLI emite `requires_manual_action` com códigos específicos para IDs, seleção de cenário, credenciais e renovação não observada, preservando `failed` quando qualquer consulta falha. A re-revisão não encontrou bloqueadores adicionais. QA confirmou AC05–AC06 demonstrados, AC01–AC02 pendentes e AC03–AC04 parciais sem operação real; não cabe marcar a spec implementada.
 
 ## Limitações e próximo passo
@@ -45,8 +45,8 @@ recuperação segundo a cadência indicada oficialmente. O `MERCADOLIVRE_THIRD_P
 deve permanecer `false` durante todo esse trabalho. A spec permanece `rascunho`
 até os critérios operacionais serem demonstrados.
 
-Para começar a autorização em Stage, criar/configurar o app no DevCenter com o
-redirect HTTPS definido no `render.yaml`, configurar `MERCADOLIVRE_CLIENT_ID`,
+Para começar a autorização em Stage, conferir as configurações do app criado no
+DevCenter e o redirect HTTPS definido no `render.yaml`, configurar `MERCADOLIVRE_CLIENT_ID`,
 `MERCADOLIVRE_CLIENT_SECRET` e a mesma `MERCADOLIVRE_OAUTH_KEY` no Stage e no
 ambiente que executará `app.marketplace.authorize_operator`, promover a branch
 até Stage e então concluir o consentimento. Nenhum segredo deve ser registrado
@@ -85,7 +85,7 @@ escopo separada.
 ### Matriz das ações de quem usa o BestPrice
 
 Conferência adicional em 2026-10-19 do cliente React, das rotas FastAPI, do
-serviço de produtos, do worker e do formulário ainda não salvo no DevCenter:
+serviço de produtos, do worker e do formulário antes da criação do app no DevCenter:
 
 | Ação no BestPrice | Chamada ao Mercado Livre | Permissão necessária |
 |---|---|---|
@@ -97,7 +97,7 @@ serviço de produtos, do worker e do formulário ainda não salvo no DevCenter:
 | Criar/alterar/excluir alerta, interromper monitoramento e ler notificações | Operações no banco BestPrice | Nenhuma adicional |
 | Renovar a autorização da conta operadora | `POST /oauth/token` | Authorization Code e Refresh Token/acesso offline; não é uma ação de cada usuário BestPrice |
 
-O formulário DevCenter ainda mostra `Authorization Code` e `Refresh Token`
+O formulário DevCenter mostrava `Authorization Code` e `Refresh Token`
 marcados, `Publicação e sincronização: Leitura`, Mercado Livre marcado,
 `Client Credentials`/PKCE/VIS desmarcados, demais permissões sem acesso e
 nenhum tópico de notificação selecionado. `Usuários` aparece forçadamente como
@@ -113,9 +113,15 @@ concessão efetiva de `offline_access` e o acesso com token da conta operadora
 ao preço de anúncios de outros vendedores continuam sem prova externa. A
 documentação do preço informa que, para anúncio de outro vendedor, os metadados
 promocionais não são retornados; o cliente BestPrice não depende deles. Ainda é
-necessário criar o app, autorizar a conta, conferir o grant/refresh token e
+necessário conferir as configurações persistidas do app, autorizar a conta, conferir o grant/refresh token e
 consultar IDs permitidos. `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false` continua
 bloqueando as consultas normais até a validação.
+
+Após a criação do app, o DevCenter exibiu o aplicativo BestPrice sob a unidade
+Mercado Livre. A abertura da configuração encaminhou para verificação da conta
+operadora. Por isso, os scopes efetivamente persistidos, o Client Secret e o
+estado de segurança do app ainda não foram conferidos. Nenhum código de
+verificação nem segredo foi registrado nesta evidência.
 
 Fontes oficiais consultadas: [permissões funcionais](https://developers.mercadolivre.com.br/pt_br/permissoes-funcionais/),
 [preços de produtos](https://developers.mercadolivre.com.br/devcenter/api-de-precos),
