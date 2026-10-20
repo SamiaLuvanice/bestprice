@@ -9,12 +9,13 @@
 - [x] Revisar o diff contra `architecture.md`, segurança e critérios da spec; aceite operacional continua pendente.
 - [x] Executar o agente `doc-sync-onboarding` após as mudanças na CLI; atualizou README e guia backend para explicar estados agregados, ações manuais e precedência das falhas. Reconfirmou `AGENTS.md`, `CLAUDE.md`, índice de docs e os demais guias/configuração sem necessidade de ajuste.
 - [x] Integrar o diagnóstico e a promoção: PRs [#140](https://github.com/SamiaLuvanice/bestprice/pull/140) e [#142](https://github.com/SamiaLuvanice/bestprice/pull/142) em `develop` (`a856c2f`, `f196d4f`); #141 fechada por head behind; PR [#143](https://github.com/SamiaLuvanice/bestprice/pull/143) em `stage` (`2eb6dc7`); PR [#144](https://github.com/SamiaLuvanice/bestprice/pull/144) integrada em `develop` com checks verdes. SHA da #144 não registrado nesta evidência.
-- [x] Concluir autorização inicial OAuth em Stage e confirmar persistência cifrada por contagem/validade, sem ler tokens; renovação real continua pendente.
-- [ ] Demonstrar refresh real, executar a sonda com anúncios permitidos e completar os exercícios operacionais; AC01 parcial, AC02 pendente e AC03–AC04 parciais.
+- [x] Concluir autorização inicial OAuth em Stage e confirmar persistência cifrada por contagem/validade, sem ler tokens.
+- [x] Demonstrar refresh real da credencial Stage com o gestor OAuth e confirmar a nova validade no banco sem ler tokens; AC01 demonstrado.
+- [ ] Executar a sonda completa com anúncios permitidos e completar os exercícios operacionais; o primeiro `GET /items/MLB6415676772` autenticado recebeu 403. AC02 bloqueado e AC03–AC04 parciais.
 - [x] Fixar o contrato HTTPS do callback OAuth no plano antes de alterar o backend ou a configuração Stage.
 - [x] Escrever testes de estado inválido/expirado, URL oficial de autorização, troca de código, persistência cifrada e remoção de query sensível dos logs; Red observado antes de criar `oauth_routes.py`.
 - [x] Implementar o gerador local da URL de autorização e o callback Stage protegido por `state`, mantendo a integração desligada.
 - [x] Atualizar variáveis de ambiente e documentação de operação para o callback Stage. O app foi criado no DevCenter; redirect, fluxos OAuth e permissões persistidos foram conferidos após a verificação da conta.
 - [x] Revisar arquitetura/segurança e executar gates locais; a revisão independente não encontrou bloqueador.
 - [x] Executar `doc-sync-onboarding` após a autorização inicial bem-sucedida; atualizar progresso, verificação, README e guias com a persistência observada e os limites não demonstrados; conferir `AGENTS.md`, `CLAUDE.md` e índice.
-- [ ] Demonstrar renovação por refresh token e consulta a anúncios permitidos; manter o flag `false` até completar validação e obter evidência suficiente para AC01–AC04.
+- [ ] Esclarecer o 403 em `/items/{id}`, obter anúncios permitidos para os três cenários e comprovar leitura de terceiros; manter o flag `false` até completar validação e obter evidência suficiente para AC02–AC04.

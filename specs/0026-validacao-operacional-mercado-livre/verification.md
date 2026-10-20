@@ -1,17 +1,18 @@
 # Verificação — 0026
 
-Data de execução: 2026-10-19 (America/Sao_Paulo). A sonda de anúncios da API
-externa ainda não foi executada; IDs permitidos não foram fornecidos. As tentativas
-reais de autorização OAuth e seus resultados estão registrados ao final deste arquivo.
+Datas de execução: 2026-10-19 e 2026-10-20 (America/Sao_Paulo). A sonda completa
+de três anúncios da API externa ainda não foi executada. Uma consulta autenticada
+e a renovação OAuth reais foram exercitadas em 2026-10-20; os resultados estão
+registrados ao final deste arquivo.
 
 ## Critérios
 
 | Critério | Estado | Evidência e limite |
 |---|---|---|
-| AC01 OAuth e renovação reais | Parcial | A quarta tentativa concluiu o authorization-code em Stage e `operator_credentials` contém uma credencial; `MAX(expires_at)` retornou `2026-10-20 04:31:06.880723+00`. Tokens não foram lidos. A renovação por refresh token ainda não foi demonstrada. |
-| AC02 anúncios de terceiros/preço/contexto | Pendente operacional | Um ID para testar o cenário com preço foi fornecido (`MLB6415676772`); o acesso pela API ainda não foi comprovado. Faltam os cenários sem preço e indisponível. A sonda exige os três IDs distintos e ainda não foi executada. |
+| AC01 OAuth e renovação reais | Demonstrado | A quarta tentativa concluiu o authorization-code em Stage. Em 2026-10-20, um script operacional temporário reutilizou o `OperatorTokenManager` da sonda para confirmar o refresh real; `MAX(expires_at)` avançou de `2026-10-20 04:31:06.880723+00` para `2026-10-20 18:25:25.033786+00`, com `refresh_blocked=false`. Tokens não foram lidos nem registrados. |
+| AC02 anúncios de terceiros/preço/contexto | Bloqueado por 403 | A consulta autenticada a `GET /items/MLB6415676772` recebeu HTTP 403 após a renovação OAuth. A consulta a `/sale_price` não ocorreu. Faltam evidências dos três cenários, incluindo IDs sem preço e indisponível. A sonda completa, que exige os três IDs distintos, ainda não foi executada. |
 | AC03 cadastro, atualização, falha, rate limit e recuperação | Parcial | Testes backend existentes simulam as falhas e recuperação e a sonda cobre só leituras. Não foram exercitados cadastro/worker com a API real nem observado limite real. Não provocar 429. |
-| AC04 evidências seguras e procedimento | Parcial | A quarta autorização e a persistência foram confirmadas por contagem e validade máxima, sem ler tokens. O procedimento e as evidências estão registrados sem segredos; falta resultado operacional da sonda e do refresh. |
+| AC04 evidências seguras e procedimento | Parcial | Autorização e refresh foram confirmados por metadados, sem ler tokens. O export temporário do Render e o script da sonda foram apagados após uso. Falta resultado operacional dos três cenários e do ciclo de monitoramento. |
 | AC05 integração desativada | Demonstrado no código e no Stage | `.env.example` mantém `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; a sonda recusa execução se o flag estiver `true`, sem alterar configuração. `test_live_validation_refuses_to_run_after_integration_flag_is_enabled` passou. O valor `false` foi relido no painel Render em 2026-10-20. |
 | AC06 testes sem rede/credenciais | Demonstrado | 12 testes da sonda e 20 testes do callback passaram sem rede/credenciais; cobrem confirmação, flag, cenários, sanitização, estados inválidos/expirados/adulterados, redirect incompatível, troca mockada, persistência Fernet e redação dos logs. |
 
@@ -36,11 +37,12 @@ reais de autorização OAuth e seus resultados estão registrados ao final deste
 
 ## Limitações e próximo passo
 
-OAuth inicial está configurado em Stage e foi concluído; não copiar tokens para
-arquivos ou ambientes locais. Ainda é necessário demonstrar a renovação com a
-credencial autorizada, obter IDs MLB cuja consulta esteja permitida e executar a
-sonda e os exercícios isolados de cadastro/atualização e recuperação, respeitando
-a cadência oficial. Registre somente resultados sanitizados. O
+OAuth inicial em Stage e renovação real da credencial Stage foram concluídos; não copiar tokens para
+arquivos ou ambientes locais. A consulta autenticada a `MLB6415676772` recebeu
+403 em `/items/{id}`. É necessário esclarecer a causa desse retorno, obter IDs
+MLB cuja consulta esteja permitida e executar a sonda completa e os exercícios
+isolados de cadastro/atualização e recuperação, respeitando a cadência oficial.
+Registre somente resultados sanitizados. O
 `MERCADOLIVRE_THIRD_PARTY_VALIDATED` deve permanecer `false` durante esse trabalho.
 A spec permanece `rascunho` até os critérios operacionais serem demonstrados.
 
@@ -278,3 +280,33 @@ renovação OAuth ou o funcionamento do monitoramento para esse anúncio.
 - Uma única consulta sem token a `GET /items/MLB6415676772` no endpoint oficial retornou HTTP 403. Ela não comprova nem refuta o acesso com a conta operadora, e não foi repetida.
 - A busca pública encontrou a página de `MLB5534578842` identificada como **anúncio pausado**. Esse ID é apenas candidato para o cenário indisponível; o status e o acesso pela API oficial ainda não foram verificados. Não foi encontrado anúncio cuja ausência de preço seja demonstrável pela página pública.
 - Para executar localmente a sonda com a credencial Stage sem alterar o flag, é necessária a transferência temporária e controlada da configuração secreta do Render. Nenhuma configuração secreta foi exportada ou copiada neste checkpoint.
+
+## Refresh real e primeira consulta autenticada — 2026-10-20 UTC
+
+Com autorização da operação, o export `.env` do Render foi baixado temporariamente
+para a máquina local. Um script temporário validou que o flag exportado era `false`
+e que o destino do banco pertencia ao Supabase. Ele reutilizou `_build_client` da
+sonda oficial, portanto o mesmo `OperatorTokenManager`, para obter um access token
+e consultar somente `MLB6415676772`. Não imprimiu tokens, segredos, URLs de
+banco, título, dados do vendedor nem corpos das respostas externas. A sonda
+completa de três cenários não foi executada por falta de IDs válidos para os
+outros dois cenários.
+
+- Em `backend/`, o comando temporário foi `.venv/Scripts/python.exe -B ../.tmp-stage-probe.py "$env:USERPROFILE/Downloads/bestprice-stage-api.env"`, precedido por `--preflight` e seguido por uma execução com `--diagnose-status`. O script foi removido após a verificação; esses comandos registram o que ocorreu, mas não são um procedimento reproduzível sem nova exportação autorizada.
+- Preflight local do arquivo exportado: `status=ready`, cenário `price`, ID `MLB6415676772`; nenhum HTTP foi feito nessa etapa.
+- Execução com o gestor OAuth e cliente oficial, às `12:25:26Z`: `oauth_refresh=confirmed`; a leitura de `MLB6415676772` terminou com `integration_access_denied`.
+- Uma consulta diagnóstica adicional, às `12:26:30Z`, obteve token pelo mesmo gestor sem novo refresh e confirmou HTTP **403 em `GET /items/MLB6415676772`**. `GET /items/MLB6415676772/sale_price` não foi chamado. Não se registrou o corpo do 403; portanto, sua causa específica não foi determinada.
+- Consulta somente de metadados no SQL Editor após a execução: uma credencial, `MAX(expires_at)=2026-10-20 18:25:25.033786+00` e `refresh_blocked=false`. Antes, a validade era `2026-10-20 04:31:06.880723+00`. Isso confirma persistência da renovação sem ler tokens.
+- O arquivo exportado em Downloads e o script temporário foram removidos; ambas as remoções foram conferidas. Nenhuma credencial foi adicionada à worktree ou versionada. A última leitura do flag Stage, antes da execução, retornou `false`; nenhum comando o alterou. O valor não foi relido após a consulta.
+
+O 403 autenticado bloqueia AC02 e impede atribuir esse anúncio ao cenário com
+preço. Investigar a resposta junto ao DevCenter ou suporte oficial, distinguindo
+permissão da aplicação, política para anúncio de terceiros e eventual bloqueio
+da origem da requisição, antes de ampliar escopos. Não habilitar a integração.
+
+Revisão independente de arquitetura e QA do registro documental: sem achado
+bloqueante. QA confirmou que o código solicita `/sale_price` somente depois de
+`/items/{id}` e distinguiu a execução do script temporário da CLI completa.
+A revisão não observou diretamente a transação externa nem pôde auditar o
+conteúdo de dois diretórios locais de pytest com acesso negado; o diff rastreado
+não contém valores de credenciais. `git diff --check` passou.
