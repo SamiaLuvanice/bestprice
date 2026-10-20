@@ -5,6 +5,8 @@
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
 copiada de
 `designsystem/logo-bestprice.png` para `frontend/src/assets/logo-bestprice.png`.
+O favicon do navegador também usa essa logo; sua cópia está em
+`frontend/public/favicon.png` e é declarada em `frontend/index.html`.
 A classe `.brand-logo` exibe a imagem inteira (`object-fit: contain`, sem
 `border-radius` nem outro recorte), com superfície de apoio
 `--color-logo-surface`. O texto visual “BestPrice” ao lado da imagem fica oculto
