@@ -334,12 +334,41 @@ o grant da conta operadora ou a permissão do aplicativo explique o 403 autentic
 O refresh bem-sucedido demonstra que a credencial foi renovada, mas não demonstra
 autorização para este recurso ou anúncio.
 
-Próximo diagnóstico controlado, sem ampliar permissões: em uma nova consulta
-autenticada e autorizada, preservar somente status, código de erro estável,
-`blocked_by`, `x-policy-agent-block-code`, `x-policy-agent-block-reason` e
-`X-Request-Id`, sem token, URL de banco, título, vendedor ou corpo integral.
-Comparar esses metadados à resposta pública. Se o bloqueio de política persistir,
-conferir no DevCenter o grant efetivo da conta e a permissão de leitura de
-publicações; se a causa permanecer indeterminada, encaminhar o request ID ao
-suporte oficial mediante autorização da operação. Não alterar escopos nem ativar
-`MERCADOLIVRE_THIRD_PARTY_VALIDATED` com base nesta comparação.
+## Metadados do 403 autenticado — 2026-10-20 UTC
+
+Com a autorização operacional anterior, um novo export temporário do Render foi
+usado para duas leituras controladas do mesmo anúncio, com o token obtido pelo
+`_build_client` da sonda. O flag Stage apareceu `false` no painel antes da
+execução; o script também recusava qualquer valor diferente de `false` e
+validava o host do banco Supabase. O token ainda estava válido, sem novo refresh.
+O script emitiu somente metadados permitidos, sem corpo integral, token,
+credencial, URL do banco, título ou vendedor.
+
+Comando nas duas leituras, em `backend/`:
+`.venv/Scripts/python.exe -B ../.tmp-stage-403-metadata.py
+"$env:USERPROFILE/Downloads/bestprice-stage-api.env"`. A tentativa inicial
+desse script falhou antes de qualquer HTTP com `ModuleNotFoundError: app`;
+o caminho de importação foi corrigido antes das chamadas registradas abaixo.
+
+- Às `13:09:06Z`, `GET /items/MLB6415676772` autenticado retornou HTTP 403,
+  `X-Request-Id=4d665f25-9167-4c2f-aa12-6b793cc7bfae`, segmento `legacy`,
+  sem `x-policy-agent-block-code` e sem campos `code`/`blocked_by` no JSON.
+- Às `13:09:30Z`, a repetição limitada confirmou HTTP 403, JSON com
+  `error=access_denied` e campos `cause`, `error`, `message`, `status`;
+  `X-Request-Id=924f104c-0702-4705-a62a-d8e13d14dded`, sem cabeçalho de
+  PolicyAgent. O valor de `message` e o corpo completo não foram registrados.
+  `/sale_price` não foi chamado em nenhuma das duas leituras.
+- O `.env` exportado para Downloads e o script temporário foram apagados e a
+  ausência de ambos foi confirmada. Nenhuma credencial foi versionada.
+
+A resposta autenticada com `access_denied` **difere** da resposta pública sem
+token, que continha `PA_UNAUTHORIZED_RESULT_FROM_POLICIES`. Isso impede tratar
+o código de política da chamada pública como explicação da falha autenticada.
+A [documentação oficial do erro 403](https://developers.mercadolivre.com.br/pt_br/autenticacao-e-autorizacao/erro-403)
+lista como possibilidades token de outro usuário, conta inativa ou pendente de
+validação, IP não permitido, scopes ausentes e aplicação bloqueada/desabilitada.
+Nenhuma dessas causas foi confirmada para esta requisição. O próximo passo é
+conferir estado da aplicação e da conta no DevCenter e regras de IP, sem ampliar
+permissões por hipótese; se a causa continuar indefinida, usar o request ID na
+investigação com suporte oficial mediante autorização da operação. AC02 segue
+bloqueado e o flag não deve ser ativado.
