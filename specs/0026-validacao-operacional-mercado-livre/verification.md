@@ -310,3 +310,36 @@ bloqueante. QA confirmou que o código solicita `/sale_price` somente depois de
 A revisão não observou diretamente a transação externa nem pôde auditar o
 conteúdo de dois diretórios locais de pytest com acesso negado; o diff rastreado
 não contém valores de credenciais. `git diff --check` passou.
+
+## Comparação pública do 403 — 2026-10-20 UTC
+
+Às `12:55:48Z`, `curl.exe -sS -D - -o NUL --max-time 10
+https://api.mercadolibre.com/items/MLB6415676772`, sem token, retornou HTTP
+403. Os cabeçalhos continham `x-policy-agent-block-code:
+PA_UNAUTHORIZED_RESULT_FROM_POLICIES` e `x-policy-agent-block-reason: At
+least one policy returned UNAUTHORIZED.` Uma segunda chamada pública às
+`12:56:15Z`, com `curl.exe -sS -i --max-time 10` para a mesma URL, confirmou
+corpo JSON com `blocked_by=PolicyAgent`, `code=PA_UNAUTHORIZED_RESULT_FROM_POLICIES`
+e `status=403`. Nenhum segredo participou dessas chamadas. A primeira tentativa
+local, dentro do sandbox, não alcançou o host porque o proxy local recusou a
+conexão; as duas chamadas acima foram executadas com rede liberada.
+
+Esse resultado **não identifica a causa do 403 autenticado** registrado às
+`12:26:30Z`: aquela resposta teve apenas o status preservado. A
+[documentação oficial de permissões funcionais](https://developers.mercadolivre.com.br/pt_br/permissoes-funcionais/)
+associa `PA_UNAUTHORIZED_RESULT_FROM_POLICIES` à falta de permissão funcional;
+a [documentação de itens](https://developers.mercadolivre.com.br/pt_br/itens-e-buscas)
+mostra consultas de itens com Bearer token. É hipótese, e não constatação, que
+o grant da conta operadora ou a permissão do aplicativo explique o 403 autenticado.
+O refresh bem-sucedido demonstra que a credencial foi renovada, mas não demonstra
+autorização para este recurso ou anúncio.
+
+Próximo diagnóstico controlado, sem ampliar permissões: em uma nova consulta
+autenticada e autorizada, preservar somente status, código de erro estável,
+`blocked_by`, `x-policy-agent-block-code`, `x-policy-agent-block-reason` e
+`X-Request-Id`, sem token, URL de banco, título, vendedor ou corpo integral.
+Comparar esses metadados à resposta pública. Se o bloqueio de política persistir,
+conferir no DevCenter o grant efetivo da conta e a permissão de leitura de
+publicações; se a causa permanecer indeterminada, encaminhar o request ID ao
+suporte oficial mediante autorização da operação. Não alterar escopos nem ativar
+`MERCADOLIVRE_THIRD_PARTY_VALIDATED` com base nesta comparação.
