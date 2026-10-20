@@ -9,7 +9,7 @@ reais de autorização OAuth e seus resultados estão registrados ao final deste
 | Critério | Estado | Evidência e limite |
 |---|---|---|
 | AC01 OAuth e renovação reais | Parcial | A quarta tentativa concluiu o authorization-code em Stage e `operator_credentials` contém uma credencial; `MAX(expires_at)` retornou `2026-10-20 04:31:06.880723+00`. Tokens não foram lidos. A renovação por refresh token ainda não foi demonstrada. |
-| AC02 anúncios de terceiros/preço/contexto | Pendente operacional | A sonda valida os três cenários usando o `MercadoLivreClient` oficial e relata preço, BRL, contexto e disponibilidade. Sem IDs autorizados, não foi executada. |
+| AC02 anúncios de terceiros/preço/contexto | Pendente operacional | Um ID para testar o cenário com preço foi fornecido (`MLB6415676772`); o acesso pela API ainda não foi comprovado. Faltam os cenários sem preço e indisponível. A sonda exige os três IDs distintos e ainda não foi executada. |
 | AC03 cadastro, atualização, falha, rate limit e recuperação | Parcial | Testes backend existentes simulam as falhas e recuperação e a sonda cobre só leituras. Não foram exercitados cadastro/worker com a API real nem observado limite real. Não provocar 429. |
 | AC04 evidências seguras e procedimento | Parcial | A quarta autorização e a persistência foram confirmadas por contagem e validade máxima, sem ler tokens. O procedimento e as evidências estão registrados sem segredos; falta resultado operacional da sonda e do refresh. |
 | AC05 integração desativada | Demonstrado no código | `.env.example` mantém `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; a sonda recusa execução se o flag estiver `true`, sem alterar configuração. `test_live_validation_refuses_to_run_after_integration_flag_is_enabled` passou. |
@@ -235,3 +235,37 @@ complexidade contra baseline e `git diff --check` passaram. A revisão
 independente final foi aprovada sem achados. A autorização inicial foi
 demonstrada; a renovação por refresh token, a consulta de anúncios permitidos e
 os exercícios operacionais restantes seguem pendentes.
+
+## Primeiro anúncio de teste fornecido — 2026-10-19 UTC
+
+A operação forneceu a página de uma fechadura Intelbras para o cenário com
+preço. No Chrome, a página identificou `MLB6415676772` como **Anúncio
+#6415676772** e apresentou preço e estoque; `MLB63323182` no caminho `/p/`
+identifica o produto, não a publicação a consultar. O ID do anúncio foi
+configurado somente em `MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID` no `.env` local
+ignorado pelo Git. Valores exibidos para pagamento não foram usados como preço
+normalizado: o contexto compartilhado depende da resposta oficial
+`/items/MLB6415676772/sale_price`.
+
+A abertura direta de `/items/MLB6415676772` no Chrome recebeu bloqueio de
+política da ferramenta antes de retornar uma resposta da API. Isso não é um
+403 atribuído ao Mercado Livre. A sonda oficial da spec exige três IDs MLB
+distintos e a credencial permanece somente em Stage; não houve chamada da
+sonda nem verificação de preço pela API para este anúncio. Os cenários sem
+preço e indisponível ainda dependem de IDs fornecidos pela operação.
+
+## Teste do link fornecido no BestPrice Stage — 2026-10-19
+
+Com sessão autenticada no Chrome, o link foi colado integralmente no formulário
+da página inicial de `https://bestprice-stage.pages.dev/` e enviado por
+**Monitorar preço**. A interface respondeu: “Este formato de link não identifica
+um anúncio. Abra a página do anúncio no Mercado Livre e copie o endereço
+completo.” O resumo permaneceu em **0 produtos monitorados**. Não houve
+cadastro nem consulta do anúncio na API do Mercado Livre nesse fluxo.
+
+O resultado corresponde ao contrato atual: `parse_product_url` aceita o
+caminho de publicação `/MLB-<id>-<título>-_JM`, mas o endereço enviado usa
+`/p/MLB63323182`; `wid=MLB6415676772` está no fragmento de recomendações.
+`add_tracking` rejeita esse caminho antes de invocar o cliente externo. Este
+teste confirma a recusa do formato no Stage, sem validar o preço real, a
+renovação OAuth ou o funcionamento do monitoramento para esse anúncio.
