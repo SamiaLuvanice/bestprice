@@ -528,3 +528,36 @@ Livre para os request IDs registrados, ou uma leitura da mesma publicação
 executada pelo egress do serviço Stage se houver um meio operacional aprovado.
 Não há chamado enviado nem alteração de configuração. O export temporário foi
 apagado após a leitura. AC02 permanece bloqueado; AC03–AC04 permanecem parciais.
+
+## Tentativa de abertura de ticket pelo suporte oficial — 2026-10-20 UTC
+
+Às 17:53Z (14:53 no horário exibido pelo site), foi usado o assistente integrado
+à [página oficial de suporte para integradores](https://developers.mercadolivre.com.br/pt_br/envio-de-produto/suporte-para-integradores).
+Foi enviado somente o escopo autorizado pela operadora: ID do aplicativo,
+IDs públicos de anúncios, request IDs/horários UTC, códigos HTTP/erro e resumo
+das verificações de configuração. Não foram enviados tokens, client secret,
+ID de conta/usuário, preços nem endereço.
+
+O assistente confirmou que não consegue criar nem escalar tickets. Também
+informou que a documentação não mostra URL direta nem botão do formulário no
+Developer Center; orientou acessar o portal DPP pela própria página e escolher
+Produtos → Anúncios, tipo Problema ou Consulta. A conversa não abriu o portal,
+formulário ou protocolo. Portanto, houve transmissão dos dados autorizados ao
+assistente oficial, mas **nenhum ticket humano foi registrado** e não há número
+de caso. A página de suporte permaneceu aberta no Chrome para continuidade.
+
+Como verificação de uma rota alternativa, foi feita no navegador, sem bearer
+token, uma consulta a `GET https://api.mercadolibre.com/sites/MLB/search?q=MLB6972021044&limit=10`.
+Ela retornou HTTP 403 `forbidden`, sem `X-Request-Id`. A chamada veio da rede
+local de navegação, não do egress Stage; por isso não identifica uma política
+da integração nem valida a resposta pública em Stage. Não se adotou essa rota
+como substituição para `/items/{id}`.
+
+O estado oficial consultado anteriormente para o app era
+`certification_status=not_certified`. Uma página oficial de suporte do escopo
+Global Selling descreve o portal como exclusivo para integradores certificados;
+isso pode explicar a falta do fluxo acionável, mas o texto consultado não é
+específico do suporte MLB Brasil e não confirma a elegibilidade deste app.
+Não houve alteração no DevCenter, no flag Stage ou na configuração da integração.
+AC02 segue bloqueado e AC03–AC04 parciais; é necessário obter um canal humano
+que aceite este aplicativo ou outra evidência oficial sobre a restrição.
