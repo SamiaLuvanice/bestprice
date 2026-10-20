@@ -24,4 +24,7 @@
 - [ ] Distinguir a causa específica do `access_denied` em `/items/{id}`; se necessário, investigar com suporte usando request ID após autorização da operação.
 - [x] Confirmar via API oficial que aplicativo está ativo, é MLB, não está em sandbox e tem grant da conta com `read`/`offline_access`; `/users/me` e busca própria responderam 200, esta última sem IDs.
 - [x] Conferir que o menu DevCenter não oferece gestão de intervalos de IP; a edição exigiu validação da conta. Isso não identifica a causa do 403.
-- [ ] Após a operadora concluir a validação da conta, conferir as permissões funcionais detalhadas e eventual restrição de IP no DevCenter; obter ID próprio apenas se existir e for permitido. Não inferir aceite de anúncio de terceiro sem resposta 200 da API.
+- [x] Após a validação da conta por telefone, conferir no DevCenter OAuth Authorization Code/Refresh Token, Mercado Livre e Publicação e sincronização em Leitura; nenhuma configuração foi salva.
+- [x] Repetir uma única consulta autenticada de `MLB6415676772` após a validação: 403 `access_denied` persistiu; export e script temporários removidos.
+- [x] Preparar em `verification.md` o contexto técnico e os request IDs para suporte, sem token, ID da conta ou envio do chamado.
+- [ ] Investigar o `access_denied` persistente com o request ID e obter ID próprio apenas se existir e for permitido. Não inferir aceite de anúncio de terceiro sem resposta 200 da API.

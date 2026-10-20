@@ -417,3 +417,55 @@ hipótese de token globalmente inválido ou aplicativo desativado, mas não prov
 autorização para `/items/{id}` de outro vendedor. O 403 segue sem causa específica
 confirmada. Não há ID próprio, sem preço ou indisponível validado pela API;
 AC02 permanece bloqueado e AC03–AC04 parciais.
+
+## Conferência pós-validação da conta — 2026-10-20 UTC
+
+Após a operadora concluir a validação por telefone exigida pelo DevCenter, a
+edição do aplicativo pôde ser lida. Sem salvar ou modificar configuração, foram
+conferidos `Authorization Code` e `Refresh Token` marcados, Mercado Livre
+marcado, `Publicação e sincronização` em **Leitura** e as outras categorias
+opcionais em **Sem acesso**. O menu da edição não apresentou gestão de
+intervalos de IP. Essa conferência confirma a configuração exibida, mas não
+prova que a API libera anúncios de terceiros.
+
+Com o flag Stage visto como `false` no painel Render e novamente conferido
+pelo script, foi feita **uma** repetição autenticada de
+`GET /items/MLB6415676772`. O comando temporário em `backend/` foi
+`.venv/Scripts/python.exe -B ../.tmp-stage-post-mfa.py
+"$env:USERPROFILE/Downloads/bestprice-stage-api.env"`. Às `14:51:06Z`, o
+resultado permaneceu HTTP **403**, `error=access_denied`, sem campo `code` ou
+cabeçalho `x-policy-agent-block-code`; o `X-Request-Id` foi
+`5c998ad5-89fd-442e-b581-b265ec6aeb5d`. O token ainda estava válido e não
+houve novo refresh. `/sale_price` não foi chamado. A validação da conta no
+DevCenter, por si só, não resolveu o bloqueio observado.
+
+O export `.env` de Render e o script temporário foram apagados imediatamente
+após a leitura, com ausência confirmada. Nenhum segredo, dado pessoal ou corpo
+integral da resposta foi registrado. O flag não foi alterado. A causa
+específica do `access_denied` permanece indeterminada; AC02 continua bloqueado,
+AC03–AC04 parciais e a PR deve permanecer em rascunho.
+
+### Dados mínimos preparados para suporte técnico
+
+Este resumo pode ser usado em um chamado da categoria **Produtos e dados
+técnicos**, conforme a [documentação de suporte para integradores](https://developers.mercadolivre.com.br/pt_br/envio-de-produto/suporte-para-integradores).
+Nenhum chamado foi enviado.
+
+- Aplicativo: `8392149911035274`, ativo, site MLB, fora de sandbox; grant da
+  conta contém `read` e `offline_access`. No DevCenter, `Publicação e
+  sincronização` está em **Leitura**, Mercado Livre e os fluxos Authorization
+  Code/Refresh Token marcados. Nenhuma configuração foi alterada.
+- Requisição: `GET https://api.mercadolibre.com/items/MLB6415676772` com
+  `Authorization: Bearer` de conta operadora autorizada. O valor do token não
+  deve acompanhar o chamado.
+- Resultado: HTTP 403, JSON `error=access_denied`, sem cabeçalho
+  `x-policy-agent-block-code`. `GET /users/me` e
+  `GET /users/{id}/items/search?limit=1` com o mesmo token responderam 200;
+  a busca retornou `results` vazio. O ID da conta não foi registrado.
+- Request IDs e horários UTC: `a794279b-ed89-42c4-9608-daf6aa52b95c`
+  às `13:42:22Z` e `5c998ad5-89fd-442e-b581-b265ec6aeb5d` às
+  `14:51:06Z`, após a validação por telefone. O 403 persistiu nas duas leituras.
+- Pergunta técnica: qual política ou restrição explica `access_denied` em
+  `/items/{id}` para esse aplicativo/token, apesar do grant e da permissão de
+  leitura? Há acesso permitido a anúncios de terceiros por esse recurso e por
+  `/items/{id}/sale_price`? Solicitar orientação antes de mudar scopes ou flag.
