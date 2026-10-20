@@ -561,3 +561,29 @@ específico do suporte MLB Brasil e não confirma a elegibilidade deste app.
 Não houve alteração no DevCenter, no flag Stage ou na configuração da integração.
 AC02 segue bloqueado e AC03–AC04 parciais; é necessário obter um canal humano
 que aceite este aplicativo ou outra evidência oficial sobre a restrição.
+
+## Reavaliação dos códigos 403 na documentação oficial — 2026-10-20 UTC
+
+A [documentação de permissões funcionais](https://developers.mercadolivre.com.br/pt_br/permissoes-funcionais/)
+descreve `PA_UNAUTHORIZED_RESULT_FROM_POLICIES` como a resposta quando falta
+permissão funcional. A leitura pública sem token que foi registrada antes teve
+esse código; as leituras autenticadas dos dois anúncios retornaram
+`error=access_denied` e não apresentaram o cabeçalho `x-policy-agent-block-code`.
+O grant `read` e a categoria funcional Publicação e sincronização em Leitura já
+foram conferidos. Portanto, não há evidência para ampliar scopes, nem para
+concluir que a assinatura autenticada seja a falha de permissão funcional
+descrita naquela página.
+
+A [página oficial de erro 403](https://developers.mercadolivre.com.br/pt_br/guia-para-produtos/erro-403)
+lista também validação incompleta do usuário, IP não permitido, aplicativo
+bloqueado/desabilitado, token de usuário inadequado e scopes como causas
+possíveis, sem mapear `access_denied` a uma delas. Os registros anteriores
+mostram app `active=true` e grant válido, mas não provam estado cadastral
+completo nem política do egress Render. Além disso, o app aparece como
+`certification_status=not_certified`. Os [Termos oficiais](https://developers.mercadolivre.com.br/pt_br/termos-e-condicoes)
+reservam ao Mercado Livre a possibilidade de restringir todo ou parte do
+conteúdo até a certificação, a seu critério. Isso torna a certificação uma
+hipótese técnica relevante, mas não prova que seja obrigatória para consultar
+anúncios MLB nem que seja a causa deste 403. Nenhuma alteração em scopes,
+certificação, conta ou flag foi feita. Uma resposta humana/oficial sobre os
+request IDs continua necessária para distinguir essas condições.

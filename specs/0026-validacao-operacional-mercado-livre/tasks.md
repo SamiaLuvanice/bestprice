@@ -29,6 +29,7 @@
 - [x] Preparar em `verification.md` o contexto técnico e os request IDs para suporte, sem token ou ID da conta; tentativa posterior pelo assistente oficial não criou ticket (detalhes em `verification.md`).
 - [x] Enviar ao assistente oficial apenas o escopo autorizado (ID do app, IDs públicos dos anúncios, request IDs/horários e resumo do erro); confirmar que o chat não cria nem escala ticket.
 - [ ] Obter o portal ou fluxo acionável de ticket humano do DPP e pedir análise dos request IDs; nenhum protocolo foi criado pelo assistente.
+- [x] Comparar a assinatura de 403 observada com a documentação oficial de permissões e certificação; registrar certificação/validação como hipóteses, sem atribuir causa sem resposta da API ou suporte.
 - [ ] Investigar o `access_denied` persistente com o request ID e obter ID próprio apenas se existir e for permitido. Não inferir aceite de anúncio de terceiro sem resposta 200 da API.
 - [x] Cobrir com TDD a resposta parcial HTTP 206 documentada para `/items/{id}`: aceitar somente `X-Content-Missing` não vazio e restrito a `location`, `geolocation` e `seller_address`; rejeitar campos obrigatórios ausentes e 206 em `/sale_price`. Testes direcionados, Ruff, suíte backend e complexidade passaram. Sincronização de onboarding ao final da mudança.
 - [x] Comparar uma chamada autenticada em `/items/bulk?ids=` para o anúncio autorizado: HTTP 200 externo com `status_code=403` interno; a rota não liberou o item.
