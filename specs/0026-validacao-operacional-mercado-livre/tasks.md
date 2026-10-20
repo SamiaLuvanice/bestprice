@@ -9,12 +9,29 @@
 - [x] Revisar o diff contra `architecture.md`, segurança e critérios da spec; aceite operacional continua pendente.
 - [x] Executar o agente `doc-sync-onboarding` após as mudanças na CLI; atualizou README e guia backend para explicar estados agregados, ações manuais e precedência das falhas. Reconfirmou `AGENTS.md`, `CLAUDE.md`, índice de docs e os demais guias/configuração sem necessidade de ajuste.
 - [x] Integrar o diagnóstico e a promoção: PRs [#140](https://github.com/SamiaLuvanice/bestprice/pull/140) e [#142](https://github.com/SamiaLuvanice/bestprice/pull/142) em `develop` (`a856c2f`, `f196d4f`); #141 fechada por head behind; PR [#143](https://github.com/SamiaLuvanice/bestprice/pull/143) em `stage` (`2eb6dc7`); PR [#144](https://github.com/SamiaLuvanice/bestprice/pull/144) integrada em `develop` com checks verdes. SHA da #144 não registrado nesta evidência.
-- [x] Concluir autorização inicial OAuth em Stage e confirmar persistência cifrada por contagem/validade, sem ler tokens; renovação real continua pendente.
-- [ ] Demonstrar refresh real, executar a sonda com anúncios permitidos e completar os exercícios operacionais; AC01 parcial, AC02 pendente e AC03–AC04 parciais.
+- [x] Concluir autorização inicial OAuth em Stage e confirmar persistência cifrada por contagem/validade, sem ler tokens.
+- [x] Demonstrar refresh real da credencial Stage com o gestor OAuth e confirmar a nova validade no banco sem ler tokens; AC01 demonstrado.
+- [ ] Executar a sonda completa com anúncios permitidos e completar os exercícios operacionais; o primeiro `GET /items/MLB6415676772` autenticado recebeu 403. AC02 bloqueado e AC03–AC04 parciais.
 - [x] Fixar o contrato HTTPS do callback OAuth no plano antes de alterar o backend ou a configuração Stage.
 - [x] Escrever testes de estado inválido/expirado, URL oficial de autorização, troca de código, persistência cifrada e remoção de query sensível dos logs; Red observado antes de criar `oauth_routes.py`.
 - [x] Implementar o gerador local da URL de autorização e o callback Stage protegido por `state`, mantendo a integração desligada.
 - [x] Atualizar variáveis de ambiente e documentação de operação para o callback Stage. O app foi criado no DevCenter; redirect, fluxos OAuth e permissões persistidos foram conferidos após a verificação da conta.
 - [x] Revisar arquitetura/segurança e executar gates locais; a revisão independente não encontrou bloqueador.
 - [x] Executar `doc-sync-onboarding` após a autorização inicial bem-sucedida; atualizar progresso, verificação, README e guias com a persistência observada e os limites não demonstrados; conferir `AGENTS.md`, `CLAUDE.md` e índice.
-- [ ] Demonstrar renovação por refresh token e consulta a anúncios permitidos; manter o flag `false` até completar validação e obter evidência suficiente para AC01–AC04.
+- [ ] Esclarecer o 403 em `/items/{id}`, obter anúncios permitidos para os três cenários e comprovar leitura de terceiros; manter o flag `false` até completar validação e obter evidência suficiente para AC02–AC04.
+- [x] Comparar a resposta pública sem token ao mesmo `/items/{id}`: 403 com `PA_UNAUTHORIZED_RESULT_FROM_POLICIES`; isso não determina a causa da resposta autenticada anterior.
+- [x] Capturar apenas metadados seguros de nova resposta autenticada: `error=access_denied`, sem cabeçalho PolicyAgent; corpo integral, tokens e segredos não registrados.
+- [ ] Distinguir a causa específica do `access_denied` em `/items/{id}`; se necessário, investigar com suporte usando request ID após autorização da operação.
+- [x] Confirmar via API oficial que aplicativo está ativo, é MLB, não está em sandbox e tem grant da conta com `read`/`offline_access`; `/users/me` e busca própria responderam 200, esta última sem IDs.
+- [x] Conferir que o menu DevCenter não oferece gestão de intervalos de IP; a edição exigiu validação da conta. Isso não identifica a causa do 403.
+- [x] Após a validação da conta por telefone, conferir no DevCenter OAuth Authorization Code/Refresh Token, Mercado Livre e Publicação e sincronização em Leitura; nenhuma configuração foi salva.
+- [x] Repetir uma única consulta autenticada de `MLB6415676772` após a validação: 403 `access_denied` persistiu; export e script temporários removidos.
+- [x] Preparar em `verification.md` o contexto técnico e os request IDs para suporte, sem token ou ID da conta; tentativa posterior pelo assistente oficial não criou ticket (detalhes em `verification.md`).
+- [x] Enviar ao assistente oficial apenas o escopo autorizado (ID do app, IDs públicos dos anúncios, request IDs/horários e resumo do erro); confirmar que o chat não cria nem escala ticket.
+- [ ] Obter o portal ou fluxo acionável de ticket humano do DPP e pedir análise dos request IDs; nenhum protocolo foi criado pelo assistente.
+- [x] Comparar a assinatura de 403 observada com a documentação oficial de permissões e certificação; registrar certificação/validação como hipóteses, sem atribuir causa sem resposta da API ou suporte.
+- [ ] Investigar o `access_denied` persistente com o request ID e obter ID próprio apenas se existir e for permitido. Não inferir aceite de anúncio de terceiro sem resposta 200 da API.
+- [x] Cobrir com TDD a resposta parcial HTTP 206 documentada para `/items/{id}`: aceitar somente `X-Content-Missing` não vazio e restrito a `location`, `geolocation` e `seller_address`; rejeitar campos obrigatórios ausentes e 206 em `/sale_price`. Testes direcionados, Ruff, suíte backend e complexidade passaram. Sincronização de onboarding ao final da mudança.
+- [x] Comparar uma chamada autenticada em `/items/bulk?ids=` para o anúncio autorizado: HTTP 200 externo com `status_code=403` interno; a rota não liberou o item.
+- [x] Consultar uma vez `/items/{id}/sale_price` diretamente com o mesmo token: HTTP 403; nenhum valor de preço foi obtido.
+- [x] Repetir uma leitura somente de `/items/{id}` em outra publicação ativa e visível publicamente: `MLB6972021044` também retornou 403 `access_denied`, sem PolicyAgent; request ID registrado em `verification.md`.

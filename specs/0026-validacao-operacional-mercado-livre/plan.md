@@ -96,6 +96,11 @@ libera a integração.
   continua pendente até haver credenciais e autorização.
 - Tokens e respostas brutas não entram no relatório. O token manager já cifra
   tokens em banco; a sonda usa o caminho de produção sem imprimi-los.
+- A documentação oficial de publicação documenta HTTP 206 para leitura de item
+  quando `X-Content-Missing` enumera `location`, `geolocation` ou
+  `seller_address`. O cliente só aceita esse status em `/items/{id}` quando o
+  cabeçalho contém exclusivamente esses campos e `_validate_item` encontra os
+  campos obrigatórios. Respostas parciais de preço seguem inválidas.
 - Anúncio sem preço ou indisponível pode não estar acessível à conta. A falha
   permanece evidência inconclusiva, não substitui o cenário requerido.
 - A CLI consulta um caso por ID para confirmar normalização e acesso. Para provar

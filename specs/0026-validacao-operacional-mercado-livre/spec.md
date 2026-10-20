@@ -36,7 +36,7 @@ falhas temporárias, rate limit e recuperação, respeitando os limites observad
 ## Critérios de aceite
 
 - [ ] **AC01** — A autorização OAuth oficial valida `state`, troca o código usando o redirect URI registrado, armazena access/refresh tokens cifrados e o procedimento registra uma renovação real sem revelar tokens.
-- [ ] **AC02** — Anúncios permitidos de terceiros com preço, sem preço e indisponíveis são consultados pela API oficial e seus campos/contexto são conferidos contra os dados normalizados.
+- [ ] **AC02** — Anúncios permitidos de terceiros com preço, sem preço e indisponíveis são consultados pela API oficial e seus campos/contexto são conferidos contra os dados normalizados. Uma resposta parcial documentada de item é aceita somente quando contém os campos necessários à normalização.
 - [ ] **AC03** — O procedimento demonstra cadastro, atualização e recuperação após falha temporária ou limite real de requisições, sem gerar consultas acima do permitido.
 - [ ] **AC04** — Evidências registram data UTC, resultado, IDs de anúncio de teste e limites, sem armazenar credenciais ou dados pessoais desnecessários.
 - [ ] **AC05** — A integração permanece desativada por padrão e nenhuma validação bem-sucedida a ativa automaticamente.

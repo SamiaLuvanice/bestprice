@@ -35,6 +35,59 @@ def test_client_reads_item_and_sale_price_from_fixed_api_host() -> None:
     assert all(request.headers["Authorization"] == "Bearer token-test" for request in requests)
 
 
+def test_client_accepts_partial_item_with_required_fields() -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/sale_price"):
+            return httpx.Response(200, json={"amount": 99.90, "currency_id": "BRL"})
+        return httpx.Response(206, headers={"X-Content-Missing": "seller_address"}, json={
+            "id": "MLB1234567890", "site_id": "MLB", "title": "Fone",
+            "permalink": "https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM",
+            "status": "active", "available_quantity": 1, "currency_id": "BRL",
+        })
+
+    listing = MercadoLivreClient("token-test", httpx.MockTransport(respond)).get_listing("MLB1234567890")
+    assert listing.price == Decimal("99.90")
+    assert listing.availability == "available"
+
+
+def test_client_rejects_partial_item_missing_required_fields() -> None:
+    def respond(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(206, headers={"X-Content-Missing": "title"}, json={
+            "id": "MLB1234567890", "site_id": "MLB", "currency_id": "BRL",
+            "permalink": "https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM",
+        })
+
+    with pytest.raises(IntegrationError) as failure:
+        MercadoLivreClient("token-test", httpx.MockTransport(respond)).get_listing("MLB1234567890")
+    assert failure.value.code == "integration_invalid_response"
+
+
+@pytest.mark.parametrize("missing_header", [None, "title", "price"])
+def test_client_rejects_partial_item_without_documented_missing_fields(missing_header: str | None) -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/sale_price"):
+            return httpx.Response(200, json={"amount": 99.90, "currency_id": "BRL"})
+        headers = {} if missing_header is None else {"X-Content-Missing": missing_header}
+        return httpx.Response(206, headers=headers, json=ITEM)
+
+    with pytest.raises(IntegrationError) as failure:
+        MercadoLivreClient("token-test", httpx.MockTransport(respond)).get_listing("MLB1234567890")
+    assert failure.value.code == "integration_invalid_response"
+
+
+def test_client_rejects_partial_sale_price_response() -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/sale_price"):
+            return httpx.Response(206, headers={"X-Content-Missing": "seller_address"}, json={
+                "amount": 99.90, "currency_id": "BRL",
+            })
+        return httpx.Response(200, json=ITEM)
+
+    with pytest.raises(IntegrationError) as failure:
+        MercadoLivreClient("token-test", httpx.MockTransport(respond)).get_listing("MLB1234567890")
+    assert failure.value.code == "integration_invalid_response"
+
+
 @pytest.mark.parametrize(
     ("status", "expected_code"),
     [(401, "integration_auth_required"), (403, "integration_access_denied"),
