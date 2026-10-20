@@ -31,3 +31,4 @@
 - [x] Cobrir com TDD a resposta parcial HTTP 206 documentada para `/items/{id}`: aceitar somente `X-Content-Missing` não vazio e restrito a `location`, `geolocation` e `seller_address`; rejeitar campos obrigatórios ausentes e 206 em `/sale_price`. Testes direcionados, Ruff, suíte backend e complexidade passaram. Sincronização de onboarding ao final da mudança.
 - [x] Comparar uma chamada autenticada em `/items/bulk?ids=` para o anúncio autorizado: HTTP 200 externo com `status_code=403` interno; a rota não liberou o item.
 - [x] Consultar uma vez `/items/{id}/sale_price` diretamente com o mesmo token: HTTP 403; nenhum valor de preço foi obtido.
+- [x] Repetir uma leitura somente de `/items/{id}` em outra publicação ativa e visível publicamente: `MLB6972021044` também retornou 403 `access_denied`, sem PolicyAgent; request ID registrado em `verification.md`.

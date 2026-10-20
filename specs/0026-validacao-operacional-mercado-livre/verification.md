@@ -498,3 +498,33 @@ Nenhum token, preço, corpo integral ou dado pessoal foi registrado. O flag
 Stage não foi alterado. AC02 segue bloqueado porque nenhuma das três rotas
 entregou anúncio e preço desse terceiro; não há base para trocar o endpoint
 de produção pelo bulk nem para habilitar a integração.
+
+## Segundo anúncio público ativo — 2026-10-20 UTC
+
+Para distinguir uma restrição do anúncio de uma restrição da conta/aplicativo,
+foi selecionado um anúncio de notebook Dell exibido na busca pública do Mercado
+Livre. A página indicava publicação ativa, estoque disponível e preço público;
+o ID MLB da publicação era `MLB6972021044`. O ID é conteúdo público do anúncio,
+não dado da conta operadora. Às `17:42:30Z`, uma chamada autenticada a
+`GET /items/MLB6972021044` retornou HTTP **403**, `error=access_denied`,
+`X-Request-Id=dd644b71-c983-4755-a116-e26c8dd62f35`, sem
+`x-policy-agent-block-code`. O token não precisou de refresh. Como a leitura do
+item falhou, não foi chamada a rota `/sale_price` neste teste. Nenhum título,
+preço ou vendedor foi registrado.
+
+O 403 em um segundo item ativo e publicamente visível demonstra que o problema
+não é exclusivo do item anterior. A [documentação oficial de erro 403](https://developers.mercadolivre.com.br/pt_br/guia-para-produtos/erro-403)
+lista bloqueio do app, conta inativa/pendente de validação, IP não permitido,
+scope insuficiente ou token de usuário inadequado como causas possíveis; ainda
+não identifica qual delas ocorreu. No DevCenter, `Publicação e sincronização`
+continua selecionado como **Leitura**; o app/grant consultado antes estava ativo
+e incluía `read`/`offline_access`. A validação por telefone já foi concluída,
+mas não há evidência de que todas as validações cadastrais da conta estejam
+completas. O pedido anterior saiu da estação local; isso não testa a política
+de IP do egress Render. Não ampliar scopes nem alterar o flag por hipótese.
+
+Assim, a próxima evidência discriminante é uma resposta do suporte do Mercado
+Livre para os request IDs registrados, ou uma leitura da mesma publicação
+executada pelo egress do serviço Stage se houver um meio operacional aprovado.
+Não há chamado enviado nem alteração de configuração. O export temporário foi
+apagado após a leitura. AC02 permanece bloqueado; AC03–AC04 permanecem parciais.
