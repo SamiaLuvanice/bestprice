@@ -12,7 +12,7 @@ reais de autorização OAuth e seus resultados estão registrados ao final deste
 | AC02 anúncios de terceiros/preço/contexto | Pendente operacional | Um ID para testar o cenário com preço foi fornecido (`MLB6415676772`); o acesso pela API ainda não foi comprovado. Faltam os cenários sem preço e indisponível. A sonda exige os três IDs distintos e ainda não foi executada. |
 | AC03 cadastro, atualização, falha, rate limit e recuperação | Parcial | Testes backend existentes simulam as falhas e recuperação e a sonda cobre só leituras. Não foram exercitados cadastro/worker com a API real nem observado limite real. Não provocar 429. |
 | AC04 evidências seguras e procedimento | Parcial | A quarta autorização e a persistência foram confirmadas por contagem e validade máxima, sem ler tokens. O procedimento e as evidências estão registrados sem segredos; falta resultado operacional da sonda e do refresh. |
-| AC05 integração desativada | Demonstrado no código | `.env.example` mantém `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; a sonda recusa execução se o flag estiver `true`, sem alterar configuração. `test_live_validation_refuses_to_run_after_integration_flag_is_enabled` passou. |
+| AC05 integração desativada | Demonstrado no código e no Stage | `.env.example` mantém `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`; a sonda recusa execução se o flag estiver `true`, sem alterar configuração. `test_live_validation_refuses_to_run_after_integration_flag_is_enabled` passou. O valor `false` foi relido no painel Render em 2026-10-20. |
 | AC06 testes sem rede/credenciais | Demonstrado | 12 testes da sonda e 20 testes do callback passaram sem rede/credenciais; cobrem confirmação, flag, cenários, sanitização, estados inválidos/expirados/adulterados, redirect incompatível, troca mockada, persistência Fernet e redação dos logs. |
 
 ## Comandos e resultados
@@ -269,3 +269,12 @@ caminho de publicação `/MLB-<id>-<título>-_JM`, mas o endereço enviado usa
 `add_tracking` rejeita esse caminho antes de invocar o cliente externo. Este
 teste confirma a recusa do formato no Stage, sem validar o preço real, a
 renovação OAuth ou o funcionamento do monitoramento para esse anúncio.
+
+## Continuação operacional — 2026-10-20 UTC
+
+- A Issue #127 permanece aberta; a PR #146 foi aberta em rascunho para a evidência documental e seus checks CI, PR policy, backend, frontend e automação passaram. Ela não deve ser integrada enquanto o aceite operacional permanecer pendente.
+- No painel Render de `bestprice-stage-api`, `MERCADOLIVRE_THIRD_PARTY_VALIDATED` foi relido como `false`. O serviço usa o plano Free, que não disponibiliza Shell nem One-Off Jobs; isso impede executar a CLI da sonda dentro do ambiente que contém as credenciais. A [documentação oficial do Render](https://render.com/docs/free) confirma essas limitações.
+- Consulta somente de metadados no SQL Editor do Supabase Stage: `SELECT COUNT(*), MAX(expires_at), BOOL_OR(refresh_blocked) FROM public.operator_credentials WHERE id = 1` retornou uma credencial, validade `2026-10-20 04:31:06.880723+00` e `refresh_blocked=false`. Não foram lidos tokens. A renovação está pendente de uma execução autorizada com o gestor OAuth.
+- Uma única consulta sem token a `GET /items/MLB6415676772` no endpoint oficial retornou HTTP 403. Ela não comprova nem refuta o acesso com a conta operadora, e não foi repetida.
+- A busca pública encontrou a página de `MLB5534578842` identificada como **anúncio pausado**. Esse ID é apenas candidato para o cenário indisponível; o status e o acesso pela API oficial ainda não foram verificados. Não foi encontrado anúncio cuja ausência de preço seja demonstrável pela página pública.
+- Para executar localmente a sonda com a credencial Stage sem alterar o flag, é necessária a transferência temporária e controlada da configuração secreta do Render. Nenhuma configuração secreta foi exportada ou copiada neste checkpoint.
