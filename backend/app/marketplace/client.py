@@ -12,6 +12,7 @@ CENT = Decimal("0.01")
 # The only price restriction compatible with the shared context: MLB marketplace, one unit,
 # no buyer-specific benefit (loyalty level, coupon, personalised price).
 SHARED_PRICE_RESTRICTIONS = frozenset({"channel_marketplace"})
+PARTIAL_ITEM_MISSING_FIELDS = frozenset({"location", "geolocation", "seller_address"})
 
 
 class IntegrationError(Exception):
@@ -49,7 +50,9 @@ class MercadoLivreClient:
             transport=self.transport,
             headers={"Authorization": f"Bearer {self.access_token}"},
         ) as client:
-            item_response = self._get(client, f"/items/{external_id}")
+            item_response = self._get(
+                client, f"/items/{external_id}", partial_missing_fields=PARTIAL_ITEM_MISSING_FIELDS
+            )
             if item_response.status_code == 404:
                 raise IntegrationError("product_not_found")
             item = self._decode(item_response)
@@ -100,7 +103,13 @@ class MercadoLivreClient:
             )
 
     @staticmethod
-    def _get(client: httpx.Client, path: str, params: dict[str, str] | None = None) -> httpx.Response:
+    def _get(
+        client: httpx.Client,
+        path: str,
+        params: dict[str, str] | None = None,
+        *,
+        partial_missing_fields: frozenset[str] = frozenset(),
+    ) -> httpx.Response:
         try:
             response = client.get(path, params=params)
         except httpx.RequestError as exc:
@@ -115,7 +124,15 @@ class MercadoLivreClient:
             raise IntegrationError("integration_rate_limited", seconds)
         if response.status_code >= 500:
             raise IntegrationError("integration_unavailable")
-        if response.status_code != 200 and response.status_code != 404:
+        if response.status_code == 206:
+            missing = {
+                field.strip()
+                for field in response.headers.get("X-Content-Missing", "").split(",")
+                if field.strip()
+            }
+            if not missing or not missing <= partial_missing_fields:
+                raise IntegrationError("integration_invalid_response")
+        elif response.status_code not in {200, 404}:
             raise IntegrationError("integration_invalid_response")
         return response
 

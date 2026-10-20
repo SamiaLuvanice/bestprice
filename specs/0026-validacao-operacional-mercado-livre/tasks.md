@@ -28,3 +28,6 @@
 - [x] Repetir uma única consulta autenticada de `MLB6415676772` após a validação: 403 `access_denied` persistiu; export e script temporários removidos.
 - [x] Preparar em `verification.md` o contexto técnico e os request IDs para suporte, sem token, ID da conta ou envio do chamado.
 - [ ] Investigar o `access_denied` persistente com o request ID e obter ID próprio apenas se existir e for permitido. Não inferir aceite de anúncio de terceiro sem resposta 200 da API.
+- [x] Cobrir com TDD a resposta parcial HTTP 206 documentada para `/items/{id}`: aceitar somente `X-Content-Missing` não vazio e restrito a `location`, `geolocation` e `seller_address`; rejeitar campos obrigatórios ausentes e 206 em `/sale_price`. Testes direcionados, Ruff, suíte backend e complexidade passaram. Sincronização de onboarding ao final da mudança.
+- [x] Comparar uma chamada autenticada em `/items/bulk?ids=` para o anúncio autorizado: HTTP 200 externo com `status_code=403` interno; a rota não liberou o item.
+- [x] Consultar uma vez `/items/{id}/sale_price` diretamente com o mesmo token: HTTP 403; nenhum valor de preço foi obtido.

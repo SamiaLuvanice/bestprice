@@ -469,3 +469,32 @@ Nenhum chamado foi enviado.
   `/items/{id}` para esse aplicativo/token, apesar do grant e da permissão de
   leitura? Há acesso permitido a anúncios de terceiros por esse recurso e por
   `/items/{id}/sale_price`? Solicitar orientação antes de mudar scopes ou flag.
+
+## Contrato de resposta parcial e comparação de rotas — 2026-10-20 UTC
+
+A [documentação oficial de publicação de produtos](https://developers.mercadolivre.com.br/pt_br/autenticacao-e-autorizacao/publicacao-de-produtos), na seção de códigos HTTP, admite HTTP 206 para `/items/{id}` quando faltam `location`, `geolocation` ou `seller_address`, indicados em `X-Content-Missing`. O contrato da spec aceita 206 somente na leitura de item, com cabeçalho não vazio contendo exclusivamente esses campos e com todos os campos essenciais presentes; 206 em `/sale_price` segue inválido.
+
+- Red: `.venv/Scripts/python.exe -m pytest tests/test_mercado_livre_client.py -q -k partial -p no:cacheprovider --tb=short` em `backend/` — um teste falhou em `integration_invalid_response` porque 206 ainda era rejeitado; outro passou, confirmando a recusa de campos ausentes.
+- Green inicial: o arquivo inteiro `tests/test_mercado_livre_client.py` — **34 passed**.
+- Revisão independente apontou que aceitar qualquer 206 era amplo demais. Red: `-k partial` — **3 failed, 3 passed**, reproduzindo ausência do cabeçalho e campos não documentados. Green após restringir `X-Content-Missing`: arquivo inteiro `tests/test_mercado_livre_client.py` — **38 passed**.
+- `backend/.venv/Scripts/ruff.exe check app tests` — passou; `git diff --check` — passou.
+- Suíte backend `.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider --tb=short`, após o ajuste: **168 passed, 31 skipped, 1 warning** de depreciação Starlette/httpx. Os skips incluem integração sem banco de teste.
+- Relatório de complexidade com `--baseline .complexity-baseline.json` — passou sem novo bloco rank D.
+
+Para distinguir bloqueio por rota de bloqueio por anúncio, houve **uma** chamada
+autenticada a `GET /items/bulk?ids=MLB6415676772` às `15:32:42Z`. A resposta
+externa foi HTTP 200, mas o item teve `status_code=403` e não trouxe os campos
+necessários; `X-Request-Id=a875920b-bf03-4a06-846d-35c35f3cad7e`. O bulk
+documentado como substituto do multiget não liberou o anúncio.
+
+Uma chamada autenticada separada a
+`GET /items/MLB6415676772/sale_price?context=channel_marketplace&quantity=1`
+às `15:33:30Z` também retornou HTTP 403,
+`X-Request-Id=92e01ec0-0e4b-4366-b234-0076b53c25f7`. Não houve resposta
+200 com `amount`, e o erro específico dessa resposta não foi preservado na
+allowlist; não se atribui causa. O token estava válido, sem novo refresh.
+As sondas e exports temporários foram apagados, com ausência confirmada.
+Nenhum token, preço, corpo integral ou dado pessoal foi registrado. O flag
+Stage não foi alterado. AC02 segue bloqueado porque nenhuma das três rotas
+entregou anúncio e preço desse terceiro; não há base para trocar o endpoint
+de produção pelo bulk nem para habilitar a integração.
