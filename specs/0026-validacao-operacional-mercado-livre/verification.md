@@ -372,3 +372,48 @@ conferir estado da aplicação e da conta no DevCenter e regras de IP, sem ampli
 permissões por hipótese; se a causa continuar indefinida, usar o request ID na
 investigação com suporte oficial mediante autorização da operação. AC02 segue
 bloqueado e o flag não deve ser ativado.
+
+## Conta, aplicativo e grant — 2026-10-20 UTC
+
+Com o mesmo token da conta operadora e o flag Stage `false`, uma sonda
+temporária somente de leitura consultou os endpoints oficiais. Em `backend/`,
+o comando foi `.venv/Scripts/python.exe -B ../.tmp-stage-identity-probe.py
+"$env:USERPROFILE/Downloads/bestprice-stage-api.env"`. Às `13:42:22Z`:
+
+- `GET /users/me` retornou 200 e um ID de usuário, que não foi registrado.
+- `GET /users/{id}/items/search?limit=1` retornou 200 com `results` vazio.
+  Portanto, não houve ID próprio verificável para comparar com o anúncio de
+  terceiro. A observação não prova que a conta jamais teve anúncios.
+- Com a mesma credencial, `GET /items/MLB6415676772` retornou novamente 403
+  `access_denied`, sem cabeçalho de PolicyAgent;
+  `X-Request-Id=a794279b-ed89-42c4-9608-daf6aa52b95c`.
+
+A [documentação oficial de gestão de aplicativos](https://developers.mercadolivre.com.br/pt_br/produto-consulta-de-usuarios/gerencie-seu-aplicativo)
+descreve consultas somente de leitura para detalhes e grants. Uma segunda sonda
+temporária usou `.venv/Scripts/python.exe -B ../.tmp-stage-app-grant.py
+"$env:USERPROFILE/Downloads/bestprice-stage-api.env"` em `backend/`. Entre
+`13:45:02Z` e `13:45:52Z`, `GET /applications/{app_id}` retornou 200 com
+`active=true`, `site_id=MLB`, `sandbox_mode=false` e
+`certification_status=not_certified`. `GET /users/{id}/applications` retornou
+200, encontrou o grant deste aplicativo e listou `read`, `write` e
+`offline_access`, sem scope `urn:mp:`. IDs de usuário, credenciais, tokens e
+respostas integrais não foram registrados. O scope global `write` não implica
+permissão de escrita em publicações; a configuração funcional anterior do
+DevCenter mostrava publicações em leitura.
+
+No DevCenter, a listagem mostrou o aplicativo como não certificado e segurança
+70%. O menu de ações apresentou Editar, Administrar permissões e Apagar, sem
+“Gerenciar intervalos de IP”. Segundo a [documentação oficial de IPs](https://developers.mercadolivre.com.br/pt_br/gerenciar-ips-de-um-aplicativo),
+a ausência dessa opção significa que o aplicativo não está habilitado para
+gerenciar intervalos de IP. Isso não exclui outro bloqueio por IP. Ao abrir a
+edição, o site exigiu validação da conta por SMS, WhatsApp ou ligação; nenhuma
+etapa do desafio foi realizada pelo agente. Configuração funcional detalhada,
+validação da conta e eventual política de IP permanecem sem conferência nova.
+
+Os exports `.env` e as duas sondas temporárias desta investigação foram apagados
+após o uso, com ausência confirmada. O flag não foi alterado. A leitura bem
+sucedida de `/users/me`, da busca própria e dos detalhes/grants restringe a
+hipótese de token globalmente inválido ou aplicativo desativado, mas não prova
+autorização para `/items/{id}` de outro vendedor. O 403 segue sem causa específica
+confirmada. Não há ID próprio, sem preço ou indisponível validado pela API;
+AC02 permanece bloqueado e AC03–AC04 parciais.

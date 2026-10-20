@@ -21,4 +21,7 @@
 - [ ] Esclarecer o 403 em `/items/{id}`, obter anúncios permitidos para os três cenários e comprovar leitura de terceiros; manter o flag `false` até completar validação e obter evidência suficiente para AC02–AC04.
 - [x] Comparar a resposta pública sem token ao mesmo `/items/{id}`: 403 com `PA_UNAUTHORIZED_RESULT_FROM_POLICIES`; isso não determina a causa da resposta autenticada anterior.
 - [x] Capturar apenas metadados seguros de nova resposta autenticada: `error=access_denied`, sem cabeçalho PolicyAgent; corpo integral, tokens e segredos não registrados.
-- [ ] Conferir estado da aplicação/conta, grant efetivo e regras de IP no DevCenter para distinguir as causas oficiais do `access_denied`; se necessário, investigar com suporte usando request ID após autorização da operação.
+- [ ] Distinguir a causa específica do `access_denied` em `/items/{id}`; se necessário, investigar com suporte usando request ID após autorização da operação.
+- [x] Confirmar via API oficial que aplicativo está ativo, é MLB, não está em sandbox e tem grant da conta com `read`/`offline_access`; `/users/me` e busca própria responderam 200, esta última sem IDs.
+- [x] Conferir que o menu DevCenter não oferece gestão de intervalos de IP; a edição exigiu validação da conta. Isso não identifica a causa do 403.
+- [ ] Após a operadora concluir a validação da conta, conferir as permissões funcionais detalhadas e eventual restrição de IP no DevCenter; obter ID próprio apenas se existir e for permitido. Não inferir aceite de anúncio de terceiro sem resposta 200 da API.
