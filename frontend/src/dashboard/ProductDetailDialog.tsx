@@ -92,7 +92,7 @@ export function ProductDetailDialog(props: Props) {
   const product = tracked.product
   const alert = tracked.alert
   const stopButton = useRef<HTMLButtonElement>(null)
-  return <section className="detail-panel detail-page" aria-labelledby="detail-title">
+  return <section className="detail-page" aria-labelledby="detail-title">
     <Link className="text-button detail-back" to="/produtos">Ir para Produtos</Link>
     <div className="detail-product-heading"><ProductImage src={product.image_url} /><div className="detail-product-copy">
       <span className="detail-eyebrow">{product.external_id} · Mercado Livre</span>
