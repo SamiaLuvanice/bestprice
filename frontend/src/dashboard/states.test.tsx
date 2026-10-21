@@ -63,14 +63,15 @@ describe('estado vazio', () => {
     expect(screen.getByText('Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.')).toBeInTheDocument()
     const hero = screen.getByRole('region', { name: 'Seu painel de preços' })
     expect(hero).toHaveClass('hero-priority')
-    const values = within(screen.getByRole('region', { name: 'Resumo do monitoramento' })).getAllByRole('listitem').map((item) => item.querySelector('strong')?.textContent)
-    expect(values).toEqual(['0', '0', '0', '0'])
-    for (const name of ['Boas oportunidades', 'Seus produtos', 'Atualizações recentes']) {
+    // 0028/AC09: sem produtos, o convite fica sozinho, sem quatro indicadores zerados.
+    expect(screen.queryByRole('heading', { name: 'Visão geral' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Produtos monitorados')).not.toBeInTheDocument()
+    for (const name of ['Resumo do monitoramento', 'Boas oportunidades', 'Seus produtos', 'Atualizações recentes']) {
       expect(screen.queryByRole('region', { name })).not.toBeInTheDocument()
     }
     expect(screen.queryByRole('region', { name: 'Notificações recebidas' })).not.toBeInTheDocument()
     await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Produtos' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos', level: 1 })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos', level: 1 })).toHaveFocus())
   })
 })
 

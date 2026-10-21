@@ -65,10 +65,10 @@ export function ConfiguredAlerts({ onUnauthenticated }: Props) {
     </div>}
     {!loading && !error && items.length === 0 && cursor === null && <p className="empty">Nenhum alerta configurado por enquanto.</p>}
     {items.length > 0 && <ul className="configured-alerts-list">{items.map((item) => <li key={item.id}>
-      <ProductImage src={item.product.image_url} /><Link to={`/produtos/${item.id}`}>{item.product.title}</Link>
-      <span>Alvo: {formatMoney(item.alert?.target_price ?? null) ?? 'Desconhecido'}</span>
-      <Badge variant="secondary" className={item.alert?.enabled ? 'availability-available' : ''}>{item.alert?.enabled ? 'Ativo' : 'Pausado'}</Badge>
-      <Link className="text-button" to={`/produtos/${item.id}`}>Configurar alerta</Link>
+      <ProductImage src={item.product.image_url} /><Link className="alert-item-title" to={`/produtos/${item.id}`}>{item.product.title}</Link>
+      <span className="alert-item-target">Alvo: {formatMoney(item.alert?.target_price ?? null) ?? 'Desconhecido'}</span>
+      <Badge variant="secondary" className={item.alert?.enabled ? 'alert-item-state availability-available' : 'alert-item-state'}>{item.alert?.enabled ? 'Ativo' : 'Pausado'}</Badge>
+      <Link className="text-button alert-item-action" to={`/produtos/${item.id}`}>Configurar alerta</Link>
     </li>)}</ul>}
     {cursor && !error && <Button type="button" className="secondary-button" disabled={loading} onClick={() => void load()}>
       Carregar mais alertas

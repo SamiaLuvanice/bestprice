@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button'
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
 import { retryHint } from '../lib/format'
+import { targetPriceInput } from '../lib/targetPrice'
 import { AlertsSection } from './AlertsSection'
 import { AppHeader, type SectionKey } from './AppHeader'
 import { ConfirmStopDialog } from './ConfirmStopDialog'
@@ -37,6 +38,11 @@ function feedback(error: unknown): Feedback {
 // 404 ou 409 tracking_inactive: o vínculo não existe mais para a pessoa (convenção de produto removido).
 function trackingGone(error: unknown): error is ApiFailure {
   return error instanceof ApiFailure && (error.status === 404 || error.code === 'tracking_inactive')
+}
+
+/** Texto inicial do campo de alvo: o valor atual com vírgula, ou vazio sem alerta. */
+function alertTarget(tracked: TrackedProduct): string {
+  return tracked.alert ? targetPriceInput(tracked.alert.target_price) : ''
 }
 
 function unauthenticated(error: unknown): error is ApiFailure {
@@ -93,6 +99,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const pageHeading = useRef<HTMLHeadingElement>(null)
   const linkInput = useRef<HTMLInputElement>(null)
   const alertsHeading = useRef<HTMLHeadingElement>(null)
+  // Em Produtos, o h1 "Seus produtos" é ao mesmo tempo o título da página e o da lista.
+  const productsHeading = useCallback((element: HTMLHeadingElement | null) => {
+    trackedHeading.current = element
+    pageHeading.current = element
+  }, [])
   const [logoutError, setLogoutError] = useState<string | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
   const detailOpen = selected !== null
@@ -215,6 +226,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       const [detail, priceHistory] = await Promise.all([api.detail(id), api.history(id)])
       if (current !== openSequence.current) return
       setSelected(detail)
+      setTarget(alertTarget(detail))
       setHistory(priceHistory.items)
       setHistoryCursor(priceHistory.next_cursor)
     } catch (failure) {
@@ -263,11 +275,15 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
   // Detalhe recarregado após uma ação: atualiza o diálogo e a linha. Parar é soft delete, então um
   // detalhe 200 com active=false (parado em outra aba) também fecha o diálogo. Devolve se continua aberto.
-  async function reloadSelected(id: string): Promise<boolean> {
+  // `resetTarget`: só criar, salvar alvo e excluir reescrevem o campo; pausar/retomar preserva o rascunho.
+  async function reloadSelected(id: string, resetTarget = false): Promise<boolean> {
     const detail = await api.detail(id)
     if (!detail.active) { closeAsRemoved(id, 'Monitoramento interrompido.'); return false }
     // Fechado (ou trocado) durante a ação: atualiza só a linha, sem reabrir o detalhe.
-    if (openDetailId.current === id) setSelected(detail)
+    if (openDetailId.current === id) {
+      setSelected(detail)
+      if (resetTarget) setTarget(alertTarget(detail))
+    }
     dispatchList({ type: 'replace', tracked: detail, receivedAt: clock() })
     return true
   }
@@ -293,41 +309,41 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }
 
   // Depois de uma ação de alerta concluída: detalhe, indicadores e contador do sino recalculados.
-  async function afterAlertAction(id: string) {
+  async function afterAlertAction(id: string, resetTarget: boolean) {
     try {
-      if (!await reloadSelected(id)) return
-      setTarget('')
+      if (!await reloadSelected(id, resetTarget)) return
       await reloadDashboard()
       await notifications.refreshAfterAction()
     } catch (failure) { failInDetail(id, failure) }
   }
 
-  async function createAlert(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  // O alvo chega normalizado pelo detalhe (`"99.90"`); entrada inválida nem chama a API (0028/AC02).
+  async function createAlert(targetPrice: string) {
     if (!selected) return
     setBusy(true)
     setError(null)
     const id = selected.id
     try {
-      await api.createAlert(id, target)
-      await afterAlertAction(id)
+      await api.createAlert(id, targetPrice)
+      await afterAlertAction(id, true)
     } catch (failure) { failInDetail(id, failure) }
     finally { setBusy(false) }
   }
 
-  async function updateAlert() {
+  // Cada controle do alerta tem uma única função (0028/AC06): salvar alvo ou pausar/retomar.
+  async function updateAlert(update: { target_price: string } | { enabled: boolean }) {
     if (!selected?.alert) return
     setBusy(true)
     setError(null)
     const id = selected.id
     try {
-      await api.updateAlert(id, target ? { target_price: target } : { enabled: !selected.alert.enabled })
+      await api.updateAlert(id, update)
     } catch (failure) {
       await recoverFromAlertFailure(id, failure)
       setBusy(false)
       return
     }
-    await afterAlertAction(id)
+    await afterAlertAction(id, 'target_price' in update)
     setBusy(false)
   }
 
@@ -343,7 +359,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       setBusy(false)
       return
     }
-    await afterAlertAction(id)
+    await afterAlertAction(id, true)
     setBusy(false)
   }
 
@@ -598,6 +614,19 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     else linkInput.current?.focus()
   }, [focusAfterStop, location.pathname, list.loaded, list.items.length, loading])
 
+  // Campo de link: hero do Início ou, em Produtos, ação abaixo do título único "Seus produtos".
+  function trackForm(embedded: boolean) {
+    return <HeroTrackForm onSubmit={track} submitting={submitting}
+      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={embedded ? undefined : pageHeading}
+      inputRef={linkInput} priority={isEmpty} embedded={embedded} compact={embedded && !isEmpty}
+      onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
+      {isEmpty && <div className="empty-state">
+        <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
+        <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
+      </div>}
+    </HeroTrackForm>
+  }
+
   return <>
     <AppHeader key={location.pathname} email={user.email} current={currentSection}
       bell={<NotificationBell unread={notifications.unread} onRetry={notifications.reloadUnread}
@@ -605,14 +634,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
 
     <main id="conteudo" className="page-main">
-    {(currentSection === 'home' || (currentSection === 'products' && !detailId)) && <HeroTrackForm onSubmit={track} submitting={submitting}
-      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={pageHeading}
-      inputRef={linkInput} priority={isEmpty} pageTitle={currentSection === 'products' ? 'Produtos' : undefined}>
-      {isEmpty && <div className="empty-state">
-        <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
-        <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
-      </div>}
-    </HeroTrackForm>}
+    {currentSection === 'home' && trackForm(false)}
     <div className="content global-messages">
       <p role="status" data-testid="global-status" className={globalMessage ? 'global-status' : 'sr-only'}>{globalMessage}</p>
       {error && !selected && !detailId && <p role="alert" className="error-box">{error.message}</p>}
@@ -621,14 +643,15 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     {currentSection === 'home' && <div className="content dashboard-content">
       {/* Fora das regiões aria-busy, para o anúncio não ser suprimido. */}
       <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
-      <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
+      {/* 0028/AC09: sem produtos, o convite do hero fica sozinho, sem indicadores zerados. */}
+      {(!isEmpty || dashboardError) && <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
         {dashboardError && <div className="region-error">
           <p role="alert" className="error-box">{dashboardError}</p>
           <Button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button>
         </div>}
         {loading && <IndicatorsSkeleton />}
-        {dashboard && <><h2 className="overview-title">Visão geral</h2><SummaryIndicators summary={dashboard.summary} /></>}
-      </section>
+        {dashboard && !isEmpty && <><h2 className="overview-title">Visão geral</h2><SummaryIndicators summary={dashboard.summary} /></>}
+      </section>}
 
       {showProductSections && <section aria-labelledby="opportunities-title" className="card-section" aria-busy={loading}>
         <div className="section-heading">
@@ -654,7 +677,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
         loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)}
         renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
           disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
-        message={productsMessage} headingRef={trackedHeading} skeleton={loading ? <ProductsSkeleton /> : undefined} />
+        message={productsMessage} headingRef={productsHeading} skeleton={loading ? <ProductsSkeleton /> : undefined}
+        toolbar={trackForm(true)} />
     </div>}
 
     {detailId && <div className="content dashboard-content">
@@ -667,8 +691,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       </div>}
       {selected?.id === detailId && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}
         target={target} onTargetChange={setTarget} onRefresh={() => void refreshSelected()}
-        onLoadMoreHistory={() => void loadMoreHistory()} onCreateAlert={(event) => void createAlert(event)}
-        onUpdateAlert={() => void updateAlert()} onRemoveAlert={() => void removeAlert()}
+        onLoadMoreHistory={() => void loadMoreHistory()} onCreateAlert={(targetPrice) => void createAlert(targetPrice)}
+        onSaveTarget={(targetPrice) => void updateAlert({ target_price: targetPrice })}
+        onToggleAlert={() => void updateAlert({ enabled: !selected.alert?.enabled })} onRemoveAlert={() => void removeAlert()}
         onRequestStop={() => { setError(null); setDetailMode('confirm') }} />}
     </div>}
 

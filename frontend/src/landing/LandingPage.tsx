@@ -4,10 +4,10 @@ import { ArrowDownRight, ArrowUpRight, Bell, Link2, Menu, X } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import bestPriceLogo from '../assets/logo-bestprice.png'
-import heroArt from '../assets/redesign/hero-person.png'
-import bannerArt from '../assets/redesign/footer-phone.png'
-import pricePreview from '../assets/redesign/price-preview.svg'
-import dashboardPreview from '../assets/redesign/dashboard-preview.svg'
+import heroArt from '../assets/redesign/hero-person.webp'
+import bannerArt from '../assets/redesign/footer-phone.webp'
+import pricePreview from '../assets/redesign/price-preview.webp'
+import dashboardPreview from '../assets/redesign/dashboard-preview.webp'
 import './LandingPage.css'
 
 const navigation = [
@@ -60,7 +60,7 @@ export function LandingPage() {
             </div>
             <p className="landing-hero__note"><Link2 aria-hidden="true" /> Um link. Acompanhamento contínuo.</p>
           </div>
-          <div className="landing-hero__visual"><img src={heroArt} alt="Pessoa consultando o celular, com ilustrações de alerta e histórico de preços." width="1024" height="1024" fetchPriority="high" /><img className="landing-price-preview" src={pricePreview} alt="Exemplo ilustrativo de preço e variação. Não representa uma oferta real." width="506" height="201" /></div>
+          <div className="landing-hero__visual"><img src={heroArt} alt="Pessoa consultando o celular, com ilustrações de alerta e histórico de preços." width="1120" height="682" fetchPriority="high" /><img className="landing-price-preview" src={pricePreview} alt="Exemplo ilustrativo de preço e variação. Não representa uma oferta real." width="506" height="201" /></div>
         </div>
       </section>
       <section id="como-funciona" className="landing-steps landing-container" aria-labelledby="landing-steps-title">
@@ -89,7 +89,7 @@ export function LandingPage() {
         <div className="landing-signup__copy"><h2 id="landing-signup-title">Seu próximo acompanhamento começa com um link.</h2><p>Os preços mudam. Você recebe o sinal na hora certa.</p>
           <Button asChild size="lg"><Link to="/login">Entrar e monitorar</Link></Button>
         </div>
-        <img className="landing-signup__art" src={bannerArt} alt="Interface ilustrativa da BestPrice em um celular, com produto e gráfico de preços." loading="lazy" width="1536" height="1024" />
+        <img className="landing-signup__art" src={bannerArt} alt="Interface ilustrativa da BestPrice em um celular, com produto e gráfico de preços." loading="lazy" width="1600" height="548" />
       </section>
     </main>
     <div className="landing-container"><Separator /></div>

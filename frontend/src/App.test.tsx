@@ -32,13 +32,19 @@ it('mostra login diretamente ao visitante, sem formulário de monitoramento', as
   expect(screen.queryByPlaceholderText('https://www.mercadolivre.com.br/...')).not.toBeInTheDocument()
 })
 
-it('mantém marca e orientação enquanto verifica a sessão e quando ela falha', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))))
+// 0028/AC14: enquanto a sessão é verificada (ou falha), a tela não oferece o formulário de link.
+it('mantém a marca sem formulário de link enquanto verifica a sessão e quando ela falha', async () => {
+  const session = deferred()
+  vi.stubGlobal('fetch', vi.fn().mockReturnValue(session.promise))
   visit('/produtos')
   expect(screen.getByRole('banner')).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Seu painel de preços' })).toBeInTheDocument()
-  expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
+  expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Seu painel de preços' })).not.toBeInTheDocument()
+  session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
   expect(await screen.findByText('Serviço temporariamente indisponível.')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
 })
 
@@ -48,7 +54,7 @@ it('recupera falha de rede na verificação sem concluir logout', async () => {
   visit('/produtos')
   expect(await screen.findByText('Não foi possível conectar ao BestPrice. Tente novamente.')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
-  expect(await screen.findByRole('heading', { name: 'Produtos', level: 1 })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
 })
 

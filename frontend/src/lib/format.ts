@@ -92,3 +92,16 @@ export function formatPercentage(value: string | null): { text: string; directio
   const direction: Direction = text.startsWith('-') ? 'down' : text.startsWith('+') ? 'up' : 'none'
   return { text: `${text}%`, direction }
 }
+
+const axisWhole = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+const axisCents = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+
+/**
+ * Rótulo do eixo Y em reais (0028/AC07). As marcas do eixo são coordenadas escolhidas pelo
+ * Recharts, não preços: valores inteiros saem sem centavos e os demais com duas casas,
+ * sempre com o símbolo do real e sem notação compacta ("mil"). O preço exato fica no tooltip e na tabela.
+ */
+export function formatAxisPrice(value: number): string {
+  const whole = Math.round(value)
+  return Math.abs(value - whole) < 0.005 ? axisWhole.format(whole) : axisCents.format(value)
+}

@@ -3,12 +3,11 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import type { HistoryEntry } from '../api'
 import { isDecimal } from '../lib/decimal'
-import { formatMoney } from '../lib/format'
+import { formatAxisPrice, formatMoney } from '../lib/format'
 
 const config = { price: { label: 'Preço unitário', color: 'var(--color-action)' } } satisfies ChartConfig
 const shortDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' })
 const fullDate = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-const axisPrice = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
 
 export function PriceHistoryChart({ history, partial }: { history: HistoryEntry[]; partial: boolean }) {
   const descriptionId = useId()
@@ -28,8 +27,8 @@ export function PriceHistoryChart({ history, partial }: { history: HistoryEntry[
           <CartesianGrid vertical={false} stroke="var(--color-chart-grid)" strokeDasharray="3 6" />
           <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={40}
             tick={{ style: { fill: 'var(--color-chart-label)' }, fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(time: number) => shortDate.format(time)} tickMargin={12} />
-          <YAxis dataKey="plotPrice" tick={{ style: { fill: 'var(--color-chart-label)' }, fontSize: 12 }} tickLine={false} axisLine={false} tickMargin={8} width={52}
-            domain={['auto', 'auto']} tickFormatter={(value: number) => axisPrice.format(value)} />
+          <YAxis dataKey="plotPrice" tick={{ style: { fill: 'var(--color-chart-label)' }, fontSize: 12 }} tickLine={false} axisLine={false} tickMargin={8} width={84}
+            domain={['auto', 'auto']} tickFormatter={formatAxisPrice} />
           <ChartTooltip content={<ChartTooltipContent
             labelFormatter={(_, payload) => {
               const time: unknown = payload?.[0]?.payload?.time
@@ -46,7 +45,7 @@ export function PriceHistoryChart({ history, partial }: { history: HistoryEntry[
     </div>
     <figcaption id={descriptionId} className="price-chart-note">
       {partial ? 'Exibindo os registros carregados. Carregue mais preços para ampliar o período.' : 'Registros de alteração desde o primeiro preço conhecido.'}
-      {' '}Preço unitário em BRL, sem frete. Cada ponto representa uma leitura registrada.
+      {' '}Preço unitário em reais. Cada ponto representa uma leitura registrada.
     </figcaption>
     <details className="history-data"><summary>Ver registros de preço</summary>
       <table><caption className="sr-only">Valores exatos do histórico, do mais antigo ao mais recente</caption>

@@ -14,15 +14,13 @@ async function replyGuestSession(page: Page) {
 }
 
 async function waitForStableImages(page: Page) {
-  // Percorre a página para disparar imagens com loading="lazy" e depois espera
-  // todas estarem decodificadas, evitando baseline instável em captura fullPage.
+  // Imagens lazy passam a eager e são decodificadas antes da captura fullPage: rolar a página
+  // dependia do tempo do IntersectionObserver e deixava o banner sem carregar (spec 0028).
   await page.evaluate(async () => {
-    const step = window.innerHeight
-    for (let y = 0; y < document.body.scrollHeight; y += step) {
-      window.scrollTo(0, y)
-      await new Promise((resolve) => setTimeout(resolve, 50))
-    }
-    window.scrollTo(0, 0)
+    await Promise.all(Array.from(document.images, async (image) => {
+      image.loading = 'eager'
+      await image.decode().catch(() => undefined)
+    }))
   })
   await page.waitForFunction(() => Array.from(document.images).every((img) => img.complete && img.naturalWidth > 0))
 }

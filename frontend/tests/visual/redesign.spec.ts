@@ -77,11 +77,21 @@ for (const scenario of scenarios) {
         return box.width < 43 || box.height < 43
       }).map((control) => control.textContent?.trim() || control.getAttribute('aria-label') || control.tagName))
     expect(smallControls).toEqual([])
-    const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+    const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()
     expect(accessibility.violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) }))).toEqual([])
     await page.screenshot({ path: testInfo.outputPath(`${scenario.name}.png`), fullPage: true, animations: 'disabled' })
     if (!scenario.guest) await expect(page.getByRole('button', { name: /Conta: pessoa@example.com/ })).toBeVisible()
-    if (scenario.name === 'produtos') {
+    if (!scenario.guest) {
+      // 0028/AC12: cabeçalho e conteúdo começam na mesma margem lateral.
+      const edges = await page.evaluate(() => ({
+        header: document.querySelector('.app-header-inner')?.getBoundingClientRect().left,
+        content: document.querySelector('main .content, main .hero')?.getBoundingClientRect().left,
+      }))
+      expect(edges.header).toBeDefined()
+      expect(Math.abs((edges.header ?? 0) - (edges.content ?? -99))).toBeLessThanOrEqual(1)
+    }
+    // Abaixo de 960 px o menu ⋮ fica oculto: a linha leva ao detalhe (teste da linha compacta).
+    if (scenario.name === 'produtos' && (page.viewportSize()?.width ?? 0) >= 960) {
       await page.getByRole('button', { name: 'Ações de Fone sem fio' }).click()
       const panel = page.getByRole('group', { name: 'Ações de Fone sem fio' })
       const stop = panel.getByRole('button', { name: 'Parar de monitorar' })
@@ -95,3 +105,116 @@ for (const scenario of scenarios) {
     }
   })
 }
+
+// 0028/AC04: utilitários do tema produzem as cores documentadas em designsystem/README.md.
+test('tokens: bg-primary, text-primary, text-muted, text-muted-foreground e bg-muted', async ({ page }) => {
+  await page.route('**/api/**', (route) => route.fulfill({ status: 401, contentType: 'application/json',
+    body: JSON.stringify({ error: { code: 'unauthenticated', message: 'Entre para continuar.', fields: [] } }) }))
+  await page.goto('/login')
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  const colors = await page.evaluate(() => {
+    const probe = (classes: string) => {
+      const element = document.createElement('span')
+      element.className = classes
+      document.body.append(element)
+      const style = getComputedStyle(element)
+      const result = { color: style.color, background: style.backgroundColor }
+      element.remove()
+      return result
+    }
+    return {
+      bgPrimary: probe('bg-primary').background,
+      textPrimary: probe('text-primary').color,
+      textPrimaryForeground: probe('text-primary-foreground').color,
+      textMutedForeground: probe('text-muted-foreground').color,
+      textMuted: probe('text-muted').color,
+      bgMuted: probe('bg-muted').background,
+      bgAction: probe('bg-action').background,
+      textActionForeground: probe('text-action-foreground').color,
+    }
+  })
+  expect(colors).toEqual({
+    bgPrimary: 'rgb(199, 0, 94)', textPrimary: 'rgb(199, 0, 94)', textPrimaryForeground: 'rgb(255, 255, 255)',
+    textMutedForeground: 'rgb(98, 98, 103)', textMuted: 'rgb(98, 98, 103)', bgMuted: 'rgb(245, 245, 247)',
+    bgAction: 'rgb(57, 255, 20)', textActionForeground: 'rgb(0, 0, 0)',
+  })
+})
+
+// 0028/AC01: com título longo, a imagem do detalhe mantém tamanho e proporção em 320 e 390 px.
+for (const width of [320, 390]) {
+  test(`detalhe com título longo mantém a imagem em ${width}px`, async ({ page }) => {
+    const longTitle = 'Fone de ouvido sem fio com cancelamento ativo de ruído, estojo de carregamento e garantia estendida do fabricante'
+    const image = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="#ccc"/></svg>')
+    const detail = { ...tracked, product: { ...product, title: longTitle, image_url: 'https://http2.mlstatic.com/D_NQ_NP_000000-MLA0000000000_000000-O.webp' } }
+    await page.setViewportSize({ width, height: 800 })
+    await page.route('https://http2.mlstatic.com/**', (route) => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: decodeURIComponent(image.slice(image.indexOf(',') + 1)) }))
+    await page.route('**/api/**', async (route) => {
+      const path = new URL(route.request().url()).pathname
+      let body: unknown = { items: [], next_cursor: null }
+      if (path === '/api/auth/me') body = { id: 'user-1', email: 'pessoa@example.com' }
+      else if (path.endsWith('/history')) body = { items: entries, next_cursor: null }
+      else if (path === '/api/tracked-products/tracking-1') body = detail
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+    })
+    await page.goto('/produtos/tracking-1')
+    await expect(page.getByRole('heading', { level: 1, name: longTitle })).toBeVisible()
+    const box = await page.locator('.detail-product-heading .product-image').boundingBox()
+    expect(box?.width).toBe(80)
+    expect(box?.height).toBe(80)
+  })
+}
+
+// Revisão 0028 (AC05): no celular a linha segue o quadro 11 (~139 px): imagem, título, preço,
+// pílula e seta; a linha inteira leva ao detalhe, que concentra Atualizar agora e Parar.
+test('Produtos em 390px usa linha compacta que abre o detalhe', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.route('**/api/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    let body: unknown = { items: [], next_cursor: null }
+    if (path === '/api/auth/me') body = { id: 'user-1', email: 'pessoa@example.com' }
+    else if (path === '/api/dashboard') body = { summary: { tracked_count: 1, price_drop_count: 1, active_alert_count: 1, target_reached_count: 0 },
+      tracked_products: { items: [tracked], next_cursor: null }, opportunities: [], recent_updates: [] }
+    else if (path === '/api/tracked-products') body = { items: [tracked], next_cursor: null }
+    else if (path.endsWith('/history')) body = { items: entries, next_cursor: null }
+    else if (path === '/api/tracked-products/tracking-1') body = tracked
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+  })
+  await page.goto('/produtos')
+  const row = page.getByRole('rowgroup', { name: 'Fone sem fio' })
+  await expect(row).toBeVisible()
+  const height = (await row.boundingBox())?.height ?? 999
+  expect(height).toBeLessThanOrEqual(140)
+  await expect(row.getByRole('button', { name: 'Ações de Fone sem fio' })).toBeHidden()
+  await expect(row.getByText('Disponível')).toBeHidden()
+  await expect(row.getByText(/Alerta em/)).toBeHidden()
+  const link = row.getByRole('link', { name: 'Ver detalhes de Fone sem fio' })
+  const box = await link.boundingBox()
+  expect(box?.width).toBeGreaterThanOrEqual(44)
+  expect(box?.height).toBeGreaterThanOrEqual(44)
+  const rowBox = await row.boundingBox()
+  await page.mouse.click((rowBox?.x ?? 0) + 120, (rowBox?.y ?? 0) + 20)
+  await expect(page).toHaveURL(/\/produtos\/tracking-1$/)
+  await expect(page.getByRole('button', { name: 'Atualizar agora' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Parar de monitorar' })).toBeVisible()
+})
+
+// Revisão 0028 (AC12): mensagens de vazio começam na mesma margem do conteúdo.
+test('Alertas vazios em 390px alinham a mensagem à margem do conteúdo', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.route('**/api/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    const body = path === '/api/auth/me' ? { id: 'user-1', email: 'pessoa@example.com' } : { items: [], next_cursor: null }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+  })
+  await page.goto('/alertas')
+  const heading = page.getByRole('heading', { level: 1, name: 'Alertas' })
+  const empty = page.getByText('Nenhuma notificação por enquanto.')
+  await expect(empty).toBeVisible()
+  const left = async (locator: typeof heading) => (await locator.evaluate((element) => {
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    return range.getBoundingClientRect().left
+  }))
+  expect(Math.abs(await left(empty) - await left(heading))).toBeLessThanOrEqual(1)
+  expect(Math.abs(await left(page.getByText('Nenhum alerta configurado por enquanto.')) - await left(heading))).toBeLessThanOrEqual(1)
+})
