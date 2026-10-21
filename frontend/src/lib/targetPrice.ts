@@ -2,9 +2,10 @@
 // o contrato `target_price` continua decimal com ponto e duas casas ("99.90"), validado no backend.
 
 const MAX_INTEGER_DIGITS = 16 // backend: valor < 10^16
-const commaDecimal = /^(\d{1,3}(?:\.\d{3})+|\d+),(\d{1,2})$/
+// Com separador de milhar, o primeiro grupo não começa com zero: "0.500" não vira 500.
+const commaDecimal = /^([1-9]\d{0,2}(?:\.\d{3})+|\d+),(\d{1,2})$/
 const dotDecimal = /^(\d+)\.(\d{1,2})$/
-const dotThousands = /^(\d{1,3}(?:\.\d{3})+)$/
+const dotThousands = /^([1-9]\d{0,2}(?:\.\d{3})+)$/
 const integerOnly = /^(\d+)$/
 
 function parts(text: string): [string, string] | null {

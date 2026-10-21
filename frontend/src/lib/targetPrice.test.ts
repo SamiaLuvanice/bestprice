@@ -20,6 +20,8 @@ describe('normalizeTargetPrice (0028/AC02)', () => {
   it.each([
     '', 'abc', '99,999', '9,9,9', '1.89,90', '12.3456', '-5,00', '0', '0,00', '1e3', '99,', ',90', '1 899,90',
     '12345678901234567,00',
+    // Revisão 0028: grupo de milhar com zero à esquerda viraria outro valor sem aviso.
+    '0.500', '0.999', '00.123', '0.500,00', '01.899,90',
   ])('recusa %j sem converter para number', (typed) => {
     expect(normalizeTargetPrice(typed)).toBeNull()
   })
