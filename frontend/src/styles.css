@@ -478,7 +478,7 @@ h1 { font-size: clamp(32px, 4.6vw, 56px); letter-spacing: -.025em; }
 @media (min-width: 841px) {
   .login-brand-compact { display: none; }
   .login-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .login-visual { display: block; min-width: 0; min-height: 0; height: 100%; overflow: hidden; background: center top / cover no-repeat url('./assets/redesign/login-left.png'); }
+  .login-visual { display: block; min-width: 0; min-height: 0; height: 100%; overflow: hidden; background: center top / cover no-repeat url('./assets/redesign/login-left.webp'); }
 }
 @media (max-width: 840px) {
   .login-card { max-width: 560px; }
@@ -651,7 +651,7 @@ a { text-underline-offset: 4px; }
 .login-note { margin-top: 40px; font-size: 15px; color: var(--color-muted); }
 .login-back { align-self: start; padding-left: 0; margin-top: 12px; }
 @media (min-width: 841px) {
-  .login-visual { position: relative; background-image: url('./assets/redesign/login-left.png'); }
+  .login-visual { position: relative; background-image: url('./assets/redesign/login-left.webp'); }
   .login-visual::after { content: ''; position: absolute; top: 32px; left: 48px; width: 64px; height: 64px; background: center / contain no-repeat url('./assets/logo-bestprice.png'); }
 }
 @media (max-width: 1100px) {
