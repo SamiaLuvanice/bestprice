@@ -119,9 +119,13 @@ e passou a declarar as dimensões reais (`1120×682`, antes `1024×1024`). Remov
 
 ## Pendências
 
-- Revisão independente, QA, `doc-sync-onboarding` e PR para `develop` (T10, orquestrador).
-- `docs/apps/frontend.md` ainda cita `login-left.png`, `hero-person.png`, `footer-phone.png`,
-  `price-preview.svg` e `dashboard-preview.svg` (linhas 65 e 117): atualizar no doc-sync.
+- PR para `develop` (T10, orquestrador). Revisão independente e QA concluídas (ver
+  "Correções pós-revisão").
+- `doc-sync-onboarding` executado sobre `37cac54`: `docs/apps/frontend.md` passou a citar as
+  artes `.webp`, tokens, Produtos com "Adicionar anúncio", preço-alvo pt-BR e
+  `asyncUtilTimeout` de 6 s; `designsystem/README.md` e `brand-spec.md` deixaram de apontar
+  `imagem-lateral.png` como arte vigente; `docs/PROGRESS.md` ganhou a linha da 0028.
+  `git diff --check` dos documentos passou.
 - Backend: não alterado; Ruff/pytest não executados por este papel.
 
 ## Correções pós-revisão

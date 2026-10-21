@@ -10,3 +10,7 @@
 - [x] T08: AC11/AC12/AC14 landing, margens, carregamento; AC13 CSS morto.
 - [x] T09: gates, baselines visuais e axe (AC15); verification.md.
 - [ ] T10: revisão independente, QA, doc-sync-onboarding e PR para `develop`.
+  - [x] Revisão independente aprovada após correção de dois P2 e quatro P3.
+  - [x] QA independente: 13 aceitos, 2 parciais (AC04, AC05) corrigidos e revisados.
+  - [x] doc-sync-onboarding executado.
+  - [ ] PR para `develop`.
