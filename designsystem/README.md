@@ -89,9 +89,50 @@ implementar essa composição com shadcn/ui e Recharts/shadcn Charts. A identida
 | Tokens shadcn `background/foreground/card/primary/secondary/muted/accent/destructive/border/input/ring` mapeados à identidade existente | Reutilizar código oficial dos controles sem adotar outra marca | Button, Input, Card, Badge, Table, Skeleton, Separator e Chart |
 | Conteúdo de até 1248 px, superfícies planas, linhas de produtos e navegação inferior até 700 px | Seguir os quadros desktop/mobile e manter o foco na tarefa | Área autenticada |
 | Recharts com série em degraus, pontos reais, tooltip decimal exato e tabela textual expansível | Não sugerir preços intermediários ou completude de histórico paginado | Detalhe; mais registros ampliam o período |
-| Artes fornecidas `hero-person.png`, `footer-phone.png`, `login-left.png`; recortes vetoriais identificados como ilustração | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
+| Artes fornecidas `hero-person`, `footer-phone`, `login-left` (originais PNG em `prototypes/2026-10-21-bestprice-figma/assets/`; na SPA, WebP redimensionado pela spec 0028); recortes vetoriais identificados como ilustração | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
 
 A landing da 0027 substitui a composição da 0024: os CTAs levam a `/login`;
 nenhum botão promete cadastro público. Os sete cartões de categorias e o aviso
 local de cadastro pertencem à versão anterior. Ilustrações públicas são estáticas
 com identificação de exemplo; a conta sempre depende da API.
+
+## Tokens da aplicação (spec 0028)
+
+A SPA usa dois grupos de variáveis em `frontend/src/styles.css`, sem nomes repetidos com
+significados diferentes. Antes da 0028, `--color-primary` era rosa no CSS próprio e verde
+no tema shadcn, e `text-muted` pintava texto com a cor de superfície `#f5f5f7`.
+
+**Tema shadcn/Tailwind** (gera os utilitários `bg-*`, `text-*`, `border-*`):
+
+| Token | Valor | Uso | Utilitários |
+|---|---|---|---|
+| `--primary` / `--primary-foreground` | `#c7005e` / `#fff` | Rosa da marca: links, títulos de destaque, foco, seleção | `bg-primary`, `text-primary`, `text-primary-foreground` |
+| `--action` / `--action-foreground` / `--action-hover` | `#39ff14` / `#000` / `#65ff48` | Verde das ações principais; variante `default` do `Button` | `bg-action`, `text-action-foreground`, `hover:bg-action-hover` |
+| `--muted` | `#f5f5f7` | **Superfície** discreta, nunca texto | `bg-muted` |
+| `--muted-foreground` | `#626267` | Texto secundário | `text-muted-foreground` |
+| `--accent` | `#fce9f2` | Fundo rosa-claro de hover e seleção | `bg-accent` |
+| `--destructive` | `#b42318` (texto branco) | Ação destrutiva ("Parar de monitorar") | `bg-destructive` |
+| `--border` / `--input` / `--ring` | `#d2d2d7` / `#86868b` / `#c7005e` | Bordas, bordas de controle e anel de foco | `border-border`, `border-input`, `ring-ring` |
+
+`text-muted` não deve ser usado: produziria a cor de superfície. Um teste
+(`frontend/src/tokens.test.ts`) recusa esse utilitário e regras que corrigem a cor de
+variantes do `Button`.
+
+**CSS próprio** (classes legadas e componentes da aplicação): `--color-brand`,
+`--color-brand-strong`, `--color-brand-soft`, `--color-text`, `--color-text-muted`,
+`--color-surface`, `--color-surface-raised`, `--color-border-soft`, `--color-control-border`,
+cores semânticas `--color-down`, `--color-up`, `--color-amber`, `--color-danger-*` e os tokens
+do gráfico. Eles derivam do tema quando o significado é o mesmo
+(`--color-brand: var(--primary)`, `--color-text-muted: var(--muted-foreground)`).
+Só `--color-border` e `--color-action` repetem um nome do tema, com o mesmo valor
+(`var(--border)`, `var(--action)`).
+
+Decisão: `--primary` passou a ser o rosa da marca e o verde virou um token próprio de
+ação. Assim `text-primary` e a variante `link` ficam legíveis sem regra corretiva, e o
+botão principal continua verde com texto preto, como no visual aprovado. As cores de
+elementos (`a`, `button`, `input`) ficam em `@layer base`, para que os utilitários do tema
+vençam sem `!important`.
+
+Largura de página: `--page-width` (1248 px) e `--page-gutter` (32 px; 20 px até 700 px)
+formam `--page-inline`, usado por cabeçalho, conteúdo e landing, que compartilham a
+mesma margem lateral.
