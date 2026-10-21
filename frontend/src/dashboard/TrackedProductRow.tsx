@@ -21,11 +21,14 @@ function Variation({ value }: { value: string | null }) {
   const formatted = formatPercentage(value)
   if (!formatted) return <>Desconhecida</>
   const Arrow = formatted.direction === 'up' ? ArrowUpIcon : ArrowDownIcon
-  return <Badge variant="secondary" className={`variation variation-${formatted.direction}`}>
-    {formatted.direction !== 'none' && <Arrow />}
-    {formatted.direction !== 'none' && <span className="sr-only">{formatted.direction === 'down' ? 'queda' : 'alta'} </span>}
-    {formatted.text} <span className="variation-note">vs. preço anterior</span>
-  </Badge>
+  // 0028/AC10: a pílula traz só seta e percentual, em uma linha; o rótulo fica fora dela.
+  return <span className="variation-cell">
+    <Badge variant="secondary" className={`variation variation-${formatted.direction}`}>
+      {formatted.direction !== 'none' && <Arrow />}
+      {formatted.direction !== 'none' && <span className="sr-only">{formatted.direction === 'down' ? 'queda' : 'alta'} </span>}
+      {formatted.text}
+    </Badge>{' '}<span className="variation-note">vs. preço anterior</span>
+  </span>
 }
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {

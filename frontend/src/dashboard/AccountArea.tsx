@@ -614,7 +614,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     <main id="conteudo" className="page-main">
     {(currentSection === 'home' || (currentSection === 'products' && !detailId)) && <HeroTrackForm onSubmit={track} submitting={submitting}
       error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={pageHeading}
-      inputRef={linkInput} priority={isEmpty} pageTitle={currentSection === 'products' ? 'Produtos' : undefined}>
+      inputRef={linkInput} priority={isEmpty} pageTitle={currentSection === 'products' ? 'Produtos' : undefined}
+      compact={currentSection === 'products' && !isEmpty}>
       {isEmpty && <div className="empty-state">
         <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
         <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
@@ -628,14 +629,15 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     {currentSection === 'home' && <div className="content dashboard-content">
       {/* Fora das regiões aria-busy, para o anúncio não ser suprimido. */}
       <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
-      <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
+      {/* 0028/AC09: sem produtos, o convite do hero fica sozinho, sem indicadores zerados. */}
+      {(!isEmpty || dashboardError) && <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
         {dashboardError && <div className="region-error">
           <p role="alert" className="error-box">{dashboardError}</p>
           <Button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button>
         </div>}
         {loading && <IndicatorsSkeleton />}
-        {dashboard && <><h2 className="overview-title">Visão geral</h2><SummaryIndicators summary={dashboard.summary} /></>}
-      </section>
+        {dashboard && !isEmpty && <><h2 className="overview-title">Visão geral</h2><SummaryIndicators summary={dashboard.summary} /></>}
+      </section>}
 
       {showProductSections && <section aria-labelledby="opportunities-title" className="card-section" aria-busy={loading}>
         <div className="section-heading">
