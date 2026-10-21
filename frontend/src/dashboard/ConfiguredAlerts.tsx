@@ -1,3 +1,6 @@
+import { Badge } from '@/components/ui/badge'
+import { ProductImage } from './ProductImage'
+import { Button } from '@/components/ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiFailure, type TrackedProduct } from '../api'
@@ -58,17 +61,17 @@ export function ConfiguredAlerts({ onUnauthenticated }: Props) {
     </div>
     {loading && <p role="status">Carregando alertas configurados…</p>}
     {error && <div className="region-error"><p role="alert" className="error-box">{error}</p>
-      <button type="button" className="secondary-button" onClick={() => void load(cursor === undefined)}>Tentar novamente</button>
+      <Button type="button" className="secondary-button" onClick={() => void load(cursor === undefined)}>Tentar novamente</Button>
     </div>}
     {!loading && !error && items.length === 0 && cursor === null && <p className="empty">Nenhum alerta configurado por enquanto.</p>}
     {items.length > 0 && <ul className="configured-alerts-list">{items.map((item) => <li key={item.id}>
-      <Link to={`/produtos/${item.id}`}>{item.product.title}</Link>
+      <ProductImage src={item.product.image_url} /><Link to={`/produtos/${item.id}`}>{item.product.title}</Link>
       <span>Alvo: {formatMoney(item.alert?.target_price ?? null) ?? 'Desconhecido'}</span>
-      <span>{item.alert?.enabled ? 'Ativo' : 'Pausado'}</span>
+      <Badge variant="secondary" className={item.alert?.enabled ? 'availability-available' : ''}>{item.alert?.enabled ? 'Ativo' : 'Pausado'}</Badge>
       <Link className="text-button" to={`/produtos/${item.id}`}>Configurar alerta</Link>
     </li>)}</ul>}
-    {cursor && !error && <button type="button" className="secondary-button" disabled={loading} onClick={() => void load()}>
+    {cursor && !error && <Button type="button" className="secondary-button" disabled={loading} onClick={() => void load()}>
       Carregar mais alertas
-    </button>}
+    </Button>}
   </section>
 }

@@ -42,15 +42,14 @@ const validUrl = 'https://produto.mercadolivre.com.br/MLB-2222222222-cafeteira-_
 describe('hero', () => {
   it('exibe exatamente os textos da spec, sem card de produto, preço ou estrelas', async () => {
     await renderHero(() => undefined, () => undefined, '/')
-    const hero = within(screen.getByRole('region', { name: 'Acompanhe o preço. Compre na hora certa.' }))
-    expect(hero.getByRole('heading', { level: 1 })).toHaveTextContent('Acompanhe o preço. Compre na hora certa.')
-    expect(hero.getByText('Compre na hora certa.')).toHaveClass('hero-highlight')
+    const hero = within(screen.getByRole('region', { name: 'Seu painel de preços' }))
+    expect(hero.getByRole('heading', { level: 1 })).toHaveTextContent('Seu painel de preços')
     expect(hero.getByText('Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.')).toBeInTheDocument()
     expect(field()).toHaveAttribute('placeholder', 'https://www.mercadolivre.com.br/...')
     expect(hero.getByRole('button', { name: 'Monitorar preço' })).toBeInTheDocument()
     expect(hero.getByText('Copie o link do anúncio no Mercado Livre e cole aqui.')).toBeInTheDocument()
     expect(hero.getByText(/vêm das consultas do BestPrice ao Mercado Livre e podem diferir/)).toBeInTheDocument()
-    const region = screen.getByRole('region', { name: 'Acompanhe o preço. Compre na hora certa.' })
+    const region = screen.getByRole('region', { name: 'Seu painel de preços' })
     expect(region).not.toHaveTextContent(/R\$|★|Amazon|prime|Histórico de preço/i)
     expect(hero.queryByRole('img')).not.toBeInTheDocument()
   })

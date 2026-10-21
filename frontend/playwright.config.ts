@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+
 // Regressão visual da SPA (spec 0025): viewports 320/768/1280 px, tema claro e
 // escuro por teste. Baselines são locais (fontes do sistema); a execução em CI
 // fica para tarefa futura, conforme "Fora de escopo" da spec.
@@ -18,7 +21,8 @@ export default defineConfig({
     },
   },
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL,
+    launchOptions: executablePath ? { executablePath } : {},
     trace: 'retain-on-failure',
   },
   projects: [
@@ -36,8 +40,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:5173',
+    command: `npm run dev -- --port ${new URL(baseURL).port || '5173'} --strictPort`,
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

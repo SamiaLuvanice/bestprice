@@ -2,6 +2,31 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-21 — Validar a composição de componentes com o CSS existente
+
+**Contexto:** a migração visual da spec 0027 adicionou Tailwind v4 e componentes
+oficiais shadcn/ui a uma SPA com CSS global. A auditoria encontrou texto rosa em
+CTA verde, o wrapper de Table recortou um menu absoluto e `display: none` retirou
+o e-mail do nome acessível da conta. Uma execução simultânea de ESLint e Playwright
+falhou quando o diretório de resultados foi recriado.
+
+**Princípio:** conferir o estilo computado e os estados abertos depois de integrar
+componentes, incluindo contraste, foco e nome acessível. CSS global fora de layers
+pode prevalecer sobre utilities; ações verdes precisam conservar texto preto.
+`overflow-x: auto` também limita o overflow vertical: menus absolutos devem ficar
+em um ancestral sem esse recorte ou usar portal. Texto oculto que identifica um
+controle usa ocultação visual, preservando a árvore acessível. Diretórios gerados
+por QA precisam ser ignorados também pelo lint, além do Git.
+
+**Anti-pattern:** considerar o componente isolado como garantia de acessibilidade
+na aplicação; verificar apenas menus fechados; esconder informação acessível com
+`display: none`; incluir `test-results/` e `playwright-report/` na varredura de fontes.
+
+**Referências:** [Issue #153](https://github.com/SamiaLuvanice/bestprice/issues/153),
+[verificação 0027](../specs/0027-redesign-figma-shadcn/verification.md),
+`frontend/src/components/ui/table.tsx`, `frontend/src/styles.css`,
+`frontend/src/landing/LandingPage.css` e `frontend/eslint.config.js`.
+
 ## 2026-10-16 — O par literal stage ↔ develop é o único caminho isento do PR policy
 
 **Contexto:** três PRs de sincronização/promoção (#87, #108 e #110) foram encerradas

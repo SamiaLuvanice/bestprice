@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useId } from 'react'
 import { useDisclosure } from '../lib/focus'
 import { ExternalListingLink } from './ExternalListingLink'
@@ -21,14 +22,14 @@ export function RowActionsMenu({ id, title, href, disabled, onRefresh, onStop }:
     action()
   }
   return <div className="disclosure row-menu" ref={menu.containerRef} onKeyDown={menu.onKeyDown} onBlur={menu.onBlur}>
-    <button ref={menu.buttonRef} type="button" className="icon-button row-menu-button" data-row-menu={id} disabled={disabled}
+    <Button ref={menu.buttonRef} type="button" className="icon-button row-menu-button" data-row-menu={id} disabled={disabled}
       aria-expanded={menu.open} aria-controls={panelId} onClick={menu.toggle}>
       <MoreIcon /><span className="sr-only">Ações de {title}</span>
-    </button>
+    </Button>
     {menu.open && <div id={panelId} ref={menu.panelRef} role="group" aria-label={`Ações de ${title}`} className="disclosure-panel row-menu-panel">
-      <button type="button" className="panel-item" onClick={() => select(onRefresh)}>Atualizar agora</button>
+      <Button type="button" className="panel-item" onClick={() => select(onRefresh)}>Atualizar agora</Button>
       <ExternalListingLink href={href} className="panel-item" onClick={() => menu.close()} />
-      <button type="button" className="panel-item" onClick={() => select(onStop)}>Parar de monitorar</button>
+      <Button type="button" className="panel-item" onClick={() => select(onStop)}>Parar de monitorar</Button>
     </div>}
   </div>
 }

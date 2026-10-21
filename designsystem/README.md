@@ -74,3 +74,24 @@ Abra `index.html` diretamente no navegador, ou execute `python -m http.server 80
 Este protótipo é uma referência visual separada da aplicação em `frontend/` (React e TypeScript). Alterações aqui não atualizam a interface da aplicação.
 
 Referência visual externa: [Nudge Portfolio Template](https://nudge-folio.framer.website/). A cópia baixada desse site não faz parte desta tarefa.
+
+
+## Extensões da spec 0027 — redesign aprovado
+
+Referência: [Figma BestPrice](https://www.figma.com/design/LZVtUEAycEzfbwL0H5YL3r/BestPrice),
+com fontes editáveis em `prototypes/2026-10-21-bestprice-figma/`. O usuário aprovou
+implementar essa composição com shadcn/ui e Recharts/shadcn Charts. A identidade de
+`index.html` continua governando verde, rosa, fonte do sistema e logo original.
+
+| Token/componente | Motivo | Superfícies |
+|---|---|---|
+| Grafite `#18171b`, texto sobre grafite `#fff`, grade `#49474f` e rótulos `#d2d2d7` | Reproduzir o gráfico aprovado com contraste legível | Histórico real no detalhe; ilustração pública de preço |
+| Tokens shadcn `background/foreground/card/primary/secondary/muted/accent/destructive/border/input/ring` mapeados à identidade existente | Reutilizar código oficial dos controles sem adotar outra marca | Button, Input, Card, Badge, Table, Skeleton, Separator e Chart |
+| Conteúdo de até 1248 px, superfícies planas, linhas de produtos e navegação inferior até 700 px | Seguir os quadros desktop/mobile e manter o foco na tarefa | Área autenticada |
+| Recharts com série em degraus, pontos reais, tooltip decimal exato e tabela textual expansível | Não sugerir preços intermediários ou completude de histórico paginado | Detalhe; mais registros ampliam o período |
+| Artes fornecidas `hero-person.png`, `footer-phone.png`, `login-left.png`; recortes vetoriais identificados como ilustração | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
+
+A landing da 0027 substitui a composição da 0024: os CTAs levam a `/login`;
+nenhum botão promete cadastro público. Os sete cartões de categorias e o aviso
+local de cadastro pertencem à versão anterior. Ilustrações públicas são estáticas
+com identificação de exemplo; a conta sempre depende da API.

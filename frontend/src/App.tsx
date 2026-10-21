@@ -1,7 +1,9 @@
+import { Button } from '@/components/ui/button'
 import { useCallback, useEffect, useState } from 'react'
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type User } from './api'
 import { LoginForm } from './LoginForm'
+import { NotFoundPage } from './NotFoundPage'
 import { LandingPage } from './landing/LandingPage'
 import { AccountArea } from './dashboard/AccountArea'
 import { HeroTrackForm, type TrackFeedback } from './dashboard/HeroTrackForm'
@@ -117,11 +119,11 @@ function AppRoutes({ clock }: { clock: () => Date }) {
       <HeroTrackForm onSubmit={trackAsGuest} submitting={false} error={guestTrackError} success={null} />
       <div className="content narrow">{sessionState === 'loading' ? <p role="status">Carregando sua conta…</p> : <div className="panel">
         <p role="alert" className="error-box">{sessionError}</p>
-        <button type="button" className="primary-button" onClick={() => {
+        <Button type="button" className="primary-button" onClick={() => {
           setSessionError(null)
           setSessionState('loading')
           setSessionAttempt((attempt) => attempt + 1)
-        }}>Tentar novamente</button>
+        }}>Tentar novamente</Button>
       </div>}</div>
     </main>{footer}
   </div>
@@ -129,11 +131,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   const loginPage = <div className="page"><main className="page-main">
     <LoginForm busy={busy} error={guestMessage} onSubmit={login} onValidationFail={() => setGuestMessage(null)} />
   </main>{footer}</div>
-  const notFound = <div className="page"><main className="page-main content narrow">
-    <h1 tabIndex={-1}>Página não encontrada</h1>
-    <p>Este endereço não corresponde a uma página do BestPrice.</p>
-    <Link to={user ? '/' : '/login'}>{user ? 'Ir para Início' : 'Ir para login'}</Link>
-  </main>{footer}</div>
+  const notFound = <div className="page"><NotFoundPage authenticated={user !== null} />{footer}</div>
 
   const protectedArea = user ? <div className="page">
     <AccountArea key={user.id} user={user} clock={clock} onUnauthenticated={endSession} onLoggedOut={loggedOut} />{footer}

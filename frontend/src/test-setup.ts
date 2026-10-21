@@ -7,6 +7,14 @@ import { takeUnexpectedCalls } from './test/fakeApi'
 // produziu falha intermitente (ver verification.md da 0012). 3 s mantém o teste determinístico.
 configure({ asyncUtilTimeout: 3000 })
 
+// jsdom não mede layout; Recharts mantém sua dimensão inicial até o navegador
+// real entregar o primeiro ResizeObserver. A matriz Playwright cobre o resize.
+globalThis.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 // Rota não prevista no dublê reprova o teste em vez de virar falha de rede silenciosa.
 beforeEach(() => { takeUnexpectedCalls() })
 afterEach(() => {

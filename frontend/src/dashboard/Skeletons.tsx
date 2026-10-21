@@ -1,8 +1,9 @@
+import { Skeleton } from '@/components/ui/skeleton'
 // Esqueletos do carregamento inicial: só forma, sem número, zero ou texto de vazio, e ocultos de
 // tecnologias assistivas — o anúncio é um único status “Carregando seu painel…” (AC24).
 
 function Bars({ count, className }: { count: number; className: string }) {
-  return <>{Array.from({ length: count }, (_, index) => <span key={index} className={`skeleton-block ${className}`} />)}</>
+  return <>{Array.from({ length: count }, (_, index) => <Skeleton key={index} className={`skeleton-block ${className}`} />)}</>
 }
 
 export function IndicatorsSkeleton() {
