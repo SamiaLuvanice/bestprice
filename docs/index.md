@@ -32,7 +32,7 @@
 | Módulo | Documento | Responsabilidade |
 |---|---|---|
 | Backend | [apps/backend.md](apps/backend.md) | API FastAPI, sessão, monitoramento MLB e worker |
-| Frontend | [apps/frontend.md](apps/frontend.md) | SPA React, dashboard, histórico, alertas e notificações |
+| Frontend | [apps/frontend.md](apps/frontend.md) | SPA React, redesign shadcn/ui, gráfico Recharts, alertas e verificação visual |
 | Infraestrutura | [apps/infraestrutura.md](apps/infraestrutura.md) | Compose com Alembic e worker, proxy, automações e estado da implantação de stage |
 
 Não há painel administrativo no código atual; o provisionamento de conta é feito por comando no backend.

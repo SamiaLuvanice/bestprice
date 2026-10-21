@@ -1,3 +1,6 @@
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useId, useState, type FormEvent, type ReactNode, type Ref } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRightIcon, InfoIcon, LinkIcon } from './Icons'
@@ -20,18 +23,6 @@ type Props = {
   children?: ReactNode
 }
 
-/** Ilustração abstrata, sem texto, número, preço, data, produto ou logotipo; oculta de tecnologias assistivas. */
-function HeroIllustration() {
-  return <svg className="hero-illustration" viewBox="0 0 320 220" aria-hidden="true" focusable="false">
-    <rect x="34" y="28" width="220" height="150" rx="22" className="shape-card" />
-    <rect x="66" y="52" width="232" height="140" rx="22" className="shape-card shape-card-front" />
-    <path d="M92 156 C120 150 132 112 160 118 S204 160 230 128 S262 92 278 96" className="shape-line" />
-    <circle cx="230" cy="128" r="7" className="shape-dot" />
-    <circle cx="70" cy="36" r="10" className="shape-bubble" />
-    <circle cx="292" cy="48" r="6" className="shape-bubble" />
-  </svg>
-}
-
 /**
  * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
@@ -50,19 +41,18 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
     <div className="hero-inner">
       <div className="hero-copy">
         <h1 id="page-title" ref={headingRef} tabIndex={-1}>
-          {pageTitle ?? <><span className="hero-line">Acompanhe o preço.</span>{' '}
-          <span className="hero-line hero-highlight">Compre na hora certa.</span></>}
+          {pageTitle ?? 'Seu painel de preços'}
         </h1>
         <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>
-        <form onSubmit={(event) => void submit(event)} className="track-form">
+        <Card className="track-panel"><h2>Comece por um link</h2><p className="track-description">Cole a URL do anúncio do Mercado Livre para acompanhar automaticamente.</p><form onSubmit={(event) => void submit(event)} className="track-form">
           <div className="track-field">
             <LinkIcon className="field-icon" />
-            <label htmlFor="product-url" className="sr-only">Link do anúncio do Mercado Livre</label>
-            <input id="product-url" ref={inputRef} type="text" inputMode="url" autoComplete="url" required value={value}
+            <label htmlFor="product-url" className="track-label">Link do anúncio do Mercado Livre</label>
+            <Input id="product-url" ref={inputRef} type="text" inputMode="url" autoComplete="url" required value={value}
               onChange={(event) => setValue(event.target.value)} placeholder="https://www.mercadolivre.com.br/..."
               aria-invalid={error ? true : undefined} aria-describedby={error ? `${errorId} ${hintId}` : hintId} />
           </div>
-          <button disabled={submitting} type="submit" className="primary-button">Monitorar preço <ArrowRightIcon /></button>
+          <Button disabled={submitting} type="submit" className="primary-button">Monitorar preço <ArrowRightIcon /></Button>
         </form>
         <p id={hintId} className="hero-hint"><InfoIcon /> Copie o link do anúncio no Mercado Livre e cole aqui.</p>
         <div role="status" className="hero-status">{submitting ? 'Localizando produto...' : success}</div>
@@ -71,10 +61,10 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
           <p id={errorId} role="alert" className="error-box">{error.message}</p>
           {error.trackedProductId && <Link className="text-button" to={`/produtos/${error.trackedProductId}`}>Ver produto</Link>}
         </div>}
+        </Card>
         <p className="hero-note">Os preços exibidos vêm das consultas do BestPrice ao Mercado Livre e podem diferir do valor no checkout.</p>
         {children}
       </div>
-      <HeroIllustration />
     </div>
   </section>
 }

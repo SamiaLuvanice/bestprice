@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useId, type Ref } from 'react'
 
 type Props = {
@@ -24,8 +25,8 @@ export function StopTrackingConfirm({ title, alertActive, busy, cancelRef, onCan
       {alertActive && <p>O alerta deste produto será pausado.</p>}
     </div>
     <div className="confirm-actions">
-      <button ref={cancelRef} type="button" className="secondary-button" onClick={onCancel}>Cancelar</button>
-      <button type="button" className="danger-button" disabled={busy} onClick={onConfirm}>Parar de monitorar</button>
+      <Button ref={cancelRef} type="button" className="secondary-button" onClick={onCancel}>Cancelar</Button>
+      <Button type="button" className="danger-button" disabled={busy} onClick={onConfirm}>Parar de monitorar</Button>
     </div>
   </div>
 }

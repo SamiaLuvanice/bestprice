@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { EyeIcon, EyeOffIcon } from './dashboard/Icons'
 import bestPriceLogo from './assets/logo-bestprice.png'
@@ -36,7 +38,9 @@ export function validateLogin(email: string, password: string): LoginErrors {
 /** A arte 0023 já contém marca e mensagem. O texto alternativo resume sua proposta sem anunciar preços ilustrativos. */
 function LoginVisual() {
   return <div className="login-visual" role="img"
-    aria-label="BestPrice: mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar." />
+    aria-label="BestPrice: mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar.">
+    <div className="login-brand" aria-hidden="true"><img src={bestPriceLogo} alt="" /><span>BestPrice</span></div>
+  </div>
 }
 
 /** Entrada da tela de visitante (spec 0017), com validação própria no envio (0020/AC07). */
@@ -86,14 +90,14 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
     <div className="login-card">
       <LoginVisual />
       <div className="login-form-side">
-        <img className="login-brand-compact" src={bestPriceLogo} alt="BestPrice" />
-        <h1 id="login-title" tabIndex={-1}>Bem-vindo de volta</h1>
-        <p className="login-subtitle">Acesse sua conta para acompanhar seus anúncios e alertas.</p>
+        <div className="login-brand login-brand-compact" role="img" aria-label="BestPrice"><img src={bestPriceLogo} alt="" /><span aria-hidden="true">BestPrice</span></div>
+        <h1 id="login-title" tabIndex={-1}>Entrar na sua conta</h1>
+        <p className="login-subtitle">Acesse seus anúncios monitorados e alertas.</p>
         {error && <p role="alert" className="error-box login-error">{error}</p>}
         <form onSubmit={submit} className="login-fields" noValidate>
           <div className="login-field">
             <label htmlFor="login-email">E-mail</label>
-            <input id="login-email" ref={emailRef} className="login-input" type="email" value={email}
+            <Input id="login-email" ref={emailRef} className="login-input" type="email" value={email}
               onChange={(event) => changeEmail(event.target.value)} required autoComplete="email"
               autoCapitalize="none" autoCorrect="off" spellCheck={false}
               aria-invalid={errors.email ? true : undefined} aria-describedby={errors.email ? 'login-email-error' : undefined} />
@@ -102,19 +106,21 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
           <div className="login-field">
             <label htmlFor="login-password">Senha</label>
             <div className="input-wrap">
-              <input id="login-password" ref={passwordRef} className="login-input login-input--password"
+              <Input id="login-password" ref={passwordRef} className="login-input login-input--password"
                 type={passwordVisible ? 'text' : 'password'} value={password}
                 onChange={(event) => changePassword(event.target.value)} required autoComplete="current-password"
                 aria-invalid={errors.password ? true : undefined} aria-describedby={errors.password ? 'login-password-error' : undefined} />
-              <button type="button" className="password-toggle" aria-label="Mostrar senha" aria-pressed={passwordVisible}
+              <Button type="button" className="password-toggle" aria-label="Mostrar senha" aria-pressed={passwordVisible}
                 onClick={() => setPasswordVisible((visible) => !visible)}>
                 {passwordVisible ? <EyeOffIcon /> : <EyeIcon />}
-              </button>
+              </Button>
             </div>
             {errors.password && <p id="login-password-error" className="field-error">{errors.password}</p>}
           </div>
-          <button type="submit" className="primary-button btn-pill" aria-disabled={busy || undefined} aria-busy={busy || undefined}>{busy ? 'Entrando…' : 'Entrar'}</button>
+          <Button type="submit" className="primary-button btn-pill" aria-disabled={busy || undefined} aria-busy={busy || undefined}>{busy ? 'Entrando…' : 'Entrar'}</Button>
         </form>
+        <p className="login-note">O monitoramento começa com um link do Mercado Livre.</p>
+        <Button asChild variant="link" className="login-back"><a href="/">Voltar para o início</a></Button>
       </div>
     </div>
   </section>

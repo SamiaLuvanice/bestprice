@@ -1,6 +1,6 @@
 # Módulo frontend
 
-## Identidade visual atual — spec 0015
+## Identidade visual atual — specs 0015 e 0027
 
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
 copiada de
@@ -11,8 +11,11 @@ A classe `.brand-logo` exibe a imagem inteira (`object-fit: contain`, sem
 `border-radius` nem outro recorte), com superfície de apoio
 `--color-logo-surface`. O texto visual “BestPrice” ao lado da imagem fica oculto
 para leitores de tela; a imagem fornece o nome acessível.
-`designsystem/index.html` orienta os tokens; a composição atual da entrada segue
-a referência fornecida na spec 0023. As extensões aplicadas estão registradas em
+`designsystem/index.html` orienta os tokens. A spec 0027 aplica a composição
+aprovada no Figma às telas públicas e autenticadas, usando os quadros editáveis em
+`designsystem/prototypes/2026-10-21-bestprice-figma/`. A referência local foi usada
+porque o conector Figma repetiu autenticação; alterações posteriores no serviço
+não foram conferidas. As extensões aplicadas estão registradas em
 [`designsystem/README.md`](../../designsystem/README.md). A partir da spec 0025,
 criar ou alterar HTML/CSS também exige ler
 [`designsystem/agent-guidelines.md`](../../designsystem/agent-guidelines.md), que
@@ -26,9 +29,9 @@ sobre sugestões dessas ferramentas.
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
 operacional (`prefers-color-scheme`); a SPA não oferece seletor nem grava uma
 preferência de tema. A ação principal usa verde com texto preto; o rosa marca
-links e destaques. Cabeçalho, menus e diálogos têm base sólida legível, com
-`backdrop-filter` como melhoria progressiva dentro de `@supports`. Nessas
-regras, `-webkit-backdrop-filter` vem **antes** de
+links e destaques. O cabeçalho e a página de detalhe têm superfícies sólidas;
+menus e confirmações preservam a base sólida legível, com `backdrop-filter` como
+melhoria progressiva dentro de `@supports`. Nessas regras, `-webkit-backdrop-filter` vem **antes** de
 `backdrop-filter`: na ordem inversa, o lightningcss usado pelo build do Vite
 reduzia o par só à forma prefixada, que o Chrome não aplica, e o vidro ficava sem
 desfoque (defeito presente desde a 0015 e corrigido na 0017). A tipografia usa fontes do sistema e
@@ -37,34 +40,35 @@ carga, erro, sucesso e foco seguem os mesmos fluxos funcionais descritos abaixo.
 Em telas estreitas, a lista de produtos continua empilhada e sem rolagem horizontal.
 O layout reduz movimento não essencial quando `prefers-reduced-motion` está ativo.
 
-O catálogo contém dados demonstrativos; a SPA continua mostrando apenas dados da
-API. A verificação visual da spec 0015 (à época, com tema automático) foi feita em
+O catálogo e as ilustrações públicas contêm dados demonstrativos identificados
+como exemplo. Produtos, preços e métricas da conta continuam vindo apenas da API.
+A composição da 0027 usa conteúdo de até 1248 px, oportunidades em linhas e
+navegação inferior da conta até 700 px. Os quatro indicadores existentes e o
+formulário por link em Produtos foram preservados. A verificação visual da spec 0015 (à época, com tema automático) foi feita em
 Chromium nas larguras de 320, 768 e 1280 px, nos dois temas, com fixtures sintéticas
 e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
 [`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
 
-## Tela de entrada — specs 0017, 0020 e 0023
+## Tela de entrada — specs 0017, 0020, 0023 e 0027
 
 Na rota `/login`, sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) direto,
 sem o cabeçalho (masthead) nem o hero com o campo de link (spec 0020, que revoga o
-trecho da 0017 que os mantinha acima do login); só o rodapé acompanha. A spec 0023
-substitui a antiga casca de vidro e a coluna ilustrativa pela imagem fornecida,
+trecho da 0017 que os mantinha acima do login); só o rodapé acompanha. A composição
+em duas metades da 0023 foi atualizada pela 0027 com a arte e a marca do redesign,
 mantendo os controles e a autenticação existentes:
 
 - **Composição:** `.login-shell` e `.login-card` ocupam a largura disponível. Acima
   de 840 px, o card divide a tela em duas metades, com arte à esquerda e formulário
-  sobre branco à direita. Não há vidro, brilhos nem conteúdo sobreposto à arte.
-- **Coluna visual:** `.login-visual` usa `frontend/src/assets/imagem-lateral.png`
-  como imagem de fundo com `cover` e enquadramento pelo topo. A marca e a mensagem
-  incorporadas à imagem permanecem visíveis; preços, produtos e percentuais nela
-  são apenas ilustração estática, sem relação com anúncios ou com a conta. O
-  elemento tem `role="img"` e uma descrição breve, sem anunciar valores como dados.
-  Até 840 px, a coluna é ocultada e o formulário exibe a logo oficial compacta
-  (`.login-brand-compact`, 40 px de altura) antes do título. Nessa faixa, o CSS
-  computado não referencia a arte e o inventário do navegador não a listou na
-  verificação da spec 0023; não houve medição direta de bytes transferidos.
-- **Formulário:** título “Bem-vindo de volta” (`h1`, a única da tela), subtítulo,
+  sobre branco à direita. A marca oficial e o texto BestPrice ficam sobre a área
+  clara da arte, conforme a referência aprovada; o formulário permanece separado.
+- **Coluna visual:** `.login-visual` usa `frontend/src/assets/redesign/login-left.png`
+  como fundo com `cover` e enquadramento pelo topo. A arte é ilustração estática,
+  sem vínculo com anúncios ou com a conta. O elemento tem `role="img"` e descrição
+  breve; sua marca visual interna é decorativa para tecnologias assistivas.
+  Até 840 px, a coluna é ocultada e a marca compacta, com logo e texto BestPrice,
+  aparece antes do título. A marca compacta tem nome acessível “BestPrice”.
+- **Formulário:** título “Entrar na sua conta” (`h1`, a única da tela), subtítulo,
   E-mail (`type="email"`, `autocomplete="email"`) e Senha (`autocomplete="current-password"`).
   Cadastro, recuperação de senha, separador “ou” e login com Google não fazem
   parte desta tela.
@@ -93,36 +97,61 @@ A verificação (QA em Chrome headless com axe, larguras de 320, 768 e 1280 px, 
 desfoque e em modo sólido simulado) e os limites estão em
 [`verification.md` da 0017](../../specs/0017-redesign-pagina-login/verification.md); a 0020 está em
 [`verification.md`](../../specs/0020-login-sem-bloco-superior/verification.md).
-A verificação da composição atual, inclusive em 320, 768 e 1280 × 640 px, está na
+A verificação histórica da imagem anterior está na
 [`verification.md` da 0023](../../specs/0023-login-com-imagem-lateral/verification.md).
+A composição atual e seus estados em 320, 768 e 1280 px estão na
+[verificação da 0027](../../specs/0027-redesign-figma-shadcn/verification.md).
 
-## Landing pública — spec 0024
+## Landing pública — specs 0024 e 0027
 
 Em `/`, enquanto a sessão está pendente, depois de um 401 ou se a consulta de
-sessão falhar, `App.tsx` mostra `LandingPage`. Se `GET /api/auth/me` confirmar a
-sessão, a mesma URL mostra o painel autenticado. A landing é conteúdo estático:
-não busca anúncios, preços, categorias ou métricas na API. A arte do hero e do
-banner e as sete imagens de categoria são WebP locais em
-`frontend/src/assets/landing/`. O recorte CSS do hero mostra a parte ilustrativa
-da imagem, sem repetir o texto que já está incorporado à sua esquerda; os
-textos navegáveis e acessíveis são elementos React. Produtos e preços dentro das
-artes são ilustrativos, não resultados reais.
+sessão falhar, `App.tsx` mostra `LandingPage`. Com sessão válida, a mesma URL mostra
+o painel. A landing é estática: não busca anúncios, preços, categorias ou métricas
+na API. A 0027 substitui a composição da 0024 pelo redesign aprovado: hero “O preço
+muda. Você fica sabendo.”, três passos, prévia ilustrativa do acompanhamento,
+seção de alertas, banner final e rodapé. Todos os CTAs de entrada levam a `/login`;
+nenhum deles promete cadastro público. Os sete cartões de categoria e o aviso
+local de cadastro pertencem à composição anterior.
 
-A página apresenta marca oficial, proposta de valor, quatro benefícios, quatro
-etapas, sete categorias ilustrativas, banner final e rodapé. Links do cabeçalho
-levam às seções da própria página. Em telas estreitas, o menu abre e fecha por
-botão com `aria-expanded`; há link para pular ao conteúdo, foco visível e redução
-de movimento conforme a preferência do sistema. A âncora `#funcionalidades`
-tem `scroll-margin-top: 94px` para permanecer visível sob o cabeçalho fixo.
-O verde de leitura `#087c1e` mantém contraste calculado de 5,37:1 sobre branco
-e 5,11:1 no selo; o botão principal conserva o verde de ação com texto escuro.
-As ações “Entrar” levam a
-`/login`. “Criar conta gratuita” exibe um aviso local com link para entrar, sem
-trocar de rota: o cadastro público ainda não existe. `frontend/index.html`
-contém a descrição de busca da aplicação. Consulte a
-[verificação da 0024](../../specs/0024-landing-page-publica/verification.md).
+As artes PNG fornecidas e os recortes SVG ficam em `frontend/src/assets/redesign/`:
+`hero-person.png`, `footer-phone.png`, `login-left.png`, `price-preview.svg` e
+`dashboard-preview.svg`. As prévias de preço e painel são identificadas como
+exemplos, sem representar ofertas reais ou dados da pessoa. Textos, links e
+controles da página são elementos React; as prévias são apenas ilustrações.
 
-## Rotas e fluxo atual — specs 0021 e 0024
+O cabeçalho leva às âncoras `#inicio`, `#como-funciona`, `#funcionalidades` e
+`#alertas`. O menu estreito usa botão com `aria-expanded`; a página mantém link
+para pular ao conteúdo, foco nos controles e movimento reduzido. A ação principal
+usa verde com texto preto. A [verificação da 0024](../../specs/0024-landing-page-publica/verification.md)
+conserva a evidência histórica; os baselines atuais estão na
+[verificação da 0027](../../specs/0027-redesign-figma-shadcn/verification.md).
+
+## Componentes e histórico visual — spec 0027
+
+O frontend usa Tailwind CSS v4 pelo plugin `@tailwindcss/vite` e código local dos
+componentes oficiais shadcn/ui em `frontend/src/components/ui/`: Button, Input,
+Card, Badge, Table, Skeleton, Separator e Chart. `frontend/components.json` define
+o estilo `new-york`, os aliases `@/` e os tokens em `src/styles.css`.
+`src/lib/utils.ts` combina classes com `clsx` e `tailwind-merge`; Radix e Lucide
+compõem os primitivos e ícones. Os tokens shadcn são mapeados à identidade
+BestPrice. A variante `.dark` é explícita e não responde ao esquema do sistema;
+a aplicação continua com tema claro fixo.
+
+No detalhe, `ProductDetailDialog` carrega `PriceHistoryChart` por `lazy`/`Suspense`.
+Recharts e Chart do shadcn ficam em um chunk separado. O gráfico usa somente
+registros BRL válidos já carregados, ordenados do mais antigo ao mais recente,
+com linha em degraus e pontos sem animação. O tooltip e “Ver registros de preço”
+mostram a string decimal original formatada; a conversão para `number` serve
+somente às coordenadas do desenho, sem decidir regras ou métricas monetárias.
+Sem registros válidos, há orientação de vazio. Enquanto existe `next_cursor`,
+o texto informa cobertura parcial e “Carregar mais preços” amplia o período.
+Não há filtros de data nem extrapolação de preços intermediários.
+
+A Table mantém overflow visível para os menus de linha; em telas estreitas a
+lista é empilhada por CSS. E-mail oculto visualmente no botão da conta continua
+na árvore acessível. Menus e confirmação mantêm os controles de foco existentes.
+
+## Rotas e fluxo atual — specs 0021, 0024 e 0027
 
 A SPA usa `react-router-dom` e mantém o contrato REST da spec 0013. `App.tsx` consulta `GET /api/auth/me` ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha de rede ou indisponibilidade mostra a landing em `/`; nas demais rotas, preserva o estado de erro com “Tentar novamente”, sem encerrar a sessão. A conta precisa ser provisionada no backend antes do login; não há cadastro público.
 
@@ -134,7 +163,7 @@ A SPA usa `react-router-dom` e mantém o contrato REST da spec 0013. `App.tsx` c
 | `/produtos/:id` | Página autenticada do monitoramento próprio, com histórico, alerta e ações. |
 | `/alertas` | Alertas configurados e notificações recebidas, em grupos distintos. |
 
-O visitante que abre uma rota protegida vai a `/login?returnTo=...`; depois de entrar, retorna à rota interna solicitada. O destino fica na URL durante uma recarga do login e `safeReturnTo` aceita somente `/`, `/produtos`, `/alertas` e um caminho de detalhe de produto, sem consulta ou fragmento. Entrada direta em `/login` leva ao Início. Logout leva a `/login`; o navegador revalida a sessão ao restaurar uma página pelo histórico. Caminho não reconhecido mostra página não encontrada com link para Início ou login. Cada tela atualiza o título da aba e foca seu título principal; a navegação marca a seção ativa, incluindo Produtos no detalhe.
+O visitante que abre uma rota protegida vai a `/login?returnTo=...`; depois de entrar, retorna à rota interna solicitada. O destino fica na URL durante uma recarga do login e `safeReturnTo` aceita somente `/`, `/produtos`, `/alertas` e um caminho de detalhe de produto, sem consulta ou fragmento. Entrada direta em `/login` leva ao Início. Logout leva a `/login`; o navegador revalida a sessão ao restaurar uma página pelo histórico. Caminho não reconhecido mostra `NotFoundPage`, com marca, título “Este endereço saiu do radar.”, curva decorativa e CTA verde: “Ir para Início” com sessão ou “Entrar” para visitante. “Voltar uma página” usa o histórico do navegador. Cada tela atualiza o título da aba e foca seu título principal; a navegação marca a seção ativa, incluindo Produtos no detalhe.
 
 O cabeçalho autenticado oferece links Início/Produtos/Alertas, sino e menu da conta. Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 
@@ -143,18 +172,21 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | Arquivo | Responsabilidade |
 |---|---|
 | `frontend/src/App.tsx` | `BrowserRouter`, rotas, consulta e revalidação de sessão, login, retorno seguro e títulos; recebe o relógio injetável (`clock`) |
-| `frontend/src/landing/LandingPage.tsx`, `LandingPage.css` | Landing pública, navegação por âncoras, menu móvel, aviso local de cadastro e apresentação responsiva |
-| `frontend/src/assets/landing/` | Nove WebP locais: hero, banner e sete categorias ilustrativas |
-| `frontend/src/LoginForm.tsx` | Tela de entrada (specs 0017, 0020 e 0023): arte lateral, validação própria no envio, campos, “Mostrar senha”, envio único e foco em Senha após falha |
+| `frontend/src/landing/LandingPage.tsx`, `LandingPage.css` | Landing pública da 0027, âncoras, menu móvel e CTAs para login |
+| `frontend/src/assets/redesign/` | Artes fornecidas e prévias SVG identificadas como ilustração |
+| `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único e foco em Senha após falha |
+| `frontend/src/NotFoundPage.tsx` | Recuperação de rota inexistente, CTA por sessão e ação de voltar |
+| `frontend/src/components/ui/`, `frontend/src/lib/utils.ts`, `frontend/components.json` | Componentes oficiais shadcn/ui, combinação de classes e configuração de geração |
 | `frontend/src/navigation/returnTo.ts` | Allowlist de destinos internos após login ou expiração de sessão |
 | `frontend/src/dashboard/AccountArea.tsx` | Orquestra as telas autenticadas, dados, ações e foco; componentes de apresentação não chamam `fetch` |
 | `frontend/src/dashboard/AppHeader.tsx`, `AccountMenu.tsx` | Cabeçalho, links de rota, seção ativa e menu da conta |
 | `frontend/src/dashboard/NotificationBell.tsx`, `useNotifications.ts` | Sino com contador e painel das não lidas; notificações da rota Alertas; marcar como lida |
 | `frontend/src/dashboard/HeroTrackForm.tsx` | Campo de link em Início e Produtos (sem validação nativa de URL), sucesso, erro e link “Ver produto” no sucesso ou 409 `already_tracked` |
-| `frontend/src/dashboard/SummaryIndicators.tsx`, `OpportunityList.tsx` | Indicadores do resumo e cards de oportunidades na ordem da API |
+| `frontend/src/dashboard/SummaryIndicators.tsx`, `OpportunityList.tsx` | Indicadores existentes e linhas de oportunidades na ordem da API |
 | `frontend/src/dashboard/TrackedProductsTable.tsx`, `TrackedProductRow.tsx`, `RowActionsMenu.tsx` | Tabela “Seus produtos” (empilhada por CSS em telas estreitas), linha e menu de ações |
 | `frontend/src/dashboard/ConfirmStopDialog.tsx`, `StopTrackingConfirm.tsx` | Confirmação de “Parar de monitorar” pela linha e conteúdo compartilhado com o detalhe |
-| `frontend/src/dashboard/ProductDetailDialog.tsx` | Conteúdo da página de detalhe: histórico, estado do monitoramento e alerta |
+| `frontend/src/dashboard/ProductDetailDialog.tsx` | Página de detalhe: imagem, preço, contexto, histórico, alerta e carregamento lazy do gráfico |
+| `frontend/src/dashboard/PriceHistoryChart.tsx` | Recharts/shadcn Chart, tooltip, tabela textual e cobertura parcial |
 | `frontend/src/dashboard/ConfiguredAlerts.tsx` | Grupo de alertas configurados, com paginação completa de monitoramentos |
 | `frontend/src/dashboard/RecentUpdatesTimeline.tsx`, `AlertsSection.tsx` | Linha do tempo de `recent_updates` e grupo de notificações com estado de leitura |
 | `frontend/src/dashboard/trackedList.ts`, `useDashboard.ts` | Reducer da lista “Seus produtos” e carga do painel com descarte de respostas antigas |
@@ -199,9 +231,9 @@ Com a integração Mercado Livre desligada, o backend ainda valida a URL, inform
 
 ## Testes e verificação
 
-Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build`. Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 3 s (`vite.config.ts` e `src/test-setup.ts`); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código da interface; dados de exemplo existem apenas nos testes. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
+Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build`. Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 3 s (`vite.config.ts` e `src/test-setup.ts`); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código TypeScript/CSS da interface. Dados de exemplo de listas ficam nas fixtures; as artes públicas são ilustrações estáticas identificadas. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
 
-A regressão visual (spec 0025) roda por Playwright com `npm run test:visual`.
+A regressão visual (specs 0025 e 0027) roda por Playwright com `npm run test:visual`.
 `frontend/playwright.config.ts` sobe o Vite em `http://127.0.0.1:5173` e define os
 projetos `viewport-320`, `viewport-768` e `viewport-1280`;
 `frontend/tests/visual/public-pages.spec.ts` captura landing, login e página não
@@ -211,6 +243,21 @@ Playwright (a SPA permanece no tema claro fixo descrito acima). Os baselines fic
 `frontend/tests/visual/__screenshots__/` e mudam só por revisão explícita
 (`--update-snapshots`, com o diff mostrado); o Vitest exclui `tests/visual/**`.
 A suíte é local: não roda no CI e os baselines dependem das fontes da máquina.
-A evidência está na [verificação da spec 0025](../../specs/0025-harness-design-tooling/verification.md).
+A evidência inicial está na [verificação da spec 0025](../../specs/0025-harness-design-tooling/verification.md).
 
-A inspeção em navegador com axe (WCAG 2.1 AA, larguras de 320 a 1280 px, sobre Compose isolado com fixtures sintéticas) é manual e roda fora do repositório: não faz parte do CI nem dos scripts versionados (o Playwright presente em `frontend/` cobre apenas snapshots de regressão visual, sem axe). Só Chromium foi inspecionado, sem leitor de tela nem dispositivo real; método e resultados estão na [evidência da spec 0012](../../specs/0012-area-usuario-monitoramento/verification.md).
+`redesign.spec.ts` acrescenta 30 cenários: dez rotas/estados nos três viewports,
+com fixtures de API interceptadas, axe (`@axe-core/playwright`, tags WCAG A/AA),
+ausência de overflow e controles de pelo menos 44 px. Também verifica nome acessível
+da conta e o menu de produto aberto por hit test, além de salvar capturas em
+`test-results/`. São 48 casos no total com os 18 snapshots públicos. Para usar outra
+porta local, defina `PLAYWRIGHT_BASE_URL`; para um Chromium existente, use
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Esses overrides não alteram o proxy da API.
+`test-results/` e `playwright-report/` são ignorados por Git e ESLint.
+
+Na 0027, lint/build, 299 testes Vitest e 48 verificações Playwright passaram;
+os 18 baselines foram aprovados em revisão explícita. A auditoria é local, sem
+leitor de tela ou dispositivo real, e não substitui teste contra uma conta real.
+Método, falhas corrigidas e limites estão na
+[verificação da 0027](../../specs/0027-redesign-figma-shadcn/verification.md).
+A inspeção manual anterior sobre Compose está preservada na
+[evidência da 0012](../../specs/0012-area-usuario-monitoramento/verification.md).

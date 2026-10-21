@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button'
+import { Table } from '@/components/ui/table'
 import type { ReactNode, Ref } from 'react'
 import { productColumns, type RowState } from './productColumns'
 import { TrackedProductRow } from './TrackedProductRow'
@@ -29,18 +31,18 @@ export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore,
     <div role="status" data-testid="products-status" className="section-status">{message}</div>
     {skeleton}
     {!skeleton && <>
-      <table role="table" className="products-table" aria-labelledby="tracked-title">
+      <Table role="table" className="products-table" aria-labelledby="tracked-title">
         <thead role="rowgroup">
           <tr role="row">{productColumns.map((column) => <th role="columnheader" scope="col" key={column}>{column}</th>)}</tr>
         </thead>
         {entries.map((entry) => <TrackedProductRow key={entry.tracked.id} entry={entry} state={rowStates[entry.tracked.id] ?? idle}
           actions={renderActions?.(entry)} />)}
-      </table>
+      </Table>
       <p className="table-note">Menor e maior preço desde o primeiro registro no BestPrice.</p>
       {loadMoreError && <p role="alert" className="error-box">{loadMoreError}</p>}
-      {hasMore && <button type="button" className="secondary-button" disabled={loadingMore} onClick={onLoadMore}>
+      {hasMore && <Button type="button" className="secondary-button" disabled={loadingMore} onClick={onLoadMore}>
         Carregar mais{' '}<span className="sr-only">produtos</span>
-      </button>}
+      </Button>}
     </>}
   </section>
 }

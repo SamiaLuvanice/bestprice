@@ -26,7 +26,7 @@ function fillLogin(email: string, password: string) {
 it('mostra login diretamente ao visitante, sem formulário de monitoramento', async () => {
   guestApi()
   visit('/login')
-  expect(await screen.findByRole('heading', { name: 'Bem-vindo de volta', level: 1 })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Entrar na sua conta', level: 1 })).toBeInTheDocument()
   expect(screen.getByRole('main').firstElementChild).toContainElement(screen.getByLabelText('E-mail'))
   expect(screen.queryByRole('banner')).not.toBeInTheDocument()
   expect(screen.queryByPlaceholderText('https://www.mercadolivre.com.br/...')).not.toBeInTheDocument()
@@ -36,7 +36,7 @@ it('mantém marca e orientação enquanto verifica a sessão e quando ela falha'
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))))
   visit('/produtos')
   expect(screen.getByRole('banner')).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Seu painel de preços' })).toBeInTheDocument()
   expect(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...')).toBeInTheDocument()
   expect(await screen.findByText('Serviço temporariamente indisponível.')).toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
@@ -89,7 +89,7 @@ it('preserva preço desconhecido sem criar valor zero no detalhe', async () => {
   visit('/produtos/tracking-1')
   expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
   expect(screen.getByText('Preço indisponível')).toBeInTheDocument()
-  expect(screen.getByText('Ainda não há preço válido registrado.')).toBeInTheDocument()
+  expect(await screen.findByText('O gráfico aparece após o primeiro preço válido registrado.')).toBeInTheDocument()
   expect(screen.queryByText(/R\$\s*0,00/)).not.toBeInTheDocument()
 })
 
@@ -125,7 +125,7 @@ it('mostra falha da integração no formulário sem afirmar sucesso', async () =
   fakeApi((url, init) => url === '/api/tracked-products' && init?.method === 'POST'
     ? reply(503, apiError('integration_not_configured', 'Integração indisponível no momento.')) : undefined)
   visit('/')
-  await screen.findByRole('heading', { name: 'Acompanhe o preço. Compre na hora certa.' })
+  await screen.findByRole('heading', { name: 'Seu painel de preços' })
   fireEvent.change(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...'), {
     target: { value: 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM' },
   })

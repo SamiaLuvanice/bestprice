@@ -83,6 +83,11 @@ Começar como monólito modular. Fluxo conceitual: React/Vite → API REST FastA
 | Banco | PostgreSQL | Tabelas de domínio por migrations Alembic; ver [banco](database.md) |
 | Infraestrutura | Docker, Compose, Git, GitHub, Actions e CI/CD | Stack local, CI e workflow de publicação de imagens/release; stage externo configurado pela spec 0018, sem destino DEV/PROD |
 
+A tabela acima preserva o recorte histórico da spec 0013. Na implementação da
+0027, o frontend já usa React Router, shadcn/ui com Tailwind CSS v4 e Recharts/shadcn
+Chart. O gráfico representa o histórico carregado; filtros temporais e demais
+métricas pretendidas neste contexto continuam dependendo de specs próprias.
+
 Não instalar dependências apenas para antecipar essa lista. Introduzi-las nas specs que justificarem seu uso, mantendo os padrões existentes e contratos compatíveis entre frontend e backend.
 
 ## Ambientes e entrega
