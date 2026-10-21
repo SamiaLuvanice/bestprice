@@ -7,4 +7,4 @@
 - [x] T05: implementar casca autenticada, início, produtos e alertas.
 - [x] T06: implementar detalhe e gráfico acessível de dados reais.
 - [x] T07: executar lint, testes, build, verificação responsiva e revisão.
-- [ ] T08: entregar PR; evidências e sincronização final de onboarding concluídas em 21/10/2026, após gates e revisão. A abertura do PR permanece pendente.
+- [x] T08: evidências e sincronização final de onboarding concluídas após gates e revisão; [PR #154](https://github.com/SamiaLuvanice/bestprice/pull/154) entregue para `develop`, como rascunho para revisão.

@@ -4,7 +4,7 @@ Issue: https://github.com/SamiaLuvanice/bestprice/issues/153
 Branch: `feature/0027-issue-153-redesign-figma-shadcn`.
 Base: `origin/develop` em `4855704`, após fetch em 21/10/2026.
 Worktree: `.worktrees/feature-0027-issue-153-redesign-figma-shadcn`.
-Estado: implementação verificada localmente e documentação sincronizada; aguarda abertura e revisão do PR.
+Estado: implementação entregue; aguarda revisão no [PR #154](https://github.com/SamiaLuvanice/bestprice/pull/154), aberto como rascunho para `develop`.
 
 ## Referência e limites
 
@@ -146,3 +146,12 @@ alteração de código, esta sincronização deve ser repetida após a nova veri
 Conferência documental final: os links locais nos dez documentos alterados foram
 resolvidos sem destino ausente; `git diff --check` passou. Nenhum teste de aplicação
 foi repetido durante esta etapa documental.
+
+
+## Entrega do PR — 21/10/2026
+
+[PR #154](https://github.com/SamiaLuvanice/bestprice/pull/154) aberto como rascunho para `develop`, com `Closes #153`.
+Implementação e sincronização documental publicadas inicialmente em `2711886`.
+Esta atualização altera somente o registro da entrega, sem mudança de código.
+CI remoto em acompanhamento; sem merge ou implantação. Branch e worktree mantidas
+para revisão. A spec permanece `pronta` até integração em `develop`.
