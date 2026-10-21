@@ -40,16 +40,40 @@ edição (`Novo valor desejado`, com valor pré-preenchido), metadados como `dt/
 (`products.test.tsx`), `hero.test.tsx` e `refresh-row.test.tsx` abrindo "Adicionar anúncio"
 em Produtos, e `App.test.tsx`/`states.test.tsx` conforme AC14/AC09.
 
-## Gates finais (estado commitado, `89cb25b`)
+## Intermitência do Vitest (investigada)
+
+Com `asyncUtilTimeout` de 3000 ms, a suíte inteira falhou de forma intermitente em testes
+variados, sempre no limite de 3 s de `findBy`/`waitFor`:
+
+- Linha de base (antes da 0028): 1ª execução `1 failed | 298 passed`; 2ª `299 passed`.
+- Durante a 0028, 6 execuções da suíte inteira: 3 com `340 passed`, uma com
+  `routes.test.tsx › preserva o destino protegido durante login e recarga` (3030 ms), uma com
+  esse mesmo teste (4513 ms) e `App.test.tsx › preserva preço desconhecido sem criar valor zero
+  no detalhe` (3042 ms).
+- Isolados: `App.test.tsx` + `routes.test.tsx` 5× seguidas, **33 passed (33)** em todas;
+  `routes.test.tsx` sozinho 3×, **17 passed (17)**.
+
+Conclusão: espera de teste curta para a carga dos workers em paralelo, não regressão
+(testes diferentes, passam isolados, padrão já presente na linha de base). Ajuste:
+`asyncUtilTimeout` de 3000 → 6000 ms em `src/test-setup.ts` (o `testTimeout` continua
+15 s; um estado que nunca aparece ainda reprova). Depois do ajuste, 3 execuções seguidas da
+suíte inteira: **340 passed (340)** em todas.
+
+A landing em `public-pages.spec.ts` também falhou 1 vez em 18 com a rolagem instantânea
+(imagem lazy ainda não iniciada). O auxiliar passou a trocar as imagens para `eager` e
+aguardar `decode()`, como já fazia `redesign.spec.ts`.
+
+## Gates finais
 
 - `npm run lint`: passou, 0 erros e 0 avisos.
-- `npm test -- --run`: **340 passed (340)**, 31 arquivos. Numa execução anterior do mesmo
-  estado, `routes.test.tsx › preserva o destino protegido durante login e recarga` falhou
-  uma vez (~3 s, tempo sob carga); repetido isolado 3× (**17/17** cada) e a suíte inteira
-  de novo (**340/340**). Mesmo padrão intermitente da linha de base; não relacionado à 0028.
+- `npm test -- --run`: **340 passed (340)**, 31 arquivos (3 execuções após o ajuste de espera).
 - `npm run build`: TypeScript e Vite passaram; Recharts segue em chunk lazy.
-- `npm run test:visual -- --workers=3`: **57 passed** sem `--update-snapshots`
-  (18 capturas públicas + 30 cenários com axe + 9 novos: tokens e imagem do detalhe).
+- `npm run test:visual -- --workers=3`: **57 passed** (18 capturas públicas + 30 cenários com
+  axe + 9 novos: tokens e imagem do detalhe), sem `--update-snapshots`, após o ajuste do
+  auxiliar de imagens; repetido em execução isolada: **57 passed (1,1 min)**. Uma execução
+  intermediária, que seguiu rodando depois de o shell ser movido para segundo plano, teve
+  3 falhas com duração de 8,1 min contra limite de 30 s (navegador parado; asserções
+  diferentes, sem captura da página): tratada como travamento do ambiente, não contada.
 - `git diff --check origin/develop..HEAD`: passou.
 - Hooks `pre-commit` (trailing whitespace, EOF, large files, private key, guarda de
   branch) passaram em todos os commits; nenhum `--no-verify`.
