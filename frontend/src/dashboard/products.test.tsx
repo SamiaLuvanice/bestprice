@@ -228,6 +228,26 @@ describe('Produtos compacto (0028/AC05, AC10)', () => {
     expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeInTheDocument()
   })
 
+  it('recolher fecha o painel, limpa o retorno e aria-controls aponta para o painel', async () => {
+    const { user } = await renderProducts(dashboardFixture({ items: [product('1', 'Fone sem fio')] }), (url, init) =>
+      url === '/api/tracked-products' && init?.method === 'POST'
+        ? reply(422, apiError('invalid_url', 'Informe um link de anúncio do Mercado Livre.')) : undefined)
+    const add = screen.getByRole('button', { name: 'Adicionar anúncio' })
+    const panelId = add.getAttribute('aria-controls')
+    expect(panelId && document.getElementById(panelId)).toBeTruthy()
+    await user.click(add)
+    await user.type(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' }), 'qualquer')
+    await user.click(screen.getByRole('button', { name: 'Monitorar preço' }))
+    expect(await screen.findByText('Informe um link de anúncio do Mercado Livre.')).toBeInTheDocument()
+    await user.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Informe um link de anúncio do Mercado Livre.')).not.toBeInTheDocument()
+    await user.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByText('Informe um link de anúncio do Mercado Livre.')).not.toBeInTheDocument()
+  })
+
   it('mantém "vs. preço anterior" fora da pílula de variação', async () => {
     await renderProducts(dashboardFixture({ items: [product('1', 'Fone sem fio')] }))
     const cell = within(productRow('Fone sem fio')).getAllByRole('cell')[2]

@@ -619,7 +619,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     {(currentSection === 'home' || (currentSection === 'products' && !detailId)) && <HeroTrackForm onSubmit={track} submitting={submitting}
       error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={pageHeading}
       inputRef={linkInput} priority={isEmpty} pageTitle={currentSection === 'products' ? 'Produtos' : undefined}
-      compact={currentSection === 'products' && !isEmpty}>
+      compact={currentSection === 'products' && !isEmpty}
+      onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
       {isEmpty && <div className="empty-state">
         <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
         <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>

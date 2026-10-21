@@ -24,6 +24,8 @@ type Props = {
    * expande o formulário. Sem produtos, o formulário aparece aberto como convite.
    */
   compact?: boolean
+  /** Ao recolher o formulário compacto: limpa erro e sucesso do último envio. */
+  onDismissFeedback?: () => void
   /** Conteúdo extra abaixo do formulário (ex.: estado vazio). */
   children?: ReactNode
 }
@@ -32,13 +34,18 @@ type Props = {
  * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
-export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, children }: Props) {
+export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, onDismissFeedback, children }: Props) {
   const panelId = useId()
   const [expanded, setExpanded] = useState(false)
   const focusOnOpen = useRef(false)
   const fieldRef = useRef<HTMLInputElement | null>(null)
-  // Erro ou sucesso do envio continua visível mesmo que a pessoa não tenha expandido o formulário.
-  const showForm = !compact || expanded || error !== null || success !== null || submitting
+  // Fonte única do painel: no modo compacto só `expanded` decide; recolher fecha e limpa o retorno.
+  const open = !compact || expanded
+  function toggle() {
+    if (expanded) onDismissFeedback?.()
+    focusOnOpen.current = !expanded
+    setExpanded(!expanded)
+  }
   useEffect(() => {
     if (expanded && focusOnOpen.current) { focusOnOpen.current = false; fieldRef.current?.focus() }
   }, [expanded])
@@ -64,11 +71,12 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
           <h1 id="page-title" ref={headingRef} tabIndex={-1}>
             {pageTitle ?? 'Seu painel de preços'}
           </h1>
-          {compact && <Button type="button" variant="link" className="add-listing" aria-expanded={showForm} aria-controls={panelId}
-            onClick={() => { focusOnOpen.current = !expanded; setExpanded(!expanded) }}>Adicionar anúncio <span aria-hidden="true">{expanded ? '−' : '+'}</span></Button>}
+          {compact && <Button type="button" variant="link" className="add-listing" aria-expanded={open} aria-controls={panelId}
+            onClick={toggle}>Adicionar anúncio <span aria-hidden="true">{open ? '−' : '+'}</span></Button>}
         </div>
         {!compact && <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>}
-        {showForm && <Card className="track-panel" id={panelId}>{!compact && <><h2>Comece por um link</h2><p className="track-description">Cole a URL do anúncio do Mercado Livre para acompanhar automaticamente.</p></>}<form onSubmit={(event) => void submit(event)} className="track-form">
+        {/* Sempre no DOM para aria-controls apontar para um id existente; `hidden` quando recolhido. */}
+        <Card className="track-panel" id={panelId} hidden={!open}>{!compact && <><h2>Comece por um link</h2><p className="track-description">Cole a URL do anúncio do Mercado Livre para acompanhar automaticamente.</p></>}<form onSubmit={(event) => void submit(event)} className="track-form">
           <div className="track-field">
             <LinkIcon className="field-icon" />
             <label htmlFor="product-url" className="track-label">Link do anúncio do Mercado Livre</label>
@@ -85,7 +93,7 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
           <p id={errorId} role="alert" className="error-box">{error.message}</p>
           {error.trackedProductId && <Link className="text-button" to={`/produtos/${error.trackedProductId}`}>Ver produto</Link>}
         </div>}
-        </Card>}
+        </Card>
         {!compact && <p className="hero-note">Os preços exibidos vêm das consultas do BestPrice ao Mercado Livre e podem diferir do valor no checkout.</p>}
         {children}
       </div>
