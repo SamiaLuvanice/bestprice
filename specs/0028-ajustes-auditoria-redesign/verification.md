@@ -119,8 +119,10 @@ e passou a declarar as dimensões reais (`1120×682`, antes `1024×1024`). Remov
 
 ## Pendências
 
-- PR para `develop` (T10, orquestrador). Revisão independente e QA concluídas (ver
-  "Correções pós-revisão").
+- PR [#158](https://github.com/SamiaLuvanice/bestprice/pull/158) integrada em `develop` (merge
+  `4a0505a`, 21/10/2026 22:51 UTC) com 10 checks remotos verdes (CI, PR policy, quality
+  Frontend/Backend/Automation, resolve, sync, Cloudflare Pages). Revisão independente e QA
+  concluídas (ver "Correções pós-revisão"). Worktree e branches da tarefa removidas.
 - `doc-sync-onboarding` executado sobre `37cac54`: `docs/apps/frontend.md` passou a citar as
   artes `.webp`, tokens, Produtos com "Adicionar anúncio", preço-alvo pt-BR e
   `asyncUtilTimeout` de 6 s; `designsystem/README.md` e `brand-spec.md` deixaram de apontar
