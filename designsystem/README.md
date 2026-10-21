@@ -50,13 +50,13 @@ as superfícies afetadas e a spec responsável.
 
 | Extensão da spec 0023 | Motivo | Superfícies |
 |---|---|---|
-| Arte `imagem-lateral.png` fornecida pelo responsável, sem logo, texto ou card sobrepostos; imagem de fundo com escala `cover` e prioridade ao topo apenas acima de 840px | Preservar a marca e a mensagem incorporadas à peça no recorte de janelas largas e baixas sem baixar a arte em telas estreitas | Metade esquerda do login acima de 840px |
+| Arte `imagem-lateral.png` fornecida pelo responsável (histórico: substituída por `assets/redesign/login-left.webp` e removida do repositório na 0028), sem logo, texto ou card sobrepostos; imagem de fundo com escala `cover` e prioridade ao topo apenas acima de 840px | Preservar a marca e a mensagem incorporadas à peça no recorte de janelas largas e baixas sem baixar a arte em telas estreitas | Metade esquerda do login acima de 840px |
 | Composição em duas metades com formulário sobre branco; em até 840px, arte oculta e logo oficial compacta antes do título | Aproximar a entrada da referência de composição sem criar controles de cadastro, recuperação ou Google | Login responsivo da spec 0023 |
 
 | Extensão da spec 0024 | Motivo | Superfícies |
 |---|---|---|
 | Fundo branco, superfície `#f8fafc`, texto `#0b172b`, apoio `#64748b`, verde de ação `#39ff14` com texto escuro, verde de leitura `#087c1e` e rosa de destaque `#c7005e`; tipografia sans do sistema | Reaproveitar a identidade oficial e manter texto e ações legíveis nas artes fornecidas; correção de contraste da revisão independente (5,37:1 sobre branco e 5,11:1 no selo, conforme cálculo local) | Landing pública em `/` |
-| Hero em duas colunas com recorte CSS do lado ilustrado de `hero.webp`; texto, CTA e navegação em React | Evitar duplicar o texto incorporado à arte e preservar conteúdo selecionável e acessível | Hero desktop e versão empilhada móvel |
+| Hero em duas colunas com recorte CSS do lado ilustrado de `hero.webp` (histórico: `assets/landing/` foi removida na 0028; a landing atual usa `assets/redesign/hero-person.webp`); texto, CTA e navegação em React | Evitar duplicar o texto incorporado à arte e preservar conteúdo selecionável e acessível | Hero desktop e versão empilhada móvel |
 | Faixa de benefícios com `scroll-margin-top: 94px`, sequência de quatro passos, sete cartões de categorias e banner panorâmico com arte WebP | Traduzir a referência visual fornecida para superfícies responsivas sem dados fictícios de produto da API e manter a âncora `#funcionalidades` visível sob o cabeçalho fixo | Seções públicas da landing |
 | Menu móvel com estado expandido, link para pular ao conteúdo, foco visível e movimento reduzido | Manter navegação operável em teclado e telas estreitas | Cabeçalho e toda a landing |
 

@@ -13,7 +13,7 @@ sobre qualquer estilo sugerido por ferramenta externa.
 | Logo oficial | `designsystem/logo-bestprice.png` | Usar sem redesenho, recorte, distorção ou substituição (spec 0015, AC02) |
 | Identidade de referência | `designsystem/index.html` | Governa cor, tipografia, espaçamento e forma |
 | Composição de entrada | `designsystem/login.html` | Somente composição; em divergência, prevalece `index.html` |
-| Arte da entrada | `frontend/src/assets/imagem-lateral.png` | Fornecida pelo responsável; sem logo, texto ou card sobrepostos |
+| Arte da entrada | `frontend/src/assets/redesign/login-left.webp` | Arte do redesign (0027), convertida para WebP na 0028; a anterior `imagem-lateral.png` foi removida. Ilustração estática, sem dados de anúncio ou da conta; a marca oficial fica sobre a área clara da arte |
 
 ## Tokens oficiais (extraídos de `index.html`)
 
