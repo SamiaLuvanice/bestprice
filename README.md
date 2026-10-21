@@ -14,6 +14,13 @@ Pré-requisitos: Python 3.13, uv, Node.js 22, npm e Docker Compose.
 
 Após entrar, a interface usa `/` (Início), `/produtos`, `/produtos/:id` (detalhe de um monitoramento próprio) e `/alertas`. As telas podem ser abertas por URL, atualizadas e percorridas com voltar/avançar; visitantes retornam à rota protegida solicitada depois do login. No Compose, Nginx entrega `index.html` aos caminhos da SPA e mantém `/api/*` no proxy da API. A verificação das rotas da spec 0021 foi feita localmente; a mesma abertura direta em `stage` ainda depende de promoção e validação naquele ambiente.
 
+A spec 0027 aplica o redesign aprovado com componentes locais shadcn/ui, Tailwind
+CSS v4 e Recharts/shadcn Chart no detalhe. A landing pública em `/` usa ilustrações
+identificadas e encaminha a entrada para `/login`; a conta mantém os dados e
+operações da API. O gráfico informa histórico parcial e permite consultar os
+valores exatos. Veja o [guia frontend](docs/apps/frontend.md) para componentes,
+referências visuais e limites.
+
 Também é possível subir a stack com `docker compose up --build`. Nesse modo, o backend aplica Alembic antes de iniciar; o worker espera o backend ficar saudável. Em worktree Windows, use `./scripts/compose-worktree.ps1 up --build` para isolar portas e volume. `docker compose down` preserva os dados.
 
 O worker usa por padrão uma consulta por publicação a cada 3600 segundos, lote de 20, uma tentativa por vez e pausa de 60 segundos entre ciclos. `.env.example` permite ajustar `MONITOR_CHECK_INTERVAL_SECONDS`, `MONITOR_FRESHNESS_SECONDS`, `MONITOR_BATCH_LIMIT`, `MONITOR_MAX_CONCURRENCY` e `MONITOR_POLL_INTERVAL_SECONDS`. Defina a frequência e a concorrência conforme os limites oficiais da integração depois de validá-la; a [arquitetura](docs/architecture.md#estado-desta-branch) mostra padrões e faixas aceitas.
@@ -26,6 +33,6 @@ Para validação operacional, configure três IDs MLB distintos em `MERCADOLIVRE
 
 ## Verificar
 
-Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`; a regressão visual local (Playwright, snapshots de landing, login e 404 em 320/768/1280 px, com esquema claro/escuro emulado) roda com `npm run test:visual` e não faz parte do CI. Resultados e limites estão nas verificações das specs [0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md) (API e integração), [0012](specs/0012-area-usuario-monitoramento/verification.md) (área do usuário), [0021](specs/0021-navegacao-por-rotas/verification.md) (navegação por URL) e [0025](specs/0025-harness-design-tooling/verification.md) (design tooling e regressão visual).
+Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`; a verificação visual local roda com `npm run test:visual` e não faz parte do CI. Ela reúne 18 snapshots públicos e 30 cenários de rotas/estados em 320/768/1280 px, com axe, overflow, alvos de toque e menu aberto. O esquema claro/escuro é emulado nos snapshots, mas a aplicação permanece clara. `PLAYWRIGHT_BASE_URL` permite outra porta e `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` seleciona um Chromium já instalado. Resultados e limites estão nas verificações das specs [0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md) (API e integração), [0012](specs/0012-area-usuario-monitoramento/verification.md) (área do usuário), [0021](specs/0021-navegacao-por-rotas/verification.md) (navegação por URL) e [0025](specs/0025-harness-design-tooling/verification.md) (design tooling e regressão visual), além da [0027](specs/0027-redesign-figma-shadcn/verification.md) (redesign, componentes e gráfico).
 
 A [documentação de onboarding](docs/index.md) detalha arquitetura, esquema, módulos e infraestrutura. O processo de contribuição usa spec, plano, implementação, verificação, PR para `develop` e revisão independente. A spec 0019 define releases no GHCR por tag SemVer no SHA validado em `stage`; o fluxo só fica ativo após integrar a mudança e aplicar as configurações externas descritas em [docs/github-workflow.md](docs/github-workflow.md). A publicação não configura implantação em produção.

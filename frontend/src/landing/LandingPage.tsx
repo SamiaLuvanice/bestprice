@@ -1,185 +1,98 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowDownRight, ArrowUpRight, Bell, Link2, Menu, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import bestPriceLogo from '../assets/logo-bestprice.png'
-import heroArt from '../assets/landing/hero.webp'
-import bannerArt from '../assets/landing/signup-banner.webp'
-import smartphones from '../assets/landing/smartphones.webp'
-import headphones from '../assets/landing/headphones.webp'
-import notebooks from '../assets/landing/notebooks.webp'
-import smartwatches from '../assets/landing/smartwatches.webp'
-import games from '../assets/landing/games.webp'
-import appliances from '../assets/landing/appliances.webp'
-import home from '../assets/landing/home.webp'
-import { ArrowRightIcon, BellIcon, TagIcon } from '../dashboard/Icons'
+import heroArt from '../assets/redesign/hero-person.png'
+import bannerArt from '../assets/redesign/footer-phone.png'
+import pricePreview from '../assets/redesign/price-preview.svg'
+import dashboardPreview from '../assets/redesign/dashboard-preview.svg'
 import './LandingPage.css'
 
 const navigation = [
   { label: 'Início', href: '#inicio' },
-  { label: 'Funcionalidades', href: '#funcionalidades' },
   { label: 'Como funciona', href: '#como-funciona' },
-  { label: 'Produtos', href: '#produtos' },
-  { label: 'Sobre', href: '#sobre' },
+  { label: 'Funcionalidades', href: '#funcionalidades' },
+  { label: 'Alertas', href: '#alertas' },
 ]
-
-const benefits = [
-  { title: 'Monitore produtos', text: 'Acompanhe os preços dos produtos do Mercado Livre Brasil.', kind: 'tag' },
-  { title: 'Histórico de preços', text: 'Visualize a evolução e as variações de preço ao longo do tempo.', kind: 'trend' },
-  { title: 'Alertas personalizados', text: 'Receba notificações quando o preço de um produto acompanhado cair.', kind: 'bell' },
-  { title: 'Decisões mais inteligentes', text: 'Use informações de preço para identificar boas oportunidades de compra.', kind: 'shield' },
-] as const
-
 const steps = [
-  { title: 'Busque o produto', text: 'Encontre o anúncio do Mercado Livre que deseja acompanhar.', kind: 'search' },
-  { title: 'Acompanhe o preço', text: 'Visualize o histórico e as variações ao longo do tempo.', kind: 'trend' },
-  { title: 'Ative os alertas', text: 'Receba uma notificação quando o preço cair.', kind: 'bell' },
-  { title: 'Compre no momento certo', text: 'Identifique oportunidades de compra e economize.', kind: 'cart' },
-] as const
-
-const categories = [
-  { name: 'Celulares e Smartphones', image: smartphones },
-  { name: 'Fones de Ouvido', image: headphones },
-  { name: 'Notebooks', image: notebooks },
-  { name: 'Smartwatches', image: smartwatches },
-  { name: 'Games', image: games },
-  { name: 'Eletrodomésticos', image: appliances },
-  { name: 'Casa e Decoração', image: home },
+  { title: 'Cole o anúncio', text: 'O link do Mercado Livre é a única entrada.' },
+  { title: 'Acompanhe as mudanças', text: 'Veja preço, disponibilidade e histórico no mesmo lugar.' },
+  { title: 'Defina um alvo', text: 'Receba uma notificação quando o valor desejado chegar.' },
 ]
-
-type IconKind = 'tag' | 'trend' | 'bell' | 'shield' | 'search' | 'cart'
-
-function LandingIcon({ kind }: { kind: IconKind }) {
-  if (kind === 'tag') return <TagIcon />
-  if (kind === 'bell') return <BellIcon />
-  const path = {
-    trend: <><path d="m3 17 6-6 4 4 8-9" /><path d="M15 6h6v6" /></>,
-    shield: <><path d="M12 2 4 5v6c0 5 3.3 8.7 8 11 4.7-2.3 8-6 8-11V5l-8-3Z" /><path d="m8.5 12 2.4 2.4 4.7-4.8" /></>,
-    search: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></>,
-    cart: <><path d="M2 4h2l2.5 11h11L21 7H5" /><circle cx="8" cy="20" r="1" /><circle cx="18" cy="20" r="1" /></>,
-  }[kind]
-  return <svg className="icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor"
-    strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{path}</svg>
-}
-
-function SignupButton({ onClick, hero = false }: { onClick: () => void; hero?: boolean }) {
-  return <button type="button" className="landing-button landing-button--primary" onClick={onClick}>
-    Criar conta gratuita {hero && <ArrowRightIcon />}
-  </button>
-}
 
 export function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [signupNotice, setSignupNotice] = useState(false)
-
   useEffect(() => {
     document.title = 'BestPrice · Acompanhe preços. Compre melhor.'
     document.documentElement.classList.add('landing-scroll')
     return () => document.documentElement.classList.remove('landing-scroll')
   }, [])
 
-  function showSignupNotice() {
-    setSignupNotice(true)
-    setMenuOpen(false)
-    window.requestAnimationFrame(() => document.getElementById('signup-notice')?.focus())
-  }
-
   return <div className="landing" id="inicio">
     <a className="landing-skip" href="#landing-content">Pular para o conteúdo</a>
     <header className="landing-header">
-      <div className="landing-header__inner">
+      <div className="landing-container landing-header__inner">
         <a className="landing-brand" href="#inicio" aria-label="BestPrice — Início" onClick={() => setMenuOpen(false)}>
-          <img src={bestPriceLogo} alt="" width="46" height="46" />
-          <span>BestPrice</span>
+          <img src={bestPriceLogo} alt="" width="44" height="44" /><span>BestPrice</span>
         </a>
-        <button type="button" className="landing-menu-toggle" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+        <Button variant="ghost" size="icon" className="landing-menu-toggle" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen((open) => !open)}>
-          <span /><span /><span />
-        </button>
+          {menuOpen ? <X /> : <Menu />}
+        </Button>
         <nav id="landing-navigation" className={menuOpen ? 'landing-nav is-open' : 'landing-nav'} aria-label="Navegação principal">
           {navigation.map(({ label, href }) => <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>)}
-          <div className="landing-nav__mobile-actions">
-            <Link className="landing-button landing-button--secondary" to="/login" onClick={() => setMenuOpen(false)}>Entrar</Link>
-            <SignupButton onClick={showSignupNotice} />
-          </div>
+          <Button asChild className="landing-mobile-login"><Link to="/login">Entrar e monitorar</Link></Button>
         </nav>
-        <div className="landing-header__actions">
-          <Link className="landing-button landing-button--secondary" to="/login">Entrar</Link>
-          <SignupButton onClick={showSignupNotice} />
-        </div>
+        <div className="landing-header__actions"><Button asChild variant="outline"><Link to="/login">Entrar</Link></Button></div>
       </div>
     </header>
-
-    {signupNotice && <div className="landing-notice" id="signup-notice" role="status" tabIndex={-1}>
-      <span>O cadastro público ainda não está disponível. Se você já tem acesso, entre na sua conta.</span>
-      <Link to="/login">Entrar</Link>
-      <button type="button" aria-label="Fechar aviso" onClick={() => setSignupNotice(false)}>×</button>
-    </div>}
-
     <main id="landing-content">
       <section className="landing-hero" aria-labelledby="landing-title">
         <div className="landing-container landing-hero__grid">
           <div className="landing-hero__copy">
-            <p className="landing-kicker"><strong>Acompanhe.</strong> Compare. Compre <em>melhor.</em></p>
-            <h1 id="landing-title" aria-label="Encontre o melhor preço no Mercado Livre.">Encontre<br />o melhor preço<br /><span>no Mercado Livre.</span></h1>
-            <p className="landing-hero__description">A BestPrice monitora automaticamente os preços dos produtos que você quer, mostra a variação ao longo do tempo e avisa quando o preço cai.</p>
+            <h1 id="landing-title">O preço muda.<br /><span>Você fica sabendo.</span></h1>
+            <p className="landing-hero__description">Cole o link de um anúncio uma vez. O BestPrice acompanha as mudanças e mostra quando vale olhar de novo.</p>
             <div className="landing-hero__actions">
-              <SignupButton onClick={showSignupNotice} hero />
-              <Link className="landing-button landing-button--secondary" to="/login">Entrar</Link>
+              <Button asChild size="lg"><Link to="/login">Entrar e monitorar</Link></Button>
+              <Button asChild variant="ghost"><a href="#como-funciona">Entenda como funciona <ArrowUpRight aria-hidden="true" /></a></Button>
             </div>
-            <p className="landing-hero__note">Um link do anúncio é o suficiente para começar a acompanhar.</p>
+            <p className="landing-hero__note"><Link2 aria-hidden="true" /> Um link. Acompanhamento contínuo.</p>
           </div>
-          <div className="landing-hero__visual">
-            <img src={heroArt} alt="Pessoa consultando o celular, com ilustrações de alerta e histórico de preços." width="1774" height="887" fetchPriority="high" />
-          </div>
+          <div className="landing-hero__visual"><img src={heroArt} alt="Pessoa consultando o celular, com ilustrações de alerta e histórico de preços." width="1024" height="1024" fetchPriority="high" /><img className="landing-price-preview" src={pricePreview} alt="Exemplo ilustrativo de preço e variação. Não representa uma oferta real." width="506" height="201" /></div>
         </div>
       </section>
-
-      <section id="funcionalidades" className="landing-benefits landing-container" aria-label="Funcionalidades da BestPrice">
-        {benefits.map((benefit, index) => <article className="landing-benefit" key={benefit.title}>
-          <span className={`landing-icon landing-icon--${index % 2 ? 'pink' : 'green'}`}><LandingIcon kind={benefit.kind} /></span>
-          <h2>{benefit.title}</h2>
-          <p>{benefit.text}</p>
-        </article>)}
-      </section>
-
       <section id="como-funciona" className="landing-steps landing-container" aria-labelledby="landing-steps-title">
-        <p className="landing-section-label">Como funciona</p>
-        <h2 id="landing-steps-title">Em poucos passos,<br />você acompanha o preço.</h2>
-        <ol className="landing-steps__list">
-          {steps.map((step, index) => <li key={step.title} className="landing-step">
-            <div className="landing-step__top"><span className={`landing-step__number landing-step__number--${index % 2 ? 'green' : 'pink'}`}>{index + 1}</span><span className="landing-step__icon"><LandingIcon kind={step.kind} /></span></div>
-            <h3>{step.title}</h3><p>{step.text}</p>
-          </li>)}
-        </ol>
+        <h2 id="landing-steps-title">A comparação começa com o seu link.</h2>
+        <p className="landing-section-description">Sem preencher nome, preço ou detalhes do produto.</p>
+        <ol className="landing-steps__list">{steps.map((step, index) => <li key={step.title}>
+          <span className="landing-step-number" aria-hidden="true">0{index + 1}</span><h3>{step.title}</h3><p>{step.text}</p>
+        </li>)}</ol>
       </section>
-
-      <section id="produtos" className="landing-categories" aria-labelledby="landing-categories-title">
-        <div className="landing-container">
-          <div className="landing-section-heading"><div><p className="landing-section-label">Explore possibilidades</p><h2 id="landing-categories-title">Categorias populares</h2></div><p>Encontre anúncios para acompanhar no Mercado Livre.</p></div>
-          <div className="landing-categories__grid">
-            {categories.map((category) => <article className="landing-category" key={category.name}>
-              <img src={category.image} alt="" loading="lazy" width="480" height="480" />
-              <h3>{category.name}</h3>
-            </article>)}
-          </div>
+      <section id="funcionalidades" className="landing-showcase" aria-labelledby="landing-showcase-title">
+        <div className="landing-container"><h2 id="landing-showcase-title">Clareza para decidir na hora certa.</h2>
+          <p className="landing-section-description">O painel reúne o que mudou, o que está disponível e seus alertas.</p>
+          <figure className="landing-dashboard-preview"><img src={dashboardPreview} alt="Exemplo ilustrativo do painel com resumo do acompanhamento e produtos. Os valores não representam ofertas reais." width="1248" height="491" loading="lazy" />
+            <figcaption>Exemplo ilustrativo da interface. Produtos e valores não representam ofertas reais.</figcaption>
+          </figure>
         </div>
       </section>
-
+      <section id="alertas" className="landing-alerts landing-container" aria-labelledby="landing-alerts-title">
+        <div><h2 id="landing-alerts-title">Quando o preço chega onde você quer, o alerta encontra você.</h2>
+          <p className="landing-section-description">Defina um valor no produto monitorado. O BestPrice avisa quando a condição for atingida.</p>
+          <Button asChild variant="link"><Link to="/login">Acompanhar meus anúncios <ArrowUpRight aria-hidden="true" /></Link></Button>
+        </div>
+        <div className="landing-alert-illustration" aria-hidden="true"><Bell /><span>Alerta de preço</span><ArrowDownRight /><strong>Seu valor desejado</strong><span>Você recebe o sinal.</span></div>
+      </section>
       <section className="landing-signup landing-container" aria-labelledby="landing-signup-title">
-        <img className="landing-signup__art" src={bannerArt} alt="Interface ilustrativa da BestPrice em um celular, com produto e gráfico de preços." loading="lazy" width="2168" height="725" />
-        <div className="landing-signup__copy">
-          <h2 id="landing-signup-title">Crie sua conta <span>gratuitamente.</span></h2>
-          <p>Comece a acompanhar seus produtos favoritos e receba alertas de preço dos produtos que você realmente quer.</p>
-          <SignupButton onClick={showSignupNotice} hero />
+        <div className="landing-signup__copy"><h2 id="landing-signup-title">Seu próximo acompanhamento começa com um link.</h2><p>Os preços mudam. Você recebe o sinal na hora certa.</p>
+          <Button asChild size="lg"><Link to="/login">Entrar e monitorar</Link></Button>
         </div>
+        <img className="landing-signup__art" src={bannerArt} alt="Interface ilustrativa da BestPrice em um celular, com produto e gráfico de preços." loading="lazy" width="1536" height="1024" />
       </section>
     </main>
-
-    <footer id="sobre" className="landing-footer">
-      <div className="landing-container landing-footer__inner">
-        <div><a className="landing-brand" href="#inicio"><img src={bestPriceLogo} alt="" width="38" height="38" /><span>BestPrice</span></a><p>Acompanhe preços. Compre melhor.</p></div>
-        <nav aria-label="Rodapé"><a href="#sobre">Sobre</a><a href="#funcionalidades">Funcionalidades</a><a href="#como-funciona">Como funciona</a><Link to="/login">Entrar</Link></nav>
-        <small>© {new Date().getFullYear()} BestPrice.</small>
-      </div>
-    </footer>
+    <div className="landing-container"><Separator /></div>
+    <footer className="landing-footer landing-container"><span>BestPrice · {new Date().getFullYear()}</span><span>Mercado Livre · acompanhamento automático</span><Link to="/login">Entrar</Link></footer>
   </div>
 }

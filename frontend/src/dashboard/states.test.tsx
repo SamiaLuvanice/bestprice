@@ -61,7 +61,7 @@ describe('estado vazio', () => {
     render(<App clock={clock} />)
     expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
     expect(screen.getByText('Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.')).toBeInTheDocument()
-    const hero = screen.getByRole('region', { name: 'Acompanhe o preço. Compre na hora certa.' })
+    const hero = screen.getByRole('region', { name: 'Seu painel de preços' })
     expect(hero).toHaveClass('hero-priority')
     const values = within(screen.getByRole('region', { name: 'Resumo do monitoramento' })).getAllByRole('listitem').map((item) => item.querySelector('strong')?.textContent)
     expect(values).toEqual(['0', '0', '0', '0'])

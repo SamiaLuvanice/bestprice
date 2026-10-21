@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge'
 import { useId, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { formatMoney, formatPercentage } from '../lib/format'
@@ -20,11 +21,11 @@ function Variation({ value }: { value: string | null }) {
   const formatted = formatPercentage(value)
   if (!formatted) return <>Desconhecida</>
   const Arrow = formatted.direction === 'up' ? ArrowUpIcon : ArrowDownIcon
-  return <span className={`variation variation-${formatted.direction}`}>
+  return <Badge variant="secondary" className={`variation variation-${formatted.direction}`}>
     {formatted.direction !== 'none' && <Arrow />}
     {formatted.direction !== 'none' && <span className="sr-only">{formatted.direction === 'down' ? 'queda' : 'alta'} </span>}
     {formatted.text} <span className="variation-note">vs. preço anterior</span>
-  </span>
+  </Badge>
 }
 
 function Detail({ label, children }: { label: string; children: ReactNode }) {

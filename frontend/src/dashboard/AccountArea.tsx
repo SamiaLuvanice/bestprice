@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
@@ -623,10 +624,10 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
         {dashboardError && <div className="region-error">
           <p role="alert" className="error-box">{dashboardError}</p>
-          <button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</button>
+          <Button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button>
         </div>}
         {loading && <IndicatorsSkeleton />}
-        {dashboard && <SummaryIndicators summary={dashboard.summary} />}
+        {dashboard && <><h2 className="overview-title">Visão geral</h2><SummaryIndicators summary={dashboard.summary} /></>}
       </section>
 
       {showProductSections && <section aria-labelledby="opportunities-title" className="card-section" aria-busy={loading}>
@@ -639,7 +640,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       </section>}
 
       {showProductSections && <section aria-labelledby="updates-title" aria-busy={loading}>
-        <div className="section-heading"><span className="eyebrow">HISTÓRICO RECENTE</span><h2 id="updates-title">Atualizações recentes</h2></div>
+        <div className="section-heading"><h2 id="updates-title">Atualizações recentes</h2></div>
         {loading && <TimelineSkeleton />}
         {dashboardView.status === 'ready' && <RecentUpdatesTimeline events={dashboardView.data.recent_updates}
           receivedAt={dashboardView.receivedAt} known={knownProducts} />}
@@ -648,7 +649,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
     {currentSection === 'products' && !detailId && <div className="content dashboard-content">
       {dashboardError && <div className="region-error"><p role="alert" className="error-box">{dashboardError}</p>
-        <button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</button></div>}
+        <Button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button></div>}
       <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
         loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)}
         renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
@@ -661,7 +662,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       {selected?.id !== detailId && error && <div className="region-error">
         <h1 tabIndex={-1}>Produto indisponível</h1>
         <p role="alert" className="error-box">{error.message}</p>
-        <button type="button" className="secondary-button" onClick={() => void open(detailId)}>Tentar novamente</button>
+        <Button type="button" className="secondary-button" onClick={() => void open(detailId)}>Tentar novamente</Button>
         <Link className="text-button" to="/produtos">Ir para Produtos</Link>
       </div>}
       {selected?.id === detailId && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}
@@ -672,7 +673,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     </div>}
 
     {currentSection === 'alerts' && <div className="content dashboard-content">
-      <h1 id="alerts-page-title" tabIndex={-1}>Alertas</h1>
+      <div className="alerts-page-heading"><h1 id="alerts-page-title" tabIndex={-1}>Alertas</h1><p className="intro">Seus valores desejados e as notificações recentes.</p></div>
       <ConfiguredAlerts onUnauthenticated={(text) => onUnauthenticated(text)} />
       <AlertsSection notifications={notifications.all} headingRef={alertsHeading} focusHeading={focusAlertsHeading}
         onMarkRead={notifications.markRead} onLoadMore={notifications.loadMoreAll} onRetry={() => void notifications.reloadAll()} />

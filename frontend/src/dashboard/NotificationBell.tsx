@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatMoney } from '../lib/format'
@@ -72,18 +73,18 @@ export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
   }
 
   return <div className="disclosure bell" ref={panel.containerRef} onKeyDown={panel.onKeyDown} onBlur={panel.onBlur}>
-    <button ref={panel.buttonRef} type="button" className="icon-button bell-button" aria-expanded={panel.open} aria-controls={panelId} onClick={panel.toggle}>
+    <Button ref={panel.buttonRef} type="button" className="icon-button bell-button" aria-expanded={panel.open} aria-controls={panelId} onClick={panel.toggle}>
       <BellIcon />
       <span className="sr-only">{counter.label}</span>
       {counter.text && <span className="bell-count" aria-hidden="true">{counter.text}</span>}
-    </button>
+    </Button>
     {panel.open && <section id={panelId} ref={panel.panelRef} className="disclosure-panel bell-panel" aria-labelledby={titleId}>
       <h2 id={titleId} ref={title} tabIndex={-1} className="panel-title">Notificações não lidas</h2>
       {error && <p role="alert" className="inline-error">{error}</p>}
       {unread.status === 'loading' && <p role="status" className="panel-note">Carregando notificações…</p>}
       {unread.status === 'error' && <div className="panel-note">
         <p>Notificações indisponíveis</p>
-        <button type="button" className="text-button" onClick={() => void retry()}>Tentar novamente</button>
+        <Button type="button" className="text-button" onClick={() => void retry()}>Tentar novamente</Button>
       </div>}
       {unread.status === 'ready' && (visible.length === 0
         ? <p className="panel-note">Nenhuma notificação não lida.</p>
@@ -94,10 +95,10 @@ export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
           </span>
           <RelativeTime iso={item.created_at} receivedAt={unread.receivedAt} />
           <Link className="link-button" to={`/produtos/${item.tracked_product_id}`} onClick={() => panel.close()}>Abrir produto</Link>
-          <button type="button" className="link-button" data-notification-id={item.id} aria-disabled={pending === item.id || undefined}
+          <Button type="button" className="link-button" data-notification-id={item.id} aria-disabled={pending === item.id || undefined}
             onClick={() => void markRead(item.id)}>
             Marcar como lida<span className="sr-only">: {item.product_title}</span>
-          </button>
+          </Button>
         </li>)}</ul>)}
       <Link className="panel-link" to="/alertas" onClick={() => panel.close()}>Ver todas as notificações</Link>
     </section>}

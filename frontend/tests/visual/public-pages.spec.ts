@@ -36,7 +36,7 @@ for (const colorScheme of themes) {
     test('landing pública', async ({ page }) => {
       await replyGuestSession(page)
       await page.goto('/')
-      const title = page.getByRole('heading', { name: /Encontre o melhor preço no Mercado Livre/i, level: 1 })
+      const title = page.getByRole('heading', { name: /O preço muda.*Você fica sabendo/i, level: 1 })
       await expect(title).toBeVisible()
       await waitForStableImages(page)
       await expect(page).toHaveScreenshot(`landing-${colorScheme}.png`, { fullPage: true })
@@ -45,14 +45,14 @@ for (const colorScheme of themes) {
     test('login', async ({ page }) => {
       await replyGuestSession(page)
       await page.goto('/login')
-      await expect(page.getByRole('heading', { name: 'Bem-vindo de volta', level: 1 })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Entrar na sua conta', level: 1 })).toBeVisible()
       await expect(page).toHaveScreenshot(`login-${colorScheme}.png`, { fullPage: true })
     })
 
     test('página não encontrada', async ({ page }) => {
       await replyGuestSession(page)
       await page.goto('/rota-inexistente')
-      await expect(page.getByRole('heading', { name: 'Página não encontrada', level: 1 })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Este endereço saiu do radar.', level: 1 })).toBeVisible()
       await expect(page).toHaveScreenshot(`not-found-${colorScheme}.png`, { fullPage: true })
     })
   })

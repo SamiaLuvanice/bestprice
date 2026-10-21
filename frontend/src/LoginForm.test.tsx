@@ -26,13 +26,13 @@ function submitForm() {
 }
 
 // 0023/AC01–AC03: a arte fornecida é a única peça promocional da coluna.
-it('mostra a arte lateral fornecida com descrição breve e sem sobreposições', () => {
+it('mostra a arte lateral e a marca aprovadas com descrição breve', () => {
   const { container } = renderForm()
   const visual = container.querySelector('.login-visual')
   const artwork = screen.getByRole('img', { name: /BestPrice.*boas escolhas.*alertas de preço/i })
   expect(visual).toBe(artwork)
-  expect(visual?.querySelectorAll('img')).toHaveLength(0)
-  expect(visual?.textContent).toBe('')
+  expect(visual?.querySelectorAll('img')).toHaveLength(1)
+  expect(visual?.textContent).toBe('BestPrice')
   expect(screen.getAllByRole('heading')).toHaveLength(1)
 })
 
@@ -42,7 +42,7 @@ it('mostra a logo reduzida antes do título, com o nome BestPrice', () => {
   const compact = container.querySelector('.login-brand-compact')
   expect(compact).not.toBeNull()
   expect(compact).toHaveAccessibleName('BestPrice')
-  const title = screen.getByRole('heading', { level: 1, name: 'Bem-vindo de volta' })
+  const title = screen.getByRole('heading', { level: 1, name: 'Entrar na sua conta' })
   expect(compact?.compareDocumentPosition(title)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
 })
 
@@ -56,9 +56,9 @@ it('mantém apenas os controles de login existentes', () => {
 })
 
 // AC03: título e campos obrigatórios com rótulo acessível.
-it('mostra o título Bem-vindo de volta e os campos obrigatórios de e-mail e senha', () => {
+it('mostra o título Entrar na sua conta e os campos obrigatórios de e-mail e senha', () => {
   renderForm()
-  expect(screen.getByRole('heading', { level: 1, name: 'Bem-vindo de volta' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { level: 1, name: 'Entrar na sua conta' })).toBeInTheDocument()
   expect(emailField()).toHaveAttribute('type', 'email')
   expect(emailField()).toHaveAttribute('autocomplete', 'email')
   expect(emailField()).toBeRequired()
