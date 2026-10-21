@@ -85,11 +85,13 @@ html.landing-scroll { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html.landing-scroll { scroll-behavior: auto; } }
 
 .landing-nav > a, .landing-footer a { min-width: 44px; }
-.landing-hero__visual { position: relative; padding-bottom: 72px; }
-.landing-hero__visual .landing-price-preview { position: absolute; bottom: 0; right: 0; width: 92%; height: auto; border-radius: 18px; }
+/* 0028/AC11: a foto ocupa a coluna e o cartão "Visão do preço" só cobre o canto inferior
+   esquerdo (sofá), como no quadro 01; rosto e celular ficam visíveis. */
+.landing-hero__visual { position: relative; display: block; padding-bottom: 104px; }
+.landing-hero__visual .landing-price-preview { position: absolute; bottom: 0; left: 0; width: min(76%, 420px); height: auto; border-radius: 18px; }
 @media (max-width: 600px) {
-  .landing-hero__visual { padding-bottom: 72px; margin-top: 12px; }
-  .landing-hero__visual .landing-price-preview { width: 90%; }
+  .landing-hero__visual { padding-bottom: 88px; margin-top: 12px; }
+  .landing-hero__visual .landing-price-preview { width: 82%; }
 }
 
 .landing [data-slot="button"][data-variant="default"] { color: var(--color-action-text); }
