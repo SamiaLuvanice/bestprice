@@ -63,20 +63,18 @@ A landing em `public-pages.spec.ts` também falhou 1 vez em 18 com a rolagem ins
 (imagem lazy ainda não iniciada). O auxiliar passou a trocar as imagens para `eager` e
 aguardar `decode()`, como já fazia `redesign.spec.ts`.
 
-## Gates finais
+## Gates finais (após as correções pós-revisão, `71267b3`)
 
 - `npm run lint`: passou, 0 erros e 0 avisos.
-- `npm test -- --run`: **340 passed (340)**, 31 arquivos (3 execuções após o ajuste de espera).
+- `npm test -- --run`: **348 passed (348)**, 31 arquivos, em 2 execuções seguidas.
 - `npm run build`: TypeScript e Vite passaram; Recharts segue em chunk lazy.
-- `npm run test:visual -- --workers=3`: **57 passed** (18 capturas públicas + 30 cenários com
-  axe + 9 novos: tokens e imagem do detalhe), sem `--update-snapshots`, após o ajuste do
-  auxiliar de imagens; repetido em execução isolada: **57 passed (1,1 min)**. Uma execução
-  intermediária, que seguiu rodando depois de o shell ser movido para segundo plano, teve
-  3 falhas com duração de 8,1 min contra limite de 30 s (navegador parado; asserções
-  diferentes, sem captura da página): tratada como travamento do ambiente, não contada.
-- `git diff --check origin/develop..HEAD`: passou.
-- Hooks `pre-commit` (trailing whitespace, EOF, large files, private key, guarda de
-  branch) passaram em todos os commits; nenhum `--no-verify`.
+- `npm run test:visual -- --workers=3`: **63 passed (1,2 min)**, sem `--update-snapshots`:
+  18 capturas públicas, 30 cenários com axe (`wcag2a/2aa/21a/21aa/22aa`), sonda de cores (3),
+  imagem do detalhe com título longo (6), linha compacta de Produtos (3) e alinhamento dos
+  vazios em Alertas (3).
+- `git diff --check origin/develop..HEAD`: passou. Porta 5181 sem processo ao final; o
+  servidor Vite do Playwright é encerrado pelo próprio Playwright.
+- Hooks `pre-commit` passaram em todos os commits; nenhum `--no-verify`.
 
 Baselines: as 12 capturas de landing e login foram regeneradas intencionalmente com
 `--update-snapshots` e conferidas visualmente (landing 320/1280, login 1280) contra os
@@ -89,11 +87,13 @@ quadros 01/02/08; as 6 de rota inexistente não mudaram. Execução limpa poster
 | `hero-person` | PNG 1.598.387 B (1774×887, ⅓ transparente à esquerda) | WebP 70.734 B | 1120×682 (recortado ao conteúdo) |
 | `login-left` | PNG 1.660.601 B (1024×1536) | WebP 46.720 B | 960×1440 |
 | `footer-phone` | PNG 1.431.980 B (2168×725) | WebP 47.458 B | 1600×548 |
-| `dashboard-preview.svg` | 279.594 B (2 PNG embutidos) | 9.215 B (WebP 104 px embutidos) | 1248×491 |
+| `dashboard-preview` | SVG 279.594 B (2 PNG embutidos) | SVG 9.215 B; após a revisão, WebP 27.708 B | 1872×737 (1,5×) |
+| `price-preview` | SVG 1.519 B (embutido no JS) | WebP 15.944 B (após a revisão) | 1012×402 (2×) |
 | `logo-bestprice.png` (cópia da SPA) | 491.530 B (1254×1254) | 9.865 B | 128×128, sem perda; original em `designsystem/` |
 
-Conversão com Pillow 12.3 (Python 3.13), `quality` 78–82, `method=6`. `dist/assets` após o
-build: maior imagem 70.734 B; nenhuma acima de 300 KB. O hero mantém `fetchPriority="high"`
+Conversão com Pillow 12.3 (Python 3.13), `quality` 78–88, `method=6`; as prévias SVG foram
+renderizadas pelo Chromium local antes da conversão. `dist/assets` após o build final:
+maior imagem 70.734 B (`hero-person`); nenhuma acima de 300 KB. O hero mantém `fetchPriority="high"`
 e passou a declarar as dimensões reais (`1120×682`, antes `1024×1024`). Removidos:
 `assets/landing/*.webp` (9 arquivos) e `assets/imagem-lateral.png`, sem importação (grep).
 
@@ -104,8 +104,8 @@ e passou a declarar as dimensões reais (`1120×682`, antes `1024×1024`). Remov
 | AC01 | Feito | Playwright: imagem 80×80 com título longo em 320 e 390 px; `flex: none` | Desktop 140×140 conferido por captura |
 | AC02 | Feito | Testes de normalização e de criação/edição; contrato inalterado | Sem chamada real ao backend nesta tarefa |
 | AC03 | Feito | Tabela acima e `dist/assets` | — |
-| AC04 | Feito | `tokens.test.ts`; Playwright confere `bg-primary`/`text-primary` `rgb(199,0,94)`, `text-muted-foreground` `rgb(98,98,103)`, `bg-muted` `rgb(245,245,247)`, `bg-action` verde com texto preto; README | `text-muted` documentado como proibido, não removido do Tailwind |
-| AC05 | Feito | Teste de Produtos compacto; captura 320 (linha ~170 px, antes ~310 px) | A linha móvel omite menor preço e horário (no detalhe) |
+| AC04 | Feito | `tokens.test.ts`; Playwright confere `bg-primary`/`text-primary` `rgb(199,0,94)`, `text-muted-foreground` `rgb(98,98,103)`, `bg-muted` `rgb(245,245,247)`, `bg-action` verde com texto preto; README | `text-muted` = `--muted-foreground` desde a correção 4 (pós-revisão) |
+| AC05 | Feito | Teste de Produtos compacto; após a correção 3, linha ≤ 140 px em 390 px (~80 px em 320 px), h1 único | Abaixo de 960 px a linha omite disponibilidade, menor preço, horários, ⋮ e selo de alerta (todos no detalhe) |
 | AC06 | Feito | Testes de controles e metadados; captura do detalhe | — |
 | AC07 | Feito | Teste do formatador; captura com eixo `R$ 375 … R$ 275` | Marcas são coordenadas do Recharts; valor exato no tooltip/tabela |
 | AC08 | Feito | Captura 320 de Alertas: título, alvo e estado em grade | No celular o link "Configurar alerta" fica oculto (o título leva ao mesmo detalhe) |
@@ -120,6 +120,30 @@ e passou a declarar as dimensões reais (`1120×682`, antes `1024×1024`). Remov
 ## Pendências
 
 - Revisão independente, QA, `doc-sync-onboarding` e PR para `develop` (T10, orquestrador).
-- `docs/apps/frontend.md` ainda cita `login-left.png` e `hero-person.png`/`footer-phone.png`
-  (linhas 65 e 117): atualizar no doc-sync.
+- `docs/apps/frontend.md` ainda cita `login-left.png`, `hero-person.png`, `footer-phone.png`,
+  `price-preview.svg` e `dashboard-preview.svg` (linhas 65 e 117): atualizar no doc-sync.
 - Backend: não alterado; Ruff/pytest não executados por este papel.
+
+## Correções pós-revisão
+
+A revisão independente (aprovada com ressalvas) e a QA (13 aceitos, 2 parciais) devolveram 8
+achados. Cada comportamento ganhou teste de regressão com Red observado antes do Green.
+
+| # | Achado | Commit | Red → Green |
+|---|---|---|---|
+| 1 (P2) | Milhar com zero à esquerda: `"0.500"` virava `"500.00"` | `50101d0` | 5 casos novos em `targetPrice.test.ts` (`0.500`, `0.999`, `00.123`, `0.500,00`, `01.899,90`) falharam (5 failed); com primeiro grupo `[1-9]\d{0,2}`, 30/30 |
+| 2 (P2) | Erro local do preço-alvo não anunciado | `2eefadf` | `findByRole('alert')` falhou (`Unable to find role="alert"`); `role="alert"` no `.field-error`, 26/26 |
+| 3 (QA AC05) | Linha móvel de Produtos com 206 px e h1 "Produtos" duplicado | `fb53fd8` | Playwright em 390 px: `Received: 206.40625` (limite 140); unit: h1 `['Produtos']`. Green: "Seus produtos" é o único h1 e região; linha com imagem, título, preço, pílula e seta (~80 px em 320 px); a linha inteira abre o detalhe, onde ficam "Atualizar agora" e "Parar de monitorar" (conferido no teste); disponibilidade, "Ver detalhes", ⋮ e selo de alerta ocultos abaixo de 960 px; link com 44×44 px |
+| 4 (QA AC04) | `text-muted` resolvia `rgb(245,245,247)` | `0884831` | `tokens.test.ts` falhou; `@utility text-muted` foi testado e não venceu o utilitário do tema (CSS gerado `.text-muted{color:var(--muted)}`). Solução: `--text-color-muted: var(--muted-foreground)` no `@theme` (namespace v4 só de `text-*`); CSS gerado `.text-muted,.text-muted-foreground{color:var(--muted-foreground)}`, `bg-muted` segue `var(--muted)`. Sonda no navegador: `text-muted` = `rgb(98, 98, 103)` |
+| 5 (P3) | Pausar/Retomar apagava o rascunho do alvo | `7c85c97` | Teste esperava `120,50` e recebeu vazio; o campo só é reescrito após criar, salvar alvo ou excluir, 27/27 |
+| 6 (P3) | `aria-expanded`/sinal/clique de "Adicionar anúncio" com fontes diferentes | `0d1f446` | `aria-controls` apontava para id inexistente (`expected null to be truthy`); fonte única `expanded`, painel sempre no DOM com `hidden`, recolher limpa erro/sucesso, 42/42 nos arquivos afetados |
+| 7 (P3) | "Nenhuma notificação por enquanto." recuado 24 px | `fbbc052` | Playwright: `Received: 24` (limite 1); `.empty` sem recuo lateral, 3/3 viewports |
+| 8 (P3) | Baselines 320 claro × escuro diferentes | `71267b3` | Diferença determinística (mesmos 2 pixels, delta 1, em 3 regenerações) no texto do SVG `<img>` do painel; após rasterizá-lo apareceu outra em 768 px (17 pixels, cartão de preço SVG). Pinar `color-scheme: light` no SVG não resolveu. As duas prévias viraram WebP; duas regenerações seguidas: claro = escuro nos 3 viewports (`getbbox() = None`) |
+
+Ajustes de teste por mudança intencional: títulos `'Produtos'` → `'Seus produtos'` (App,
+header, refresh-row, states, routes) e o menu ⋮ do cenário `produtos` só é exercitado a
+partir de 960 px.
+
+Observação de ambiente: durante as correções, uma execução isolada de `detail.test.tsx`
+levou 79 s num único teste (carga externa: processos de outras ferramentas, nenhum servidor
+desta tarefa); repetida, 26/26.
