@@ -89,7 +89,7 @@ implementar essa composição com shadcn/ui e Recharts/shadcn Charts. A identida
 | Tokens shadcn `background/foreground/card/primary/secondary/muted/accent/destructive/border/input/ring` mapeados à identidade existente | Reutilizar código oficial dos controles sem adotar outra marca | Button, Input, Card, Badge, Table, Skeleton, Separator e Chart |
 | Conteúdo de até 1248 px, superfícies planas, linhas de produtos e navegação inferior até 700 px | Seguir os quadros desktop/mobile e manter o foco na tarefa | Área autenticada |
 | Recharts com série em degraus, pontos reais, tooltip decimal exato e tabela textual expansível | Não sugerir preços intermediários ou completude de histórico paginado | Detalhe; mais registros ampliam o período |
-| Artes fornecidas `hero-person`, `footer-phone`, `login-left` (originais PNG em `prototypes/2026-10-21-bestprice-figma/assets/`; na SPA, WebP redimensionado pela spec 0028); recortes vetoriais identificados como ilustração | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
+| Artes fornecidas `hero-person`, `footer-phone`, `login-left` (originais PNG em `prototypes/2026-10-21-bestprice-figma/assets/`; na SPA, WebP redimensionado pela spec 0028); prévias de preço e do painel identificadas como ilustração (SVG rasterizado em WebP pela 0028, para a captura não variar com o esquema de cor) | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
 
 A landing da 0027 substitui a composição da 0024: os CTAs levam a `/login`;
 nenhum botão promete cadastro público. Os sete cartões de categorias e o aviso

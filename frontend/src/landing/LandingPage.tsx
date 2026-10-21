@@ -6,8 +6,8 @@ import { Separator } from '@/components/ui/separator'
 import bestPriceLogo from '../assets/logo-bestprice.png'
 import heroArt from '../assets/redesign/hero-person.webp'
 import bannerArt from '../assets/redesign/footer-phone.webp'
-import pricePreview from '../assets/redesign/price-preview.svg'
-import dashboardPreview from '../assets/redesign/dashboard-preview.svg'
+import pricePreview from '../assets/redesign/price-preview.webp'
+import dashboardPreview from '../assets/redesign/dashboard-preview.webp'
 import './LandingPage.css'
 
 const navigation = [
