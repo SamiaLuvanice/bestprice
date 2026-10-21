@@ -3,23 +3,11 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart'
 import type { HistoryEntry } from '../api'
 import { isDecimal } from '../lib/decimal'
-import { formatMoney } from '../lib/format'
+import { formatAxisPrice, formatMoney } from '../lib/format'
 
 const config = { price: { label: 'Preço unitário', color: 'var(--color-action)' } } satisfies ChartConfig
 const shortDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' })
 const fullDate = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-const axisWhole = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
-const axisCents = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
-
-/**
- * Rótulo do eixo Y em reais (0028/AC07). As marcas do eixo são coordenadas escolhidas pelo
- * Recharts, não preços: valores inteiros saem sem centavos (`R$ 1.900`) e os demais com duas
- * casas (`R$ 1.899,90`), sem notação compacta. O preço exato fica no tooltip e na tabela.
- */
-export function formatAxisPrice(value: number): string {
-  const whole = Math.round(value)
-  return Math.abs(value - whole) < 0.005 ? axisWhole.format(whole) : axisCents.format(value)
-}
 
 export function PriceHistoryChart({ history, partial }: { history: HistoryEntry[]; partial: boolean }) {
   const descriptionId = useId()
