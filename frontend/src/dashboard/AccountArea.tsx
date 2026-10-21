@@ -270,11 +270,15 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
 
   // Detalhe recarregado após uma ação: atualiza o diálogo e a linha. Parar é soft delete, então um
   // detalhe 200 com active=false (parado em outra aba) também fecha o diálogo. Devolve se continua aberto.
-  async function reloadSelected(id: string): Promise<boolean> {
+  // `resetTarget`: só criar, salvar alvo e excluir reescrevem o campo; pausar/retomar preserva o rascunho.
+  async function reloadSelected(id: string, resetTarget = false): Promise<boolean> {
     const detail = await api.detail(id)
     if (!detail.active) { closeAsRemoved(id, 'Monitoramento interrompido.'); return false }
     // Fechado (ou trocado) durante a ação: atualiza só a linha, sem reabrir o detalhe.
-    if (openDetailId.current === id) { setSelected(detail); setTarget(alertTarget(detail)) }
+    if (openDetailId.current === id) {
+      setSelected(detail)
+      if (resetTarget) setTarget(alertTarget(detail))
+    }
     dispatchList({ type: 'replace', tracked: detail, receivedAt: clock() })
     return true
   }
@@ -300,9 +304,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }
 
   // Depois de uma ação de alerta concluída: detalhe, indicadores e contador do sino recalculados.
-  async function afterAlertAction(id: string) {
+  async function afterAlertAction(id: string, resetTarget: boolean) {
     try {
-      if (!await reloadSelected(id)) return
+      if (!await reloadSelected(id, resetTarget)) return
       await reloadDashboard()
       await notifications.refreshAfterAction()
     } catch (failure) { failInDetail(id, failure) }
@@ -316,7 +320,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     const id = selected.id
     try {
       await api.createAlert(id, targetPrice)
-      await afterAlertAction(id)
+      await afterAlertAction(id, true)
     } catch (failure) { failInDetail(id, failure) }
     finally { setBusy(false) }
   }
@@ -334,7 +338,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       setBusy(false)
       return
     }
-    await afterAlertAction(id)
+    await afterAlertAction(id, 'target_price' in update)
     setBusy(false)
   }
 
@@ -350,7 +354,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       setBusy(false)
       return
     }
-    await afterAlertAction(id)
+    await afterAlertAction(id, true)
     setBusy(false)
   }
 

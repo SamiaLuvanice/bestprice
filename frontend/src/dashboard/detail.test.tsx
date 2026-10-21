@@ -381,6 +381,23 @@ describe('alerta de preço no formato brasileiro (0028/AC02, AC06)', () => {
     expect(bodyOf(callsTo(mockFetch, `${itemUrl}/alert`, 'PATCH')[0])).toEqual({ enabled: false })
   })
 
+  it('pausar e retomar preservam o rascunho do novo alvo', async () => {
+    const withAlert = product('1', 'Fone sem fio', {}, { alert: alertFixture() })
+    const paused = product('1', 'Fone sem fio', {}, { alert: alertFixture({ enabled: false }) })
+    const server = detailServer([withAlert, second], (url, init) => {
+      if (url === `${itemUrl}/alert` && init?.method === 'PATCH') { server.setDetail(paused); return reply(200, paused.alert) }
+      return undefined
+    })
+    const { user } = await renderArea(dashboardFixture({ items: [withAlert, second] }), server.route)
+    const detail = within(await openDetail(user))
+    const field = detail.getByLabelText('Novo valor desejado')
+    await user.clear(field)
+    await user.type(field, '120,50')
+    await user.click(detail.getByRole('button', { name: 'Pausar alerta' }))
+    expect(await detail.findByRole('button', { name: 'Retomar alerta' })).toBeInTheDocument()
+    expect(detail.getByLabelText('Novo valor desejado')).toHaveValue('120,50')
+  })
+
   it('agrupa metadados sem repetir "sem frete"', async () => {
     const { user } = await renderArea(dashboardFixture({ items: [first, second] }), detailServer([first, second]).route)
     const section = await openDetail(user)
