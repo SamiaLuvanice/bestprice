@@ -47,9 +47,17 @@ describe('tokens de cor', () => {
     expect(root.get('--muted-foreground')).toBe('#626267')
   })
 
-  it('não usa text-muted (superfície) como cor de texto nem regras corretivas de variante', () => {
-    const offenders = sourceFiles(sourceRoot).filter((file) => /(?<![-\w])text-muted(?![-\w])/.test(readFileSync(file, 'utf-8')))
-    expect(offenders).toEqual([])
+  it('text-muted é texto secundário (--muted-foreground) e bg-muted continua superfície', () => {
+    // A cor calculada é conferida no navegador (tests/visual/redesign.spec.ts).
+    // Tailwind v4: --text-color-* vale só para utilitários text-*; bg-* continua lendo --color-*.
+    const theme = declarations(themeBlock())
+    expect(theme.get('--text-color-muted')).toBe('var(--muted-foreground)')
+    expect(theme.get('--color-muted')).toBe('var(--muted)')
+    expect(styles).toMatch(/@source inline\("[^"]*\btext-muted\b[^"]*"\)/)
+  })
+
+  it('não tem regras que corrigem a cor das variantes do Button', () => {
+    expect(sourceFiles(sourceRoot).length).toBeGreaterThan(10)
     expect(styles).not.toMatch(/data-variant="(link|default)"\][^{]*\{[^}]*\bcolor\s*:/)
   })
 })

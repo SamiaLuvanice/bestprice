@@ -106,7 +106,7 @@ for (const scenario of scenarios) {
 }
 
 // 0028/AC04: utilitários do tema produzem as cores documentadas em designsystem/README.md.
-test('tokens: bg-primary, text-primary, text-muted-foreground e bg-muted', async ({ page }) => {
+test('tokens: bg-primary, text-primary, text-muted, text-muted-foreground e bg-muted', async ({ page }) => {
   await page.route('**/api/**', (route) => route.fulfill({ status: 401, contentType: 'application/json',
     body: JSON.stringify({ error: { code: 'unauthenticated', message: 'Entre para continuar.', fields: [] } }) }))
   await page.goto('/login')
@@ -126,6 +126,7 @@ test('tokens: bg-primary, text-primary, text-muted-foreground e bg-muted', async
       textPrimary: probe('text-primary').color,
       textPrimaryForeground: probe('text-primary-foreground').color,
       textMutedForeground: probe('text-muted-foreground').color,
+      textMuted: probe('text-muted').color,
       bgMuted: probe('bg-muted').background,
       bgAction: probe('bg-action').background,
       textActionForeground: probe('text-action-foreground').color,
@@ -133,7 +134,7 @@ test('tokens: bg-primary, text-primary, text-muted-foreground e bg-muted', async
   })
   expect(colors).toEqual({
     bgPrimary: 'rgb(199, 0, 94)', textPrimary: 'rgb(199, 0, 94)', textPrimaryForeground: 'rgb(255, 255, 255)',
-    textMutedForeground: 'rgb(98, 98, 103)', bgMuted: 'rgb(245, 245, 247)',
+    textMutedForeground: 'rgb(98, 98, 103)', textMuted: 'rgb(98, 98, 103)', bgMuted: 'rgb(245, 245, 247)',
     bgAction: 'rgb(57, 255, 20)', textActionForeground: 'rgb(0, 0, 0)',
   })
 })

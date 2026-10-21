@@ -108,15 +108,17 @@ no tema shadcn, e `text-muted` pintava texto com a cor de superfície `#f5f5f7`.
 |---|---|---|---|
 | `--primary` / `--primary-foreground` | `#c7005e` / `#fff` | Rosa da marca: links, títulos de destaque, foco, seleção | `bg-primary`, `text-primary`, `text-primary-foreground` |
 | `--action` / `--action-foreground` / `--action-hover` | `#39ff14` / `#000` / `#65ff48` | Verde das ações principais; variante `default` do `Button` | `bg-action`, `text-action-foreground`, `hover:bg-action-hover` |
-| `--muted` | `#f5f5f7` | **Superfície** discreta, nunca texto | `bg-muted` |
-| `--muted-foreground` | `#626267` | Texto secundário | `text-muted-foreground` |
+| `--muted` | `#f5f5f7` | **Superfície** discreta | `bg-muted` |
+| `--muted-foreground` | `#626267` | Texto secundário | `text-muted-foreground` e `text-muted` |
 | `--accent` | `#fce9f2` | Fundo rosa-claro de hover e seleção | `bg-accent` |
 | `--destructive` | `#b42318` (texto branco) | Ação destrutiva ("Parar de monitorar") | `bg-destructive` |
 | `--border` / `--input` / `--ring` | `#d2d2d7` / `#86868b` / `#c7005e` | Bordas, bordas de controle e anel de foco | `border-border`, `border-input`, `ring-ring` |
 
-`text-muted` não deve ser usado: produziria a cor de superfície. Um teste
-(`frontend/src/tokens.test.ts`) recusa esse utilitário e regras que corrigem a cor de
-variantes do `Button`.
+`text-muted` produz o texto secundário `#626267`, igual a `text-muted-foreground`: o tema
+declara `--text-color-muted: var(--muted-foreground)`, namespace do Tailwind v4 que vale
+só para utilitários `text-*`, e `bg-muted` continua a superfície `#f5f5f7`. Os testes
+`frontend/src/tokens.test.ts` e a sonda de cores de `frontend/tests/visual/redesign.spec.ts`
+protegem esse contrato e recusam regras que corrigem a cor de variantes do `Button`.
 
 **CSS próprio** (classes legadas e componentes da aplicação): `--color-brand`,
 `--color-brand-strong`, `--color-brand-soft`, `--color-text`, `--color-text-muted`,

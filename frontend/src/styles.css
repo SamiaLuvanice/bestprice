@@ -10,7 +10,8 @@
  *  - CSS próprio da aplicação: --color-brand, --color-text-muted, --color-surface...
  *    Não usam nomes do namespace do tema (primary, muted, accent, card...).
  * --primary é o rosa da marca (texto, links, foco); --action é o verde das ações principais.
- * --muted é superfície; texto secundário usa --muted-foreground / --color-text-muted.
+ * --muted é superfície (bg-muted); texto secundário usa --muted-foreground, text-muted-foreground
+ * ou text-muted (mapeado para --muted-foreground).
  */
 @theme inline {
   --color-background: var(--background);
@@ -28,6 +29,7 @@
   --color-secondary-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --text-color-muted: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--foreground);
   --color-destructive: var(--destructive);
@@ -38,6 +40,10 @@
   --radius-md: 12px;
   --radius-lg: 18px;
 }
+
+/* 0028/AC04: text-muted é texto secundário (--text-color-muted no tema, que só vale para text-*);
+   bg-muted continua superfície (#f5f5f7). Os utilitários são sempre gerados, mesmo sem uso no código. */
+@source inline("text-muted bg-muted text-muted-foreground");
 
 :root {
   color-scheme: light;
