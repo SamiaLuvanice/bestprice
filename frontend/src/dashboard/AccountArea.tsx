@@ -1,8 +1,9 @@
 import { Button } from '@/components/ui/button'
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
 import { retryHint } from '../lib/format'
+import { targetPriceInput } from '../lib/targetPrice'
 import { AlertsSection } from './AlertsSection'
 import { AppHeader, type SectionKey } from './AppHeader'
 import { ConfirmStopDialog } from './ConfirmStopDialog'
@@ -37,6 +38,11 @@ function feedback(error: unknown): Feedback {
 // 404 ou 409 tracking_inactive: o vínculo não existe mais para a pessoa (convenção de produto removido).
 function trackingGone(error: unknown): error is ApiFailure {
   return error instanceof ApiFailure && (error.status === 404 || error.code === 'tracking_inactive')
+}
+
+/** Texto inicial do campo de alvo: o valor atual com vírgula, ou vazio sem alerta. */
+function alertTarget(tracked: TrackedProduct): string {
+  return tracked.alert ? targetPriceInput(tracked.alert.target_price) : ''
 }
 
 function unauthenticated(error: unknown): error is ApiFailure {
@@ -215,6 +221,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       const [detail, priceHistory] = await Promise.all([api.detail(id), api.history(id)])
       if (current !== openSequence.current) return
       setSelected(detail)
+      setTarget(alertTarget(detail))
       setHistory(priceHistory.items)
       setHistoryCursor(priceHistory.next_cursor)
     } catch (failure) {
@@ -267,7 +274,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     const detail = await api.detail(id)
     if (!detail.active) { closeAsRemoved(id, 'Monitoramento interrompido.'); return false }
     // Fechado (ou trocado) durante a ação: atualiza só a linha, sem reabrir o detalhe.
-    if (openDetailId.current === id) setSelected(detail)
+    if (openDetailId.current === id) { setSelected(detail); setTarget(alertTarget(detail)) }
     dispatchList({ type: 'replace', tracked: detail, receivedAt: clock() })
     return true
   }
@@ -296,32 +303,32 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   async function afterAlertAction(id: string) {
     try {
       if (!await reloadSelected(id)) return
-      setTarget('')
       await reloadDashboard()
       await notifications.refreshAfterAction()
     } catch (failure) { failInDetail(id, failure) }
   }
 
-  async function createAlert(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  // O alvo chega normalizado pelo detalhe (`"99.90"`); entrada inválida nem chama a API (0028/AC02).
+  async function createAlert(targetPrice: string) {
     if (!selected) return
     setBusy(true)
     setError(null)
     const id = selected.id
     try {
-      await api.createAlert(id, target)
+      await api.createAlert(id, targetPrice)
       await afterAlertAction(id)
     } catch (failure) { failInDetail(id, failure) }
     finally { setBusy(false) }
   }
 
-  async function updateAlert() {
+  // Cada controle do alerta tem uma única função (0028/AC06): salvar alvo ou pausar/retomar.
+  async function updateAlert(update: { target_price: string } | { enabled: boolean }) {
     if (!selected?.alert) return
     setBusy(true)
     setError(null)
     const id = selected.id
     try {
-      await api.updateAlert(id, target ? { target_price: target } : { enabled: !selected.alert.enabled })
+      await api.updateAlert(id, update)
     } catch (failure) {
       await recoverFromAlertFailure(id, failure)
       setBusy(false)
@@ -667,8 +674,9 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       </div>}
       {selected?.id === detailId && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}
         target={target} onTargetChange={setTarget} onRefresh={() => void refreshSelected()}
-        onLoadMoreHistory={() => void loadMoreHistory()} onCreateAlert={(event) => void createAlert(event)}
-        onUpdateAlert={() => void updateAlert()} onRemoveAlert={() => void removeAlert()}
+        onLoadMoreHistory={() => void loadMoreHistory()} onCreateAlert={(targetPrice) => void createAlert(targetPrice)}
+        onSaveTarget={(targetPrice) => void updateAlert({ target_price: targetPrice })}
+        onToggleAlert={() => void updateAlert({ enabled: !selected.alert?.enabled })} onRemoveAlert={() => void removeAlert()}
         onRequestStop={() => { setError(null); setDetailMode('confirm') }} />}
     </div>}
 
