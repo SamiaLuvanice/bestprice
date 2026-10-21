@@ -197,3 +197,24 @@ test('Produtos em 390px usa linha compacta que abre o detalhe', async ({ page })
   await expect(page.getByRole('button', { name: 'Atualizar agora' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Parar de monitorar' })).toBeVisible()
 })
+
+// Revisão 0028 (AC12): mensagens de vazio começam na mesma margem do conteúdo.
+test('Alertas vazios em 390px alinham a mensagem à margem do conteúdo', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.route('**/api/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    const body = path === '/api/auth/me' ? { id: 'user-1', email: 'pessoa@example.com' } : { items: [], next_cursor: null }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+  })
+  await page.goto('/alertas')
+  const heading = page.getByRole('heading', { level: 1, name: 'Alertas' })
+  const empty = page.getByText('Nenhuma notificação por enquanto.')
+  await expect(empty).toBeVisible()
+  const left = async (locator: typeof heading) => (await locator.evaluate((element) => {
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    return range.getBoundingClientRect().left
+  }))
+  expect(Math.abs(await left(empty) - await left(heading))).toBeLessThanOrEqual(1)
+  expect(Math.abs(await left(page.getByText('Nenhum alerta configurado por enquanto.')) - await left(heading))).toBeLessThanOrEqual(1)
+})
