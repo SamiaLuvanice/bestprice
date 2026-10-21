@@ -1,6 +1,6 @@
 # Módulo frontend
 
-## Identidade visual atual — specs 0015 e 0027
+## Identidade visual atual — specs 0015, 0027 e 0028
 
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
 copiada de
@@ -29,7 +29,14 @@ sobre sugestões dessas ferramentas.
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
 operacional (`prefers-color-scheme`); a SPA não oferece seletor nem grava uma
 preferência de tema. A ação principal usa verde com texto preto; o rosa marca
-links e destaques. O cabeçalho e a página de detalhe têm superfícies sólidas;
+links e destaques. Desde a 0028, os nomes não se repetem com significados
+diferentes: no tema shadcn, `--primary` é o rosa da marca (`bg-primary`,
+`text-primary`) e `--action` é o verde das ações (`bg-action`, variante `default`
+do `Button`); no CSS próprio, `--color-brand` deriva de `--primary`; `text-muted`
+produz o texto secundário (`--muted-foreground`), enquanto `bg-muted` continua a
+superfície discreta. A tabela completa está em
+[Tokens da aplicação](../../designsystem/README.md#tokens-da-aplicação-spec-0028);
+`src/tokens.test.ts` protege esse contrato. O cabeçalho e a página de detalhe têm superfícies sólidas;
 menus e confirmações preservam a base sólida legível, com `backdrop-filter` como
 melhoria progressiva dentro de `@supports`. Nessas regras, `-webkit-backdrop-filter` vem **antes** de
 `backdrop-filter`: na ordem inversa, o lightningcss usado pelo build do Vite
@@ -43,8 +50,10 @@ O layout reduz movimento não essencial quando `prefers-reduced-motion` está at
 O catálogo e as ilustrações públicas contêm dados demonstrativos identificados
 como exemplo. Produtos, preços e métricas da conta continuam vindo apenas da API.
 A composição da 0027 usa conteúdo de até 1248 px, oportunidades em linhas e
-navegação inferior da conta até 700 px. Os quatro indicadores existentes e o
-formulário por link em Produtos foram preservados. A verificação visual da spec 0015 (à época, com tema automático) foi feita em
+navegação inferior da conta até 700 px. Os quatro indicadores existentes foram
+preservados; desde a 0028 o Início sem produtos mostra só o convite do campo de
+link, sem indicadores zerados, e Produtos abre na lista, com o campo de link
+recolhido na ação compacta “Adicionar anúncio”. A verificação visual da spec 0015 (à época, com tema automático) foi feita em
 Chromium nas larguras de 320, 768 e 1280 px, nos dois temas, com fixtures sintéticas
 e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
@@ -62,7 +71,7 @@ mantendo os controles e a autenticação existentes:
   de 840 px, o card divide a tela em duas metades, com arte à esquerda e formulário
   sobre branco à direita. A marca oficial e o texto BestPrice ficam sobre a área
   clara da arte, conforme a referência aprovada; o formulário permanece separado.
-- **Coluna visual:** `.login-visual` usa `frontend/src/assets/redesign/login-left.png`
+- **Coluna visual:** `.login-visual` usa `frontend/src/assets/redesign/login-left.webp`
   como fundo com `cover` e enquadramento pelo topo. A arte é ilustração estática,
   sem vínculo com anúncios ou com a conta. O elemento tem `role="img"` e descrição
   breve; sua marca visual interna é decorativa para tecnologias assistivas.
@@ -113,9 +122,12 @@ seção de alertas, banner final e rodapé. Todos os CTAs de entrada levam a `/l
 nenhum deles promete cadastro público. Os sete cartões de categoria e o aviso
 local de cadastro pertencem à composição anterior.
 
-As artes PNG fornecidas e os recortes SVG ficam em `frontend/src/assets/redesign/`:
-`hero-person.png`, `footer-phone.png`, `login-left.png`, `price-preview.svg` e
-`dashboard-preview.svg`. As prévias de preço e painel são identificadas como
+As artes fornecidas e as prévias ficam em `frontend/src/assets/redesign/`, todas em
+WebP desde a 0028: `hero-person.webp`, `footer-phone.webp`, `login-left.webp`,
+`price-preview.webp` e `dashboard-preview.webp` (as prévias eram SVG e foram
+rasterizadas para deixar as capturas determinísticas). Nenhuma passa de 300 KB; o
+hero tem `fetchPriority="high"` e dimensões declaradas (1120 × 682). A pasta
+`assets/landing/` e `assets/imagem-lateral.png`, sem uso, foram removidas. As prévias de preço e painel são identificadas como
 exemplos, sem representar ofertas reais ou dados da pessoa. Textos, links e
 controles da página são elementos React; as prévias são apenas ilustrações.
 
@@ -142,7 +154,10 @@ Recharts e Chart do shadcn ficam em um chunk separado. O gráfico usa somente
 registros BRL válidos já carregados, ordenados do mais antigo ao mais recente,
 com linha em degraus e pontos sem animação. O tooltip e “Ver registros de preço”
 mostram a string decimal original formatada; a conversão para `number` serve
-somente às coordenadas do desenho, sem decidir regras ou métricas monetárias.
+somente às coordenadas do desenho, sem decidir regras ou métricas monetárias. O eixo
+vertical usa `formatAxisPrice` (0028): marcas em reais com `R$`, inteiras sem
+centavos e as demais com duas casas, sem notação compacta (“mil”); o valor exato
+continua no tooltip e na tabela.
 Sem registros válidos, há orientação de vazio. Enquanto existe `next_cursor`,
 o texto informa cobertura parcial e “Carregar mais preços” amplia o período.
 Não há filtros de data nem extrapolação de preços intermediários.
@@ -159,13 +174,15 @@ A SPA usa `react-router-dom` e mantém o contrato REST da spec 0013. `App.tsx` c
 |---|---|
 | `/login` | Entrada pública; uma sessão válida segue para Início. |
 | `/` | Landing pública para visitante, inclusive durante carga/falha da sessão; com sessão válida, Início autenticado com formulário por link, resumo, oportunidades e atualizações recentes. |
-| `/produtos` | Lista autenticada de monitoramentos, paginação e formulário por link. |
+| `/produtos` | Lista autenticada de monitoramentos sob o título único “Seus produtos”, paginação e ação “Adicionar anúncio” que expande o formulário por link (aberto quando não há produtos). |
 | `/produtos/:id` | Página autenticada do monitoramento próprio, com histórico, alerta e ações. |
 | `/alertas` | Alertas configurados e notificações recebidas, em grupos distintos. |
 
 O visitante que abre uma rota protegida vai a `/login?returnTo=...`; depois de entrar, retorna à rota interna solicitada. O destino fica na URL durante uma recarga do login e `safeReturnTo` aceita somente `/`, `/produtos`, `/alertas` e um caminho de detalhe de produto, sem consulta ou fragmento. Entrada direta em `/login` leva ao Início. Logout leva a `/login`; o navegador revalida a sessão ao restaurar uma página pelo histórico. Caminho não reconhecido mostra `NotFoundPage`, com marca, título “Este endereço saiu do radar.”, curva decorativa e CTA verde: “Ir para Início” com sessão ou “Entrar” para visitante. “Voltar uma página” usa o histórico do navegador. Cada tela atualiza o título da aba e foca seu título principal; a navegação marca a seção ativa, incluindo Produtos no detalhe.
 
-O cabeçalho autenticado oferece links Início/Produtos/Alertas, sino e menu da conta. Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
+O cabeçalho autenticado oferece links Início/Produtos/Alertas, sino e menu da conta. Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
+
+O preço-alvo aceita o formato brasileiro (spec 0028): `src/lib/targetPrice.ts` normaliza `99,90`, `99.90`, `1.899,90`, `1899,9` e o prefixo `R$` para o decimal do contrato (`"99.90"`), só com texto, sem `number`. Valor inválido, zero, acima de 16 dígitos inteiros ou com milhar iniciado por zero (`0.500`) não chama a API: o campo recebe `aria-invalid` e a mensagem “Informe um valor em reais, como 99,90.” em `role="alert"`. O campo de edição mostra o alvo atual com vírgula. O contrato REST `target_price` e o backend não mudaram. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 
 Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcançar alertas ativos e pausados, inclusive além da primeira página; a consulta prossegue por páginas sem alertas até encontrar um ou esgotar a lista. O grupo de notificações mantém o histórico recebido, paginação e leitura explícita. Cada grupo tem seus próprios estados de carga, erro com retry e vazio. Abrir o produto não marca a notificação como lida. “Carregar mais” nas listas e no histórico usa `next_cursor` e evita IDs duplicados.
 
@@ -173,7 +190,7 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 |---|---|
 | `frontend/src/App.tsx` | `BrowserRouter`, rotas, consulta e revalidação de sessão, login, retorno seguro e títulos; recebe o relógio injetável (`clock`) |
 | `frontend/src/landing/LandingPage.tsx`, `LandingPage.css` | Landing pública da 0027, âncoras, menu móvel e CTAs para login |
-| `frontend/src/assets/redesign/` | Artes fornecidas e prévias SVG identificadas como ilustração |
+| `frontend/src/assets/redesign/` | Artes fornecidas e prévias em WebP identificadas como ilustração |
 | `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único e foco em Senha após falha |
 | `frontend/src/NotFoundPage.tsx` | Recuperação de rota inexistente, CTA por sessão e ação de voltar |
 | `frontend/src/components/ui/`, `frontend/src/lib/utils.ts`, `frontend/components.json` | Componentes oficiais shadcn/ui, combinação de classes e configuração de geração |
@@ -193,12 +210,13 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | `frontend/src/dashboard/RelativeTime.tsx`, `Skeletons.tsx` | Tempo relativo e esqueletos do carregamento inicial |
 | `frontend/src/dashboard/ExternalListingLink.tsx`, `ProductImage.tsx`, `labels.ts`, `Icons.tsx` | Link do anúncio, imagem ou marcador neutro, rótulos de estados da API e ícones |
 | `frontend/src/lib/decimal.ts` | Validação e comparação de decimais como texto, sem converter para `number` |
-| `frontend/src/lib/format.ts` | Dinheiro (BRL), percentual com direção, tempo relativo e instante absoluto via `Intl` |
+| `frontend/src/lib/format.ts` | Dinheiro (BRL), percentual com direção, tempo relativo, instante absoluto e rótulo do eixo do gráfico (`formatAxisPrice`) via `Intl` |
+| `frontend/src/lib/targetPrice.ts` | Normalização do preço-alvo digitado em pt-BR para o decimal do contrato e mensagem de erro local |
 | `frontend/src/lib/focus.ts` | `useModalFocus` para confirmação e `useDisclosure` para sino, conta e menu da linha |
 | `frontend/src/lib/url.ts` | `safeHttpsUrl`: só `https` vira `href`/`src` (bloqueia `javascript:`, `data:` e `http:`) |
 | `frontend/src/api.ts` | Cliente HTTP relativo a `/api`, cookie da sessão, validação das respostas (dinheiro e percentuais como strings decimais) e erros `ApiFailure` com `status`, `code`, `trackedProductId` e `retryAfterSeconds` |
-| `frontend/src/styles.css` | Tokens da identidade BestPrice no tema claro fixo e apresentação responsiva |
-| `frontend/src/assets/logo-bestprice.png` | Cópia da logo oficial usada na entrada e no cabeçalho autenticado |
+| `frontend/src/styles.css` | Tokens da identidade BestPrice no tema claro fixo e apresentação responsiva; `src/tokens.test.ts` recusa nomes repetidos com significados diferentes |
+| `frontend/src/assets/logo-bestprice.png` | Cópia da logo oficial usada na entrada e no cabeçalho autenticado, reduzida sem perda a 128 × 128 na 0028 (o original segue em `designsystem/`) |
 | `frontend/src/health.ts` | Cliente legado de `/api/health`, preservado para testes de saúde |
 
 O cliente consome `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/dashboard`, `/api/tracked-products`, seus subrecursos `history`, `refresh` e `alert`, além de `/api/notifications` (todas e `unread_only`). Usa `credentials: 'same-origin'`; Vite e Nginx encaminham `/api` ao FastAPI localmente. Em stage, `frontend/functions/api/[[path]].ts` encaminha `/api/*` à origem HTTPS indicada por `API_ORIGIN` no Cloudflare Pages. A Function preserva método, caminho, consulta, corpo, cookie e resposta da API, inclusive `Set-Cookie`; origem inválida ou falha de rede gera 502 genérico. `frontend/public/_routes.json` inclui só `/api/*`, portanto as páginas estáticas não invocam a Function. O build copia esse arquivo para `dist/`. O proxy foi testado localmente e o health público de stage foi verificado na spec 0018; a nova navegação da 0021 ainda não foi verificada em stage. Valores monetários chegam como strings decimais: `Intl.NumberFormat` os formata sem conversão para `number`, e a direção de um evento de preço vem de `compareDecimal`. Resposta fora do contrato vira “A API respondeu com dados inválidos.”; erro sem `code` e `message` vira a mensagem genérica, e falha de rede, “Não foi possível conectar ao BestPrice. Tente novamente.”.
@@ -231,7 +249,7 @@ Com a integração Mercado Livre desligada, o backend ainda valida a URL, inform
 
 ## Testes e verificação
 
-Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build`. Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 3 s (`vite.config.ts` e `src/test-setup.ts`); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código TypeScript/CSS da interface. Dados de exemplo de listas ficam nas fixtures; as artes públicas são ilustrações estáticas identificadas. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
+Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build`. Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 6 s (`vite.config.ts` e `src/test-setup.ts`; aumentado de 3 s na 0028 após falhas intermitentes sob carga, descritas na [verificação da 0028](../../specs/0028-ajustes-auditoria-redesign/verification.md)); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código TypeScript/CSS da interface. Dados de exemplo de listas ficam nas fixtures; as artes públicas são ilustrações estáticas identificadas. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
 
 A regressão visual (specs 0025 e 0027) roda por Playwright com `npm run test:visual`.
 `frontend/playwright.config.ts` sobe o Vite em `http://127.0.0.1:5173` e define os
@@ -249,7 +267,9 @@ A evidência inicial está na [verificação da spec 0025](../../specs/0025-harn
 com fixtures de API interceptadas, axe (`@axe-core/playwright`, tags WCAG A/AA),
 ausência de overflow e controles de pelo menos 44 px. Também verifica nome acessível
 da conta e o menu de produto aberto por hit test, além de salvar capturas em
-`test-results/`. São 48 casos no total com os 18 snapshots públicos. Para usar outra
+`test-results/`. A 0028 acrescentou a sonda de cores dos tokens (3), a imagem do
+detalhe com título longo (6), a linha compacta de Produtos (3) e o alinhamento dos
+vazios em Alertas (3); com os 18 snapshots públicos são 63 casos. Para usar outra
 porta local, defina `PLAYWRIGHT_BASE_URL`; para um Chromium existente, use
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Esses overrides não alteram o proxy da API.
 `test-results/` e `playwright-report/` são ignorados por Git e ESLint.
@@ -259,5 +279,8 @@ os 18 baselines foram aprovados em revisão explícita. A auditoria é local, se
 leitor de tela ou dispositivo real, e não substitui teste contra uma conta real.
 Método, falhas corrigidas e limites estão na
 [verificação da 0027](../../specs/0027-redesign-figma-shadcn/verification.md).
+Na 0028, lint, 348 testes Vitest, build e 63 verificações Playwright passaram; as
+12 capturas de landing e login foram regeneradas e conferidas contra os quadros
+aprovados ([verificação da 0028](../../specs/0028-ajustes-auditoria-redesign/verification.md)).
 A inspeção manual anterior sobre Compose está preservada na
 [evidência da 0012](../../specs/0012-area-usuario-monitoramento/verification.md).

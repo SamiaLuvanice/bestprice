@@ -47,7 +47,7 @@ describe('Atualizar agora pela linha', () => {
     expect(screen.getByRole('link', { name: 'Ver detalhes de Cafeteira elétrica' })).toHaveAttribute('href', '/produtos/tracking-2')
     await user.click(screen.getByRole('button', { name: 'Ações de Cafeteira elétrica' }))
     expect(screen.getByRole('group', { name: 'Ações de Cafeteira elétrica' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Adicionar anúncio' })).toBeEnabled()
 
     response.resolve(reply(200, server.update(product('1', 'Fone sem fio', { current_price: '75.00' }))))
     await waitFor(() => expect(rowStatus('Fone sem fio')).toHaveTextContent('Consulta concluída.'))
@@ -183,7 +183,8 @@ describe('Atualizar agora pela linha', () => {
     response.resolve(reply(200, product('1', 'Fone sem fio', { current_price: '75.00' })))
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(screen.queryByRole('rowgroup', { name: 'Fone sem fio' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: 'Produtos' })).toHaveFocus()
+    expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Adicionar anúncio' }))
     await user.click(linkField())
     await user.paste('https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM')
     await user.click(screen.getByRole('button', { name: 'Monitorar preço' }))

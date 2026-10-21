@@ -162,7 +162,7 @@ describe('ações da linha', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Fone sem fio' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/produtos/tracking-1')
     expect(screen.getByRole('heading', { name: 'Histórico de preços' })).toBeInTheDocument()
-    expect(screen.getByText(/Última tentativa:/)).toBeInTheDocument()
+    expect(screen.getByText('Última tentativa', { selector: 'dt' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Alerta de preço' })).toBeInTheDocument()
     const external = screen.getByRole('link', { name: 'Ver anúncio no Mercado Livre (abre em nova aba)' })
     expect(external).toHaveAttribute('href', item.product.canonical_url)
@@ -211,5 +211,52 @@ describe('ações da linha', () => {
     await user.tab({ shift: true })
     expect(menuButton).toHaveFocus()
     expect(menuButton).toHaveAttribute('aria-expanded', 'false')
+  })
+})
+
+describe('Produtos compacto (0028/AC05, AC10)', () => {
+  it('abre com a lista e oferece Adicionar anúncio como ação compacta', async () => {
+    const { user } = await renderProducts(dashboardFixture({ items: [product('1', 'Fone sem fio')] }))
+    // Revisão 0028: um só título, "Seus produtos", como h1 da página (quadros 04 e 11).
+    expect(screen.getAllByRole('heading', { level: 1 }).map((heading) => heading.textContent)).toEqual(['Seus produtos'])
+    expect(screen.queryByRole('heading', { name: 'Produtos' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('region', { name: 'Seus produtos' })).toHaveLength(1)
+    expect(screen.queryByRole('heading', { name: 'Comece por um link' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).not.toBeInTheDocument()
+    const add = screen.getByRole('button', { name: 'Adicionar anúncio' })
+    expect(add).toHaveAttribute('aria-expanded', 'false')
+    await user.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'true')
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).toHaveFocus())
+    expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeInTheDocument()
+  })
+
+  it('recolher fecha o painel, limpa o retorno e aria-controls aponta para o painel', async () => {
+    const { user } = await renderProducts(dashboardFixture({ items: [product('1', 'Fone sem fio')] }), (url, init) =>
+      url === '/api/tracked-products' && init?.method === 'POST'
+        ? reply(422, apiError('invalid_url', 'Informe um link de anúncio do Mercado Livre.')) : undefined)
+    const add = screen.getByRole('button', { name: 'Adicionar anúncio' })
+    const panelId = add.getAttribute('aria-controls')
+    expect(panelId && document.getElementById(panelId)).toBeTruthy()
+    await user.click(add)
+    await user.type(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' }), 'qualquer')
+    await user.click(screen.getByRole('button', { name: 'Monitorar preço' }))
+    expect(await screen.findByText('Informe um link de anúncio do Mercado Livre.')).toBeInTheDocument()
+    await user.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Informe um link de anúncio do Mercado Livre.')).not.toBeInTheDocument()
+    await user.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByText('Informe um link de anúncio do Mercado Livre.')).not.toBeInTheDocument()
+  })
+
+  it('mantém "vs. preço anterior" fora da pílula de variação', async () => {
+    await renderProducts(dashboardFixture({ items: [product('1', 'Fone sem fio')] }))
+    const cell = within(productRow('Fone sem fio')).getAllByRole('cell')[2]
+    const pill = cell.querySelector('[data-slot="badge"]') as HTMLElement
+    expect(pill).toHaveTextContent('-20,00%')
+    expect(pill).not.toHaveTextContent('vs. preço anterior')
+    expect(cell).toHaveTextContent('vs. preço anterior')
   })
 })

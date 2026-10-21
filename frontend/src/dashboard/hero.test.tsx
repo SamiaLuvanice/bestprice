@@ -22,6 +22,8 @@ async function renderHero(trackRoute: Route, extra: Route = () => undefined, ini
   const user = userEvent.setup()
   render(<App clock={clock} />)
   await screen.findByRole('heading', { level: 1 })
+  // Em Produtos com lista, o formulário fica atrás da ação compacta “Adicionar anúncio” (0028/AC05).
+  if (initialPath === '/produtos') await user.click(await screen.findByRole('button', { name: 'Adicionar anúncio' }))
   return { user, mockFetch }
 }
 

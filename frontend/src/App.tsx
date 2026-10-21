@@ -6,7 +6,6 @@ import { LoginForm } from './LoginForm'
 import { NotFoundPage } from './NotFoundPage'
 import { LandingPage } from './landing/LandingPage'
 import { AccountArea } from './dashboard/AccountArea'
-import { HeroTrackForm, type TrackFeedback } from './dashboard/HeroTrackForm'
 import { safeReturnTo } from './navigation/returnTo'
 import bestPriceLogo from './assets/logo-bestprice.png'
 
@@ -26,7 +25,6 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   const [sessionAttempt, setSessionAttempt] = useState(0)
   const [guestMessage, setGuestMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const [guestTrackError, setGuestTrackError] = useState<TrackFeedback | null>(null)
   const [postLoginTarget, setPostLoginTarget] = useState<string | null>(null)
   const [logoutRedirect, setLogoutRedirect] = useState(false)
   useEffect(() => {
@@ -108,15 +106,11 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   }
 
   const footer = <footer>BestPrice · Acompanhe com clareza</footer>
-  function trackAsGuest() {
-    setGuestTrackError({ message: 'Entre na sua conta para monitorar este anúncio.', trackedProductId: null })
-    return false
-  }
   if (location.pathname === '/' && sessionState !== 'ready') return <LandingPage />
+  // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
     <header className="masthead"><img className="brand-logo" src={bestPriceLogo} alt="BestPrice" /></header>
-    <main className="page-main">
-      <HeroTrackForm onSubmit={trackAsGuest} submitting={false} error={guestTrackError} success={null} />
+    <main className="page-main session-check">
       <div className="content narrow">{sessionState === 'loading' ? <p role="status">Carregando sua conta…</p> : <div className="panel">
         <p role="alert" className="error-box">{sessionError}</p>
         <Button type="button" className="primary-button" onClick={() => {

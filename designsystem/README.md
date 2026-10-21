@@ -50,13 +50,13 @@ as superfícies afetadas e a spec responsável.
 
 | Extensão da spec 0023 | Motivo | Superfícies |
 |---|---|---|
-| Arte `imagem-lateral.png` fornecida pelo responsável, sem logo, texto ou card sobrepostos; imagem de fundo com escala `cover` e prioridade ao topo apenas acima de 840px | Preservar a marca e a mensagem incorporadas à peça no recorte de janelas largas e baixas sem baixar a arte em telas estreitas | Metade esquerda do login acima de 840px |
+| Arte `imagem-lateral.png` fornecida pelo responsável (histórico: substituída por `assets/redesign/login-left.webp` e removida do repositório na 0028), sem logo, texto ou card sobrepostos; imagem de fundo com escala `cover` e prioridade ao topo apenas acima de 840px | Preservar a marca e a mensagem incorporadas à peça no recorte de janelas largas e baixas sem baixar a arte em telas estreitas | Metade esquerda do login acima de 840px |
 | Composição em duas metades com formulário sobre branco; em até 840px, arte oculta e logo oficial compacta antes do título | Aproximar a entrada da referência de composição sem criar controles de cadastro, recuperação ou Google | Login responsivo da spec 0023 |
 
 | Extensão da spec 0024 | Motivo | Superfícies |
 |---|---|---|
 | Fundo branco, superfície `#f8fafc`, texto `#0b172b`, apoio `#64748b`, verde de ação `#39ff14` com texto escuro, verde de leitura `#087c1e` e rosa de destaque `#c7005e`; tipografia sans do sistema | Reaproveitar a identidade oficial e manter texto e ações legíveis nas artes fornecidas; correção de contraste da revisão independente (5,37:1 sobre branco e 5,11:1 no selo, conforme cálculo local) | Landing pública em `/` |
-| Hero em duas colunas com recorte CSS do lado ilustrado de `hero.webp`; texto, CTA e navegação em React | Evitar duplicar o texto incorporado à arte e preservar conteúdo selecionável e acessível | Hero desktop e versão empilhada móvel |
+| Hero em duas colunas com recorte CSS do lado ilustrado de `hero.webp` (histórico: `assets/landing/` foi removida na 0028; a landing atual usa `assets/redesign/hero-person.webp`); texto, CTA e navegação em React | Evitar duplicar o texto incorporado à arte e preservar conteúdo selecionável e acessível | Hero desktop e versão empilhada móvel |
 | Faixa de benefícios com `scroll-margin-top: 94px`, sequência de quatro passos, sete cartões de categorias e banner panorâmico com arte WebP | Traduzir a referência visual fornecida para superfícies responsivas sem dados fictícios de produto da API e manter a âncora `#funcionalidades` visível sob o cabeçalho fixo | Seções públicas da landing |
 | Menu móvel com estado expandido, link para pular ao conteúdo, foco visível e movimento reduzido | Manter navegação operável em teclado e telas estreitas | Cabeçalho e toda a landing |
 
@@ -89,9 +89,52 @@ implementar essa composição com shadcn/ui e Recharts/shadcn Charts. A identida
 | Tokens shadcn `background/foreground/card/primary/secondary/muted/accent/destructive/border/input/ring` mapeados à identidade existente | Reutilizar código oficial dos controles sem adotar outra marca | Button, Input, Card, Badge, Table, Skeleton, Separator e Chart |
 | Conteúdo de até 1248 px, superfícies planas, linhas de produtos e navegação inferior até 700 px | Seguir os quadros desktop/mobile e manter o foco na tarefa | Área autenticada |
 | Recharts com série em degraus, pontos reais, tooltip decimal exato e tabela textual expansível | Não sugerir preços intermediários ou completude de histórico paginado | Detalhe; mais registros ampliam o período |
-| Artes fornecidas `hero-person.png`, `footer-phone.png`, `login-left.png`; recortes vetoriais identificados como ilustração | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
+| Artes fornecidas `hero-person`, `footer-phone`, `login-left` (originais PNG em `prototypes/2026-10-21-bestprice-figma/assets/`; na SPA, WebP redimensionado pela spec 0028); prévias de preço e do painel identificadas como ilustração (SVG rasterizado em WebP pela 0028, para a captura não variar com o esquema de cor) | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
 
 A landing da 0027 substitui a composição da 0024: os CTAs levam a `/login`;
 nenhum botão promete cadastro público. Os sete cartões de categorias e o aviso
 local de cadastro pertencem à versão anterior. Ilustrações públicas são estáticas
 com identificação de exemplo; a conta sempre depende da API.
+
+## Tokens da aplicação (spec 0028)
+
+A SPA usa dois grupos de variáveis em `frontend/src/styles.css`, sem nomes repetidos com
+significados diferentes. Antes da 0028, `--color-primary` era rosa no CSS próprio e verde
+no tema shadcn, e `text-muted` pintava texto com a cor de superfície `#f5f5f7`.
+
+**Tema shadcn/Tailwind** (gera os utilitários `bg-*`, `text-*`, `border-*`):
+
+| Token | Valor | Uso | Utilitários |
+|---|---|---|---|
+| `--primary` / `--primary-foreground` | `#c7005e` / `#fff` | Rosa da marca: links, títulos de destaque, foco, seleção | `bg-primary`, `text-primary`, `text-primary-foreground` |
+| `--action` / `--action-foreground` / `--action-hover` | `#39ff14` / `#000` / `#65ff48` | Verde das ações principais; variante `default` do `Button` | `bg-action`, `text-action-foreground`, `hover:bg-action-hover` |
+| `--muted` | `#f5f5f7` | **Superfície** discreta | `bg-muted` |
+| `--muted-foreground` | `#626267` | Texto secundário | `text-muted-foreground` e `text-muted` |
+| `--accent` | `#fce9f2` | Fundo rosa-claro de hover e seleção | `bg-accent` |
+| `--destructive` | `#b42318` (texto branco) | Ação destrutiva ("Parar de monitorar") | `bg-destructive` |
+| `--border` / `--input` / `--ring` | `#d2d2d7` / `#86868b` / `#c7005e` | Bordas, bordas de controle e anel de foco | `border-border`, `border-input`, `ring-ring` |
+
+`text-muted` produz o texto secundário `#626267`, igual a `text-muted-foreground`: o tema
+declara `--text-color-muted: var(--muted-foreground)`, namespace do Tailwind v4 que vale
+só para utilitários `text-*`, e `bg-muted` continua a superfície `#f5f5f7`. Os testes
+`frontend/src/tokens.test.ts` e a sonda de cores de `frontend/tests/visual/redesign.spec.ts`
+protegem esse contrato e recusam regras que corrigem a cor de variantes do `Button`.
+
+**CSS próprio** (classes legadas e componentes da aplicação): `--color-brand`,
+`--color-brand-strong`, `--color-brand-soft`, `--color-text`, `--color-text-muted`,
+`--color-surface`, `--color-surface-raised`, `--color-border-soft`, `--color-control-border`,
+cores semânticas `--color-down`, `--color-up`, `--color-amber`, `--color-danger-*` e os tokens
+do gráfico. Eles derivam do tema quando o significado é o mesmo
+(`--color-brand: var(--primary)`, `--color-text-muted: var(--muted-foreground)`).
+Só `--color-border` e `--color-action` repetem um nome do tema, com o mesmo valor
+(`var(--border)`, `var(--action)`).
+
+Decisão: `--primary` passou a ser o rosa da marca e o verde virou um token próprio de
+ação. Assim `text-primary` e a variante `link` ficam legíveis sem regra corretiva, e o
+botão principal continua verde com texto preto, como no visual aprovado. As cores de
+elementos (`a`, `button`, `input`) ficam em `@layer base`, para que os utilitários do tema
+vençam sem `!important`.
+
+Largura de página: `--page-width` (1248 px) e `--page-gutter` (32 px; 20 px até 700 px)
+formam `--page-inline`, usado por cabeçalho, conteúdo e landing, que compartilham a
+mesma margem lateral.
