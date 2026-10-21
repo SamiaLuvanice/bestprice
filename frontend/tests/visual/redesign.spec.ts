@@ -77,10 +77,19 @@ for (const scenario of scenarios) {
         return box.width < 43 || box.height < 43
       }).map((control) => control.textContent?.trim() || control.getAttribute('aria-label') || control.tagName))
     expect(smallControls).toEqual([])
-    const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
+    const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()
     expect(accessibility.violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) }))).toEqual([])
     await page.screenshot({ path: testInfo.outputPath(`${scenario.name}.png`), fullPage: true, animations: 'disabled' })
     if (!scenario.guest) await expect(page.getByRole('button', { name: /Conta: pessoa@example.com/ })).toBeVisible()
+    if (!scenario.guest) {
+      // 0028/AC12: cabeçalho e conteúdo começam na mesma margem lateral.
+      const edges = await page.evaluate(() => ({
+        header: document.querySelector('.app-header-inner')?.getBoundingClientRect().left,
+        content: document.querySelector('main .content, main .hero')?.getBoundingClientRect().left,
+      }))
+      expect(edges.header).toBeDefined()
+      expect(Math.abs((edges.header ?? 0) - (edges.content ?? -99))).toBeLessThanOrEqual(1)
+    }
     if (scenario.name === 'produtos') {
       await page.getByRole('button', { name: 'Ações de Fone sem fio' }).click()
       const panel = page.getByRole('group', { name: 'Ações de Fone sem fio' })
@@ -93,5 +102,62 @@ for (const scenario of scenarios) {
       })).toBe(true)
       await page.screenshot({ path: testInfo.outputPath('menu-produto.png'), fullPage: true, animations: 'disabled' })
     }
+  })
+}
+
+// 0028/AC04: utilitários do tema produzem as cores documentadas em designsystem/README.md.
+test('tokens: bg-primary, text-primary, text-muted-foreground e bg-muted', async ({ page }) => {
+  await page.route('**/api/**', (route) => route.fulfill({ status: 401, contentType: 'application/json',
+    body: JSON.stringify({ error: { code: 'unauthenticated', message: 'Entre para continuar.', fields: [] } }) }))
+  await page.goto('/login')
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  const colors = await page.evaluate(() => {
+    const probe = (classes: string) => {
+      const element = document.createElement('span')
+      element.className = classes
+      document.body.append(element)
+      const style = getComputedStyle(element)
+      const result = { color: style.color, background: style.backgroundColor }
+      element.remove()
+      return result
+    }
+    return {
+      bgPrimary: probe('bg-primary').background,
+      textPrimary: probe('text-primary').color,
+      textPrimaryForeground: probe('text-primary-foreground').color,
+      textMutedForeground: probe('text-muted-foreground').color,
+      bgMuted: probe('bg-muted').background,
+      bgAction: probe('bg-action').background,
+      textActionForeground: probe('text-action-foreground').color,
+    }
+  })
+  expect(colors).toEqual({
+    bgPrimary: 'rgb(199, 0, 94)', textPrimary: 'rgb(199, 0, 94)', textPrimaryForeground: 'rgb(255, 255, 255)',
+    textMutedForeground: 'rgb(98, 98, 103)', bgMuted: 'rgb(245, 245, 247)',
+    bgAction: 'rgb(57, 255, 20)', textActionForeground: 'rgb(0, 0, 0)',
+  })
+})
+
+// 0028/AC01: com título longo, a imagem do detalhe mantém tamanho e proporção em 320 e 390 px.
+for (const width of [320, 390]) {
+  test(`detalhe com título longo mantém a imagem em ${width}px`, async ({ page }) => {
+    const longTitle = 'Fone de ouvido sem fio com cancelamento ativo de ruído, estojo de carregamento e garantia estendida do fabricante'
+    const image = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="#ccc"/></svg>')
+    const detail = { ...tracked, product: { ...product, title: longTitle, image_url: 'https://http2.mlstatic.com/D_NQ_NP_000000-MLA0000000000_000000-O.webp' } }
+    await page.setViewportSize({ width, height: 800 })
+    await page.route('https://http2.mlstatic.com/**', (route) => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: decodeURIComponent(image.slice(image.indexOf(',') + 1)) }))
+    await page.route('**/api/**', async (route) => {
+      const path = new URL(route.request().url()).pathname
+      let body: unknown = { items: [], next_cursor: null }
+      if (path === '/api/auth/me') body = { id: 'user-1', email: 'pessoa@example.com' }
+      else if (path.endsWith('/history')) body = { items: entries, next_cursor: null }
+      else if (path === '/api/tracked-products/tracking-1') body = detail
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+    })
+    await page.goto('/produtos/tracking-1')
+    await expect(page.getByRole('heading', { level: 1, name: longTitle })).toBeVisible()
+    const box = await page.locator('.detail-product-heading .product-image').boundingBox()
+    expect(box?.width).toBe(80)
+    expect(box?.height).toBe(80)
   })
 }

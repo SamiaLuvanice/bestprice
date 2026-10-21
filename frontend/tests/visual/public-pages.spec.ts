@@ -18,11 +18,12 @@ async function waitForStableImages(page: Page) {
   // todas estarem decodificadas, evitando baseline instável em captura fullPage.
   await page.evaluate(async () => {
     const step = window.innerHeight
+    // A landing usa scroll-behavior: smooth; rolagem instantânea garante que cada trecho entre na tela.
     for (let y = 0; y < document.body.scrollHeight; y += step) {
-      window.scrollTo(0, y)
+      window.scrollTo({ top: y, behavior: 'instant' })
       await new Promise((resolve) => setTimeout(resolve, 50))
     }
-    window.scrollTo(0, 0)
+    window.scrollTo({ top: 0, behavior: 'instant' })
   })
   await page.waitForFunction(() => Array.from(document.images).every((img) => img.complete && img.naturalWidth > 0))
 }
