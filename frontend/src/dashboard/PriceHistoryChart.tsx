@@ -8,7 +8,18 @@ import { formatMoney } from '../lib/format'
 const config = { price: { label: 'Preço unitário', color: 'var(--color-action)' } } satisfies ChartConfig
 const shortDate = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' })
 const fullDate = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-const axisPrice = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 })
+const axisWhole = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+const axisCents = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 })
+
+/**
+ * Rótulo do eixo Y em reais (0028/AC07). As marcas do eixo são coordenadas escolhidas pelo
+ * Recharts, não preços: valores inteiros saem sem centavos (`R$ 1.900`) e os demais com duas
+ * casas (`R$ 1.899,90`), sem notação compacta. O preço exato fica no tooltip e na tabela.
+ */
+export function formatAxisPrice(value: number): string {
+  const whole = Math.round(value)
+  return Math.abs(value - whole) < 0.005 ? axisWhole.format(whole) : axisCents.format(value)
+}
 
 export function PriceHistoryChart({ history, partial }: { history: HistoryEntry[]; partial: boolean }) {
   const descriptionId = useId()
@@ -28,8 +39,8 @@ export function PriceHistoryChart({ history, partial }: { history: HistoryEntry[
           <CartesianGrid vertical={false} stroke="var(--color-chart-grid)" strokeDasharray="3 6" />
           <XAxis dataKey="time" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={40}
             tick={{ style: { fill: 'var(--color-chart-label)' }, fontSize: 12 }} tickLine={false} axisLine={false} tickFormatter={(time: number) => shortDate.format(time)} tickMargin={12} />
-          <YAxis dataKey="plotPrice" tick={{ style: { fill: 'var(--color-chart-label)' }, fontSize: 12 }} tickLine={false} axisLine={false} tickMargin={8} width={52}
-            domain={['auto', 'auto']} tickFormatter={(value: number) => axisPrice.format(value)} />
+          <YAxis dataKey="plotPrice" tick={{ style: { fill: 'var(--color-chart-label)' }, fontSize: 12 }} tickLine={false} axisLine={false} tickMargin={8} width={84}
+            domain={['auto', 'auto']} tickFormatter={formatAxisPrice} />
           <ChartTooltip content={<ChartTooltipContent
             labelFormatter={(_, payload) => {
               const time: unknown = payload?.[0]?.payload?.time
@@ -46,7 +57,7 @@ export function PriceHistoryChart({ history, partial }: { history: HistoryEntry[
     </div>
     <figcaption id={descriptionId} className="price-chart-note">
       {partial ? 'Exibindo os registros carregados. Carregue mais preços para ampliar o período.' : 'Registros de alteração desde o primeiro preço conhecido.'}
-      {' '}Preço unitário em BRL, sem frete. Cada ponto representa uma leitura registrada.
+      {' '}Preço unitário em reais. Cada ponto representa uma leitura registrada.
     </figcaption>
     <details className="history-data"><summary>Ver registros de preço</summary>
       <table><caption className="sr-only">Valores exatos do histórico, do mais antigo ao mais recente</caption>
