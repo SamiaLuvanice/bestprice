@@ -71,7 +71,7 @@ describe('estado vazio', () => {
     }
     expect(screen.queryByRole('region', { name: 'Notificações recebidas' })).not.toBeInTheDocument()
     await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Produtos' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos', level: 1 })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos', level: 1 })).toHaveFocus())
   })
 })
 

@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge'
 import { useId, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { formatMoney, formatPercentage } from '../lib/format'
-import { ArrowDownIcon, ArrowUpIcon } from './Icons'
+import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon } from './Icons'
 import { attemptResult, availabilityLabel } from './labels'
 import { ProductImage } from './ProductImage'
 import { productColumns, type RowState } from './productColumns'
@@ -61,8 +61,10 @@ export function TrackedProductRow({ entry, state, actions }: Props) {
       <td role="cell" {...label(4)}><span className={`availability availability-${product.availability}`}>{availabilityLabel(product.availability)}</span></td>
       <td role="cell" {...label(5)}><RelativeTime iso={product.last_price_observed_at} receivedAt={receivedAt} /></td>
       <td role="cell" {...label(6)} className="cell-actions">
-        <Link className="secondary-button" to={`/produtos/${tracked.id}`} data-row-details={tracked.id}>
-          Ver detalhes{' '}<span className="sr-only">de {product.title}</span>
+        {/* No celular vira a seta da linha e cobre a linha inteira (quadro 11); o nome acessível não muda. */}
+        <Link className="secondary-button row-details-link" to={`/produtos/${tracked.id}`} data-row-details={tracked.id}>
+          <span className="row-details-text">Ver detalhes</span>{' '}<span className="sr-only">de {product.title}</span>
+          <ChevronRightIcon className="row-details-chevron" />
         </Link>
         {actions}
       </td>

@@ -99,6 +99,11 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   const pageHeading = useRef<HTMLHeadingElement>(null)
   const linkInput = useRef<HTMLInputElement>(null)
   const alertsHeading = useRef<HTMLHeadingElement>(null)
+  // Em Produtos, o h1 "Seus produtos" é ao mesmo tempo o título da página e o da lista.
+  const productsHeading = useCallback((element: HTMLHeadingElement | null) => {
+    trackedHeading.current = element
+    pageHeading.current = element
+  }, [])
   const [logoutError, setLogoutError] = useState<string | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
   const detailOpen = selected !== null
@@ -609,6 +614,19 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
     else linkInput.current?.focus()
   }, [focusAfterStop, location.pathname, list.loaded, list.items.length, loading])
 
+  // Campo de link: hero do Início ou, em Produtos, ação abaixo do título único "Seus produtos".
+  function trackForm(embedded: boolean) {
+    return <HeroTrackForm onSubmit={track} submitting={submitting}
+      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={embedded ? undefined : pageHeading}
+      inputRef={linkInput} priority={isEmpty} embedded={embedded} compact={embedded && !isEmpty}
+      onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
+      {isEmpty && <div className="empty-state">
+        <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
+        <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
+      </div>}
+    </HeroTrackForm>
+  }
+
   return <>
     <AppHeader key={location.pathname} email={user.email} current={currentSection}
       bell={<NotificationBell unread={notifications.unread} onRetry={notifications.reloadUnread}
@@ -616,16 +634,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
       logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
 
     <main id="conteudo" className="page-main">
-    {(currentSection === 'home' || (currentSection === 'products' && !detailId)) && <HeroTrackForm onSubmit={track} submitting={submitting}
-      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={pageHeading}
-      inputRef={linkInput} priority={isEmpty} pageTitle={currentSection === 'products' ? 'Produtos' : undefined}
-      compact={currentSection === 'products' && !isEmpty}
-      onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
-      {isEmpty && <div className="empty-state">
-        <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
-        <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
-      </div>}
-    </HeroTrackForm>}
+    {currentSection === 'home' && trackForm(false)}
     <div className="content global-messages">
       <p role="status" data-testid="global-status" className={globalMessage ? 'global-status' : 'sr-only'}>{globalMessage}</p>
       {error && !selected && !detailId && <p role="alert" className="error-box">{error.message}</p>}
@@ -668,7 +677,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
         loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)}
         renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
           disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
-        message={productsMessage} headingRef={trackedHeading} skeleton={loading ? <ProductsSkeleton /> : undefined} />
+        message={productsMessage} headingRef={productsHeading} skeleton={loading ? <ProductsSkeleton /> : undefined}
+        toolbar={trackForm(true)} />
     </div>}
 
     {detailId && <div className="content dashboard-content">

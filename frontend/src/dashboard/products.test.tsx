@@ -217,7 +217,10 @@ describe('ações da linha', () => {
 describe('Produtos compacto (0028/AC05, AC10)', () => {
   it('abre com a lista e oferece Adicionar anúncio como ação compacta', async () => {
     const { user } = await renderProducts(dashboardFixture({ items: [product('1', 'Fone sem fio')] }))
-    expect(screen.getByRole('heading', { level: 1, name: 'Produtos' })).toBeInTheDocument()
+    // Revisão 0028: um só título, "Seus produtos", como h1 da página (quadros 04 e 11).
+    expect(screen.getAllByRole('heading', { level: 1 }).map((heading) => heading.textContent)).toEqual(['Seus produtos'])
+    expect(screen.queryByRole('heading', { name: 'Produtos' })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('region', { name: 'Seus produtos' })).toHaveLength(1)
     expect(screen.queryByRole('heading', { name: 'Comece por um link' })).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).not.toBeInTheDocument()
     const add = screen.getByRole('button', { name: 'Adicionar anúncio' })

@@ -208,9 +208,11 @@ footer { color: var(--color-text-muted); text-align: center; padding: 28px; marg
 /* Hero da área autenticada */
 .hero { width: var(--page-inline); margin: 48px auto 0; }
 .hero-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-6); }
-.hero h1, .alerts-page-heading h1, .detail-page h1 { font-size: clamp(32px, 3.4vw, 43px); line-height: 1.15; }
+.hero h1, .alerts-page-heading h1, .detail-page h1, .products-section h1 { font-size: clamp(32px, 3.4vw, 43px); line-height: 1.15; }
+.products-section h1 { margin-bottom: 0; }
+.hero-embedded { width: auto; margin: 0 0 var(--space-4); }
 .hero-compact h1 { margin-bottom: 0; }
-.hero-compact .track-panel { margin-top: var(--space-4); }
+.hero-compact .track-panel { margin-top: var(--space-2); }
 .add-listing { padding-inline: 0; font-size: 16px; }
 .intro { color: var(--color-text-muted); font-size: 17px; line-height: 1.5; max-width: 72ch; margin: 0 0 var(--space-6); }
 .track-panel { display: block; padding: 28px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
@@ -335,6 +337,7 @@ footer { color: var(--color-text-muted); text-align: center; padding: 28px; marg
 .availability-unavailable { background: var(--color-up-soft); color: var(--color-up); }
 .availability-unknown { background: var(--color-surface-raised); color: var(--color-text-muted); }
 .cell-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.row-details-chevron { display: none; }
 .row-menu-panel { width: 260px; display: grid; gap: var(--space-1); padding: var(--space-2); }
 .row-menu-panel .panel-item { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; }
 .product-secondary td { padding-top: 0; padding-bottom: 20px; }
@@ -451,22 +454,33 @@ footer { color: var(--color-text-muted); text-align: center; padding: 28px; marg
   .indicator-value { font-size: 36px; }
   .skeleton-indicators { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-content:has(.summary-section) { grid-template-columns: 1fr; }
-  /* 0028/AC05: em telas estreitas cada produto vira uma linha compacta (quadro 11); papéis explícitos mantêm a semântica de tabela. */
-  .products-table, .products-table tbody { display: block; width: 100%; table-layout: fixed; }
+  /* 0028/AC05: em telas estreitas cada produto vira a linha do quadro 11 (imagem, título, preço,
+     pílula e seta) e a linha inteira leva ao detalhe, que concentra Atualizar agora e Parar.
+     Papéis explícitos mantêm a semântica de tabela. */
+  .products-table, .products-table tbody { display: block; width: 100%; }
   .products-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
-  .product-group { padding: var(--space-4) 0; }
-  .products-table tr.product-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-2) var(--space-3); align-items: center; }
+  .products-table tr.product-main { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) 44px; align-items: center; gap: 2px var(--space-3); min-height: 64px; padding: var(--space-4) 0 var(--space-4) 76px; }
   .products-table tr.product-secondary { display: block; }
   .products-table td { display: block; padding: 0; overflow-wrap: anywhere; }
-  .products-table td.cell-product { grid-column: 1 / -1; display: flex; max-width: none; min-width: 0; }
-  .products-table td.cell-price { grid-column: 1; font-size: 18px; white-space: nowrap; }
-  .products-table td:nth-child(3) { grid-column: 2; justify-self: end; }
-  .products-table td:nth-child(4), .products-table td:nth-child(6) { display: none; }
-  .products-table td:nth-child(5) { grid-column: 1; }
-  .products-table td.cell-actions { grid-column: 2; display: flex; flex-wrap: nowrap; justify-content: flex-end; }
-  .products-table .cell-actions .secondary-button { padding-inline: var(--space-3); }
-  .products-table .product-secondary td { padding: var(--space-1) 0 0; }
-  .products-table .row-details { display: none; }
+  .products-table td.cell-product { grid-column: 1 / 3; grid-row: 1; display: block; max-width: none; min-width: 0; }
+  .products-table .cell-product .row-image { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 64px; height: 64px; }
+  .products-table td.cell-price { grid-column: 1; grid-row: 2; font-size: 18px; white-space: nowrap; }
+  .products-table td:nth-child(3) { grid-column: 2; grid-row: 2; justify-self: start; }
+  .products-table td:nth-child(4), .products-table td:nth-child(5), .products-table td:nth-child(6) { display: none; }
+  .products-table td.cell-actions { grid-column: 3; grid-row: 1 / 3; display: flex; justify-content: flex-end; }
+  .products-table .row-menu { display: none; }
+  .products-table .row-details-link { width: 44px; min-width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--color-brand); }
+  .products-table .row-details-link::after { content: ""; position: absolute; inset: 0; }
+  .products-table .row-details-link:focus-visible { outline: none; }
+  .products-table .row-details-link:focus-visible::after { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: 12px; }
+  .products-table .row-details-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .products-table .row-details-chevron { display: block; width: 24px; height: 24px; }
+  .products-table .product-secondary td { padding: 0 0 0 76px; }
+  .products-table .product-secondary td:has(.row-flags:empty):has(.row-status:empty) { display: none; }
+  .products-table .row-details, .products-table .small-badge { display: none; }
+  .products-table .row-flags:not(:has(:not(.small-badge))) { display: none; }
+  .products-table .row-status:not(:empty) { margin: 0 0 var(--space-3); }
+  .product-group { padding: 0; }
   /* Pílula sozinha, como no quadro 11; o rótulo segue para leitores de tela. */
   .products-table .variation-note { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 }

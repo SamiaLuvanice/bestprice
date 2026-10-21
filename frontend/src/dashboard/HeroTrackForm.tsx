@@ -24,6 +24,11 @@ type Props = {
    * expande o formulário. Sem produtos, o formulário aparece aberto como convite.
    */
   compact?: boolean
+  /**
+   * Dentro de outra seção que já tem o título da página (Produtos): sem h1, sem região própria
+   * e sem introdução. Combinado com `compact`, mostra só a ação "Adicionar anúncio".
+   */
+  embedded?: boolean
   /** Ao recolher o formulário compacto: limpa erro e sucesso do último envio. */
   onDismissFeedback?: () => void
   /** Conteúdo extra abaixo do formulário (ex.: estado vazio). */
@@ -34,7 +39,7 @@ type Props = {
  * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
-export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, onDismissFeedback, children }: Props) {
+export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, embedded = false, onDismissFeedback, children }: Props) {
   const panelId = useId()
   const [expanded, setExpanded] = useState(false)
   const focusOnOpen = useRef(false)
@@ -63,18 +68,20 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
     if (submitting) return
     if (await onSubmit(value)) setValue('')
   }
-  const classes = ['hero', priority && 'hero-priority', compact && 'hero-compact'].filter(Boolean).join(' ')
-  return <section className={classes} id="inicio" aria-labelledby="page-title">
+  const classes = ['hero', priority && 'hero-priority', compact && 'hero-compact', embedded && 'hero-embedded'].filter(Boolean).join(' ')
+  const addButton = compact && <Button type="button" variant="link" className="add-listing" aria-expanded={open} aria-controls={panelId}
+    onClick={toggle}>Adicionar anúncio <span aria-hidden="true">{open ? '−' : '+'}</span></Button>
+  const Root = embedded ? 'div' : 'section'
+  return <Root className={classes} id={embedded ? undefined : 'inicio'} aria-labelledby={embedded ? undefined : 'page-title'}>
     <div className="hero-inner">
       <div className="hero-copy">
-        <div className="hero-heading">
+        {embedded ? addButton : <div className="hero-heading">
           <h1 id="page-title" ref={headingRef} tabIndex={-1}>
             {pageTitle ?? 'Seu painel de preços'}
           </h1>
-          {compact && <Button type="button" variant="link" className="add-listing" aria-expanded={open} aria-controls={panelId}
-            onClick={toggle}>Adicionar anúncio <span aria-hidden="true">{open ? '−' : '+'}</span></Button>}
-        </div>
-        {!compact && <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>}
+          {addButton}
+        </div>}
+        {!compact && !embedded && <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>}
         {/* Sempre no DOM para aria-controls apontar para um id existente; `hidden` quando recolhido. */}
         <Card className="track-panel" id={panelId} hidden={!open}>{!compact && <><h2>Comece por um link</h2><p className="track-description">Cole a URL do anúncio do Mercado Livre para acompanhar automaticamente.</p></>}<form onSubmit={(event) => void submit(event)} className="track-form">
           <div className="track-field">
@@ -98,5 +105,5 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
         {children}
       </div>
     </div>
-  </section>
+  </Root>
 }

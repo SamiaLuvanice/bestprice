@@ -90,7 +90,8 @@ for (const scenario of scenarios) {
       expect(edges.header).toBeDefined()
       expect(Math.abs((edges.header ?? 0) - (edges.content ?? -99))).toBeLessThanOrEqual(1)
     }
-    if (scenario.name === 'produtos') {
+    // Abaixo de 960 px o menu ⋮ fica oculto: a linha leva ao detalhe (teste da linha compacta).
+    if (scenario.name === 'produtos' && (page.viewportSize()?.width ?? 0) >= 960) {
       await page.getByRole('button', { name: 'Ações de Fone sem fio' }).click()
       const panel = page.getByRole('group', { name: 'Ações de Fone sem fio' })
       const stop = panel.getByRole('button', { name: 'Parar de monitorar' })
@@ -162,3 +163,37 @@ for (const width of [320, 390]) {
     expect(box?.height).toBe(80)
   })
 }
+
+// Revisão 0028 (AC05): no celular a linha segue o quadro 11 (~139 px): imagem, título, preço,
+// pílula e seta; a linha inteira leva ao detalhe, que concentra Atualizar agora e Parar.
+test('Produtos em 390px usa linha compacta que abre o detalhe', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.route('**/api/**', async (route) => {
+    const path = new URL(route.request().url()).pathname
+    let body: unknown = { items: [], next_cursor: null }
+    if (path === '/api/auth/me') body = { id: 'user-1', email: 'pessoa@example.com' }
+    else if (path === '/api/dashboard') body = { summary: { tracked_count: 1, price_drop_count: 1, active_alert_count: 1, target_reached_count: 0 },
+      tracked_products: { items: [tracked], next_cursor: null }, opportunities: [], recent_updates: [] }
+    else if (path === '/api/tracked-products') body = { items: [tracked], next_cursor: null }
+    else if (path.endsWith('/history')) body = { items: entries, next_cursor: null }
+    else if (path === '/api/tracked-products/tracking-1') body = tracked
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+  })
+  await page.goto('/produtos')
+  const row = page.getByRole('rowgroup', { name: 'Fone sem fio' })
+  await expect(row).toBeVisible()
+  const height = (await row.boundingBox())?.height ?? 999
+  expect(height).toBeLessThanOrEqual(140)
+  await expect(row.getByRole('button', { name: 'Ações de Fone sem fio' })).toBeHidden()
+  await expect(row.getByText('Disponível')).toBeHidden()
+  await expect(row.getByText(/Alerta em/)).toBeHidden()
+  const link = row.getByRole('link', { name: 'Ver detalhes de Fone sem fio' })
+  const box = await link.boundingBox()
+  expect(box?.width).toBeGreaterThanOrEqual(44)
+  expect(box?.height).toBeGreaterThanOrEqual(44)
+  const rowBox = await row.boundingBox()
+  await page.mouse.click((rowBox?.x ?? 0) + 120, (rowBox?.y ?? 0) + 20)
+  await expect(page).toHaveURL(/\/produtos\/tracking-1$/)
+  await expect(page.getByRole('button', { name: 'Atualizar agora' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Parar de monitorar' })).toBeVisible()
+})

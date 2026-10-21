@@ -43,7 +43,7 @@ describe('cabeçalho', () => {
     const alerts = () => nav().getByRole('link', { name: 'Alertas' })
 
     await user.click(products())
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
     expect(window.location.pathname).toBe('/produtos')
     expect(products()).toHaveAttribute('aria-current', 'page')
     expect(home()).not.toHaveAttribute('aria-current')
@@ -79,7 +79,7 @@ describe('cabeçalho', () => {
     await user.click(screen.getByRole('button', { name: /pessoa@example\.com/ }))
     await user.click(screen.getByRole('button', { name: 'Sair' }))
     expect(await within(screen.getByRole('banner')).findByRole('alert')).toHaveTextContent(text)
-    expect(screen.getByRole('heading', { name: 'Produtos' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/produtos')
     expect(screen.queryByRole('button', { name: 'Entrar' })).not.toBeInTheDocument()
   })
@@ -87,7 +87,7 @@ describe('cabeçalho', () => {
   it('opera o menu da conta pelo teclado', async () => {
     const { user } = await renderArea()
     const account = screen.getByRole('button', { name: /pessoa@example\.com/ })
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Produtos' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
     account.focus()
     await user.keyboard('{Enter}')
     expect(account).toHaveAttribute('aria-expanded', 'true')

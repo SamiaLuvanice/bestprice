@@ -54,7 +54,7 @@ it('recupera falha de rede na verificação sem concluir logout', async () => {
   visit('/produtos')
   expect(await screen.findByText('Não foi possível conectar ao BestPrice. Tente novamente.')).toBeInTheDocument()
   fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
-  expect(await screen.findByRole('heading', { name: 'Produtos', level: 1 })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
 })
 
