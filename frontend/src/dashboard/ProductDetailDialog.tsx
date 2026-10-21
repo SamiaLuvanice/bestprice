@@ -78,7 +78,7 @@ function TargetForm({ id, label, submitLabel, value, busy, onChange, onSubmit }:
     <Input id={id} value={value} inputMode="decimal" placeholder="99,90" autoComplete="off" required
       aria-invalid={invalid || undefined} aria-describedby={invalid ? errorId : undefined}
       onChange={(event) => { setInvalid(false); onChange(event.target.value) }} />
-    {invalid && <p id={errorId} className="field-error">{targetPriceError}</p>}
+    {invalid && <p id={errorId} role="alert" className="field-error">{targetPriceError}</p>}
     <Button disabled={busy} type="submit">{submitLabel}</Button>
   </form>
 }

@@ -345,7 +345,7 @@ describe('alerta de preço no formato brasileiro (0028/AC02, AC06)', () => {
     const field = detail.getByLabelText('Avise quando chegar a')
     await user.type(field, '99,999')
     await user.click(detail.getByRole('button', { name: 'Criar alerta' }))
-    expect(await detail.findByText('Informe um valor em reais, como 99,90.')).toBeInTheDocument()
+    expect(await detail.findByRole('alert')).toHaveTextContent('Informe um valor em reais, como 99,90.')
     expect(field).toHaveAttribute('aria-invalid', 'true')
     expect(field).toHaveAccessibleDescription('Informe um valor em reais, como 99,90.')
     expect(callsTo(mockFetch, `${itemUrl}/alert`, 'POST')).toHaveLength(0)
