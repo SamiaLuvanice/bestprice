@@ -153,3 +153,23 @@ partir de 960 px.
 Observação de ambiente: durante as correções, uma execução isolada de `detail.test.tsx`
 levou 79 s num único teste (carga externa: processos de outras ferramentas, nenhum servidor
 desta tarefa); repetida, 26/26.
+
+## Ajuste visual pós-integração — 22/10/2026
+
+A pedido do responsável, a imagem principal do hero recebeu `border-radius: 18px`; a prévia de preço sobreposta preserva o raio próprio. Alterações em `frontend/src/landing/LandingPage.css` e `docs/apps/frontend.md`, na worktree `fix/issue-157-raio-foto-hero` baseada em `origin/develop` (`583f522`).
+
+- `.agents/skills/impeccable/scripts/impeccable.cmd detect --json frontend/src/landing/LandingPage.css`: `[]`.
+- `npm ci`: 395 pacotes instalados, 0 vulnerabilidades.
+- `npm run lint`: passou.
+- `npm run build`: passou.
+- `npm test -- --run`: no sandbox, 30 arquivos falharam ao abrir arquivos temporários (`ENOENT`) e 1 arquivo passou com 14 testes; executado isoladamente fora do sandbox, passou com 31 arquivos e 348/348 testes.
+- `npm run test:visual` e tentativas focadas na landing: ficaram sem saída e foram interrompidas. O uso de Chrome instalado e de porta explícita não resolveu; iniciar Vite na porta 53219 informou que já estava em uso. Capturas visuais não verificadas.
+- `git diff --check`: passou.
+
+A tentativa paralela inicial de testes também teve `ENOENT`; gates repetidos separadamente produziram os resultados acima. Revisão independente e QA não encontraram achados bloqueantes; ambas apontaram a falta de captura visual deste delta. `AGENTS.md` e `CLAUDE.md` conferidos, sem necessidade de edição.
+
+- Hooks: `pre-commit install --hook-type pre-commit --hook-type commit-msg`; ambos instalados. `git commit` passou pelos hooks de whitespace, arquivos, YAML/JSON aplicáveis, conflitos, arquivos grandes, chave privada e proteção de branch.
+- Revisão independente (`arch-reviewer`): sem achados bloqueantes; observou que o seletor depende da ordem atual das imagens no JSX.
+- QA independente: confirmou o alvo do CSS e a separação da prévia, lint/build, e usou a evidência de 348/348 testes; não conseguiu demonstrar captura visual.
+- Commit local: `7a74e5a` (`fix(frontend): arredonda foto da hero`; `Refs #157`).
+- Handoff GitHub concluído: criada a [Issue #164](https://github.com/SamiaLuvanice/bestprice/issues/164), pois a #157 foi fechada pela PR #158. A branch `fix/issue-164-arredonda-foto-hero` foi publicada a partir do commit `f7697e1` sobre `origin/develop` em `583f522`; [PR #165](https://github.com/SamiaLuvanice/bestprice/pull/165) aberta para `develop` com `Closes #164`. Aguardando CI e revisão no GitHub; nenhum merge ou deploy foi feito.
