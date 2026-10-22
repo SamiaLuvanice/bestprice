@@ -2,6 +2,15 @@
 
 Data: 22/10/2026. Base: `e484cd3` (`origin/develop`). Issue: [#174](https://github.com/SamiaLuvanice/bestprice/issues/174).
 
+Encerramento: [PR #175](https://github.com/SamiaLuvanice/bestprice/pull/175)
+integrada em `develop` em 22/10/2026 às 19:37:03 UTC, merge `5219077`;
+Issue #174 fechada. QA independente aceitou AC01–AC11 sem bloqueios após conferir
+código, documentação, capturas e os resultados das rodadas de 128 e 40 casos,
+sem repetir as suítes aprovadas. Isso não amplia os limites de validação abaixo.
+A galeria e as evidências foram preservadas no checkout principal em
+`frontend/playwright-report/spec-0030-delivery/comparison.html`, fora das
+worktrees; a limpeza aguarda integração do encerramento documental da Issue #176.
+
 ## Inventário real
 
 | Superfície | Componentes e estados inspecionados | Tratamento |
@@ -70,4 +79,4 @@ Nenhuma dependência ou fonte nova. Além do token preto do rodapé adicionado n
 
 ## Limites de validação
 
-Os testes de navegador usam API simulada e Chrome desktop com viewports emulados. Não comprovam dispositivo físico, leitor de tela, Safari/Firefox nem integração real Mercado Livre. A disponibilidade operacional da API continua na Issue #127. A revisão independente terminou sem achados concretos; revisão da entrega e integração em develop permanecem pendentes.
+Os testes de navegador usam API simulada e Chrome desktop com viewports emulados. Não comprovam dispositivo físico, leitor de tela, Safari/Firefox nem integração real Mercado Livre. A disponibilidade operacional da API continua na Issue #127. Revisão independente e aceite final concluídos sem bloqueios; integração em develop confirmada na PR #175. Este encerramento não promove release ou stage.

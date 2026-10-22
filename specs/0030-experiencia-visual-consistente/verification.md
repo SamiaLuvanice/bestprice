@@ -1,5 +1,32 @@
 # Verificação — spec 0030 / Issue #174
 
+## Aceite e integração em develop
+
+A [PR #175](https://github.com/SamiaLuvanice/bestprice/pull/175) foi integrada em
+22/10/2026 às 19:37:03 UTC, merge
+`5219077fde05164f336bc24ba26dc082cab05df0`, contendo o HEAD `d9f010e`.
+A Issue #174 está fechada. Os checks remotos desse HEAD passaram: CI, Frontend,
+Backend, Automation, PR policy, Pages e resolve/sync. O resultado de Pages não
+representa validação funcional de stage ou release.
+
+QA independente aceitou AC01–AC11 sem bloqueios, conferindo código, documentação,
+capturas e `.last-run.json` das rodadas de 128 e 40 casos, ambos com status
+`passed` e `failedTests: []`. Não repetiu as suítes verdes. A rodada de 128
+permanece anterior à correção AC11; os 40 casos afetados são a confirmação após
+essa correção. Os registros históricos abaixo preservam a sequência da entrega.
+
+Status final: spec `implementada`. A
+[Issue #176](https://github.com/SamiaLuvanice/bestprice/issues/176) acompanha o
+encerramento documental em branch própria, sobre `origin/develop` em `5219077`.
+Esta etapa altera somente documentação; não executa código, testes ou snapshots.
+`AGENTS.md`, `CLAUDE.md` e documentação de onboarding conferidos sem alterações
+adicionais: instruções, setup, arquitetura e fluxos continuam válidos.
+A limpeza das duas worktrees será realizada após integrar o PR documental;
+não foi executada nesta etapa. Nenhuma promoção de stage ou release foi feita.
+O caminho preservado da galeria foi conferido com `Test-Path` (`True`).
+`git diff --check` passou no encerramento documental; nenhum gate de código foi
+repetido para esta atualização exclusiva de documentação.
+
 ## Correções solicitadas na revisão do PR #175
 
 O usuário apontou banner final cortando o telefone, rodapé público claro e marca
@@ -123,8 +150,17 @@ As capturas foram observadas em desktop e amostras de mobile/tablet, incluindo t
 
 ## Artefatos locais
 
-Galeria: `frontend/playwright-report/spec-0030/comparison.html`. Inclui antes/depois desktop de dez rotas/estados, capturas finais de 320/390/768 px e 24 mapas de diferenças das referências públicas. Verificação com `HTMLParser` encontrou 74 imagens referenciadas e nenhuma ausente. Capturas e traces de execução ficam ignorados pelo Git; as baselines públicas são versionadas. Dados de produto nesses testes são ilustrativos.
+Galeria preservada no checkout principal:
+`C:/Users/luvan/Learning/bestprice/frontend/playwright-report/spec-0030-delivery/comparison.html`.
+A pasta inteira foi movida com caminhos verificados do antigo
+`frontend/playwright-report/spec-0030` da worktree, sem perda de artefatos;
+permanece fora das worktrees para sobreviver à limpeza. Inclui antes/depois
+desktop de dez rotas/estados, capturas finais de 320/390/768 px e 24 mapas de
+diferenças das referências públicas. A verificação histórica com `HTMLParser`
+encontrou 74 imagens referenciadas e nenhuma ausente; oito capturas landing/login
+foram atualizadas na correção. Capturas e traces são ignorados pelo Git;
+baselines públicas são versionadas. Os dados desses testes são ilustrativos.
 
 ## Limites e handoff
 
-Não executados nesta correção: integração com backend/banco/Mercado Livre real, dispositivo físico, leitor de tela manual, Firefox/Safari, auditoria completa das propriedades Figma por API, suíte visual inteira após AC11, deploy e integração em develop. CI da rodada anterior verde; checks da correção aguardam push. A operação Mercado Livre permanece na Issue #127. A spec fica `pronta`; revisão independente executada sem achados concretos. Implementação entregue na [PR #175](https://github.com/SamiaLuvanice/bestprice/pull/175); aguarda revisão da entrega e merge. A worktree permanece disponível durante a revisão.
+Não executados: integração com backend/banco/Mercado Livre real, dispositivo físico, leitor de tela manual, Firefox/Safari, auditoria completa das propriedades Figma por API, suíte visual inteira após AC11 ou validação de deploy. A operação Mercado Livre permanece na Issue #127. Os checks remotos passaram, QA independente aceitou AC01–AC11 e a PR #175 foi integrada em develop; spec `implementada`. A limpeza aguarda integração do encerramento documental da Issue #176, com artefatos já preservados fora das worktrees.
