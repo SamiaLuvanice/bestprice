@@ -33,6 +33,7 @@ Landing, login, início autenticado, produtos, detalhe, alertas, página não en
 - AC08: carregamento, falha, sucesso, vazio e falta de preço mantêm informação e recuperação disponíveis.
 - AC09: lint, testes, build e auditoria de navegador são executados e registrados com contagens, falhas e limites; comparação antes/depois cobre todas as rotas.
 - AC10: decisões das três referências, arquivos afetados e pendências constam no relatório e documentação.
+- AC11 (correção de revisão): o banner final preserva a proporção da arte sem recortes adicionais do telefone; o rodapé público é preto com texto claro; a marca do login aparece apenas na coluna do formulário à direita no desktop, com fundo transparente, permanecendo visível no mobile.
 
 # Fora de escopo
 

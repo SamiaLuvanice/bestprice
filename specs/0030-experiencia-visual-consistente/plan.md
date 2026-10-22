@@ -1,5 +1,15 @@
 # Plano técnico
 
+## Correções solicitadas em revisão
+
+AC11: substituir o banner em coluna estreita com `cover` por arte na proporção
+natural, ocupando a seção inteira no desktop com texto sobre a área livre à
+esquerda. Em tablet/mobile, empilhar texto e arte sem recorte. Rodapé público
+preto em toda a largura, com contêiner interno alinhado e contraste claro.
+Mover a única instância de Brand do login para o formulário; a arte lateral é
+decorativa e o CSS preserva o alpha do PNG. Essa orientação explícita substitui
+a localização anterior da marca sobre a fotografia. Sem editar os ativos.
+
 ## Contratos
 
 Nenhuma mudança REST, DTO, validação de rede, banco ou backend. Componentes de apresentação continuam delegando ações aos handlers existentes.

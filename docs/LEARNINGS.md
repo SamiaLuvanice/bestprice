@@ -2,6 +2,27 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-22 — Conferir o ativo original antes de corrigir seu enquadramento
+
+**Contexto:** na revisão da spec 0030, o banner panorâmico de 1600 × 548 px
+era recortado por altura fixa e `cover`; o fundo branco aparente da logo vinha
+do CSS, embora o PNG original tivesse alpha. A orientação de revisão também
+reposicionou a marca do login para a coluna do formulário.
+
+**Princípio:** compare as dimensões e a transparência do ativo com as regras do
+contêiner antes de editar a imagem. Preserve a proporção quando a composição
+inteira importa, adapte texto e arte à largura disponível e distinga recorte CSS
+dos limites que já existem no arquivo. Ao mover uma marca informativa, preserve
+uma única instância acessível e trate a fotografia de apoio como decorativa.
+
+**Anti-pattern:** recriar pixels ausentes do arquivo original, editar um PNG para
+corrigir fundo aplicado por CSS, ou manter uma marca sobreposta redundante após
+mudar sua localização.
+
+**Referências:** [PR #175](https://github.com/SamiaLuvanice/bestprice/pull/175),
+[AC11 da spec 0030](../specs/0030-experiencia-visual-consistente/spec.md),
+`frontend/src/LoginForm.tsx` e `frontend/src/landing/LandingPage.css`.
+
 ## 2026-10-22 — Recolher menus sem perder o caminho do foco
 
 **Contexto:** a auditoria da spec 0030 demonstrou que o menu móvel público não

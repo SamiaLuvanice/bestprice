@@ -25,21 +25,20 @@ function submitForm() {
   fireEvent.submit(form)
 }
 
-// 0023/AC01–AC03: a arte fornecida é a única peça promocional da coluna.
-it('mostra a arte lateral e a marca aprovadas com descrição breve', () => {
+// Revisão 0030: a arte é decorativa; a marca é anunciada uma só vez no formulário.
+it('mantém a arte lateral decorativa, sem duplicar a marca sobre a imagem', () => {
   const { container } = renderForm()
   const visual = container.querySelector('.login-visual')
-  expect(visual).toHaveAccessibleName('BestPrice')
-  expect(visual).toHaveAccessibleDescription('Mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar.')
-  expect(visual?.querySelectorAll('img')).toHaveLength(1)
-  expect(visual?.textContent).toBe('BestPrice')
+  expect(visual).toHaveAttribute('aria-hidden', 'true')
+  expect(visual?.querySelectorAll('img')).toHaveLength(0)
+  expect(screen.getAllByRole('img', { name: 'BestPrice' })).toHaveLength(1)
   expect(screen.getAllByRole('heading')).toHaveLength(1)
 })
 
-// 0020/AC14: em tela estreita a logo reduzida aparece acima do título, com o mesmo nome acessível.
-it('mostra a logo reduzida antes do título, com o nome BestPrice', () => {
+// A marca fica antes do título no formulário em todos os tamanhos.
+it('mostra a marca antes do título, dentro da coluna do formulário', () => {
   const { container } = renderForm()
-  const compact = container.querySelector('.login-brand-compact')
+  const compact = container.querySelector('.login-form-side .login-brand')
   expect(compact).not.toBeNull()
   expect(compact).toHaveAccessibleName('BestPrice')
   const title = screen.getByRole('heading', { level: 1, name: 'Entrar na sua conta' })

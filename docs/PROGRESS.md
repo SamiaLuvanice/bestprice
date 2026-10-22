@@ -1,5 +1,17 @@
 # Progresso das specs
 
+Atualização da spec 0030 na [PR #175](https://github.com/SamiaLuvanice/bestprice/pull/175),
+aberta e sem merge: correções solicitadas na revisão preservam a arte completa
+do banner final (sem recorte adicional), tornam o rodapé público preto em toda a
+largura e posicionam a marca única do login na coluna do formulário, com alpha
+original e fotografia decorativa. Após esses ajustes, lint/build (2.653 módulos)
+e 350 testes Vitest em 31 arquivos passaram. A confirmação Playwright afetada teve
+**40 casos aprovados sem atualização de baselines** em quatro larguras; os 128
+casos da tabela abaixo pertencem à rodada anterior. Revisão independente dos
+ajustes sem achados; doc-sync-onboarding repetido após o código final. CI da
+rodada anterior estava verde; os checks da correção aguardam push. Integração em
+develop e deploy permanecem pendentes. Evidências na verificação da spec.
+
 | Spec | Refinamento e plano | Implementação | Revisão | Verificação |
 |---|---|---|---|---|
 | 0030-experiencia-visual-consistente | Spec `pronta`, auditoria P0–P3, plano e tarefas; [Issue #174](https://github.com/SamiaLuvanice/bestprice/issues/174); worktree/branch `feature/0030-issue-174-experiencia-visual`, base `origin/develop` em `e484cd3` | Tokens de ritmo/movimento, superfícies e foco comuns, hero em duas colunas no desktop, indicadores verticais, hierarquia de detalhe/listas/login/landing/404; menu público fecha com Escape e saída de foco. Sem mudança de backend, API, banco, regras ou dependências. Doc-sync-onboarding executado como última etapa após gates/revisão | Revisão independente sem achados concretos de regressão ou bloqueios; 24 baselines públicas revisadas antes de regenerar. Implementação entregue; aguarda revisão e merge, PR em preparação | Lint e build verdes; **350/350 Vitest** em 31 arquivos; **128/128 Playwright** na execução final sem atualizar baselines, quatro larguras e API simulada. Detector `[]`; automações Node da raiz passaram; complexidade sem Python alterado. Figma inspecionado no Chrome e exportações locais (conector sem autenticação); Spartan observado. Sem validação de API real, dispositivo físico, CI ou deploy nesta tarefa. Ver [verification.md](../specs/0030-experiencia-visual-consistente/verification.md). |

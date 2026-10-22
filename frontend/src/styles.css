@@ -103,6 +103,7 @@
   --color-skeleton-b: #f5f5f7;
   --color-graphite: #18171b;
   --color-on-graphite: #fff;
+  --color-footer-bg: #000;
   --color-chart-grid: #49474f;
   --color-chart-label: #d2d2d7;
   --radius-card: 18px;
@@ -572,9 +573,8 @@ h1, h2 { text-wrap: balance; }
 .login-shell { display: grid; width: 100%; min-height: calc(100svh - 72px); margin: 0 auto; }
 .login-card { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; min-height: inherit; margin: 0 auto; background: var(--color-bg); }
 .login-visual { display: none; }
-.login-visual .login-brand { position: absolute; top: 32px; left: 48px; }
-.login-brand { font-size: 26px; }
-.login-brand-compact { align-self: flex-start; margin: 0 0 40px; }
+.login-brand { font-size: 26px; align-self: flex-start; margin: 0 0 40px; }
+.login-brand .brand-logo { background: transparent; }
 .login-form-side { display: flex; flex-direction: column; justify-content: center; min-width: 0; width: min(100%, 544px); margin: 0 auto; padding: var(--space-12); background: var(--color-bg); }
 .login-form-side h1 { font-size: clamp(30px, 3vw, 38px); font-weight: 700; line-height: 1.15; letter-spacing: -.025em; margin: 0 0 var(--space-3); }
 .login-subtitle { margin: 0; color: var(--color-text-muted); font-size: 17px; line-height: 1.5; }
@@ -598,7 +598,6 @@ h1, h2 { text-wrap: balance; }
 .login-note { margin-top: 40px; font-size: 15px; color: var(--color-text-muted); }
 .login-back { align-self: start; padding-left: 0; margin-top: 12px; }
 @media (min-width: 841px) {
-  .login-brand-compact { display: none; }
   .login-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .login-visual { position: relative; display: block; min-width: 0; min-height: 0; height: 100%; overflow: hidden; background: center top / cover no-repeat url('./assets/redesign/login-left.webp'); }
 }
@@ -609,7 +608,7 @@ h1, h2 { text-wrap: balance; }
   .login-form-side { padding: 28px 20px; }
 }
 @media (max-width: 380px) {
-  .login-brand-compact { margin-bottom: var(--space-6); }
+  .login-brand { margin-bottom: var(--space-6); }
   .login-fields { margin-top: var(--space-6); }
 }
 @media (prefers-reduced-motion: reduce) {

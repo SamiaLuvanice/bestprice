@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, Bell, Link2, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Brand } from '../components/Brand'
 import heroArt from '../assets/redesign/hero-person.webp'
 import bannerArt from '../assets/redesign/footer-phone.webp'
@@ -101,7 +100,6 @@ export function LandingPage() {
         <img className="landing-signup__art" src={bannerArt} alt="Interface ilustrativa da BestPrice em um celular, com produto e gráfico de preços." loading="lazy" width="1600" height="548" />
       </section>
     </main>
-    <div className="landing-container"><Separator /></div>
-    <footer className="landing-footer landing-container"><span>BestPrice · {new Date().getFullYear()}</span><span>Mercado Livre · acompanhamento automático</span><Link to="/login">Entrar</Link></footer>
+    <footer className="landing-footer"><div className="landing-footer__inner landing-container"><span>BestPrice · {new Date().getFullYear()}</span><span>Mercado Livre · acompanhamento automático</span><Link to="/login">Entrar</Link></div></footer>
   </div>
 }

@@ -1,5 +1,43 @@
 # Verificação — spec 0030 / Issue #174
 
+## Correções solicitadas na revisão do PR #175
+
+O usuário apontou banner final cortando o telefone, rodapé público claro e marca
+do login com fundo branco sobre a fotografia à esquerda. A inspeção confirmou
+`object-fit: cover` com altura fixa na coluna estreita e fundo CSS branco no
+ícone. O PNG original tem canal alpha; nenhum ativo precisou ser editado.
+
+- Red: `npm run test:visual -- review-corrections.spec.ts --project=viewport-1280 --workers=2`: **3 falharam** pelos sintomas exatos. Proporção do banner 1,38 em vez de 2,92; rodapé transparente com texto cinza; marca no formulário oculta no desktop.
+- Green: `npm run test:visual -- review-corrections.spec.ts --workers=2`: **12 passaram**, quatro larguras.
+- `npm run test:visual -- --grep "redesign (landing|login)|marca login" --workers=2`: **12 passaram**, incluindo axe, overflow, toque e marca. Capturas desktop/mobile inspecionadas.
+- `npm run lint`: passou. Build identificou uma opção `exact` indevida na assertiva Testing Library nova; corrigida a tipagem do teste, sem alteração funcional. `npm run build` repetido: passou, 2.653 módulos.
+- `npm test -- --run --maxWorkers=2`: **350 testes, 31 arquivos passaram**.
+- Detector impeccable sobre os quatro arquivos de UI afetados: `[]`.
+- Referências visuais de landing/login revisadas: `public-pages.spec.ts --grep "landing pública|login" --update-snapshots`: **16 passaram**. Nem todos os PNGs precisaram mudar.
+- Confirmação após a correção: `npm run test:visual -- --grep 'landing pública|login|redesign landing|banner final|rodapé da' --workers=2 --output=playwright-report/spec-0030/review-final`: **40 passaram**, sem atualização de baselines. Cobre as superfícies afetadas; não representa reexecução da suíte inteira.
+- Revisão independente dos ajustes conforme `arch-reviewer`: sem achados no diff e nas capturas de 1280 e 320 px. O implementador também inspecionou 1280 e 390 px. Complexidade sem Python alterado; detector `[]` e `git diff --check` sem erros.
+
+O banner conserva todo o arquivo original de 1600 × 548 px, sem recorte adicional.
+O limite inferior já existente no ativo fornecido permanece parte da arte. O
+rodapé é preto em toda a largura, com texto branco e link verde. A única marca
+acessível do login fica acima do formulário, na coluna direita do desktop; a
+fotografia passa a ser decorativa. A galeria local teve oito capturas de
+landing/login substituídas pelas versões corrigidas.
+
+Doc-sync-onboarding repetido após o código final e a revisão independente, como
+última etapa, seguindo `.agents/agents/doc-sync-onboarding.md` e as skills
+`doc-sync-onboarding` e `learnings`. Conferidos diff contra `d5645c1`, AC11,
+plano, tokens e testes. Atualizados `docs/apps/frontend.md`, `docs/PROGRESS.md`,
+`docs/LEARNINGS.md`, `designsystem/README.md`, auditoria, tarefas e este registro
+para distinguir o estado atual e as execuções anteriores. Nenhum código, teste
+ou snapshot alterado nesta sincronização. `AGENTS.md` e `CLAUDE.md` conferidos
+sem mudança: instruções e imports continuam válidos. `docs/index.md`, README e
+arquitetura continuam adequados, sem novo documento, setup, dependência ou fluxo
+HTTP; demais guias não são afetados. PR #175 aberta, sem merge; CI anterior verde,
+checks desta correção aguardam push. Sem validação de deploy ou API real.
+`git diff --check` passou após as edições documentais; houve apenas avisos de
+conversão futura LF/CRLF do Git, sem erros de whitespace.
+
 Ambiente: Windows, worktree `feature/0030-issue-174-experiencia-visual`, base `e484cd3`, Node/npm locais e Chrome instalado em `C:/Program Files/Google/Chrome/Application/chrome.exe`. API simulada nos testes de UI; sem alteração ou validação de backend/banco nesta tarefa.
 
 ## Preparação e evidência inicial
@@ -19,7 +57,7 @@ Ambiente: Windows, worktree `feature/0030-issue-174-experiencia-visual`, base `e
 - Green após correção: **7 passaram**.
 - Teste de navegador adicional para senha inicialmente procurava o nome inexistente “Ocultar senha”; o controle existente usa nome estável “Mostrar senha” com `aria-pressed`. A assertiva foi corrigida para esse contrato, sem alterar o produto. Essa falha de teste não é evidência Red de comportamento.
 
-## Gates executados
+## Gates da implementação anterior à correção de revisão
 
 | Comando | Resultado observado |
 |---|---|
@@ -36,7 +74,7 @@ Ambiente: Windows, worktree `feature/0030-issue-174-experiencia-visual`, base `e
 - Automações da raiz: `node --test (Get-ChildItem .github/scripts -Filter '*.test.cjs').FullName`: passou, código 0, testes positivos. A primeira execução ficou bloqueada por `spawn EPERM`; a repetição autorizada fora do sandbox executou os testes.
 - Revisão independente conforme `.agents/agents/arch-reviewer.md`: sem achados concretos de regressão ou bloqueios. Conferiu diff, teste novo e amostras de capturas; `git diff --check` passou. Complexidade `--changed origin/develop`: código 0, nenhum Python alterado. A revisão não repetiu suites amplas nem validou API real/dispositivos físicos.
 
-## Sincronização documental final
+## Sincronização documental da implementação anterior
 
 Em 22/10/2026, executado o papel `.agents/agents/doc-sync-onboarding.md` com as
 skills `doc-sync-onboarding` e `learnings`, após os gates e a revisão independente.
@@ -79,8 +117,9 @@ As capturas foram observadas em desktop e amostras de mobile/tablet, incluindo t
 | AC05–06 | TDD do menu; testes de teclado/movimento reduzido; axe WCAG A/AA; foco explícito e scroll-padding |
 | AC07 | 350 testes de API cliente/UI cobrem navegação, login, monitoramento, atualização, alertas, paginação e interrupção sem alterar contratos |
 | AC08 | Estados de dashboard e sessão, erros, vazios e carregamentos na suíte visual; sucesso e falhas na suíte Vitest |
-| AC09 | Comandos e resultados acima, incluindo 128 casos finais sem atualização de baselines |
+| AC09 | 128 casos na rodada anterior; após AC11, 40 casos afetados confirmados sem atualizar baselines, lint/build e 350 Vitest repetidos |
 | AC10 | Auditoria, plano, documentação do design system e galeria local de comparação |
+| AC11 | Red de três sintomas em 1280 px; Green de 12 casos em quatro larguras; confirmação final afetada de 40 casos, revisão de capturas e marca única acessível |
 
 ## Artefatos locais
 
@@ -88,4 +127,4 @@ Galeria: `frontend/playwright-report/spec-0030/comparison.html`. Inclui antes/de
 
 ## Limites e handoff
 
-Não executados: integração com backend/banco/Mercado Livre real, dispositivo físico, leitor de tela manual, Firefox/Safari, auditoria completa das propriedades Figma por API, CI remoto, deploy e integração em develop. A operação Mercado Livre permanece na Issue #127. A spec fica `pronta`; revisão independente executada sem achados concretos. Implementação entregue; aguarda revisão da entrega e merge. A worktree permanece disponível durante a revisão.
+Não executados nesta correção: integração com backend/banco/Mercado Livre real, dispositivo físico, leitor de tela manual, Firefox/Safari, auditoria completa das propriedades Figma por API, suíte visual inteira após AC11, deploy e integração em develop. CI da rodada anterior verde; checks da correção aguardam push. A operação Mercado Livre permanece na Issue #127. A spec fica `pronta`; revisão independente executada sem achados concretos. Implementação entregue na [PR #175](https://github.com/SamiaLuvanice/bestprice/pull/175); aguarda revisão da entrega e merge. A worktree permanece disponível durante a revisão.

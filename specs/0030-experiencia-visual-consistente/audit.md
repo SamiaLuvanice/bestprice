@@ -41,12 +41,26 @@ Não há rotas de cadastro, recuperação de senha, perfil ou configurações. N
 
 ## Design system e arquitetura
 
-Nenhuma dependência, cor ou fonte nova. Tokens de espaçamento 48/64 px e movimento 160 ms/curva de saída foram registrados antes de uso. A largura comum, logo Brand, alvos de 44 px e limites semânticos permanecem. Estilos foram alterados nas regras existentes, sem folha adicional de overrides. Duas divisões no formulário separam introdução e entrada sem duplicar lógica. O campo permanece com estado local; o gráfico continua importado sob demanda. Não se afirma ganho de desempenho sem medição comparativa.
+Correção de revisão (AC11 / PR #175): o banner final agora mostra o arquivo
+original de 1600 × 548 px na proporção natural, sem altura fixa ou `cover`.
+O limite já existente na arte permanece, sem inventar pixels do telefone. Texto
+ocupa a área livre à esquerda no desktop e se empilha com a arte até 959 px.
+O rodapé público usa o novo token `--color-footer-bg: #000`, texto branco e link
+verde em toda a largura. A marca única do login fica acima do formulário na
+coluna direita do desktop e permanece no móvel; o PNG não foi editado, seu fundo
+CSS é transparente e `LoginVisual` é decorativo. A instrução de revisão
+substitui a posição anterior da marca na fotografia. Os três sintomas tiveram
+Red demonstrado; 40 casos afetados passaram na confirmação final. A rodada de
+128 casos pertence à implementação anterior à correção.
+
+Nenhuma dependência ou fonte nova. Além do token preto do rodapé adicionado na revisão, a paleta permanece. Tokens de espaçamento 48/64 px e movimento 160 ms/curva de saída foram registrados antes de uso. A largura comum, logo Brand, alvos de 44 px e limites semânticos permanecem. Estilos foram alterados nas regras existentes, sem folha adicional de overrides. Duas divisões no formulário separam introdução e entrada sem duplicar lógica. O campo permanece com estado local; o gráfico continua importado sob demanda. Não se afirma ganho de desempenho sem medição comparativa.
 
 ## Arquivos alterados
 
 - `frontend/src/styles.css`: tokens, layout, navegação, foco, listas, preço, login, 404 e movimento reduzido.
 - `frontend/src/components/ui/button.tsx`: transição limitada a cores.
+- `frontend/src/LoginForm.tsx` e `LoginForm.test.tsx`: marca única no formulário e fotografia decorativa, com testes acessíveis atualizados.
+- `frontend/tests/visual/review-corrections.spec.ts`: proporção do banner, rodapé preto e localização/transparência da marca em quatro larguras.
 - `frontend/src/dashboard/HeroTrackForm.tsx`: agrupamento de introdução e formulário.
 - `frontend/src/dashboard/ProductDetailDialog.tsx`: identificador secundário após título.
 - `frontend/src/landing/LandingPage.tsx`, `LandingPage.css` e `LandingPage.test.tsx`: menu acessível, composição e regressões.
