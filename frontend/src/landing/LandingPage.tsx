@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, Bell, Link2, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
 import { Brand } from '../components/Brand'
 import heroArt from '../assets/redesign/hero-person.webp'
 import bannerArt from '../assets/redesign/footer-phone.webp'
@@ -24,6 +23,7 @@ const steps = [
 
 export function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuToggle = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     document.title = 'BestPrice · Acompanhe preços. Compre melhor.'
     document.documentElement.classList.add('landing-scroll')
@@ -32,12 +32,20 @@ export function LandingPage() {
 
   return <div className="landing" id="inicio">
     <a className="landing-skip" href="#landing-content">Pular para o conteúdo</a>
-    <header className="landing-header">
+    <header className="landing-header" onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setMenuOpen(false)
+    }} onKeyDown={(event) => {
+      if (event.key === 'Escape' && menuOpen) {
+        event.preventDefault()
+        setMenuOpen(false)
+        menuToggle.current?.focus()
+      }
+    }}>
       <div className="landing-container landing-header__inner">
         <a className="brand-link" href="#inicio" aria-label="BestPrice — Início" onClick={() => setMenuOpen(false)}>
           <Brand className="landing-brand" decorative />
         </a>
-        <Button variant="ghost" size="icon" className="landing-menu-toggle" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+        <Button ref={menuToggle} variant="ghost" size="icon" className="landing-menu-toggle" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen((open) => !open)}>
           {menuOpen ? <X /> : <Menu />}
         </Button>
@@ -92,7 +100,6 @@ export function LandingPage() {
         <img className="landing-signup__art" src={bannerArt} alt="Interface ilustrativa da BestPrice em um celular, com produto e gráfico de preços." loading="lazy" width="1600" height="548" />
       </section>
     </main>
-    <div className="landing-container"><Separator /></div>
-    <footer className="landing-footer landing-container"><span>BestPrice · {new Date().getFullYear()}</span><span>Mercado Livre · acompanhamento automático</span><Link to="/login">Entrar</Link></footer>
+    <footer className="landing-footer"><div className="landing-footer__inner landing-container"><span>BestPrice · {new Date().getFullYear()}</span><span>Mercado Livre · acompanhamento automático</span><Link to="/login">Entrar</Link></div></footer>
   </div>
 }

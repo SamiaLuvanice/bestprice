@@ -35,12 +35,9 @@ export function validateLogin(email: string, password: string): LoginErrors {
   return errors
 }
 
-/** A arte preserva a composição desktop; o contêiner anuncia a marca uma vez. */
+/** Arte decorativa da coluna esquerda; a marca pertence ao formulário à direita. */
 function LoginVisual() {
-  return <div className="login-visual" role="img"
-    aria-label="BestPrice" aria-description="Mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar.">
-    <Brand className="login-brand" decorative />
-  </div>
+  return <div className="login-visual" aria-hidden="true" />
 }
 
 /** Entrada da tela de visitante (spec 0017), com validação própria no envio (0020/AC07). */
@@ -90,7 +87,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
     <div className="login-card">
       <LoginVisual />
       <div className="login-form-side">
-        <Brand className="login-brand login-brand-compact" />
+        <Brand className="login-brand" />
         <h1 id="login-title" tabIndex={-1}>Entrar na sua conta</h1>
         <p className="login-subtitle">Acesse seus anúncios monitorados e alertas.</p>
         {error && <p role="alert" className="error-box login-error">{error}</p>}

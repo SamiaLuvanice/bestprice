@@ -163,3 +163,25 @@ vençam sem `!important`.
 Largura de página: `--page-width` (1248 px) e `--page-gutter` (32 px; 20 px até 700 px)
 formam `--page-inline`, usado por cabeçalho, conteúdo e landing, que compartilham a
 mesma margem lateral.
+# Consolidação de superfícies (spec 0030)
+
+Correção de revisão: o rodapé público usa preto (`--color-footer-bg: #000`) e
+texto branco existente (`--color-on-graphite`), com links verdes. O banner final
+exibe a arte em sua proporção natural, sem `cover` ou altura fixa. A marca do
+login pertence à coluna do formulário, inclusive no desktop; seu ícone preserva
+o canal alpha original com fundo CSS transparente. A arte lateral é decorativa.
+
+Mantém a paleta e a tipografia oficiais. A escala agora nomeia espaçamentos de 48 e
+64 px (`--space-12`, `--space-16`), duração curta de 160 ms (`--motion-fast`) e
+curva de saída (`--ease-out`). Bordas suaves separam conteúdo; bordas de controle
+mantêm contraste próprio. A revisão adicionou apenas o token preto do rodapé;
+a tipografia e as demais cores foram preservadas.
+
+Início usa introdução e formulário lado a lado a partir de 1101 px, empilhados em
+tablet/mobile; indicadores têm número e rótulo alinhados verticalmente. Navegação
+ativa usa superfície rosa clara e foco mantém anel rosa. Listas conservam linhas
+compactas e o detalhe conserva gráfico escuro e tabela acessível. Login limita o
+formulário a uma coluna legível; landing preserva as artes, com título neutro e
+sequência mais discreta. As transições compartilhadas se limitam a cor/borda;
+o feedback de pressão já existente no login permanece. Movimento reduzido
+desativa transições e shimmer. Veja a [auditoria](../specs/0030-experiencia-visual-consistente/audit.md).

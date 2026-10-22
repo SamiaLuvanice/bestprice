@@ -1,6 +1,6 @@
 # Módulo frontend
 
-## Identidade visual atual — specs 0015, 0027, 0028 e 0029
+## Identidade visual atual — specs 0015, 0027, 0028, 0029 e 0030
 
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
 copiada de
@@ -17,8 +17,9 @@ de carregamento/erro de sessão. O nome visual usa `--font-display` (`SF Pro Dis
 quadradas, sem encolher. Na apresentação autônoma, o contêiner tem `role="img"` e
 nome acessível “BestPrice”; ícone e texto internos são decorativos. Dentro dos
 links “BestPrice — Início”, o componente inteiro é decorativo e o link fornece o
-nome. Na arte do login desktop, o contêiner da ilustração anuncia a marca uma vez
-e fornece sua descrição breve.
+nome. Desde a correção de revisão da 0030, o login mostra uma única marca
+acessível na coluna do formulário, em todas as larguras. O ícone tem fundo CSS
+transparente, preservando o alpha do PNG original; a fotografia é decorativa.
 `designsystem/index.html` orienta os tokens. A spec 0027 aplica a composição
 aprovada no Figma às telas públicas e autenticadas, usando os quadros editáveis em
 `designsystem/prototypes/2026-10-21-bestprice-figma/`. A referência local foi usada
@@ -55,6 +56,29 @@ carga, erro, sucesso e foco seguem os mesmos fluxos funcionais descritos abaixo.
 Em telas estreitas, a lista de produtos continua empilhada e sem rolagem horizontal.
 O layout reduz movimento não essencial quando `prefers-reduced-motion` está ativo.
 
+A spec 0030 consolida a apresentação sem mudar rotas, contratos ou ações. Os tokens
+`--space-12` (48 px), `--space-16` (64 px), `--motion-fast` (160 ms) e `--ease-out`
+organizam ritmo e feedback. Navegação ativa usa superfície rosa clara; hover e
+foco visível distinguem os controles. Preços e contagens usam números tabulares.
+Acima de 1100 px, a introdução do painel fica ao lado do formulário; em larguras
+menores, os grupos se empilham. Indicadores mostram número acima do rótulo,
+listas usam divisores suaves e o detalhe apresenta título antes do identificador.
+Login tem coluna de formulário mais contida; a landing e a rota não encontrada
+usam títulos proporcionais ao conteúdo. As artes, o gráfico e os estados reais
+permanecem. A página reserva espaço para a navegação móvel e safe area; o modo de
+movimento reduzido desativa animações e transições, inclusive shimmer.
+
+A [auditoria da 0030](../../specs/0030-experiencia-visual-consistente/audit.md)
+registra decisões do sistema existente, Figma e Spartan AI. O conector Figma
+retornou `UNAUTHORIZED`, mas o arquivo foi inspecionado visualmente no Chrome,
+complementado pelas exportações locais. A
+[verificação](../../specs/0030-experiencia-visual-consistente/verification.md)
+registra 350 testes Vitest e a rodada anterior de 128 casos Playwright em 320,
+390, 768 e 1280 px. Após a correção de revisão de landing/login, lint, build e
+350 testes Vitest passaram novamente, assim como 40 casos Playwright afetados,
+sem atualizar baselines na confirmação. Os testes usam API simulada e não comprovam integração Mercado Livre real,
+dispositivo físico, leitor de tela manual ou outros motores de navegador.
+
 O catálogo e as ilustrações públicas contêm dados demonstrativos identificados
 como exemplo. Produtos, preços e métricas da conta continuam vindo apenas da API.
 A composição da 0027 usa conteúdo de até 1248 px, oportunidades em linhas e
@@ -77,14 +101,14 @@ mantendo os controles e a autenticação existentes:
 
 - **Composição:** `.login-shell` e `.login-card` ocupam a largura disponível. Acima
   de 840 px, o card divide a tela em duas metades, com arte à esquerda e formulário
-  sobre branco à direita. A marca oficial e o texto BestPrice ficam sobre a área
-  clara da arte, conforme a referência aprovada; o formulário permanece separado.
+  sobre branco à direita. Na correção de revisão da 0030, a marca oficial e o
+  texto BestPrice passaram para a coluna do formulário, acima do título,
+  sem sobreposição à fotografia e sem fundo branco adicional no ícone.
 - **Coluna visual:** `.login-visual` usa `frontend/src/assets/redesign/login-left.webp`
   como fundo com `cover` e enquadramento pelo topo. A arte é ilustração estática,
-  sem vínculo com anúncios ou com a conta. O elemento tem `role="img"` e descrição
-  breve; sua marca visual interna é decorativa para tecnologias assistivas.
-  Até 840 px, a coluna é ocultada e a marca compacta, com logo e texto BestPrice,
-  aparece antes do título. A marca compacta tem nome acessível “BestPrice” e, desde
+  sem vínculo com anúncios ou com a conta. O elemento é decorativo (`aria-hidden`).
+  Até 840 px, a coluna é ocultada. A marca permanece antes do título no formulário
+  em todas as larguras. Tem nome acessível “BestPrice” e, desde
   a 0029, mantém ícone e nome lado a lado também no móvel.
 - **Formulário:** título “Entrar na sua conta” (`h1`, a única da tela), subtítulo,
   E-mail (`type="email"`, `autocomplete="email"`) e Senha (`autocomplete="current-password"`).
@@ -145,12 +169,21 @@ Na hero, a arte da pessoa usa cantos de 18 px, em harmonia com o banner e as
 outras superfícies arredondadas da landing; a prévia de preço sobreposta mantém
 seu próprio raio.
 
+Na correção de revisão da 0030, o banner final preserva a proporção natural da
+arte de 1600 × 548 px, com altura automática e sem `cover` ou recorte adicional.
+O limite inferior já presente no arquivo original permanece. No desktop, o texto
+ocupa a área livre à esquerda; até 959 px, texto e arte se empilham. O rodapé
+ocupa toda a largura com `--color-footer-bg: #000`, texto branco e link verde,
+mantendo o conteúdo alinhado ao contêiner comum.
+
 O cabeçalho leva às âncoras `#inicio`, `#como-funciona`, `#funcionalidades` e
 `#alertas`. O menu estreito usa botão com `aria-expanded`; a página mantém link
-para pular ao conteúdo, foco nos controles e movimento reduzido. A ação principal
+para pular ao conteúdo, foco nos controles e movimento reduzido. Desde a 0030,
+Escape fecha o menu aberto e devolve o foco ao gatilho; sair com o foco da região
+do cabeçalho também o recolhe, preservando a continuidade da navegação. A ação principal
 usa verde com texto preto. A [verificação da 0024](../../specs/0024-landing-page-publica/verification.md)
 conserva a evidência histórica; os baselines atuais estão na
-[verificação da 0027](../../specs/0027-redesign-figma-shadcn/verification.md).
+[verificação da 0030](../../specs/0030-experiencia-visual-consistente/verification.md).
 
 ## Componentes e histórico visual — spec 0027
 

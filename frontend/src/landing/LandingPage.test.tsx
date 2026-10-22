@@ -68,3 +68,21 @@ it('abre o menu por teclado e fecha ao seguir uma seção', async () => {
   await user.click(within(screen.getByRole('navigation', { name: 'Navegação principal' })).getByRole('link', { name: 'Como funciona' }))
   expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
 })
+
+it('fecha o menu com Escape e devolve o foco ao botão de abertura', async () => {
+  visit('/')
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Abrir menu' }))
+  within(screen.getByRole('navigation', { name: 'Navegação principal' })).getByRole('link', { name: 'Como funciona' }).focus()
+  await user.keyboard('{Escape}')
+  expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveFocus()
+})
+
+it('recolhe o menu quando o foco sai do cabeçalho', async () => {
+  visit('/')
+  const user = userEvent.setup()
+  await user.click(await screen.findByRole('button', { name: 'Abrir menu' }))
+  within(screen.getByRole('region', { name: /O preço muda.*Você fica sabendo/i })).getByRole('link', { name: 'Entrar e monitorar' }).focus()
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false'))
+})
