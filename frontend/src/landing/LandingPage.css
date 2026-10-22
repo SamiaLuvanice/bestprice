@@ -24,6 +24,7 @@ html.landing-scroll { scroll-behavior: smooth; }
 .landing-hero__note svg { width: 18px; }
 .landing-hero__visual { align-self: stretch; min-width: 0; display: flex; align-items: center; }
 .landing-hero__visual img { width: 100%; height: auto; object-fit: contain; }
+.landing-hero__visual > img:first-child { border-radius: 18px; }
 .landing-steps { padding-block: 68px 80px; scroll-margin-top: 110px; }
 .landing-section-description { font-size: 18px; color: var(--color-text-muted); margin-top: 20px; max-width: 65ch; }
 .landing-steps__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; list-style: none; padding: 0; margin: 56px 0 0; }
