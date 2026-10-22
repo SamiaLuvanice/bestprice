@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:5173'
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
 
-// Regressão visual da SPA (spec 0025): viewports 320/768/1280 px, tema claro e
+// Regressão visual da SPA (specs 0025/0029): viewports 320/390/768/1280 px, tema claro e
 // escuro por teste. Baselines são locais (fontes do sistema); a execução em CI
 // fica para tarefa futura, conforme "Fora de escopo" da spec.
 export default defineConfig({
@@ -26,6 +26,10 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
+    {
+      name: 'viewport-390',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 640 } },
+    },
     {
       name: 'viewport-320',
       use: { ...devices['Desktop Chrome'], viewport: { width: 320, height: 640 } },

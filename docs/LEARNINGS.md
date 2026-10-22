@@ -2,6 +2,27 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-22 — Compartilhar a marca e observar cada transição
+
+**Contexto:** na spec 0029, as telas repetiam a mesma logo com fontes, pesos e
+composições diferentes; o login estreito empilhava ícone e nome e os estados de
+sessão exibiam só o ícone. A intermitência relatada não foi reproduzida.
+
+**Princípio:** centralize a apresentação visual e acessível de uma marca usada
+em várias superfícies. Em regressões de persistência, registre a observação
+imediatamente após cada transição relevante, para que um estado posterior não
+oculte uma falha temporária. Distinga correções comprovadas dos limites da
+reprodução; capturas de viewport móvel não demonstram comportamento em aparelho
+real ou em outro motor de navegador.
+
+**Anti-pattern:** duplicar o conjunto de marca por tela, anunciar ícone e nome
+separadamente, ou verificar apenas o estado final após várias navegações e
+declarar resolvida uma falha intermitente não reproduzida.
+
+**Referências:** [Issue #167](https://github.com/SamiaLuvanice/bestprice/issues/167),
+[verificação 0029](../specs/0029-identidade-bestprice-consistente/verification.md),
+`frontend/src/components/Brand.tsx` e `frontend/tests/visual/brand.spec.ts`.
+
 ## 2026-10-21 — Validar a composição de componentes com o CSS existente
 
 **Contexto:** a migração visual da spec 0027 adicionou Tailwind v4 e componentes

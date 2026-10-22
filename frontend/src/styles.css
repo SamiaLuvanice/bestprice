@@ -119,6 +119,7 @@
   --page-width: 1248px;
   --page-gutter: 32px;
   --page-inline: min(100% - 2 * var(--page-gutter), var(--page-width));
+  --font-display: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
@@ -166,7 +167,8 @@ footer { color: var(--color-text-muted); text-align: center; padding: 28px; marg
 /* Cabeçalho */
 .app-header { position: sticky; top: 0; z-index: 10; background: var(--color-bg); border-bottom: 1px solid var(--color-border-soft); }
 .app-header-inner { width: var(--page-inline); margin: 0 auto; min-height: 88px; display: flex; align-items: center; gap: 36px; }
-.brand { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text); font-weight: 800; font-size: 25px; letter-spacing: -.03em; flex-shrink: 0; }
+.brand { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text); font-family: var(--font-display); font-weight: 600; font-size: 25px; letter-spacing: -.011em; flex-shrink: 0; white-space: nowrap; line-height: 1.2; }
+.brand-link { display: inline-flex; align-items: center; min-height: 44px; flex-shrink: 0; text-decoration: none; }
 .brand-name { color: var(--color-text); }
 .brand-logo { display: block; width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; background: var(--color-logo-surface); }
 .main-nav { margin-inline: auto; }
@@ -546,9 +548,8 @@ footer { color: var(--color-text-muted); text-align: center; padding: 28px; marg
 .login-card { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; min-height: inherit; margin: 0 auto; background: var(--color-bg); }
 .login-visual { display: none; }
 .login-visual .login-brand { position: absolute; top: 32px; left: 48px; }
-.login-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 750; color: var(--color-text); }
-.login-brand img { width: 48px; height: 48px; object-fit: contain; }
-.login-brand-compact { display: block; width: auto; height: auto; align-self: flex-start; object-fit: contain; margin: 0 0 40px; }
+.login-brand { font-size: 26px; }
+.login-brand-compact { align-self: flex-start; margin: 0 0 40px; }
 .login-form-side { display: flex; flex-direction: column; justify-content: center; min-width: 0; width: min(100%, 672px); max-width: 628px; margin: 0 auto; padding: 64px; background: var(--color-bg); }
 .login-form-side h1 { font-size: clamp(30px, 3.4vw, 43px); font-weight: 700; line-height: 1.12; letter-spacing: -.025em; margin: 0 0 var(--space-3); }
 .login-subtitle { margin: 0; color: var(--color-text-muted); font-size: 17px; line-height: 1.5; }
@@ -592,7 +593,6 @@ footer { color: var(--color-text-muted); text-align: center; padding: 28px; marg
 
 /* Recuperação de rota conforme quadros 07b/14. */
 .not-found-header { padding-block: 28px; }
-.not-found-header .brand { text-decoration: none; min-height: 44px; }
 .not-found-main { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 48px; align-items: center; padding-block: 80px; flex: 1; }
 .not-found-copy h1 { font-size: clamp(40px, 5.4vw, 70px); line-height: 1.12; letter-spacing: -.04em; max-width: 12ch; }
 .not-found-copy p { font-size: 20px; color: var(--color-text-muted); line-height: 1.6; margin: 40px 0; max-width: 50ch; }

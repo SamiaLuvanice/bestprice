@@ -15,7 +15,15 @@ skill `frontend-design` → sugestões de ferramentas externas.
 | 3 | Contraste AA/AAA | Texto ≥ 4,5:1 (ou 3:1 em texto grande); limites de controles e foco ≥ 3:1 contra o fundo adjacente, nos temas claro e escuro | Spec 0015, AC03; WCAG 2.2 AA |
 | 4 | Tokens de cor, não hex solto | Componentes usam os tokens do design system; nova cor exige registro em `designsystem/README.md` | `frontend.md`; skill `ui-ux-pro-max`, prioridade 6 |
 | 5 | Movimento reduzido | Animações não essenciais respeitam `prefers-reduced-motion` | Spec 0015, AC05 |
-| 6 | Sem rolagem horizontal | Nenhum viewport de 320, 768 ou 1280 px causa scroll horizontal da página | Spec 0015, AC04 |
+| 6 | Sem rolagem horizontal | Nenhum viewport de 320, 390, 768 ou 1280 px causa scroll horizontal da página | Spec 0015, AC04; spec 0029 |
+
+A apresentação da marca na SPA usa o componente compartilhado `Brand`
+(`frontend/src/components/Brand.tsx`): nome “BestPrice”, fonte `--font-display`,
+peso 600 e tracking `-.011em`. Variações de tamanho por superfície preservam
+ícone quadrado, nome sem quebra e alinhamento horizontal. O componente fornece
+um único nome acessível; em links ou ilustrações já nomeados, use `decorative`
+para que o contêiner forneça essa identificação. Ver a decisão da
+[spec 0029](README.md#marca-compartilhada-na-spa-spec-0029).
 
 ## Skills de design instaladas
 
@@ -45,7 +53,7 @@ skill `frontend-design` → sugestões de ferramentas externas.
 ## Regressão visual
 
 A suíte Playwright em `frontend/tests/visual/` captura snapshots nos viewports 320,
-768 e 1280 px, com emulação de esquema clara e escura (o produto usa tema claro
+390, 768 e 1280 px, com emulação de esquema clara e escura (o produto usa tema claro
 fixo, spec 0016). Rode `npm run test:visual` em `frontend/` antes de entregar
 mudança visual; baselines só mudam por revisão explícita (escreva com
 `--update-snapshots` e mostre o diff).

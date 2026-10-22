@@ -96,6 +96,31 @@ nenhum botão promete cadastro público. Os sete cartões de categorias e o avis
 local de cadastro pertencem à versão anterior. Ilustrações públicas são estáticas
 com identificação de exemplo; a conta sempre depende da API.
 
+## Marca compartilhada na SPA (spec 0029)
+
+`frontend/src/components/Brand.tsx` reúne a logo oficial e o nome “BestPrice” nas
+telas públicas, autenticadas e nos estados de verificação/erro de sessão.
+O nome usa a família de display do catálogo: `SF Pro Display`, `SF Pro Icons`,
+`Helvetica Neue`, Helvetica, Arial, sans-serif, peso 600 e tracking `-.011em`.
+O token `--font-display` em `frontend/src/styles.css` fixa essa escolha; a fonte
+efetivamente disponível depende do sistema, sem download adicional.
+
+O conjunto mantém alinhamento horizontal e nome sem quebra. A imagem é quadrada,
+com `object-fit: contain` e sem encolher; os tamanhos por superfície continuam
+permitidos (44 px na landing, 48 px como base, com reduções responsivas existentes).
+No login estreito, o conjunto horizontal substitui o empilhamento causado pelo
+antigo `display: block` da marca compacta. As referências históricas de tamanho
+das specs 0020/0023 acima não definem os valores atuais da SPA.
+
+A apresentação autônoma tem nome acessível “BestPrice” no contêiner; imagem e
+texto internos são decorativos. Em links “BestPrice — Início” e na arte nomeada
+do login, `Brand decorative` deixa o contêiner fornecer a identificação uma vez.
+
+A [verificação da 0029](../specs/0029-identidade-bestprice-consistente/verification.md)
+registra a comparação em 320, 390, 768 e 1280 px. A intermitência relatada da logo
+não foi reproduzida em Chromium; a padronização corrige divergências observadas
+de tipografia e composição, sem comprovar causa de falha em dispositivo real.
+
 ## Tokens da aplicação (spec 0028)
 
 A SPA usa dois grupos de variáveis em `frontend/src/styles.css`, sem nomes repetidos com

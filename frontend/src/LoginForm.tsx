@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { EyeIcon, EyeOffIcon } from './dashboard/Icons'
-import bestPriceLogo from './assets/logo-bestprice.png'
+import { Brand } from './components/Brand'
 
 type Props = {
   /** O App controla o envio em curso. */
@@ -35,11 +35,11 @@ export function validateLogin(email: string, password: string): LoginErrors {
   return errors
 }
 
-/** A arte 0023 já contém marca e mensagem. O texto alternativo resume sua proposta sem anunciar preços ilustrativos. */
+/** A arte preserva a composição desktop; o contêiner anuncia a marca uma vez. */
 function LoginVisual() {
   return <div className="login-visual" role="img"
-    aria-label="BestPrice: mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar.">
-    <div className="login-brand" aria-hidden="true"><img src={bestPriceLogo} alt="" /><span>BestPrice</span></div>
+    aria-label="BestPrice" aria-description="Mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar.">
+    <Brand className="login-brand" decorative />
   </div>
 }
 
@@ -90,7 +90,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
     <div className="login-card">
       <LoginVisual />
       <div className="login-form-side">
-        <div className="login-brand login-brand-compact" role="img" aria-label="BestPrice"><img src={bestPriceLogo} alt="" /><span aria-hidden="true">BestPrice</span></div>
+        <Brand className="login-brand login-brand-compact" />
         <h1 id="login-title" tabIndex={-1}>Entrar na sua conta</h1>
         <p className="login-subtitle">Acesse seus anúncios monitorados e alertas.</p>
         {error && <p role="alert" className="error-box login-error">{error}</p>}

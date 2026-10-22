@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, Bell, Link2, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import bestPriceLogo from '../assets/logo-bestprice.png'
+import { Brand } from '../components/Brand'
 import heroArt from '../assets/redesign/hero-person.webp'
 import bannerArt from '../assets/redesign/footer-phone.webp'
 import pricePreview from '../assets/redesign/price-preview.webp'
@@ -34,8 +34,8 @@ export function LandingPage() {
     <a className="landing-skip" href="#landing-content">Pular para o conteúdo</a>
     <header className="landing-header">
       <div className="landing-container landing-header__inner">
-        <a className="landing-brand" href="#inicio" aria-label="BestPrice — Início" onClick={() => setMenuOpen(false)}>
-          <img src={bestPriceLogo} alt="" width="44" height="44" /><span>BestPrice</span>
+        <a className="brand-link" href="#inicio" aria-label="BestPrice — Início" onClick={() => setMenuOpen(false)}>
+          <Brand className="landing-brand" decorative />
         </a>
         <Button variant="ghost" size="icon" className="landing-menu-toggle" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen((open) => !open)}>
