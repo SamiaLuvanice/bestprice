@@ -1,6 +1,6 @@
 # Módulo frontend
 
-## Identidade visual atual — specs 0015, 0027, 0028 e 0029
+## Identidade visual atual — specs 0015, 0027, 0028, 0029 e 0030
 
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
 copiada de
@@ -54,6 +54,27 @@ alternativas sans-serif, sem distribuir a fonte citada no protótipo. Os estados
 carga, erro, sucesso e foco seguem os mesmos fluxos funcionais descritos abaixo.
 Em telas estreitas, a lista de produtos continua empilhada e sem rolagem horizontal.
 O layout reduz movimento não essencial quando `prefers-reduced-motion` está ativo.
+
+A spec 0030 consolida a apresentação sem mudar rotas, contratos ou ações. Os tokens
+`--space-12` (48 px), `--space-16` (64 px), `--motion-fast` (160 ms) e `--ease-out`
+organizam ritmo e feedback. Navegação ativa usa superfície rosa clara; hover e
+foco visível distinguem os controles. Preços e contagens usam números tabulares.
+Acima de 1100 px, a introdução do painel fica ao lado do formulário; em larguras
+menores, os grupos se empilham. Indicadores mostram número acima do rótulo,
+listas usam divisores suaves e o detalhe apresenta título antes do identificador.
+Login tem coluna de formulário mais contida; a landing e a rota não encontrada
+usam títulos proporcionais ao conteúdo. As artes, o gráfico e os estados reais
+permanecem. A página reserva espaço para a navegação móvel e safe area; o modo de
+movimento reduzido desativa animações e transições, inclusive shimmer.
+
+A [auditoria da 0030](../../specs/0030-experiencia-visual-consistente/audit.md)
+registra decisões do sistema existente, Figma e Spartan AI. O conector Figma
+retornou `UNAUTHORIZED`, mas o arquivo foi inspecionado visualmente no Chrome,
+complementado pelas exportações locais. A
+[verificação](../../specs/0030-experiencia-visual-consistente/verification.md)
+registra 350 testes Vitest e 128 casos Playwright finais em 320, 390, 768 e
+1280 px, usando API simulada. Isso não comprova integração Mercado Livre real,
+dispositivo físico, leitor de tela manual ou outros motores de navegador.
 
 O catálogo e as ilustrações públicas contêm dados demonstrativos identificados
 como exemplo. Produtos, preços e métricas da conta continuam vindo apenas da API.
@@ -147,10 +168,12 @@ seu próprio raio.
 
 O cabeçalho leva às âncoras `#inicio`, `#como-funciona`, `#funcionalidades` e
 `#alertas`. O menu estreito usa botão com `aria-expanded`; a página mantém link
-para pular ao conteúdo, foco nos controles e movimento reduzido. A ação principal
+para pular ao conteúdo, foco nos controles e movimento reduzido. Desde a 0030,
+Escape fecha o menu aberto e devolve o foco ao gatilho; sair com o foco da região
+do cabeçalho também o recolhe, preservando a continuidade da navegação. A ação principal
 usa verde com texto preto. A [verificação da 0024](../../specs/0024-landing-page-publica/verification.md)
 conserva a evidência histórica; os baselines atuais estão na
-[verificação da 0027](../../specs/0027-redesign-figma-shadcn/verification.md).
+[verificação da 0030](../../specs/0030-experiencia-visual-consistente/verification.md).
 
 ## Componentes e histórico visual — spec 0027
 

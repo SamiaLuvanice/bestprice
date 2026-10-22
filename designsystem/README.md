@@ -163,3 +163,18 @@ vençam sem `!important`.
 Largura de página: `--page-width` (1248 px) e `--page-gutter` (32 px; 20 px até 700 px)
 formam `--page-inline`, usado por cabeçalho, conteúdo e landing, que compartilham a
 mesma margem lateral.
+# Consolidação de superfícies (spec 0030)
+
+Mantém a paleta e a tipografia oficiais. A escala agora nomeia espaçamentos de 48 e
+64 px (`--space-12`, `--space-16`), duração curta de 160 ms (`--motion-fast`) e
+curva de saída (`--ease-out`). Bordas suaves separam conteúdo; bordas de controle
+mantêm contraste próprio. Nenhuma nova cor ou fonte foi introduzida.
+
+Início usa introdução e formulário lado a lado a partir de 1101 px, empilhados em
+tablet/mobile; indicadores têm número e rótulo alinhados verticalmente. Navegação
+ativa usa superfície rosa clara e foco mantém anel rosa. Listas conservam linhas
+compactas e o detalhe conserva gráfico escuro e tabela acessível. Login limita o
+formulário a uma coluna legível; landing preserva as artes, com título neutro e
+sequência mais discreta. As transições compartilhadas se limitam a cor/borda;
+o feedback de pressão já existente no login permanece. Movimento reduzido
+desativa transições e shimmer. Veja a [auditoria](../specs/0030-experiencia-visual-consistente/audit.md).

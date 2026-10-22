@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, Bell, Link2, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,7 @@ const steps = [
 
 export function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuToggle = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     document.title = 'BestPrice · Acompanhe preços. Compre melhor.'
     document.documentElement.classList.add('landing-scroll')
@@ -32,12 +33,20 @@ export function LandingPage() {
 
   return <div className="landing" id="inicio">
     <a className="landing-skip" href="#landing-content">Pular para o conteúdo</a>
-    <header className="landing-header">
+    <header className="landing-header" onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setMenuOpen(false)
+    }} onKeyDown={(event) => {
+      if (event.key === 'Escape' && menuOpen) {
+        event.preventDefault()
+        setMenuOpen(false)
+        menuToggle.current?.focus()
+      }
+    }}>
       <div className="landing-container landing-header__inner">
         <a className="brand-link" href="#inicio" aria-label="BestPrice — Início" onClick={() => setMenuOpen(false)}>
           <Brand className="landing-brand" decorative />
         </a>
-        <Button variant="ghost" size="icon" className="landing-menu-toggle" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+        <Button ref={menuToggle} variant="ghost" size="icon" className="landing-menu-toggle" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen((open) => !open)}>
           {menuOpen ? <X /> : <Menu />}
         </Button>

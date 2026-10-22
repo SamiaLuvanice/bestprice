@@ -95,8 +95,8 @@ export function ProductDetailDialog(props: Props) {
   return <section className="detail-page" aria-labelledby="detail-title">
     <Link className="text-button detail-back" to="/produtos">Ir para Produtos</Link>
     <div className="detail-product-heading"><ProductImage src={product.image_url} /><div className="detail-product-copy">
-      <span className="detail-eyebrow">{product.external_id} · Mercado Livre</span>
       <h1 id="detail-title" tabIndex={-1}>{product.title}</h1>
+      <p className="detail-reference">{product.external_id} · Mercado Livre</p>
       <p className="muted">{availabilityLabel(product.availability)} · preço unitário sem frete</p></div></div>
     {error && <p role="alert" className="error-box">{error}</p>}
     <p className="product-price">{money(product.current_price)}</p>

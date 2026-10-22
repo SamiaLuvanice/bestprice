@@ -2,6 +2,28 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-22 — Recolher menus sem perder o caminho do foco
+
+**Contexto:** a auditoria da spec 0030 demonstrou que o menu móvel público não
+fechava com Escape nem ao mover o foco para o conteúdo. Os dois caminhos tiveram
+falhas de regressão reproduzidas antes da correção. No teste de senha, o controle
+existente já tinha nome estável “Mostrar senha” e estado em `aria-pressed`.
+
+**Princípio:** Escape deve recolher a navegação expandida e devolver foco ao
+gatilho. Ao sair da região do menu por Tab, recolha-o preservando o novo destino
+do foco; considere a região inteira ao tratar `blur`, para não fechar entre seus
+controles. Verifique estado pelos atributos semânticos e preserve controles com
+nome estável e `aria-pressed` quando esse é o contrato acessível existente.
+
+**Anti-pattern:** esconder um elemento ainda focado, devolver foco ao gatilho
+quando a pessoa já avançou ao conteúdo, ou alterar o nome do controle para atender
+a uma assertiva que presumiu outro contrato.
+
+**Referências:** [Issue #174](https://github.com/SamiaLuvanice/bestprice/issues/174),
+[verificação 0030](../specs/0030-experiencia-visual-consistente/verification.md),
+`frontend/src/landing/LandingPage.tsx`, `frontend/src/landing/LandingPage.test.tsx`
+e `frontend/tests/visual/interaction.spec.ts`.
+
 ## 2026-10-22 — Compartilhar a marca e observar cada transição
 
 **Contexto:** na spec 0029, as telas repetiam a mesma logo com fontes, pesos e
