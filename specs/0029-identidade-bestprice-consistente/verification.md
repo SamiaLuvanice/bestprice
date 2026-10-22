@@ -129,5 +129,8 @@ API e banco não foram alterados; Ruff, pytest e integração PostgreSQL locais 
 foram executados por esta spec restrita à SPA. Não houve validação com conta real,
 aparelho real, Safari móvel ou implantação externa.
 
-T11 (PR, CI remoto e integração em `develop`) permanece pendente. O status da spec
-permanece `pronta` até a integração; a revisão independente local já foi concluída.
+O [PR #168](https://github.com/SamiaLuvanice/bestprice/pull/168) foi aberto para
+`develop`. T11 está parcialmente concluída: PR preparado; CI remoto e integração
+pendentes no momento deste registro. Os checks atuais ficam no PR. O status da
+spec permanece `pronta` até a integração; a revisão independente local já foi
+concluída.

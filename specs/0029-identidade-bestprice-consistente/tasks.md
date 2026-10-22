@@ -25,4 +25,5 @@
 - [x] T10: Após a última mudança de código, executar `doc-sync-onboarding` como
   etapa final, conferir documentação de onboarding e atualizar `docs/PROGRESS.md`.
 - [ ] T11: Preparar PR para `develop` com `Closes #167`, evidências e pendências;
-  só concluir a spec após revisão, CI e integração.
+  [PR #168](https://github.com/SamiaLuvanice/bestprice/pull/168) aberto. Concluir a
+  spec após revisão, CI e integração.
