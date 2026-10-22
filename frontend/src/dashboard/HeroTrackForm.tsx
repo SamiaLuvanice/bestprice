@@ -75,6 +75,7 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
   return <Root className={classes} id={embedded ? undefined : 'inicio'} aria-labelledby={embedded ? undefined : 'page-title'}>
     <div className="hero-inner">
       <div className="hero-copy">
+        <div className="hero-intro">
         {embedded ? addButton : <div className="hero-heading">
           <h1 id="page-title" ref={headingRef} tabIndex={-1}>
             {pageTitle ?? 'Seu painel de preços'}
@@ -82,6 +83,8 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
           {addButton}
         </div>}
         {!compact && !embedded && <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>}
+        </div>
+        <div className="hero-entry">
         {/* Sempre no DOM para aria-controls apontar para um id existente; `hidden` quando recolhido. */}
         <Card className="track-panel" id={panelId} hidden={!open}>{!compact && <><h2>Comece por um link</h2><p className="track-description">Cole a URL do anúncio do Mercado Livre para acompanhar automaticamente.</p></>}<form onSubmit={(event) => void submit(event)} className="track-form">
           <div className="track-field">
@@ -103,6 +106,7 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
         </Card>
         {!compact && <p className="hero-note">Os preços exibidos vêm das consultas do BestPrice ao Mercado Livre e podem diferir do valor no checkout.</p>}
         {children}
+        </div>
       </div>
     </div>
   </Root>
