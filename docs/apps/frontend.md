@@ -130,6 +130,9 @@ hero tem `fetchPriority="high"` e dimensões declaradas (1120 × 682). A pasta
 `assets/landing/` e `assets/imagem-lateral.png`, sem uso, foram removidas. As prévias de preço e painel são identificadas como
 exemplos, sem representar ofertas reais ou dados da pessoa. Textos, links e
 controles da página são elementos React; as prévias são apenas ilustrações.
+Na hero, a arte da pessoa usa cantos de 18 px, em harmonia com o banner e as
+outras superfícies arredondadas da landing; a prévia de preço sobreposta mantém
+seu próprio raio.
 
 O cabeçalho leva às âncoras `#inicio`, `#como-funciona`, `#funcionalidades` e
 `#alertas`. O menu estreito usa botão com `aria-expanded`; a página mantém link
