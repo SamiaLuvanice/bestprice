@@ -1,6 +1,6 @@
 # Módulo frontend
 
-## Identidade visual atual — specs 0015, 0027 e 0028
+## Identidade visual atual — specs 0015, 0027, 0028 e 0029
 
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
 copiada de
@@ -9,8 +9,16 @@ O favicon do navegador também usa essa logo; sua cópia está em
 `frontend/public/favicon.png` e é declarada em `frontend/index.html`.
 A classe `.brand-logo` exibe a imagem inteira (`object-fit: contain`, sem
 `border-radius` nem outro recorte), com superfície de apoio
-`--color-logo-surface`. O texto visual “BestPrice” ao lado da imagem fica oculto
-para leitores de tela; a imagem fornece o nome acessível.
+`--color-logo-surface`. Desde a spec 0029, `frontend/src/components/Brand.tsx`
+compartilha ícone e nome entre landing, login, conta, rota não encontrada e estados
+de carregamento/erro de sessão. O nome visual usa `--font-display` (`SF Pro Display`,
+`SF Pro Icons`, `Helvetica Neue`, Helvetica, Arial, sans-serif), peso 600 e
+`letter-spacing: -.011em`, sem quebra de linha. A imagem preserva dimensões
+quadradas, sem encolher. Na apresentação autônoma, o contêiner tem `role="img"` e
+nome acessível “BestPrice”; ícone e texto internos são decorativos. Dentro dos
+links “BestPrice — Início”, o componente inteiro é decorativo e o link fornece o
+nome. Na arte do login desktop, o contêiner da ilustração anuncia a marca uma vez
+e fornece sua descrição breve.
 `designsystem/index.html` orienta os tokens. A spec 0027 aplica a composição
 aprovada no Figma às telas públicas e autenticadas, usando os quadros editáveis em
 `designsystem/prototypes/2026-10-21-bestprice-figma/`. A referência local foi usada
@@ -76,7 +84,8 @@ mantendo os controles e a autenticação existentes:
   sem vínculo com anúncios ou com a conta. O elemento tem `role="img"` e descrição
   breve; sua marca visual interna é decorativa para tecnologias assistivas.
   Até 840 px, a coluna é ocultada e a marca compacta, com logo e texto BestPrice,
-  aparece antes do título. A marca compacta tem nome acessível “BestPrice”.
+  aparece antes do título. A marca compacta tem nome acessível “BestPrice” e, desde
+  a 0029, mantém ícone e nome lado a lado também no móvel.
 - **Formulário:** título “Entrar na sua conta” (`h1`, a única da tela), subtítulo,
   E-mail (`type="email"`, `autocomplete="email"`) e Senha (`autocomplete="current-password"`).
   Cadastro, recuperação de senha, separador “ou” e login com Google não fazem
@@ -110,6 +119,8 @@ A verificação histórica da imagem anterior está na
 [`verification.md` da 0023](../../specs/0023-login-com-imagem-lateral/verification.md).
 A composição atual e seus estados em 320, 768 e 1280 px estão na
 [verificação da 0027](../../specs/0027-redesign-figma-shadcn/verification.md).
+A consistência da marca em 320, 390, 768 e 1280 px está na
+[verificação da 0029](../../specs/0029-identidade-bestprice-consistente/verification.md).
 
 ## Landing pública — specs 0024 e 0027
 
@@ -254,9 +265,9 @@ Com a integração Mercado Livre desligada, o backend ainda valida a URL, inform
 
 Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build`. Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 6 s (`vite.config.ts` e `src/test-setup.ts`; aumentado de 3 s na 0028 após falhas intermitentes sob carga, descritas na [verificação da 0028](../../specs/0028-ajustes-auditoria-redesign/verification.md)); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código TypeScript/CSS da interface. Dados de exemplo de listas ficam nas fixtures; as artes públicas são ilustrações estáticas identificadas. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
 
-A regressão visual (specs 0025 e 0027) roda por Playwright com `npm run test:visual`.
+A regressão visual (specs 0025, 0027, 0028 e 0029) roda por Playwright com `npm run test:visual`.
 `frontend/playwright.config.ts` sobe o Vite em `http://127.0.0.1:5173` e define os
-projetos `viewport-320`, `viewport-768` e `viewport-1280`;
+projetos `viewport-320`, `viewport-390`, `viewport-768` e `viewport-1280`;
 `frontend/tests/visual/public-pages.spec.ts` captura landing, login e página não
 encontrada, com `GET /api/auth/me` interceptado em 401 para um estado de visitante
 determinístico, sem backend, e com o esquema de cor claro/escuro emulado pelo
@@ -266,16 +277,22 @@ Playwright (a SPA permanece no tema claro fixo descrito acima). Os baselines fic
 A suíte é local: não roda no CI e os baselines dependem das fontes da máquina.
 A evidência inicial está na [verificação da spec 0025](../../specs/0025-harness-design-tooling/verification.md).
 
-`redesign.spec.ts` acrescenta 30 cenários: dez rotas/estados nos três viewports,
+`redesign.spec.ts` acrescentou inicialmente 30 cenários: dez rotas/estados em três viewports,
 com fixtures de API interceptadas, axe (`@axe-core/playwright`, tags WCAG A/AA),
 ausência de overflow e controles de pelo menos 44 px. Também verifica nome acessível
 da conta e o menu de produto aberto por hit test, além de salvar capturas em
 `test-results/`. A 0028 acrescentou a sonda de cores dos tokens (3), a imagem do
 detalhe com título longo (6), a linha compacta de Produtos (3) e o alinhamento dos
-vazios em Alertas (3); com os 18 snapshots públicos são 63 casos. Para usar outra
+vazios em Alertas (3); à época, com os 18 snapshots públicos, eram 63 casos.
+Com o projeto de 390 px da 0029, a matriz pública/redesign soma 84 casos, dos quais
+24 são snapshots públicos. `brand.spec.ts` cobre mais 36 casos de identidade,
+geometria, nome acessível e axe: nove rotas/estados nas quatro larguras. Em 320 e
+390 px, registra observações também após recarga, navegação, retorno e troca de
+aba, conforme o cenário. As APIs são simuladas pelo Playwright. Para usar outra
 porta local, defina `PLAYWRIGHT_BASE_URL`; para um Chromium existente, use
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`. Esses overrides não alteram o proxy da API.
-`test-results/` e `playwright-report/` são ignorados por Git e ESLint.
+`test-results/` e `playwright-report/` são ignorados por Git e ESLint; capturas e
+JSON nesses diretórios são evidências apenas locais, não artefatos versionados.
 
 Na 0027, lint/build, 299 testes Vitest e 48 verificações Playwright passaram;
 os 18 baselines foram aprovados em revisão explícita. A auditoria é local, sem
@@ -285,5 +302,12 @@ Método, falhas corrigidas e limites estão na
 Na 0028, lint, 348 testes Vitest, build e 63 verificações Playwright passaram; as
 12 capturas de landing e login foram regeneradas e conferidas contra os quadros
 aprovados ([verificação da 0028](../../specs/0028-ajustes-auditoria-redesign/verification.md)).
+Na 0029, lint/build, 348 testes Vitest, 36 casos de marca/axe e os 84 casos da
+matriz pública/redesign passaram. A QA independente reexecutou os 18 casos móveis
+do teste final e conferiu 76 observações; as 24 baselines públicas foram aprovadas.
+O desaparecimento intermitente da logo não foi reproduzido. A evidência cobre
+Chromium com viewport móvel e API simulada, sem aparelho real ou Safari; não
+confirma causa nem resolução de falha exclusiva desses dispositivos. Backend e
+banco não foram alterados nem tiveram seus gates locais executados nesta spec.
 A inspeção manual anterior sobre Compose está preservada na
 [evidência da 0012](../../specs/0012-area-usuario-monitoramento/verification.md).

@@ -81,4 +81,20 @@ com o comportamento atual.
   navegador. A mudança de marca compartilhada pode afetar screenshots de várias
   rotas; revisar o diff visual de cada uma.
 - Depois dos gates e da revisão, preparar PR para `develop` com `Closes #167`.
-  Esta etapa de planejamento termina antes de editar o código da aplicação.
+  A implementação foi autorizada após a revisão do planejamento.
+
+## Decisões confirmadas na implementação
+
+- `Brand` centraliza o asset otimizado já usado pela SPA, com ícone quadrado sem
+  encolhimento, nome horizontal e `--font-display` igual à pilha da referência,
+  peso `600` e tracking `-.011em`. O tamanho continua adaptável (22–26 px;
+  ícone de 44–52 px conforme a superfície). Nenhum asset foi substituído.
+- O login compacto usava `display:block`, que empilhava ícone e nome; passou a
+  herdar `inline-flex` da marca. Landing, conta e login tinham pesos/trackings
+  diferentes. O estado de sessão apresentava apenas o ícone. Esses defeitos foram
+  observados e corrigidos; o desaparecimento intermitente original não se
+  reproduziu nas tentativas e não tem causa atribuída.
+- Marcas em links são decorativas, pois o link já anuncia “BestPrice — Início”.
+  Nas demais superfícies há uma apresentação `img` chamada “BestPrice”. No login
+  desktop, o contêiner da arte fornece esse nome e uma descrição separada; a
+  versão compacta só entra na árvore acessível quando visível pelo breakpoint.

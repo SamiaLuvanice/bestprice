@@ -29,8 +29,8 @@ function submitForm() {
 it('mostra a arte lateral e a marca aprovadas com descrição breve', () => {
   const { container } = renderForm()
   const visual = container.querySelector('.login-visual')
-  const artwork = screen.getByRole('img', { name: /BestPrice.*boas escolhas.*alertas de preço/i })
-  expect(visual).toBe(artwork)
+  expect(visual).toHaveAccessibleName('BestPrice')
+  expect(visual).toHaveAccessibleDescription('Mais do que preços, são boas escolhas. Acompanhe e compare com alertas de preço para economizar.')
   expect(visual?.querySelectorAll('img')).toHaveLength(1)
   expect(visual?.textContent).toBe('BestPrice')
   expect(screen.getAllByRole('heading')).toHaveLength(1)

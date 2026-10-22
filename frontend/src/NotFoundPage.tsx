@@ -1,13 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import bestPriceLogo from './assets/logo-bestprice.png'
+import { Brand } from './components/Brand'
 
 export function NotFoundPage({ authenticated }: { authenticated: boolean }) {
   const navigate = useNavigate()
   return <>
-    <header className="not-found-header content"><Link className="brand" to="/" aria-label="BestPrice — Início">
-      <img className="brand-logo" src={bestPriceLogo} alt="" /><span className="brand-name">BestPrice</span>
+    <header className="not-found-header content"><Link className="brand-link" to="/" aria-label="BestPrice — Início">
+      <Brand decorative />
     </Link></header>
     <main className="not-found-main content">
       <div className="not-found-copy"><h1 tabIndex={-1}>Este endereço saiu do radar.</h1>

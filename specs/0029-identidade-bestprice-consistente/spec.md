@@ -39,11 +39,11 @@ sequência exata que o provocam ainda precisam ser registrados durante o diagnó
 
 ## Critérios de aceite
 
-- [ ] AC01: Na página pública, no login, nas áreas autenticadas e na página não encontrada, o nome “BestPrice” mantém a mesma grafia, família tipográfica, peso e espaçamento entre letras da identidade oficial; o tamanho pode se adaptar à largura da tela.
-- [ ] AC02: Em larguras de 320 e 390 px, a logo oficial aparece na página pública, no login, nas áreas autenticadas e na página não encontrada, inclusive após navegação, retorno, recarregamento e mudança de aba; não fica cortada, encoberta ou reduzida a ponto de perder legibilidade.
-- [ ] AC03: Em 320, 390, 768 e 1280 px, a marca mantém proporção e espaçamento coerentes, sem colidir com menu, título ou ações do cabeçalho.
-- [ ] AC04: A marca tem nome acessível “BestPrice” uma única vez por apresentação; a imagem e o texto visuais não geram anúncio duplicado para leitores de tela.
-- [ ] AC05: O diagnóstico registra em quais telas, estados e larguras havia divergência ou ausência da logo, e a verificação final demonstra a correção nesses cenários.
+- [x] AC01: Na página pública, no login, nas áreas autenticadas e na página não encontrada, o nome “BestPrice” mantém a mesma grafia, família tipográfica, peso e espaçamento entre letras da identidade oficial; o tamanho pode se adaptar à largura da tela.
+- [x] AC02: Em larguras de 320 e 390 px, a logo oficial aparece na página pública, no login, nas áreas autenticadas e na página não encontrada, inclusive após navegação, retorno, recarregamento e mudança de aba; não fica cortada, encoberta ou reduzida a ponto de perder legibilidade.
+- [x] AC03: Em 320, 390, 768 e 1280 px, a marca mantém proporção e espaçamento coerentes, sem colidir com menu, título ou ações do cabeçalho.
+- [x] AC04: A marca tem nome acessível “BestPrice” uma única vez por apresentação; a imagem e o texto visuais não geram anúncio duplicado para leitores de tela.
+- [x] AC05: O diagnóstico registra em quais telas, estados e larguras havia divergência ou ausência da logo, e a verificação final demonstra a correção nesses cenários.
 
 ## Fora de escopo
 

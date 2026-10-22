@@ -7,7 +7,7 @@ import { NotFoundPage } from './NotFoundPage'
 import { LandingPage } from './landing/LandingPage'
 import { AccountArea } from './dashboard/AccountArea'
 import { safeReturnTo } from './navigation/returnTo'
-import bestPriceLogo from './assets/logo-bestprice.png'
+import { Brand } from './components/Brand'
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
@@ -109,7 +109,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   if (location.pathname === '/' && sessionState !== 'ready') return <LandingPage />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
-    <header className="masthead"><img className="brand-logo" src={bestPriceLogo} alt="BestPrice" /></header>
+    <header className="masthead"><Brand /></header>
     <main className="page-main session-check">
       <div className="content narrow">{sessionState === 'loading' ? <p role="status">Carregando sua conta…</p> : <div className="panel">
         <p role="alert" className="error-box">{sessionError}</p>

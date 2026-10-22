@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { AccountMenu } from './AccountMenu'
 import { BoxIcon, BellIcon, HomeIcon } from './Icons'
-import bestPriceLogo from '../assets/logo-bestprice.png'
+import { Brand } from '../components/Brand'
 
 export type SectionKey = 'home' | 'products' | 'alerts'
 
@@ -25,7 +25,7 @@ type Props = {
 export function AppHeader({ email, current, bell, logoutError, loggingOut, onLogout }: Props) {
   return <header className="app-header">
     <div className="app-header-inner">
-      <span className="brand"><img className="brand-logo" src={bestPriceLogo} alt="BestPrice" /><span className="brand-name" aria-hidden="true">BestPrice</span></span>
+      <Brand />
       <nav aria-label="Principal" className="main-nav">
         <ul>
           {items.map((item) => <li key={item.key}>
