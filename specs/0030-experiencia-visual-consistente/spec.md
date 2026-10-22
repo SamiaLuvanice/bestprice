@@ -3,7 +3,7 @@ numero: 0030
 titulo: Experiência visual consistente do BestPrice
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend]
 depende_de: [0027, 0028, 0029]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/174
