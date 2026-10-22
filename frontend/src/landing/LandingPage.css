@@ -6,8 +6,7 @@ html.landing-scroll { scroll-behavior: smooth; }
 .landing p { line-height: 1.6; }
 .landing-header { position: sticky; top: 0; z-index: 30; background: var(--color-bg); border-bottom: 1px solid var(--color-border-soft); }
 .landing-header__inner { display: flex; align-items: center; gap: 32px; min-height: 88px; }
-.landing-brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-size: 25px; font-weight: 750; letter-spacing: -.03em; text-decoration: none; color: var(--color-text); }
-.landing-brand img { object-fit: contain; }
+.landing-brand .brand-logo { width: 44px; height: 44px; }
 .landing-nav { margin-inline: auto; display: flex; align-items: center; gap: 30px; }
 .landing-nav > a { display: flex; align-items: center; min-height: 44px; font-size: 15px; color: var(--color-text); text-decoration: none; }
 .landing-nav > a:hover { color: var(--color-brand); }

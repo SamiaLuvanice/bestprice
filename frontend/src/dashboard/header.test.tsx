@@ -31,7 +31,7 @@ describe('cabeçalho', () => {
     expect(banner.getByText('BestPrice')).toBeInTheDocument()
     const logos = banner.getAllByRole('img', { name: 'BestPrice' })
     expect(logos).toHaveLength(1)
-    expect(logos[0].getAttribute('src')).toContain('logo-bestprice.png')
+    expect(logos[0].querySelector('img')).toHaveAttribute('src', expect.stringContaining('logo-bestprice.png'))
     expect(nav().getAllByRole('link').map((link) => link.textContent)).toEqual(['Início', 'Produtos', 'Alertas'])
     expect(banner.getByRole('button', { name: /pessoa@example\.com/ })).toHaveAttribute('aria-expanded', 'false')
   })
