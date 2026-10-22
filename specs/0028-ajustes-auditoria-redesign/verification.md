@@ -171,5 +171,5 @@ A tentativa paralela inicial de testes também teve `ENOENT`; gates repetidos se
 - Hooks: `pre-commit install --hook-type pre-commit --hook-type commit-msg`; ambos instalados. `git commit` passou pelos hooks de whitespace, arquivos, YAML/JSON aplicáveis, conflitos, arquivos grandes, chave privada e proteção de branch.
 - Revisão independente (`arch-reviewer`): sem achados bloqueantes; observou que o seletor depende da ordem atual das imagens no JSX.
 - QA independente: confirmou o alvo do CSS e a separação da prévia, lint/build, e usou a evidência de 348/348 testes; não conseguiu demonstrar captura visual.
-- Commit local: `0a4811b` (`fix(frontend): arredonda foto da hero`; `Refs #157`).
+- Commit local: `7a74e5a` (`fix(frontend): arredonda foto da hero`; `Refs #157`).
 - Handoff GitHub pendente: `gh auth status` informa token inválido para a conta ativa `SamiaLuvanice`; a Issue #157 já está fechada pela PR #158. Não foi possível criar nova Issue ou PR, e a política local exige Issue aberta vinculada à PR.
