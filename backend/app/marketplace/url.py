@@ -1,12 +1,14 @@
 import re
 from dataclasses import dataclass
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 ALLOWED_HOSTS = frozenset({"produto.mercadolivre.com.br", "www.mercadolivre.com.br"})
 # Mercado Livre hosts that never identify a single publication (search/category lists).
 LIST_HOSTS = frozenset({"lista.mercadolivre.com.br"})
 SHORT_LINK_HOSTS = frozenset({"meli.la"})
 LISTING_PATH = re.compile(r"/MLB-([0-9]+)-([A-Za-z0-9][A-Za-z0-9._-]*)-_JM/?", re.IGNORECASE)
+CATALOG_PATH = re.compile(r"/[A-Za-z0-9][A-Za-z0-9._-]*/p/MLB[0-9]+/?", re.IGNORECASE)
+FILTERED_LISTING_ID = re.compile(r"item_id:(MLB[0-9]+)\Z", re.IGNORECASE)
 EMBEDDED_ID = re.compile(r"MLB-?[0-9]+", re.IGNORECASE)
 
 INVALID_URL_MESSAGE = "Insira um link válido de anúncio do Mercado Livre."
@@ -70,9 +72,33 @@ def parse_product_url(url: str) -> ParsedProductUrl:
         raise InvalidProductUrl("unsupported_url_format", SHORT_LINK_MESSAGE)
     if parsed.path.lower().rstrip("/") == "/ofertas":
         raise InvalidProductUrl("unsupported_url_format", LIST_PAGE_MESSAGE)
-    match = LISTING_PATH.fullmatch(parsed.path)
-    if match is None:
+    return _extract_listing_id(parsed.path, parsed.query)
+
+
+def _extract_listing_id(path: str, query: str) -> ParsedProductUrl:
+    match = LISTING_PATH.fullmatch(path)
+    if match is not None:
+        if EMBEDDED_ID.search(match.group(2)):
+            raise InvalidProductUrl("ambiguous_item_id", AMBIGUOUS_ID_MESSAGE)
+        return ParsedProductUrl(external_id=f"MLB{match.group(1)}")
+
+    if CATALOG_PATH.fullmatch(path):
+        return _extract_selected_listing_id(query)
+
+    raise InvalidProductUrl("unsupported_url_format", UNSUPPORTED_FORMAT_MESSAGE)
+
+
+def _extract_selected_listing_id(query: str) -> ParsedProductUrl:
+    filter_values = parse_qs(query, keep_blank_values=True).get("pdp_filters", [])
+    if not filter_values:
         raise InvalidProductUrl("unsupported_url_format", UNSUPPORTED_FORMAT_MESSAGE)
-    if EMBEDDED_ID.search(match.group(2)):
+    listing_ids: set[str] = set()
+    for filter_value in filter_values:
+        for selected_item in filter_value.split("|"):
+            selection = FILTERED_LISTING_ID.fullmatch(selected_item)
+            if selection is None:
+                raise InvalidProductUrl("unsupported_url_format", UNSUPPORTED_FORMAT_MESSAGE)
+            listing_ids.add(selection.group(1).upper())
+    if len(listing_ids) != 1:
         raise InvalidProductUrl("ambiguous_item_id", AMBIGUOUS_ID_MESSAGE)
-    return ParsedProductUrl(external_id=f"MLB{match.group(1)}")
+    return ParsedProductUrl(external_id=listing_ids.pop())
