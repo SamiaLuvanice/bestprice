@@ -2,6 +2,25 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-23 — Restringir sondas manuais com secrets de ambiente
+
+**Contexto:** o Render Free não oferece Shell nem One-off Jobs para a sonda
+operacional; um workflow `workflow_dispatch` só fica disponível na branch padrão.
+
+**Princípio:** quando um runner hospedado precisa acessar um serviço Stage,
+guarde os segredos em GitHub Environment dedicado, permita deployments apenas
+da branch padrão e injete-os somente na etapa que os consome. Passe entradas
+operacionais por variáveis de ambiente, fixe Actions por SHA e evite logs,
+artefatos ou resumos com valores secretos. Verifique se a sonda tem efeitos
+colaterais (como rotação de refresh token) antes de repetir uma execução.
+
+**Anti-pattern:** usar secrets globais do repositório, executar uma sonda de
+Stage a partir de uma feature branch ou presumir que um refresh OAuth é idempotente.
+
+**Referências:** [Issue #182](https://github.com/SamiaLuvanice/bestprice/issues/182),
+spec [0032](../specs/0032-sonda-mercado-livre-github-actions/spec.md),
+`.github/workflows/validate-mercadolivre-stage.yml`.
+
 ## 2026-10-22 — Conferir o ativo original antes de corrigir seu enquadramento
 
 **Contexto:** na revisão da spec 0030, o banner panorâmico de 1600 × 548 px
