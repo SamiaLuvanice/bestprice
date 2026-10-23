@@ -101,7 +101,15 @@ def _probe(client: MercadoLivreClient, scenario: str, item_id: str) -> dict[str,
     try:
         listing = client.get_listing(item_id)
     except IntegrationError as exc:
-        return {"scenario": scenario, "item_id": item_id, "status": "failed", "error_code": exc.code}
+        result: dict[str, object] = {
+            "scenario": scenario,
+            "item_id": item_id,
+            "status": "failed",
+            "error_code": exc.code,
+        }
+        if exc.code == "integration_access_denied" and exc.resource in {"item", "sale_price"}:
+            result["blocked_resource"] = exc.resource
+        return result
     except Exception:  # noqa: BLE001 - CLI boundary must not print internal request details.
         return {
             "scenario": scenario,

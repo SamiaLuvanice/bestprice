@@ -24,6 +24,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, Node tests e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
+| `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
 
 ### Regras das automações GitHub
@@ -58,6 +59,51 @@ Para as rotas da spec 0021, `frontend/nginx.conf` aplica `try_files $uri $uri/ /
 As variáveis da aplicação estão tabeladas em [architecture.md](../architecture.md#estado-desta-branch). `.env.example` inclui `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`, variáveis OAuth/chave Fernet e URI de callback, três IDs MLB para a sonda, `APP_ENV=development` e cinco parâmetros `MONITOR_*`. Compose repassa OAuth, callback, IDs de validação e `MONITOR_*` a backend e worker. A configuração Render define o callback HTTPS Stage, mas não configura segredos. Para iniciar a autorização, `python -m app.marketplace.authorize_operator` imprime uma URL oficial; a aplicação precisa estar criada no DevCenter, e a mesma chave Fernet deve estar segura no ambiente que inicia o fluxo e em Stage. A versão com diagnóstico por categorias seguras foi promovida pela PR #139; o serviço Render está Live com health 200. Após três tentativas malsucedidas, a quarta autorização foi concluída e a persistência cifrada confirmada por contagem e validade, sem ler tokens. A autorização inicial foi demonstrada, mas a renovação e a consulta de anúncios ainda não. O último valor conhecido da flag Stage era `false`; a sincronização pela PR #144 não alterou variáveis de ambiente, mas o valor não foi relido após a integração. A ferramenta `python -m app.marketplace.validate_live --confirm-live-requests`, em `backend/`, usa os IDs de cenário e o banco local, consulta até três anúncios em modo de leitura (até dois GETs por anúncio) e só confirma sucesso após observar uma rotação real do token e os três resultados esperados. Os IDs não são segredos, mas precisam ser anúncios de terceiros permitidos à conta operadora. Mantenha o flag desligado até validar renovação, anúncios permitidos e limites operacionais; não provoque 429 e use dublês para validar falhas e recuperação. Os valores de monitoramento devem ser escolhidos conforme os limites oficiais validados; os padrões atuais permitem testar a operação local. O script de worktree também lê `BACKEND_PORT`, `FRONTEND_PORT` e `DB_PORT` do ambiente do PowerShell como overrides. Na ausência delas, deriva valores estáveis de branch e caminho, em faixas distintas; valida o intervalo `1..65535`; então restaura os valores de ambiente anteriores ao terminar.
 
 O isolamento de projeto cria nomes e volumes distintos por worktree. As portas ainda podem conflitar com outro processo. O script não cria senhas próprias: Compose continua exigindo `POSTGRES_PASSWORD` em `.env` ou no ambiente.
+
+## Sonda oficial do Mercado Livre no GitHub Actions
+
+O Render Free não disponibiliza Shell nem One-off Jobs. Após o workflow ser
+integrado em `develop`, a sonda existente em `backend/app/marketplace/validate_live.py`
+pode ser executada sem custo no runner hospedado pelo GitHub. Ela consulta
+anúncios permitidos pela conta operadora e pode renovar/persistir o refresh token
+OAuth no banco Stage; não escreve produtos e não altera
+`MERCADOLIVRE_THIRD_PARTY_VALIDATED`.
+
+Na configuração do repositório, crie o GitHub Environment `stage-validation` e
+restrinja os deployments ao branch `develop`. Cadastre nele, como secrets, os
+valores copiados dos respectivos campos do Render Stage:
+
+| Secret no GitHub | Variável de origem no Render |
+|---|---|
+| `STAGE_DATABASE_URL` | `DATABASE_URL` |
+| `STAGE_MERCADOLIVRE_OAUTH_KEY` | `MERCADOLIVRE_OAUTH_KEY` |
+| `STAGE_MERCADOLIVRE_CLIENT_ID` | `MERCADOLIVRE_CLIENT_ID` |
+| `STAGE_MERCADOLIVRE_CLIENT_SECRET` | `MERCADOLIVRE_CLIENT_SECRET` |
+
+Não registre os valores em arquivos, Issue, PR, console ou artefatos. Quem tem
+permissão de escrita no repositório pode alterar workflows; mantenha a proteção
+de `develop` e revise os diffs de Actions antes de integrar.
+
+No GitHub, abra **Actions → Validate Mercado Livre Stage → Run workflow**,
+selecione `develop` e informe IDs MLB distintos para preço, sem preço e
+indisponível. A sonda valida formato e unicidade antes de qualquer chamada e
+imprime somente o relatório sanitizado com status, códigos, IDs e dados mínimos
+de preço/disponibilidade. A ausência de anúncio naturalmente sem preço é uma
+ação manual a registrar, não uma razão para substituir preço ausente por zero.
+Não repita uma tentativa OAuth de resultado incerto: o refresh token anterior é
+de uso único e o token rotacionado fica persistido no Stage.
+
+Uma execução `passed` é evidência para a decisão operacional 0026, não uma
+ativação automática. Depois da validação, remova os secrets do environment caso
+não seja necessário repetir a sonda; o workflow pode ser reutilizado após
+recadastrar os secrets. Ative o gate no Render somente após revisar a evidência
+e confirmar os limites oficiais aplicáveis.
+
+No relatório, um HTTP 403 mantém `error_code: integration_access_denied` e
+acrescenta `blocked_resource: item` ou `blocked_resource: sale_price`, conforme
+a leitura negada. Essa informação curta ajuda a direcionar a revisão do
+DevCenter sem registrar o caminho com ID, resposta bruta, cabeçalhos ou dados do
+anúncio. Ela não indica, por si só, qual permissão ou política precisa mudar.
 
 ## CI e entrega
 
