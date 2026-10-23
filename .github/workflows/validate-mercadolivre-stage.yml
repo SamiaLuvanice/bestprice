@@ -1,0 +1,55 @@
+name: Validate Mercado Livre Stage
+on:
+  workflow_dispatch:
+    inputs:
+      price_item_id:
+        description: ID MLB de anúncio que deve ter preço comparável
+        required: true
+        type: string
+      no_price_item_id:
+        description: ID MLB de anúncio autorizado sem preço
+        required: true
+        type: string
+      unavailable_item_id:
+        description: ID MLB de anúncio pausado ou indisponível
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: validate-mercadolivre-stage
+  cancel-in-progress: false
+jobs:
+  validate:
+    name: Sonda somente de leitura contra Stage
+    if: github.ref == 'refs/heads/develop'
+    environment: stage-validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: false
+      - name: Instalar dependências fixadas
+        run: uv sync --locked --no-dev
+      - name: Consultar anúncios permitidos e validar OAuth
+        env:
+          APP_ENV: stage
+          DATABASE_URL: ${{ secrets.STAGE_DATABASE_URL }}
+          MERCADOLIVRE_OAUTH_KEY: ${{ secrets.STAGE_MERCADOLIVRE_OAUTH_KEY }}
+          MERCADOLIVRE_CLIENT_ID: ${{ secrets.STAGE_MERCADOLIVRE_CLIENT_ID }}
+          MERCADOLIVRE_CLIENT_SECRET: ${{ secrets.STAGE_MERCADOLIVRE_CLIENT_SECRET }}
+          MERCADOLIVRE_THIRD_PARTY_VALIDATED: 'false'
+          MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID: ${{ inputs.price_item_id }}
+          MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID: ${{ inputs.no_price_item_id }}
+          MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID: ${{ inputs.unavailable_item_id }}
+        run: uv run --no-sync python -m app.marketplace.validate_live --confirm-live-requests
