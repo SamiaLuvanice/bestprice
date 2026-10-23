@@ -16,5 +16,6 @@
   última alteração de código: README, guia backend, aprendizados, progresso e
   verificação atualizados; `AGENTS.md`, `CLAUDE.md` e índice de docs conferidos,
   sem necessidade de mudança.
-- [ ] **T06 — Entregar para revisão.** Atualizar verificação e progresso, publicar
-  a branch e preparar PR para `develop`, sem fazer merge.
+- [x] **T06 — Entregar para revisão.** Verificação e progresso atualizados; branch
+  publicada e PR [#181](https://github.com/SamiaLuvanice/bestprice/pull/181)
+  aberta para `develop`, sem fazer merge. Revisão independente pendente.

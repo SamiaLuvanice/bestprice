@@ -53,5 +53,8 @@ Base de implementação: `origin/develop` (`396f0ac`).
 
 ## Entrega
 
-Implementação entregue; aguarda revisão independente. PR para `develop` e
-validação PostgreSQL real ainda pendentes.
+Implementação commitada em `65794ff` e publicada na branch
+`feature/0031-issue-180-link-catalogo`; PR [#181](https://github.com/SamiaLuvanice/bestprice/pull/181)
+aberta para `develop`. Revisão independente e validação PostgreSQL real ainda
+pendentes. O monitoramento real continua condicionado à validação operacional
+0026; esta mudança não ativa a integração.
