@@ -12,12 +12,8 @@
     },
     "mercadolibre-mcp-server": {
       "type": "remote",
-      "url": "https://mcp.mercadolibre.com/mcp",
-      "enabled": true,
-      "headers": {
-        "Authorization": "Bearer {env:MERCADOLIBRE_ACCESS_TOKEN}"
-      },
-      "oauth": false
+      "url": "https://mcp.mercadolibre.com/devsite/v1/mcp",
+      "enabled": true
     }
   }
 }
