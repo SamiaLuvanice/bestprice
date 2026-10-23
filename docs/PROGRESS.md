@@ -14,6 +14,8 @@ A [Issue #176](https://github.com/SamiaLuvanice/bestprice/issues/176) acompanha 
 encerramento documental por PR. Limpeza das duas worktrees aguarda essa integração;
 nenhuma promoção de release/stage ou validação de API real foi feita.
 
+Spec 0033 `pronta`, em implementação: [Issue #184](https://github.com/SamiaLuvanice/bestprice/issues/184), branch/worktree `feature/0033-issue-184-diagnostico-403-mercado-livre`, base `origin/develop` (`f364e7c`). Diagnóstico seguro de HTTP 403 identifica `item` ou `sale_price` no relatório da sonda, preservando `integration_access_denied`; sem incluir corpo upstream ou ampliar permissões OAuth. Testes focados **48/48**, suíte backend **166 passed, 31 skipped**, Ruff e complexidade verdes. Revisão independente sem achados; execução Stage com a mudança, CI e merge ainda pendentes; gate permanece desligado. Ver [spec 0033](../specs/0033-diagnostico-403-mercado-livre/spec.md) e [verification](../specs/0033-diagnostico-403-mercado-livre/verification.md).
+
 | Spec | Refinamento e plano | Implementação | Revisão | Verificação |
 |---|---|---|---|---|
 | 0032-sonda-mercado-livre-github-actions | Spec `pronta`, plano e tarefas; [Issue #182](https://github.com/SamiaLuvanice/bestprice/issues/182); base `origin/develop` (`396f0ac`) | Workflow manual implementado; environment GitHub `stage-validation` criado, restrito a `develop` e abastecido com quatro secrets Stage/OAuth; valores não exibidos | Revisão local de segurança, PR e revisão independente pendentes | `workflow_dispatch` ainda indisponível até integração em `develop`; sonda não executada e Stage permanece com gate `false`; ver [verification.md](../specs/0032-sonda-mercado-livre-github-actions/verification.md) |
