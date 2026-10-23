@@ -49,8 +49,37 @@ def test_client_maps_upstream_failures(status: int, expected_code: str) -> None:
         client.get_listing("MLB1234567890")
 
     assert failure.value.code == expected_code
+    if status == 403:
+        assert failure.value.resource == "item"
     if status == 429:
         assert failure.value.retry_after_seconds == 42
+
+
+@pytest.mark.parametrize(
+    ("blocked_path", "expected_resource"),
+    [("/items/MLB1234567890", "item"), ("/items/MLB1234567890/sale_price", "sale_price")],
+)
+def test_client_identifies_only_the_resource_blocked_by_403(
+    blocked_path: str, expected_resource: str,
+) -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path == blocked_path:
+            return httpx.Response(403, json={"message": "private upstream detail"})
+        if request.url.path == "/items/MLB1234567890":
+            return httpx.Response(200, json={
+                "id": "MLB1234567890", "site_id": "MLB", "title": "Fone",
+                "permalink": "https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM",
+                "status": "active", "available_quantity": 1, "currency_id": "BRL",
+            })
+        raise AssertionError(f"Unexpected request: {request.url.path}")
+
+    client = MercadoLivreClient("token-test", httpx.MockTransport(respond))
+    with pytest.raises(IntegrationError) as failure:
+        client.get_listing("MLB1234567890")
+
+    assert failure.value.code == "integration_access_denied"
+    assert failure.value.resource == expected_resource
+    assert "private upstream detail" not in str(failure.value)
 
 
 def test_client_does_not_fall_back_to_deprecated_item_price() -> None:

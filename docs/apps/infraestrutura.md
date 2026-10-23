@@ -99,6 +99,12 @@ não seja necessário repetir a sonda; o workflow pode ser reutilizado após
 recadastrar os secrets. Ative o gate no Render somente após revisar a evidência
 e confirmar os limites oficiais aplicáveis.
 
+No relatório, um HTTP 403 mantém `error_code: integration_access_denied` e
+acrescenta `blocked_resource: item` ou `blocked_resource: sale_price`, conforme
+a leitura negada. Essa informação curta ajuda a direcionar a revisão do
+DevCenter sem registrar o caminho com ID, resposta bruta, cabeçalhos ou dados do
+anúncio. Ela não indica, por si só, qual permissão ou política precisa mudar.
+
 ## CI e entrega
 
 ```mermaid
