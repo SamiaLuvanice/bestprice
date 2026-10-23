@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   validate:
-    name: Sonda somente de leitura contra Stage
+    name: Consultar anúncios e validar OAuth no Stage
     if: github.ref == 'refs/heads/develop'
     environment: stage-validation
     runs-on: ubuntu-latest

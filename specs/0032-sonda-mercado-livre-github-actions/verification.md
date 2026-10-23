@@ -9,10 +9,18 @@ Base: `origin/develop` (`396f0ac`).
 |---|---|---|
 | AC01 | Parcial | Workflow manual com três IDs requeridos; branch guard e validação/unicidade são anteriores às chamadas no script. Não executado: workflow ainda não está em `develop`. |
 | AC02 | Implementado localmente | Environment `stage-validation` confirmado no GitHub, deployment limitado a `develop`; workflow fixa SHAs e usa `contents: read`. A execução ainda depende do PR. |
-| AC03 | Parcial | Quatro secrets configurados no environment protegido; workflow os injeta apenas na etapa da sonda. Revisão automatizada pendente. |
+| AC03 | Parcial | Quatro secrets configurados no environment protegido; workflow os injeta apenas na etapa da sonda. Revisão independente feita; CI do ajuste de clareza está pendente. |
 | AC04 | Pendente | Sonda não executada; depende de IDs confirmados e do workflow em `develop`. O refresh pode rotacionar credenciais OAuth no banco Stage. |
 | AC05 | Implementado localmente | Workflow fixa a flag como `false` e não tem etapa para alterar configuração Render. |
 | AC06 | Implementado | Procedimento, escopo, limpeza e riscos de OAuth documentados em `docs/apps/infraestrutura.md` e `docs/github-workflow.md`. |
+
+## Revisão independente
+
+- Fullstack Pleno não encontrou achados altos ou bloqueantes. Um P3 de clareza
+  no título do job foi corrigido; o nome agora distingue consultas de anúncio e
+  validação OAuth, que pode persistir credenciais no Stage.
+- A revisão não executou a sonda real; IDs, especialmente o cenário `no_price`,
+  ainda precisam de confirmação da API depois que o workflow chegar a `develop`.
 
 ## Comandos e resultados
 
@@ -20,8 +28,9 @@ Base: `origin/develop` (`396f0ac`).
   sandbox; a primeira tentativa no sandbox foi bloqueada por `spawn EPERM`).
 - `git diff --check` — **passou**.
 - `actionlint` — ferramenta ausente no ambiente local; CI executará o lint do workflow após o push.
-- Doc-sync-onboarding aplicado por último após a revisão local: `docs/apps/infraestrutura.md`,
-  `docs/github-workflow.md`, `docs/PROGRESS.md` e `docs/LEARNINGS.md` atualizados;
+- Doc-sync-onboarding aplicado por último após o ajuste do título do job:
+  `docs/apps/infraestrutura.md`, `docs/github-workflow.md`, `docs/PROGRESS.md` e
+  `docs/LEARNINGS.md` continuam coerentes;
   `README.md`, `docs/index.md`, `AGENTS.md` e `CLAUDE.md` conferidos, sem necessidade
   de alteração adicional.
 

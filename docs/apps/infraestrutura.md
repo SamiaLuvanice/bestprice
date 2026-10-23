@@ -24,7 +24,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, Node tests e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
-| `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual no branch `develop` da sonda somente de leitura do Mercado Livre contra o banco Stage |
+| `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
 
 ### Regras das automações GitHub
