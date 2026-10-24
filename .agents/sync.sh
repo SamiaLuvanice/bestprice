@@ -65,6 +65,8 @@ if [[ $WITH_CURSOR -eq 1 || -d "$ROOT/.cursor" ]]; then
   echo "Cursor:"
   link ".cursor/skills" "../$SRC/skills"
   [[ -d "$ROOT/$SRC/commands" ]] && link ".cursor/commands" "../$SRC/commands"
+  cp "$ROOT/$SRC/mcp.json" "$ROOT/.cursor/mcp.json"
+  echo "  + .cursor/mcp.json (gerado — não editar)"
   # Único caso de cópia no projeto: Cursor só lê regras com extensão .mdc.
   rm -rf "$ROOT/.cursor/rules"; mkdir -p "$ROOT/.cursor/rules"
   for f in "$ROOT/$SRC/rules"/*.md; do
