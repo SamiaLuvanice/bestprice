@@ -26,6 +26,7 @@
 | [Atualização do harness](harness-upgrade.md) | Processo de atualização |
 | [Setup do harness](harness-setup.md) | Instalação e configuração do harness |
 | [Reivindicações de agentes](agent-claims.md) | Registro operacional de agentes |
+| [Spec 0031 — BestPrice IA](../specs/0031-bestprice-ai-evolution/spec.md) | Evolução proposta, auditoria, diretrizes de design e handoff do protótipo navegável |
 
 ## Documentação por módulo/app
 
