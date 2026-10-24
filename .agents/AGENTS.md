@@ -8,6 +8,6 @@ Papéis ativos: product-owner, spec-reviewer, backend, frontend, fullstack, qa, 
 
 As ferramentas enxergam .agents/ diretamente ou por projeções: Codex lê AGENTS.md; Claude usa CLAUDE.md e links; OpenCode/Cursor podem usar links opcionais. No Windows execute .agents/sync.ps1; no Unix, bash .agents/sync.sh. Edite apenas .agents/, nunca conteúdo das projeções.
 
-Servidores MCP ficam em .agents/mcp.json (formato agnóstico mcpServers) — a fonte única. O sync projeta .mcp.json na raiz (lido por Claude e clientes compatíveis) e gera o bloco mcp de opencode.json, cujo formato é próprio do OpenCode. Nunca edite esses dois arquivos gerados: altere .agents/mcp.json e rode o sync.
+Servidores MCP ficam em .agents/mcp.json (formato agnóstico mcpServers) — a fonte única. O sync projeta .mcp.json para Claude e clientes compatíveis, gera opencode.json e, quando habilitado, .cursor/mcp.json. Nunca edite arquivos gerados: altere .agents/mcp.json e rode o sync. Codex recebe a conexão local pelo botão Add to Codex do Paper Desktop.
 
 Nomes neutros, instruções simples e segredos fora do repositório. Use apenas regras, skills e papéis listados no índice ativo; não carregue snapshots inativos.

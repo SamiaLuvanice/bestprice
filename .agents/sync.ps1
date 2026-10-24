@@ -95,6 +95,9 @@ if ($WithOpenCode -or (Test-Path -LiteralPath (Join-Path $Root '.opencode'))) {
 if ($WithCursor -or (Test-Path -LiteralPath (Join-Path $Root '.cursor'))) {
     Sync-Junction '.cursor/skills' '.agents/skills'
     Sync-Junction '.cursor/commands' '.agents/commands'
+    Copy-Item -LiteralPath (Join-Path $Root '.agents/mcp.json') `
+        -Destination (Join-Path $Root '.cursor/mcp.json') -Force
+    Write-Output '+ .cursor/mcp.json (gerado — não editar)'
     $rulesPath = Join-Path $Root '.cursor/rules'
     New-Item -ItemType Directory -Path $rulesPath -Force | Out-Null
     Get-ChildItem -LiteralPath $rulesPath -Filter '*.mdc' -File |

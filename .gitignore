@@ -45,7 +45,8 @@ dist/
 .claude/skills
 .claude/commands
 .opencode/
-.cursor/
+.cursor/*
+!.cursor/mcp.json
 
 # Projeções de outros assistentes criadas pelo CLI skills (não gerenciadas pelo sync)
 .junie/
