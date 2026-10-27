@@ -2,7 +2,7 @@
 
 ## Estado
 
-Implementação local, QA e doc-sync concluídos; publicação da PR em fechamento.
+Implementação local, QA e doc-sync concluídos; PR draft publicada para revisão.
 Esta página separa preparação, testes simulados e verificações
 reais. Nenhum critério está automaticamente comprovado por implementação ou por
 aprovação do plano. Geração real requer chave/configuração e não foi executada.
@@ -108,7 +108,7 @@ os resultados finais e aprovou a evidência local, mantendo os limites abaixo.
 | AC25 | Monitoramento e aliases, suíte anterior preservada, gate externo não ativado | Testes, UI e regressões dos destinos antigos passaram |
 | AC26–AC27 | Axe, overflow e alvos44px nos4viewports; Tab/Escape real no Chrome | Matriz final38/38 passou após ajustes; sem leitor de tela/dispositivo físico |
 | AC28–AC29 | Falhas de persistência/rede não viram sucesso; retries reais; ações futuras não simulam cadastro | Falhas específicas da UI injetadas; health503 com DB realmente parado |
-| AC30 | Relatórios por papel, revisão, doc-sync e limites acima | Publicação da PR/CI em fechamento; spec permanece `pronta` |
+| AC30 | Relatórios por papel, revisão, doc-sync, PR e limites acima | Handoff registrado; spec permanece `pronta` com AC10/15/19 abertos |
 
 ## Sincronização final de documentação
 
@@ -122,8 +122,23 @@ atualizações de relatórios simultâneas. A rodada final `pre-commit run` pass
 com todos os papéis de edição encerrados: whitespace, EOF, YAML, conflitos,
 arquivos grandes e chaves privadas. JSON não tinha arquivos aplicáveis.
 
-## Pendências do handoff
+## Publicação e handoff
 
-- Commit/hooks, push, PR para develop e CI; sem merge/deploy nesta verificação.
+Commit de implementação `5d84083`, com `Refs #195`, publicado sem bypass de hooks
+e sem atribuição a ferramentas. [PR #196](https://github.com/SamiaLuvanice/bestprice/pull/196)
+aberta em draft para develop, com `Closes #195`, spec, testes e limites.
+Autoria humana existente preservada. A base foi reconferida antes da publicação:
+`HEAD...origin/develop` era `0 0` antes do commit.
+
+Os [checks remotos da PR](https://github.com/SamiaLuvanice/bestprice/pull/196/checks)
+são a evidência autoritativa do CI para o head publicado. A primeira consulta
+confirmou PR policy e Automation verdes, Backend/Frontend em execução; essa
+observação não equivale ao resultado final do check obrigatório CI. Nenhuma
+integração, aprovação própria, ativação externa ou release foi executada.
+
+## Pendências operacionais
+
+- CI obrigatório e revisão precedem eventual merge; worktree/branch preservadas
+  para revisão. Não executar cleanup antes de integrar e resolver pendências.
 - Validação operacional do modelo com configuração gratuita própria e avaliação
   da qualidade em português não foi executada. IA permanece desativada por padrão.

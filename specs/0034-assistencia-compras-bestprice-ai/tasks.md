@@ -12,6 +12,6 @@
 - [x] T10 Gates de camadas, automações e revisão independente/QA; corrigir achados.
 - [x] T11 Atualizar verification.md e docs/PROGRESS.md com evidência e limites reais.
 - [x] T12 Doc-sync-onboarding por último após a última alteração de código.
-- [ ] T13 Commit/push/PR develop com Closes195; acompanhar CI sem merge automático.
+- [x] T13 Commit/push/PR draft #196 para develop com Closes195; acompanhamento de CI sem merge automático.
 
 Nenhuma tarefa de comportamento se conclui só com implementação ou teste pulado.

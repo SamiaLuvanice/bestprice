@@ -185,7 +185,7 @@ implementado quando todos os critérios aplicáveis abaixo estiverem demonstrado
 
 ## Critérios de aceite
 
-As marcações abaixo correspondem à evidência local em verification.md, com SPA/API/PostgreSQL reais e geração externa controlada na fronteira de teste. Não atestam disponibilidade ou qualidade operacional do Gemini. AC10, AC15 e AC19 mantêm a avaliação do modelo real pendente; AC30 fecha com o handoff documental.
+As marcações abaixo correspondem à evidência local em verification.md, com SPA/API/PostgreSQL reais e geração externa controlada na fronteira de teste. Não atestam disponibilidade ou qualidade operacional do Gemini. AC10, AC15 e AC19 mantêm a avaliação do modelo real pendente; o handoff documental está registrado na PR draft #196.
 
 - [x] **AC01 — Direção visual:** existem composições revisáveis de Landing,
   Dashboard, Assistente e Comparador em desktop e mobile, com os estados vazio,
@@ -272,7 +272,7 @@ As marcações abaixo correspondem à evidência local em verification.md, com S
 - [x] **AC29 — Recursos futuros:** cadastro, recuperação de senha, preferências
   e outras capacidades não entregues não oferecem ações que simulem operação
   concluída; os caminhos funcionais de entrada existentes continuam disponíveis.
-- [ ] **AC30 — Evidência da entrega:** cada critério aplicável é demonstrado com
+- [x] **AC30 — Evidência da entrega:** cada critério aplicável é demonstrado com
   evidência e seus limites; os cenários de sucesso, erro principal e acesso alheio
   são verificados sem apresentar estudos de design como implementação funcional.
 

@@ -17,9 +17,12 @@ NUMERIC(18,2) e RLS nas seis tabelas novas. Health real 200→503→200 no banco
 descartável. Rodada visual ampla anterior: 129/132 antes da correção da marca;
 8/8 afetados depois, oito baselines landing revisados/atualizados e confirmação
 8/8 sem update; baselines login/404 preservados. Doc-sync final concluído em
-27/10/2026, com AGENTS.md/CLAUDE.md conferidos. Commit/hooks, PR e CI ainda são
-etapas do handoff. AC10/AC15/AC19 dependem de configuração gratuita e avaliação
-real do modelo, sem chave/custo/chamada nesta etapa; AC30 aguarda o handoff.
+27/10/2026, com AGENTS.md/CLAUDE.md conferidos. Commit `5d84083` publicado com hooks
+aprovados; [PR #196](https://github.com/SamiaLuvanice/bestprice/pull/196) aberta em
+draft para develop, com Closes #195 e evidências. O resultado autoritativo do CI
+fica nos [checks da PR](https://github.com/SamiaLuvanice/bestprice/pull/196/checks).
+AC10/AC15/AC19 dependem de configuração gratuita e avaliação real do modelo, sem
+chave/custo/chamada nesta etapa; AC30 tem o handoff registrado.
 Sem merge, deploy ou alegação de atualização do Project. Ver [plano](../specs/0034-assistencia-compras-bestprice-ai/plan.md),
 [verificação](../specs/0034-assistencia-compras-bestprice-ai/verification.md) e
 [doc-sync](../specs/0034-assistencia-compras-bestprice-ai/doc-sync.md).
