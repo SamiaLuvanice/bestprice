@@ -5,13 +5,14 @@ import { pathToFileURL } from "node:url";
 export async function main(args = process.argv.slice(2), write = value => console.log(JSON.stringify(value, null, 2))) {
   const operation = args[0] ?? "help";
   if (operation === "help" || operation === "--help") {
-    write({ success: true, operation: "help", element: null, verified: false, commands: ["status", "inspect", "create-frame", "add-text", "screenshot", "validate", "design-system", "create-screen"], options: ["--name", "--reuse", "--width", "--height", "--x", "--y", "--background", "--parent", "--text", "--font-size", "--font-weight", "--color", "--endpoint", "--document", "--file"] });
+    write({ success: true, operation: "help", element: null, verified: false, commands: ["status", "inspect", "create-frame", "add-text", "screenshot", "validate", "design-system", "create-screen", "sync"], options: ["--name", "--reuse", "--width", "--height", "--x", "--y", "--background", "--parent", "--text", "--font-size", "--font-weight", "--color", "--endpoint", "--document", "--file", "--screen", "--viewport", "--new-version"] });
     return 0;
   }
   try {
-    const keys = ["name", "reuse", "width", "height", "x", "y", "background", "parent", "text", "font-size", "font-weight", "color", "endpoint", "document", "file"];
-    const parsed = parseArgs({ args: args.slice(1), options: Object.fromEntries(keys.map(key => [key, { type: "string" }])), strict: true });
+    const keys = ["name", "reuse", "width", "height", "x", "y", "background", "parent", "text", "font-size", "font-weight", "color", "endpoint", "document", "file", "screen", "viewport", "new-version"];
+    const parsed = parseArgs({ args: args.slice(1), options: Object.fromEntries(keys.map(key => [key, { type: key === "new-version" ? "boolean" : "string" }])), strict: true });
     const values = { ...parsed.values, fontSize: parsed.values["font-size"], fontWeight: parsed.values["font-weight"] };
+    values.newVersion = values["new-version"] ?? false;
     const result = await runOperation(operation, values);
     write(result);
     return result.success ? 0 : 1;

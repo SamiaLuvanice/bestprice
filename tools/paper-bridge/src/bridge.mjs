@@ -9,8 +9,9 @@ import { resolveColor } from "./design-system.mjs";
 import { addText, verifyText } from "./text.mjs";
 import { createScreen } from "./composition.mjs";
 import { readFile } from "node:fs/promises";
+import { syncHtmlScreen } from "./html-sync.mjs";
 
-const operations = new Set(["status", "inspect", "create-frame", "add-text", "screenshot", "validate", "design-system", "create-screen"]);
+const operations = new Set(["status", "inspect", "create-frame", "add-text", "screenshot", "validate", "design-system", "create-screen", "sync"]);
 
 export async function runOperation(operation, options = {}, runtime = { connect, loadDesignSystem, acquireLock, beginReport, finishReport }) {
   let release, connection, report, result;
@@ -46,6 +47,9 @@ export async function runOperation(operation, options = {}, runtime = { connect,
           result = await createScreen(page, ds, screen);
           break;
         }
+        case "sync":
+          result = await syncHtmlScreen(page, options);
+          break;
         case "screenshot":
           result = { success: true, operation, element: "BestPrice Bridge Test", verified: true };
           break;
@@ -93,6 +97,7 @@ export function createPaper(options = {}) {
     createFrame: values => runOperation("create-frame", { ...options, ...values }),
     addText: values => runOperation("add-text", { ...options, ...values }),
     createScreen: values => runOperation("create-screen", { ...options, ...values }),
+    sync: values => runOperation("sync", { ...options, ...values }),
     screenshot: () => runOperation("screenshot", options),
     validate: values => runOperation("validate", { ...options, ...values }),
   };

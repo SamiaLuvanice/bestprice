@@ -4,3 +4,4 @@ reports/*
 screenshots/
 *.png
 /editor-map.json
+/state/
