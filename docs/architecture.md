@@ -1,5 +1,30 @@
 # Arquitetura
 
+## Ferramenta local de design — spec 0035
+
+`tools/paper-bridge/` é um pacote Node ESM independente, com CLI e API JavaScript.
+Conecta-se ao Chromium do Paper Desktop por CDP exclusivamente em
+`http://127.0.0.1:PORTA` e opera o documento autorizado `BestPrice Bridge Test`.
+As alterações usam controles da interface, teclado e mouse; o DOM serve à leitura
+de propriedades, geometria e parentesco, sem consultar o modelo interno ou
+endpoints privados do Paper. A ferramenta não usa o MCP oficial.
+
+Conexão/política, seletores, canvas, propriedades, frames, texto, composição,
+validação e evidências ficam em módulos separados. O adaptador lê tokens CSS,
+tipografia, espaços, raios, sombras e metadados de layout/rotas/componentes dos
+fontes reais do frontend. O inventário não converte automaticamente componentes
+React nem regras responsivas em camadas. A composição atual aceita frame e textos;
+fontes usam Arial como fallback oficial disponível no Windows.
+
+Um lock exclusivo em diretório temporário coordena as instâncias da bridge entre
+worktrees. Operações retornam JSON com sucesso separado de verificação e registram
+screenshots antes/depois e observações locais. A idempotência foi demonstrada no
+documento pequeno com árvore expandida e inteira visível; virtualização simultânea
+da árvore e do canvas impede tratar esse cheque como garantia global de ausência.
+Não há alteração na API, SPA, banco, Compose ou deploy do produto. Veja
+[execução e limites](../tools/paper-bridge/README.md) e
+[evidências](../specs/0035-paper-bridge-local/verification.md).
+
 ## Estado desta branch
 
 A aplicação combina SPA React, API FastAPI, PostgreSQL 17 e um processo worker. A spec 0034 acrescenta assistência de compras por conversa, comparação manual de 2–3 produtos e histórico privado por 90 dias. O monitoramento usa publicações do Mercado Livre Brasil (MLB) e mantém seu gate externo desligado. A [visão do produto](product-context.md) adota o Mercado Livre Brasil como marketplace exclusivo desta fase, substituindo a premissa Amazon anterior; o acesso real a anúncios de terceiros do Mercado Livre ainda depende de validação externa.

@@ -1,0 +1,6 @@
+node_modules/
+reports/*
+!reports/.gitkeep
+screenshots/
+*.png
+/editor-map.json

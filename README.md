@@ -48,6 +48,25 @@ O código dispõe de armazenamento cifrado e renovação OAuth da conta operador
 
 Para validação operacional, configure três IDs MLB distintos em `MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID` e `MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID`, usando apenas anúncios de terceiros autorizados para a conta. Mantenha `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`. Com banco local saudável e migrado e tokens da conta operadora provisionados, execute `docker compose run --rm backend python -m app.marketplace.validate_live --confirm-live-requests`; a ferramenta faz três consultas somente de leitura (até seis GETs de item/preço e, quando necessário, uma renovação OAuth) e imprime JSON sem títulos, URLs nem tokens. O relatório usa `passed` somente quando os três cenários correspondem e a renovação OAuth foi observada; usa `requires_manual_action` quando faltam IDs válidos ou credenciais OAuth, um anúncio não corresponde ao cenário ou a renovação ainda precisa ser agendada. Falhas reais de consulta permanecem `failed`, mesmo se outro cenário exigir ação manual. Para confirmar renovação, execute quando a credencial provisionada estiver a até cinco minutos do vencimento. Não provoque 429: use os testes simulados para falha e recuperação e siga a cadência informada oficialmente. A sonda não demonstra cadastro/worker ponta a ponta nem ativa o flag. Registre a saída sanitizada e os limites em [verificação 0026](specs/0026-validacao-operacional-mercado-livre/verification.md). Até obter evidência real e operacional, mantenha a integração desligada.
 
+## Paper Bridge local
+
+A [Paper Bridge](tools/paper-bridge/README.md) da spec 0035 automatiza somente o
+documento `BestPrice Bridge Test` do Paper Desktop no Windows, por Playwright e
+CDP local. A CLI cria/atualiza frames, nomes, dimensões, posição, preenchimento e
+textos usando tokens reais do checkout; também compõe frame com textos, captura
+screenshots e verifica propriedades e parentesco no DOM renderizado. Não usa o MCP
+oficial do Paper e não integra a execução da SPA/API.
+
+Em `tools/paper-bridge/`, rode `npm ci` e `npm run paper -- status`. O guia traz o
+comando para iniciar Paper com depuração restrita a `127.0.0.1:9222`, exemplos e
+limitações. Abra exatamente uma aba do documento de teste, mantenha a janela
+visível e a árvore expandida/inteira visível. `npm test` e `npm run check` são
+offline; `npm run test:live` altera esse documento de teste e exige execução
+exclusiva. A composição integral de telas, importação HTML e responsividade
+automática permanecem pendentes. Consulte a
+[verificação 0035](specs/0035-paper-bridge-local/verification.md) para a execução
+live comprovada e a repetição final que não pôde ser concluída.
+
 ## Verificar
 
 Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`; a verificação visual local roda com `npm run test:visual` e não faz parte do CI. Ela reúne snapshots públicos e cenários de rotas/estados em 320/390/768/1280 px, com axe, overflow, alvos de toque, menu aberto e persistência da marca após transições móveis. O esquema claro/escuro é emulado nos snapshots, mas a aplicação permanece clara. `PLAYWRIGHT_BASE_URL` permite outra porta e `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` seleciona um Chromium já instalado. Resultados e limites estão nas verificações das specs [0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md) (API e integração), [0012](specs/0012-area-usuario-monitoramento/verification.md) (área do usuário), [0021](specs/0021-navegacao-por-rotas/verification.md) (navegação por URL), [0025](specs/0025-harness-design-tooling/verification.md) (design tooling e regressão visual), [0027](specs/0027-redesign-figma-shadcn/verification.md) (redesign, componentes e gráfico) e [0029](specs/0029-identidade-bestprice-consistente/verification.md) (marca compartilhada e diagnóstico da logo móvel).
