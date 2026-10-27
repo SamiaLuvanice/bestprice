@@ -1,6 +1,7 @@
 # Progresso das specs
 
-Spec 0035 `pronta`, implementação entregue para revisão:
+Spec 0035 `pronta`, implementação entregue para revisão no
+[PR #202](https://github.com/SamiaLuvanice/bestprice/pull/202) em rascunho para develop:
 [Issue #201](https://github.com/SamiaLuvanice/bestprice/issues/201),
 branch/worktree `feature/0035-issue-201-paper-bridge-local`, base
 `origin/develop` (`b0e674e`). Paper Bridge local com CLI/API Node por

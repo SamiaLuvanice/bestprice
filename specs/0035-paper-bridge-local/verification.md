@@ -121,6 +121,11 @@ Project. O PR e CI são parte do handoff, não substituem o teste local do Paper
 
 ## Doc-sync-onboarding
 
+Handoff posterior: [PR #202](https://github.com/SamiaLuvanice/bestprice/pull/202)
+aberto em rascunho para develop; implementação em `d0d1749`. Na consulta inicial,
+PR policy e gates Backend/Frontend/Automation estavam em andamento. Nenhum merge
+foi realizado. A worktree permanece disponível para revisão e novas evidências.
+
 Executado após a última alteração de código, gates finais e revisão independente.
 Conferidos os módulos, testes, exemplo, scripts, spec, plano e evidências descritas
 neste relatório. Atualizados README raiz (entrada de execução), arquitetura

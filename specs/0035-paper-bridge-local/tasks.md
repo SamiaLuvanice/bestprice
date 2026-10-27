@@ -9,4 +9,4 @@
 - [x] Executar testes, demonstrações reais, screenshots e relatório de limites.
 - [x] Revisão independente, ajustes e gates finais.
 - [x] Executar doc-sync-onboarding por último; conferir AGENTS.md, CLAUDE.md e docs.
-- [ ] Preparar handoff/PR para develop.
+- [x] Preparar handoff e [PR #202](https://github.com/SamiaLuvanice/bestprice/pull/202) em rascunho para develop; aguarda revisão e CI.
