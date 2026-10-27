@@ -6,4 +6,4 @@
 - [x] Gerar dashboard real e converter CSS/artefatos por viewport.
 - [x] Implementar sync e validação com evidências, mantendo primitives.
 - [x] Executar testes offline/live e revisão documentada do diff.
-- [ ] Executar doc-sync-onboarding ao final e preparar PR para develop.
+- [x] Executar doc-sync-onboarding ao final e preparar PR para develop (#204, em rascunho).
