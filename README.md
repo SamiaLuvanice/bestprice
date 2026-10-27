@@ -1,6 +1,6 @@
 # BestPrice
 
-O [contexto do produto](docs/product-context.md) define a visão de monitoramento automático de preços, tendo o Mercado Livre Brasil como marketplace exclusivo desta fase (a premissa anterior era a Amazon). Esta branch implementa um fluxo inicial para publicações MLB: entrada por URL, histórico, dashboard, alertas e notificações em FastAPI, React e PostgreSQL. A integração real com anúncios de terceiros permanece desabilitada por padrão até validar autorização externa e configurar um token OAuth operacional.
+O BestPrice reúne assistência de compras por conversa, comparação manual de 2–3 produtos e histórico privado de pesquisas por 90 dias, além do monitoramento de publicações do Mercado Livre Brasil. O [contexto do produto](docs/product-context.md) registra essa evolução na spec 0034 e preserva a entrada por URL para monitoramento. A stack é FastAPI, React e PostgreSQL. A IA é opt-in e fica desativada por padrão; a integração real com anúncios de terceiros permanece bloqueada até a validação externa existente.
 
 ## Preparar e executar localmente
 
@@ -12,14 +12,31 @@ Pré-requisitos: Python 3.13, uv, Node.js 22, npm e Docker Compose.
 4. Ainda em `backend/`, crie uma conta com `uv run python -m app.auth.provision EMAIL`; a senha é solicitada sem eco. Inicie a API com `uv run uvicorn app.main:app --reload --port 8000`.
 5. Em `frontend/`, rode `npm ci` e `npm run dev`. Abra <http://localhost:5173/login>. O Vite encaminha `/api` para a API local.
 
-Após entrar, a interface usa `/` (Início), `/produtos`, `/produtos/:id` (detalhe de um monitoramento próprio) e `/alertas`. As telas podem ser abertas por URL, atualizadas e percorridas com voltar/avançar; visitantes retornam à rota protegida solicitada depois do login. No Compose, Nginx entrega `index.html` aos caminhos da SPA e mantém `/api/*` no proxy da API. A verificação das rotas da spec 0021 foi feita localmente; a mesma abertura direta em `stage` ainda depende de promoção e validação naquele ambiente.
+`/` é a landing pública, inclusive com sessão válida. O login leva a `/app/dashboard`, ou retorna à rota protegida solicitada. A área usa `/app/assistant`, `/app/compare` e `/app/history`; conversas e comparações salvas têm o ID no caminho. O monitoramento continua em `/app/monitoring`, com painel em `/app/monitoring/overview` e alertas em `/app/monitoring/alerts`; `/produtos`, `/produtos/:id` e `/alertas` permanecem funcionais. As telas podem ser abertas por URL, recarregadas e percorridas com voltar/avançar. Nginx entrega `index.html` aos caminhos da SPA e mantém `/api/*` no proxy. A revisão 0034 foi verificada localmente, sem promoção ou validação em Stage.
 
 A spec 0027 aplica o redesign aprovado com componentes locais shadcn/ui, Tailwind
 CSS v4 e Recharts/shadcn Chart no detalhe. A landing pública em `/` usa ilustrações
-identificadas e encaminha a entrada para `/login`; a conta mantém os dados e
+identificadas; os CTAs da 0034 levam à área protegida, com login quando necessário. A conta mantém os dados e
 operações da API. O gráfico informa histórico parcial e permite consultar os
 valores exatos. Veja o [guia frontend](docs/apps/frontend.md) para componentes,
 referências visuais e limites.
+
+Para usar a IA, a pessoa operadora precisa configurar `AI_ENABLED=true` e
+`GEMINI_API_KEY` somente no ambiente do backend; o modelo fixado no código é
+`gemini-3.5-flash-lite`. O padrão de `.env.example` é desativado/chave vazia.
+O plano prevê configuração própria em cota gratuita e sem faturamento; o aplicativo
+não audita a cobrança da conta Google. Nenhuma chamada real ou avaliação da
+qualidade do modelo foi feita nesta entrega. Salvar, editar e recuperar comparações
+manuais funciona sem IA. Não há busca de ofertas, scraping ou leitura dos links
+informados. Veja limites locais, privacidade e operação no [guia backend](docs/apps/backend.md#assistência-e-pesquisas-privadas--spec-0034).
+
+As pesquisas expiram 90 dias após a criação, sem extensão por edição. A API as
+torna inacessíveis no vencimento e tenta removê-las fisicamente a cada hora enquanto
+está em execução. Para executar a limpeza manualmente em `backend/`, use
+`uv run python -m app.research.cleanup` com o banco configurado. A exclusão se
+refere ao banco ativo do BestPrice, sem promessa sobre backups ou registros Google.
+Em desenvolvimento isolado, `API_PROXY_TARGET` pode apontar o proxy Vite para outra
+API; o padrão continua `http://localhost:8000`.
 
 Também é possível subir a stack com `docker compose up --build`. Nesse modo, o backend aplica Alembic antes de iniciar; o worker espera o backend ficar saudável. Em worktree Windows, use `./scripts/compose-worktree.ps1 up --build` para isolar portas e volume. `docker compose down` preserva os dados.
 
@@ -34,5 +51,7 @@ Para validação operacional, configure três IDs MLB distintos em `MERCADOLIVRE
 ## Verificar
 
 Em `backend/`: `uv run ruff check .` e `uv run pytest -q`; `TEST_DATABASE_URL` habilita testes contra PostgreSQL isolado. Em `frontend/`: `npm run lint`, `npm test -- --run` e `npm run build`; a verificação visual local roda com `npm run test:visual` e não faz parte do CI. Ela reúne snapshots públicos e cenários de rotas/estados em 320/390/768/1280 px, com axe, overflow, alvos de toque, menu aberto e persistência da marca após transições móveis. O esquema claro/escuro é emulado nos snapshots, mas a aplicação permanece clara. `PLAYWRIGHT_BASE_URL` permite outra porta e `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` seleciona um Chromium já instalado. Resultados e limites estão nas verificações das specs [0013](specs/0013-monitoramento-mercado-livre-brasil/verification.md) (API e integração), [0012](specs/0012-area-usuario-monitoramento/verification.md) (área do usuário), [0021](specs/0021-navegacao-por-rotas/verification.md) (navegação por URL), [0025](specs/0025-harness-design-tooling/verification.md) (design tooling e regressão visual), [0027](specs/0027-redesign-figma-shadcn/verification.md) (redesign, componentes e gráfico) e [0029](specs/0029-identidade-bestprice-consistente/verification.md) (marca compartilhada e diagnóstico da logo móvel).
+
+A [verificação 0034](specs/0034-assistencia-compras-bestprice-ai/verification.md) registra os gates finais, a integração local com PostgreSQL real e os limites de IA ainda pendentes.
 
 A [documentação de onboarding](docs/index.md) detalha arquitetura, esquema, módulos e infraestrutura. O processo de contribuição usa spec, plano, implementação, verificação, PR para `develop` e revisão independente. A spec 0019 define releases no GHCR por tag SemVer no SHA validado em `stage`; o fluxo só fica ativo após integrar a mudança e aplicar as configurações externas descritas em [docs/github-workflow.md](docs/github-workflow.md). A publicação não configura implantação em produção.

@@ -2,6 +2,41 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-27 — Rascunhos privados pertencem à sessão
+
+**Contexto:** na revisão da spec 0034, o rascunho enviado pelo dashboard em
+`history.state` podia reaparecer ao voltar no navegador após trocar de conta.
+Remontar componentes com `key=user.id` não apaga entradas do histórico.
+
+**Princípio:** transporte conteúdo privado transitório em memória vinculada à
+sessão. O histórico pode carregar um identificador opaco, cujo conteúdo deixa de
+existir ao sair. Teste voltar a uma entrada antiga após logout/login, inclusive
+quando a mesma conta entra novamente.
+
+**Anti-pattern:** guardar texto privado em URL, `history.state` ou armazenamento
+persistente e presumir que limpar o estado React invalida todas essas cópias.
+
+**Referências:** [Issue #195](https://github.com/SamiaLuvanice/bestprice/issues/195),
+[RF01](../specs/0034-assistencia-compras-bestprice-ai/review-frontend.md),
+`frontend/src/features/research/ResearchArea.tsx`.
+
+## 2026-10-27 — Reservar e capturar o contexto na mesma transação
+
+**Contexto:** um envio podia ler o histórico, esperar outra mensagem concluir e
+então reservar sua geração usando o contexto antigo. O teste PostgreSQL reproduziu
+essa ordem com eventos antes da correção.
+
+**Princípio:** capture os valores que sustentam uma operação sob a mesma exclusão
+que autoriza sua reserva. Copie os dados necessários e conclua a transação antes
+da chamada externa. Ao salvar a resposta, confira novamente propriedade,
+existência, expiração e versão.
+
+**Anti-pattern:** ler antes da trava e tratar o snapshot como atual depois dela,
+ou manter a transação aberta durante uma geração de IA.
+
+**Referências:** [RB01](../specs/0034-assistencia-compras-bestprice-ai/review-backend.md),
+`backend/app/research/service.py`, `backend/tests/test_research_integration.py`.
+
 ## 2026-10-23 — Restringir sondas manuais com secrets de ambiente
 
 **Contexto:** o Render Free não oferece Shell nem One-off Jobs para a sonda

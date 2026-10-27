@@ -26,7 +26,7 @@ export async function renderArea(dashboard: unknown, route: Route = () => undefi
   await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
   if (initialPath === '/produtos') {
     await waitFor(() => expect(screen.getByRole('region', { name: 'Seus produtos' })).toHaveAttribute('aria-busy', 'false'))
-  } else if (initialPath === '/') {
+  } else if (initialPath === '/app/monitoring/overview') {
     await waitFor(() => expect(screen.queryByText('Carregando seu painel…')).not.toBeInTheDocument())
   }
   return { user, mockFetch }

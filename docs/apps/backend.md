@@ -2,7 +2,7 @@
 
 ## Implementação atual nesta branch
 
-O FastAPI mantém `GET /api/health` e acrescenta sessão BestPrice, monitoramentos MLB, histórico, dashboard, alertas e notificações. `backend/app/main.py` registra os roteadores e um formato de erro com `error.code` e `error.message`. SQLAlchemy acessa PostgreSQL pelo `backend/app/db.py`; Alembic mantém o esquema em `backend/alembic/`.
+O FastAPI mantém `GET /api/health` e acrescenta sessão BestPrice, monitoramentos MLB, histórico, dashboard, alertas, notificações e pesquisas privadas de assistência de compras. `backend/app/main.py` registra os roteadores e um formato de erro com `error.code` e `error.message`. SQLAlchemy acessa PostgreSQL pelo `backend/app/db.py`; Alembic mantém o esquema em `backend/alembic/`.
 
 O engine de domínio (`create_database_engine`, cacheado) reaproveita conexões e as mantém utilizáveis sem intervenção: revalida a conexão ao retirá-la (`pool_pre_ping`), descarta a que passou de `pool_recycle=300 s` desde a abertura, reutiliza primeiro as mais recentes (`pool_use_lifo`), limita a espera por uma conexão do conjunto em `pool_timeout=10 s` e a abertura de conexão nova em `connect_timeout=5 s`. Os valores ficam como constantes em `backend/app/db.py`. O health e o Alembic usam conexões próprias (não o conjunto de domínio) e não seguem esses limites. Detalhes e limites em [verification da spec 0022](../../specs/0022-conexao-resiliente-ao-banco/verification.md).
 
@@ -42,6 +42,87 @@ Listagens de monitoramentos, histórico e notificações devolvem `{items, next_
 `MONITOR_CHECK_INTERVAL_SECONDS` determina a próxima consulta após sucesso (padrão 3600); `MONITOR_FRESHNESS_SECONDS` define por quanto tempo um preço pode ser reutilizado, quando a resposta marca `stale` e se um alerta pode avaliar o preço (padrão 3600). Um preço fora dessa janela deixa a condição do alerta como `unknown` e não gera notificação até uma observação válida. `MONITOR_BATCH_LIMIT` limita publicações por ciclo (padrão 20), `MONITOR_MAX_CONCURRENCY` limita tentativas paralelas (padrão 1) e `MONITOR_POLL_INTERVAL_SECONDS` controla a pausa (padrão 60). Os valores são inteiros validados; ajuste-os depois de confirmar os limites reais da integração autorizada.
 
 Ao avaliar um preço válido, o backend trava e recarrega as linhas de `price_alerts` em ordem de chave primária antes de verificar se aquele episódio já foi notificado; as rotas de alerta avaliam apenas o alerta que já travaram, evitando deadlock com a atualização compartilhada. A edição do alvo também trava a linha antes de ler a revisão e incrementá-la. Criação, edição e exclusão de alerta, além da interrupção do monitoramento, travam e recarregam o vínculo antes da decisão local. Se a edição habilitar o alerta primeiro, a interrupção seguinte desabilita o alerta junto com o vínculo. Se a interrupção obtiver a trava primeiro, a tentativa posterior de habilitar o alerta retorna `tracking_inactive`. Avaliações simultâneas do mesmo alerta produzem uma notificação por episódio, edições simultâneas preservam as revisões sucessivas e cadastros simultâneos do mesmo alerta deixam um registro e uma notificação; a segunda tentativa retorna `alert_already_exists`. A unicidade de `(alert_id, revision, episode)` em `notifications` continua como proteção no banco. Quatro testes com duas sessões PostgreSQL cobrem essas corridas; demais transições concorrentes e processos distintos ainda precisam de verificação.
+
+## Assistência e pesquisas privadas — spec 0034
+
+`backend/app/research/` reúne rotas, schemas, serviço, repositório, serialização,
+modelos, configuração, adapter Google e limpeza. Todas as rotas abaixo exigem a
+sessão existente, usam UUID e datas UTC e nunca aceitam `user_id` do cliente.
+Recurso alheio, excluído ou expirado retorna 404 `research_not_found`.
+
+| Método e rota | Comportamento |
+|---|---|
+| `GET /api/ai/capabilities` | Disponibilidade, provider/modelo e limites públicos; sem chave |
+| `POST /api/ai/chat` | `{conversation_id,request_id,message}`; devolve o par user/assistant e cria conversa somente no primeiro sucesso |
+| `GET/DELETE /api/ai/conversations/{id}` | Recuperar conversa própria ou excluir com mensagens e conteúdo dos snapshots |
+| `POST /api/comparisons` | Salvar título, uso e 2–3 produtos manuais; 201, sem depender da IA |
+| `GET/PUT/DELETE /api/comparisons/{id}` | Ler, editar com `version` ou excluir; edição incrementa versão e limpa análise |
+| `POST /api/comparisons/{id}/analyze` | `{request_id,version}`; análise identificada como IA para a versão salva |
+| `GET /api/research` | `kind=all\|conversation\|comparison`, `q` até 100 caracteres, `offset>=0`, `limit` 1–50 (20); `{items,next_offset}` |
+
+Pesquisa aplica filtro por título sem diferenciar caixa antes da paginação e ordena
+por atualização decrescente, tipo e ID. Dashboard solicita seis registros;
+histórico usa 20. Paginação por offset não garante snapshot entre alterações.
+Produtos manuais têm nome, detalhes, preço decimal string ou null, moeda BRL e URL
+opcional; URLs são apenas referência, nunca requisitadas. Preço original é
+`NUMERIC(18,2)`/`Decimal` em tabela filha. Veja [banco](../database.md).
+
+`AI_ENABLED=false` e `GEMINI_API_KEY` vazia são os padrões. Só `AI_ENABLED=true`
+com chave não vazia libera geração; ambas pertencem ao backend. O modelo fixo é
+`gemini-3.5-flash-lite`, via `generateContent` no host Google fixo, sem redirect ou
+retry automático. O plano prevê cota gratuita sem faturamento e sem fallback pago;
+a aplicação não verifica billing da conta operadora. Nenhuma chave ou chamada
+real foi usada na QA; disponibilidade e qualidade do modelo em português seguem
+pendentes, incluindo AC10/AC15/AC19 da spec.
+
+| Limite local inicial | Valor |
+|---|---|
+| Mensagem / título | 2.000 / 100 caracteres |
+| Contexto recente / resposta | 16.000 caracteres / 1.024 tokens e 8.000 caracteres |
+| Por pessoa | 20 tentativas por dia UTC e 3 por minuto |
+| Por aplicação | 60 tentativas por dia UTC e 5 por minuto |
+| Timeout HTTP Google | 25 segundos |
+| Idempotência / tentativa pendente | Replay por até 24 horas / prazo de 90 segundos |
+
+Contadores são persistidos e independentes da pesquisa. Tentativas reservadas
+contam inclusive em falha do provider; exclusão/expiração não restitui consumo.
+Trava advisory transacional curta serializa reserva e cotas no PostgreSQL. O
+contexto é capturado sob trava do recurso antes de liberar a transação; nenhuma
+transação permanece aberta na geração HTTP. Conclusão revalida propriedade,
+expiração, exclusão e versão para não gravar resultado obsoleto.
+
+`(user_id,request_id)` e fingerprint tornam reenvio do mesmo payload idempotente:
+resultado concluído é repetido sem geração/cota extra; payload diferente causa
+409 `research_conflict`, tentativa ativa causa 409 `request_in_progress`. Replay
+sempre revalida o recurso antes do snapshot. A tentativa sem conclusão após 90 s
+vira falha recuperável, sem regeneração automática; não há garantia de exatamente
+uma chamada Google diante de timeout ambíguo. Primeira geração com falha não
+persiste conversa vazia; numa conversa existente, o par só é salvo atomicamente no
+sucesso. Falha conhecida usa um novo request ID na nova tentativa explícita.
+
+Erros mantêm o envelope `ApiError`: 422 `validation_error`, 503
+`research_unavailable` para persistência, 503 `ai_unavailable`, 504 `ai_timeout`,
+502 `ai_invalid_response` e 429 `ai_rate_limited` com `Retry-After`. Não expõem SQL,
+credenciais ou resposta bruta do provider. O adapter só aceita texto não vazio,
+limitado e com conclusão STOP. O prompt orienta reconhecer lacunas, sem inventar
+preço, estoque, especificações ou ofertas; isso não comprova qualidade factual.
+
+A UI informa antes do envio que Google processa o texto e pode usá-lo na modalidade
+gratuita, e orienta não incluir dados pessoais/confidenciais. O backend não adiciona
+email, cookie, ID de usuário ou segredo ao contexto. Texto livre pode conter o que
+a pessoa digitar; não há garantia de sanitização de todos os dados pessoais.
+Pesquisas expiram 90 dias após criação, sem prorrogação. O lifespan da API agenda
+limpeza a cada 3.600 s em thread, sem bloquear health/startup; durante indisponibilidade
+a remoção pode atrasar, mas o acesso já é negado. O comando manual em `backend/` é
+`uv run python -m app.research.cleanup`. Exclusão se limita ao banco ativo, sem
+promessa sobre backups ou registros do fornecedor.
+
+A [verificação 0034](../../specs/0034-assistencia-compras-bestprice-ai/verification.md)
+registra 239 testes aprovados, dois skips POSIX no Windows e um warning; 46 focados
+com HTTP, transporte simulado, PostgreSQL e RLS. Ruff passou; o módulo novo tem
+64 blocos com média A/2,34 e máximo B/10. O gate global respeitou a baseline e as
+dívidas legadas permaneceram idênticas à base. Esses resultados foram fornecidos
+pelos gates/revisão anteriores ao doc-sync; não comprovam CI ou deploy.
 
 ## Verificação e limites
 

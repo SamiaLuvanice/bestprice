@@ -4,7 +4,7 @@
 
 `20261014_enable_public_rls.py` (revisão `20261014rls`) habilita Row Level Security em `alembic_version`, `products`, `users`, `price_history`, `product_events`, `tracked_products`, `user_sessions`, `notifications`, `price_alerts` e `operator_credentials`, sem criar políticas de acesso direto para `anon` ou `authenticated`. A API FastAPI usa a conexão PostgreSQL do proprietário das tabelas. O downgrade exige procedimento manual de segurança, pois desabilitar RLS reabriria tabelas que já têm permissões concedidas no Supabase. A proteção foi aplicada diretamente no Supabase `bestprice-stage` em 14/10/2026 com aprovação do responsável e depois reproduzida no deploy #69: log Alembic `20261009safe -> 20261014rls`, head confirmado, 10/10 tabelas com RLS ativo, nenhuma política em `public` e health público 200.
 
-As migrations em `backend/alembic/versions/` criam o esquema SQLAlchemy definido em `backend/app/products/models.py`; `20261009_operator_credentials.py` e `20261009_oauth_refresh_safety.py` acrescentam as credenciais da conta operadora e o controle de renovação. O head do código e de stage é `20261014rls`. Aplique em `backend/` com `uv run alembic upgrade head` após configurar `DATABASE_URL` ou `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e, opcionalmente, `DB_PORT`. O Compose aplica as migrations antes de iniciar Uvicorn. O volume `db-data` persiste entre subidas; não remova volumes para aplicar migrations.
+As migrations em `backend/alembic/versions/` criam o esquema SQLAlchemy definido em `backend/app/products/models.py` e `backend/app/research/models.py`; `20261009_operator_credentials.py` e `20261009_oauth_refresh_safety.py` acrescentam as credenciais da conta operadora e o controle de renovação. A migration `20261026_research.py` acrescenta as pesquisas da spec 0034 após `20261014rls`; o head do código passa a `20261026research`. O head Stage citado na evidência anterior é `20261014rls`; a nova revisão não foi implantada nesta tarefa. Aplique em `backend/` com `uv run alembic upgrade head` após configurar `DATABASE_URL` ou `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` e, opcionalmente, `DB_PORT`. O Compose aplica as migrations antes de iniciar Uvicorn. O volume `db-data` persiste entre subidas; não remova volumes para aplicar migrations.
 
 | Tabela | Conteúdo e relação principal |
 |---|---|
@@ -17,6 +17,35 @@ As migrations em `backend/alembic/versions/` criam o esquema SQLAlchemy definido
 | `product_events` | Alterações observadas por publicação |
 | `price_alerts` | Um alerta por vínculo, alvo, estado, revisão e episódio |
 | `notifications` | Ocorrência por usuário e alerta; combinação `alert_id, revision, episode` única |
+
+A migration nova cria seis tabelas e habilita RLS em todas, sem políticas para
+`anon`/`authenticated`; a API mantém autorização por proprietário e expiração.
+O banco descartável migrado do zero confirmou `NUMERIC(18,2)` e seis flags RLS
+ativas. Isso não demonstra aplicação dessa migration em Stage.
+
+| Tabela research | Conteúdo e relação principal |
+|---|---|
+| `research_conversations` | Conversa privada por usuário; título, criação, atualização e expiração |
+| `research_messages` | Mensagem textual user/assistant; FK com cascata e posição única por conversa |
+| `research_comparisons` | Comparação privada, uso declarado, versão e análise JSON nullable |
+| `research_comparison_products` | Dados originais ordenados; PK `(comparison_id, position)`, posições 0–2, FK com cascata; preço `NUMERIC(18,2)` nullable e positivo quando informado |
+| `research_ai_requests` | Unicidade `(user_id, request_id)`, fingerprint, estado e snapshot/erro; target sem FK para conservar tombstone sem conteúdo após exclusão |
+| `research_ai_usage` | Contadores persistidos independentes da pesquisa, por pessoa/aplicação e janela UTC, sem prompt ou resposta |
+
+`ComparisonProduct.price` usa `Decimal` criado da string validada; o REST representa
+o valor com duas casas ou null. Preço ausente não vira zero. A análise e snapshots
+REST são JSON, sem substituir a coluna monetária original. Edição substitui os
+filhos na mesma transação, incrementa versão e invalida a análise, preservando a
+expiração. Os modelos não criam `Product`/`TrackedProduct` de monitoramento.
+
+Conversas e comparações expiram após 90 dias desde a criação, sem renovação por
+edição. Leituras sempre exigem `expires_at > now`; exclusão manual remove filhos e
+conteúdo dos snapshots imediatamente do banco ativo. Tombstones de tentativas
+persistem sem conteúdo para impedir ressurreição por replay; a janela de replay é
+24 h. Limpeza horária remove pesquisas vencidas, tentativas com mais de 24 h e
+contadores cuja janela venceu há pelo menos dois dias. Excluir uma pesquisa não
+restitui cota. O CLI `uv run python -m app.research.cleanup`, em `backend/`, usa a
+mesma limpeza; backups e registros Google não fazem parte dessa garantia.
 
 Valores monetários persistem como `NUMERIC(18,2)`; o cliente Mercado Livre já entrega o preço arredondado a centavos (`ROUND_HALF_UP`), então o valor comparado é o mesmo persistido. Instantes usam colunas com fuso; `backend/app/db.py` executa `SET TIME ZONE 'UTC'` em cada nova conexão SQLAlchemy (em autocommit, para sobreviver a rollbacks), e a API serializa os instantes com `Z` independentemente do fuso padrão do servidor. Há índices para próxima consulta, vínculos ativos por usuário, histórico e eventos por publicação e notificações por usuário. Os detalhes de colunas e constraints estão nos modelos e na migration. Histórico e publicação são compartilhados; vínculo, alerta, sessão e notificação têm escopo individual.
 

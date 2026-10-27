@@ -60,6 +60,37 @@ As variáveis da aplicação estão tabeladas em [architecture.md](../architectu
 
 O isolamento de projeto cria nomes e volumes distintos por worktree. As portas ainda podem conflitar com outro processo. O script não cria senhas próprias: Compose continua exigindo `POSTGRES_PASSWORD` em `.env` ou no ambiente.
 
+## Operação local da assistência — spec 0034
+
+Compose repassa `AI_ENABLED` (padrão `false`) e `GEMINI_API_KEY` (padrão vazio)
+apenas ao backend. A chave não vai para o bundle da SPA. A configuração opt-in
+não provisiona conta, faturamento ou segredo remoto, nem ativa monitoramento MLB.
+O modelo e as cotas locais estão no [guia backend](backend.md#assistência-e-pesquisas-privadas--spec-0034).
+A gratuidade depende da configuração Google da pessoa operadora; o app não audita
+billing e a validação externa permanece pendente.
+
+`frontend/nginx.conf` permite `proxy_read_timeout 35s` somente para
+`/api/ai/chat` e `/api/comparisons/{id}/analyze`, acima dos 25 s do adapter Google.
+O restante de `/api/` mantém 5 s de leitura; conexão usa 2 s e envio 5 s em ambos.
+O proxy de desenvolvimento Vite aceita `API_PROXY_TARGET`, com padrão
+`http://localhost:8000`, para uma API isolada da worktree. Essa variável não
+configura a Pages Function nem representa verificação do proxy Stage.
+
+A migration local passa a `20261026research` e deve ser aplicada antes de servir
+a revisão 0034. As seis tabelas research recebem RLS; o head conhecido de Stage
+na evidência histórica abaixo continua separado da nova revisão. O lifespan da
+API agenda limpeza física horária de pesquisas; não é tarefa do worker de MLB.
+Com a API parada, não há limpeza periódica, mas leituras negam registros vencidos
+assim que o serviço retorna. Para executar manualmente:
+`docker compose run --rm backend python -m app.research.cleanup` ou, em
+`backend/` com o banco configurado, `uv run python -m app.research.cleanup`.
+
+SPA, API e PostgreSQL foram exercitados localmente com o schema final; apenas a
+fronteira de geração externa usou fixture e o adapter Google foi bloqueado para
+rede real. Não houve chave, custo, alteração de Stage ou promoção nesta tarefa.
+As rotas `/app/*` e os aliases anteriores dependem do mesmo fallback SPA; os
+testes locais não comprovam abertura direta dessa revisão no deploy público.
+
 ## Sonda oficial do Mercado Livre no GitHub Actions
 
 O Render Free não disponibiliza Shell nem One-off Jobs. Após o workflow ser

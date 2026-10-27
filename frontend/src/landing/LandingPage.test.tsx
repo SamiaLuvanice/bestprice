@@ -19,25 +19,25 @@ function visit(path: string) {
 it('mostra a landing pública e permite entrar no login existente', async () => {
   document.title = 'BestPrice'
   visit('/')
-  expect(await screen.findByRole('heading', { name: /O preço muda.*Você fica sabendo/i, level: 1 })).toBeInTheDocument()
-  expect(document.title).toContain('Acompanhe preços')
+  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/i, level: 1 })).toBeInTheDocument()
+  expect(document.title).toContain('Compre com mais clareza')
   expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'Clareza para decidir na hora certa.' })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'O que muda entre as opções?' })).toBeInTheDocument()
   expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-  await userEvent.setup().click(within(screen.getByRole('banner').querySelector('.landing-header__actions')!).getByRole('link', { name: 'Entrar' }))
+  await userEvent.setup().click(within(screen.getByRole('banner')).getByRole('link', { name: 'Entrar' }))
   expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
   expect(window.location.pathname).toBe('/login')
   expect(document.title).toBe('Entrar · BestPrice')
 })
 
-it('substitui a landing pelo painel com título próprio quando a sessão é válida', async () => {
+it('preserva a landing pública mesmo quando a sessão é válida', async () => {
   document.title = 'BestPrice'
   fakeApi((url) => url === '/api/auth/me' ? reply(200, { id: 'user-1', email: 'pessoa@example.com' }) : undefined)
   window.history.replaceState({}, '', '/')
   render(<App />)
-  expect(await screen.findByRole('heading', { name: /Seu painel de preços/i, level: 1 })).toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: /O preço muda.*Você fica sabendo/i })).not.toBeInTheDocument()
-  await waitFor(() => expect(document.title).toBe('Início · BestPrice'))
+  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/i, level: 1 })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: /Seu painel de preços/i })).not.toBeInTheDocument()
+  await waitFor(() => expect(document.title).toContain('Compre com mais clareza'))
 })
 
 it('mostra a entrada pública mesmo enquanto a consulta de sessão está pendente ou falha', async () => {
@@ -45,15 +45,15 @@ it('mostra a entrada pública mesmo enquanto a consulta de sessão está pendent
   fakeApi((url) => url === '/api/auth/me' ? session.promise : undefined)
   window.history.replaceState({}, '', '/')
   render(<App />)
-  expect(screen.getByRole('heading', { name: /O preço muda.*Você fica sabendo/i })).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: /Compre com.*mais clareza/i })).toBeInTheDocument()
   session.reject(new TypeError('Failed to fetch'))
-  expect(await screen.findByRole('heading', { name: /O preço muda.*Você fica sabendo/i })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/i })).toBeInTheDocument()
 })
 
 it('encaminha o CTA principal ao login sem prometer cadastro disponível', async () => {
   visit('/')
-  const hero = await screen.findByRole('region', { name: /O preço muda.*Você fica sabendo/i })
-  await userEvent.setup().click(within(hero).getByRole('link', { name: 'Entrar e monitorar' }))
+  const hero = await screen.findByRole('region', { name: /Compre com.*mais clareza/i })
+  await userEvent.setup().click(within(hero).getByRole('link', { name: 'Começar com IA' }))
   expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
   expect(window.location.pathname).toBe('/login')
 })
@@ -83,6 +83,6 @@ it('recolhe o menu quando o foco sai do cabeçalho', async () => {
   visit('/')
   const user = userEvent.setup()
   await user.click(await screen.findByRole('button', { name: 'Abrir menu' }))
-  within(screen.getByRole('region', { name: /O preço muda.*Você fica sabendo/i })).getByRole('link', { name: 'Entrar e monitorar' }).focus()
+  within(screen.getByRole('region', { name: /Compre com.*mais clareza/i })).getByRole('link', { name: 'Começar com IA' }).focus()
   await waitFor(() => expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false'))
 })

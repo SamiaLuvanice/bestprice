@@ -64,7 +64,7 @@ it('recupera falha de rede na verificação sem concluir logout', async () => {
 
 it('não mostra dados protegidos após 401 da área autenticada', async () => {
   fakeApi((url) => url === '/api/dashboard' ? reply(401, apiError('unauthenticated', 'Sua sessão expirou. Entre novamente.')) : undefined)
-  visit('/')
+  visit('/app/monitoring/overview')
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
   expect(screen.queryByText('pessoa@example.com')).not.toBeInTheDocument()
@@ -116,7 +116,7 @@ it.each([
   ['instante inválido', { ...validPriceEvent, observed_at: null }],
 ])('rejeita resposta de dashboard com evento fora do contrato: %s', async (_case, event) => {
   fakeApi(() => undefined, dashboardFixture({ recentUpdates: [event] }))
-  visit('/')
+  visit('/app/monitoring/overview')
   expect(await screen.findByText('A API respondeu com dados inválidos.')).toBeInTheDocument()
 })
 
@@ -125,7 +125,7 @@ it('aceita evento de disponibilidade sem moeda e mostra a atualização recente'
     ...validPriceEvent, type: 'availability_changed', previous_value: 'unavailable',
     current_value: 'available', currency: null,
   }] }))
-  visit('/')
+  visit('/app/monitoring/overview')
   await waitFor(() => expect(screen.getByRole('region', { name: 'Atualizações recentes' }))
     .toHaveTextContent('Fone sem fio voltou a ficar disponível.'))
   expect(screen.queryByText('A API respondeu com dados inválidos.')).not.toBeInTheDocument()
@@ -134,7 +134,7 @@ it('aceita evento de disponibilidade sem moeda e mostra a atualização recente'
 it('mostra falha da integração no formulário sem afirmar sucesso', async () => {
   fakeApi((url, init) => url === '/api/tracked-products' && init?.method === 'POST'
     ? reply(503, apiError('integration_not_configured', 'Integração indisponível no momento.')) : undefined)
-  visit('/')
+  visit('/app/monitoring/overview')
   await screen.findByRole('heading', { name: 'Seu painel de preços' })
   fireEvent.change(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...'), {
     target: { value: 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM' },
@@ -164,7 +164,7 @@ it('mostra envio ocupado sem reenviar, preserva campos após 401 e entra na tent
   fillLogin('pessoa@example.com', 'certa')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   expect(await screen.findByText('pessoa@example.com')).toBeInTheDocument()
-  expect(window.location.pathname).toBe('/')
+  expect(window.location.pathname).toBe('/app/dashboard')
 })
 
 it('limpa alerta do servidor se novo envio falha na validação', async () => {
