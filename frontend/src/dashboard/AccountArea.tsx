@@ -63,8 +63,10 @@ type Props = {
 export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Props) {
   const location = useLocation()
   const navigateTo = useNavigate()
-  const detailId = location.pathname.startsWith('/produtos/') ? location.pathname.slice('/produtos/'.length) : null
-  const currentSection: SectionKey = location.pathname === '/alertas' ? 'alerts' : location.pathname.startsWith('/produtos') ? 'products' : 'home'
+  const canonicalPath = location.pathname === '/app/monitoring/overview' ? '/' : location.pathname === '/app/monitoring/alerts' ? '/alertas'
+    : location.pathname.replace(/^\/app\/monitoring(?=\/|$)/, '/produtos')
+  const detailId = canonicalPath.startsWith('/produtos/') ? canonicalPath.slice('/produtos/'.length) : null
+  const currentSection: SectionKey = canonicalPath === '/alertas' ? 'alerts' : canonicalPath.startsWith('/produtos') ? 'products' : 'home'
   const [list, dispatchList] = useReducer(trackedListReducer, initialTrackedList)
   const mounted = useRef(true)
   useEffect(() => {

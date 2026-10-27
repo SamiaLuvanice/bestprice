@@ -40,6 +40,8 @@ services:
     environment:
       <<: *backend-env
       APP_ENV: ${APP_ENV:-development}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       db:
         condition: service_healthy

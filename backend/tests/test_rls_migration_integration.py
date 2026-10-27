@@ -19,6 +19,12 @@ PUBLIC_TABLES = {
     "notifications",
     "price_alerts",
     "operator_credentials",
+    "research_conversations",
+    "research_messages",
+    "research_comparisons",
+    "research_comparison_products",
+    "research_ai_requests",
+    "research_ai_usage",
 }
 
 

@@ -1,5 +1,29 @@
 # Progresso das specs
 
+Spec 0034 `pronta`, implementação local revisada: [Issue #195](https://github.com/SamiaLuvanice/bestprice/issues/195),
+branch/worktree `feature/0034-issue-195-assistencia-compras-ai`, base `origin/develop`
+(`de31eb7`). Direção A aprovada; assistência, comparação manual de 2–3 produtos e
+histórico privado, com monitoramento preservado e gate MLB desligado. Retenção local
+de 90 dias; IA opt-in, modelo fixado e desativado por padrão. Backend final:
+**239 passed, 2 skipped POSIX no Windows, 1 warning** (82,39 s); **46 focados**
+HTTP/provider simulado/PostgreSQL/RLS. Ruff verde; módulo novo 64 blocos, média
+A/2,34, máximo B/10; gate global passou com dívidas legadas idênticas à base.
+Frontend: **366/366** suíte completa e **18/18** afetados finais, lint/build
+aprovados (2.658 módulos). Revisão independente aprovou RB01/RB02 e RF01–RF06
+após correções; QA aprovada. SPA/API/PostgreSQL reais no schema final passaram
+**4/4 jornadas**, **6/6 erros** e **38/38 matriz** em quatro larguras/oito rotas;
+somente a geração externa foi fixture, com rede Google bloqueada. SQL confirmou
+NUMERIC(18,2) e RLS nas seis tabelas novas. Health real 200→503→200 no banco
+descartável. Rodada visual ampla anterior: 129/132 antes da correção da marca;
+8/8 afetados depois, oito baselines landing revisados/atualizados e confirmação
+8/8 sem update; baselines login/404 preservados. Doc-sync final concluído em
+27/10/2026, com AGENTS.md/CLAUDE.md conferidos. Commit/hooks, PR e CI ainda são
+etapas do handoff. AC10/AC15/AC19 dependem de configuração gratuita e avaliação
+real do modelo, sem chave/custo/chamada nesta etapa; AC30 aguarda o handoff.
+Sem merge, deploy ou alegação de atualização do Project. Ver [plano](../specs/0034-assistencia-compras-bestprice-ai/plan.md),
+[verificação](../specs/0034-assistencia-compras-bestprice-ai/verification.md) e
+[doc-sync](../specs/0034-assistencia-compras-bestprice-ai/doc-sync.md).
+
 Spec 0030 `implementada`: [PR #175](https://github.com/SamiaLuvanice/bestprice/pull/175)
 integrada em `develop` em 22/10/2026 às 19:37:03 UTC, merge `5219077`, contendo
 HEAD `d9f010e`; Issue #174 fechada. Checks remotos verdes (CI, Frontend,

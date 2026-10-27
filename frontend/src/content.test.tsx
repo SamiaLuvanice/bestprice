@@ -49,7 +49,7 @@ describe('conteúdo da interface', () => {
 
   it('não mostra nenhum produto, preço ou evento quando a API devolve lista vazia', async () => {
     fakeApi(() => undefined, emptyDashboard)
-    window.history.replaceState(null, '', '/')
+    window.history.replaceState(null, '', '/app/monitoring/overview')
     const user = userEvent.setup()
     render(<App />)
     await screen.findByText('Você ainda não está acompanhando nenhum produto.')

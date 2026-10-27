@@ -7,7 +7,7 @@ import { Brand } from '../components/Brand'
 export type SectionKey = 'home' | 'products' | 'alerts'
 
 const items: { key: SectionKey; href: string; label: string; icon: ReactNode }[] = [
-  { key: 'home', href: '/', label: 'Início', icon: <HomeIcon /> },
+  { key: 'home', href: '/app/monitoring/overview', label: 'Início', icon: <HomeIcon /> },
   { key: 'products', href: '/produtos', label: 'Produtos', icon: <BoxIcon /> },
   { key: 'alerts', href: '/alertas', label: 'Alertas', icon: <BellIcon /> },
 ]

@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, pool
 from alembic import context
 from app.db import Base, database_url
 from app.products import models  # noqa: F401
+from app.research import models as research_models  # noqa: F401
 
 config = context.config
 if config.config_file_name:

@@ -79,8 +79,8 @@ registra 350 testes Vitest e a rodada anterior de 128 casos Playwright em 320,
 sem atualizar baselines na confirmação. Os testes usam API simulada e não comprovam integração Mercado Livre real,
 dispositivo físico, leitor de tela manual ou outros motores de navegador.
 
-O catálogo e as ilustrações públicas contêm dados demonstrativos identificados
-como exemplo. Produtos, preços e métricas da conta continuam vindo apenas da API.
+As prévias históricas de monitoramento contêm dados demonstrativos identificados
+como exemplo; a landing atual da 0034 não apresenta catálogo de ofertas. Produtos, preços e métricas da conta continuam vindo apenas da API.
 A composição da 0027 usa conteúdo de até 1248 px, oportunidades em linhas e
 navegação inferior da conta até 700 px. Os quatro indicadores existentes foram
 preservados; desde a 0028 o Início sem produtos mostra só o convite do campo de
@@ -146,44 +146,30 @@ A composição atual e seus estados em 320, 768 e 1280 px estão na
 A consistência da marca em 320, 390, 768 e 1280 px está na
 [verificação da 0029](../../specs/0029-identidade-bestprice-consistente/verification.md).
 
-## Landing pública — specs 0024 e 0027
+## Landing pública — spec 0034
 
-Em `/`, enquanto a sessão está pendente, depois de um 401 ou se a consulta de
-sessão falhar, `App.tsx` mostra `LandingPage`. Com sessão válida, a mesma URL mostra
-o painel. A landing é estática: não busca anúncios, preços, categorias ou métricas
-na API. A 0027 substitui a composição da 0024 pelo redesign aprovado: hero “O preço
-muda. Você fica sabendo.”, três passos, prévia ilustrativa do acompanhamento,
-seção de alertas, banner final e rodapé. Todos os CTAs de entrada levam a `/login`;
-nenhum deles promete cadastro público. Os sete cartões de categoria e o aviso
-local de cadastro pertencem à composição anterior.
+`/` apresenta `LandingPage` em qualquer estado de sessão, inclusive autenticada.
+A composição atual comunica assistência de compras: hero “Compre com mais
+clareza.”, conversa por necessidade, comparação manual e continuidade por 90 dias.
+A landing é estática e não consulta ofertas ou métricas pessoais. “Começar com IA”
+aponta para `/app/assistant`, “Abrir comparador” para `/app/compare` e o acesso ao
+monitoramento para `/app/monitoring`; o guard encaminha visitantes ao login com
+retorno seguro. Não há cadastro público ou recuperação simulados.
 
-As artes fornecidas e as prévias ficam em `frontend/src/assets/redesign/`, todas em
-WebP desde a 0028: `hero-person.webp`, `footer-phone.webp`, `login-left.webp`,
-`price-preview.webp` e `dashboard-preview.webp` (as prévias eram SVG e foram
-rasterizadas para deixar as capturas determinísticas). Nenhuma passa de 300 KB; o
-hero tem `fetchPriority="high"` e dimensões declaradas (1120 × 682). A pasta
-`assets/landing/` e `assets/imagem-lateral.png`, sem uso, foram removidas. As prévias de preço e painel são identificadas como
-exemplos, sem representar ofertas reais ou dados da pessoa. Textos, links e
-controles da página são elementos React; as prévias são apenas ilustrações.
-Na hero, a arte da pessoa usa cantos de 18 px, em harmonia com o banner e as
-outras superfícies arredondadas da landing; a prévia de preço sobreposta mantém
-seu próprio raio.
+A marca usa `Brand` com complemento visual AI e um nome acessível completo no link.
+A imagem `assets/redesign/hero-person.webp` é ilustrativa. As prévias de preço/painel
+e o banner da composição 0027 não são respostas de IA nem fazem parte da landing
+atual. O cabeçalho tem âncoras `#como-funciona` e `#comparar`, botão móvel com
+`aria-expanded`, fechamento por Escape e saída de foco. O link para pular ao
+conteúdo, foco visível e redução de movimento permanecem.
 
-Na correção de revisão da 0030, o banner final preserva a proporção natural da
-arte de 1600 × 548 px, com altura automática e sem `cover` ou recorte adicional.
-O limite inferior já presente no arquivo original permanece. No desktop, o texto
-ocupa a área livre à esquerda; até 959 px, texto e arte se empilham. O rodapé
-ocupa toda a largura com `--color-footer-bg: #000`, texto branco e link verde,
-mantendo o conteúdo alinhado ao contêiner comum.
-
-O cabeçalho leva às âncoras `#inicio`, `#como-funciona`, `#funcionalidades` e
-`#alertas`. O menu estreito usa botão com `aria-expanded`; a página mantém link
-para pular ao conteúdo, foco nos controles e movimento reduzido. Desde a 0030,
-Escape fecha o menu aberto e devolve o foco ao gatilho; sair com o foco da região
-do cabeçalho também o recolhe, preservando a continuidade da navegação. A ação principal
-usa verde com texto preto. A [verificação da 0024](../../specs/0024-landing-page-publica/verification.md)
-conserva a evidência histórica; os baselines atuais estão na
-[verificação da 0030](../../specs/0030-experiencia-visual-consistente/verification.md).
+A [verificação 0034](../../specs/0034-assistencia-compras-bestprice-ai/verification.md)
+separa a rodada visual ampla anterior (129/132) dos oito casos afetados aprovados
+após correção da marca. Somente oito baselines landing foram revisados e
+atualizados, com confirmação posterior 8/8 sem update; login e 404 não tiveram
+baselines alterados. A matriz ampliada de UI passou 38/38 em quatro larguras e
+oito rotas, com axe, overflow, alvo de toque e teclado. Não comprova dispositivo
+físico, leitor de tela ou disponibilidade do provider externo.
 
 ## Componentes e histórico visual — spec 0027
 
@@ -213,21 +199,78 @@ A Table mantém overflow visível para os menus de linha; em telas estreitas a
 lista é empilhada por CSS. E-mail oculto visualmente no botão da conta continua
 na árvore acessível. Menus e confirmação mantêm os controles de foco existentes.
 
-## Rotas e fluxo atual — specs 0021, 0024 e 0027
+## Rotas e fluxo atual — spec 0034
 
-A SPA usa `react-router-dom` e mantém o contrato REST da spec 0013. `App.tsx` consulta `GET /api/auth/me` ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha de rede ou indisponibilidade mostra a landing em `/`; nas demais rotas, preserva o estado de erro com “Tentar novamente”, sem encerrar a sessão. A conta precisa ser provisionada no backend antes do login; não há cadastro público.
+A SPA usa `react-router-dom`, o contrato de monitoramento existente e o novo
+cliente tipado `features/research/api.ts`. `App.tsx` consulta `GET /api/auth/me`
+ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha
+de sessão fora de `/` exibe erro e “Tentar novamente”; `/` permanece pública.
+A conta precisa ser provisionada no backend antes do login.
 
 | URL | Conteúdo e acesso |
 |---|---|
-| `/login` | Entrada pública; uma sessão válida segue para Início. |
-| `/` | Landing pública para visitante, inclusive durante carga/falha da sessão; com sessão válida, Início autenticado com formulário por link, resumo, oportunidades e atualizações recentes. |
-| `/produtos` | Lista autenticada de monitoramentos sob o título único “Seus produtos”, paginação e ação “Adicionar anúncio” que expande o formulário por link (aberto quando não há produtos). |
-| `/produtos/:id` | Página autenticada do monitoramento próprio, com histórico, alerta e ações. |
-| `/alertas` | Alertas configurados e notificações recebidas, em grupos distintos. |
+| `/` | Landing pública, inclusive com sessão válida |
+| `/login` | Entrada; sessão válida segue para `/app/dashboard` ou retorno conhecido |
+| `/app` | Redireciona para `/app/dashboard` após autenticação |
+| `/app/dashboard` | Necessidade de compra, sugestões editáveis e seis pesquisas recentes |
+| `/app/assistant`, `/app/assistant/:id` | Nova conversa ou conversa própria salva |
+| `/app/compare`, `/app/compare/:id` | Nova comparação manual ou comparação própria salva |
+| `/app/history` | Busca por título, tipo, paginação e exclusão confirmada |
+| `/app/monitoring` | Lista de monitoramentos e formulário “Adicionar anúncio” |
+| `/app/monitoring/overview` | Painel completo de acompanhamento anterior |
+| `/app/monitoring/:id` | Detalhe do vínculo próprio, histórico, alerta e ações |
+| `/app/monitoring/alerts` | Alertas configurados e notificações |
+| `/produtos`, `/produtos/:id`, `/alertas` | Destinos anteriores preservados de lista, detalhe e alertas |
 
-O visitante que abre uma rota protegida vai a `/login?returnTo=...`; depois de entrar, retorna à rota interna solicitada. O destino fica na URL durante uma recarga do login e `safeReturnTo` aceita somente `/`, `/produtos`, `/alertas` e um caminho de detalhe de produto, sem consulta ou fragmento. Entrada direta em `/login` leva ao Início. Logout leva a `/login`; o navegador revalida a sessão ao restaurar uma página pelo histórico. Caminho não reconhecido mostra `NotFoundPage`, com marca, título “Este endereço saiu do radar.”, curva decorativa e CTA verde: “Ir para Início” com sessão ou “Entrar” para visitante. “Voltar uma página” usa o histórico do navegador. Cada tela atualiza o título da aba e foca seu título principal; a navegação marca a seção ativa, incluindo Produtos no detalhe.
+Visitante segue para `/login?returnTo=...` e retorna ao caminho protegido após
+entrar. `safeReturnTo` aceita somente caminhos internos conhecidos, incluindo os
+novos destinos, sem query/fragmento ou escapes. Entrada direta no login leva ao
+dashboard. Logout vai a `/login`; restauração por bfcache revalida a sessão.
+`ResearchArea` e `AccountArea` são isoladas pela chave `user.id`; respostas obsoletas
+são ignoradas após desmontagem. Caminhos desconhecidos mostram estado de página
+não encontrada. A navegação atualiza título e foco, e marca a seção ativa.
 
-O cabeçalho autenticado oferece links Início/Produtos/Alertas, sino e menu da conta. Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
+## Assistente, comparação e histórico — spec 0034
+
+`features/research/ResearchArea.tsx` organiza dashboard, navegação lateral e
+atalhos móveis. O dashboard transporta rascunho por token em estado de navegação;
+o texto fica no Map da montagem autenticada, sem persistir conteúdo no histórico
+do browser. Categorias apenas preenchem texto editável. A chamada de IA exige
+outra ação explícita na tela do assistente, após a informação sobre Google,
+conteúdo confidencial e retenção local. A interface consulta capabilities e
+mantém envio/análise indisponíveis quando a configuração falta, sem impedir
+leitura das pesquisas e salvamento manual.
+
+`AssistantPage` carrega mensagens próprias, mostra carga, vazio, erro recuperável
+e envio ocupado com trava contra duplicação. Texto de IA é renderizado como texto,
+identificado como não verificado, sem executar HTML/Markdown. Mensagem tem até
+2.000 caracteres; conversas longas usam contexto recente limitado. IDs são
+`crypto.randomUUID()`: falha de rede reaproveita o request ID dentro de 24 h para
+consultar o resultado; falha conhecida permite nova tentativa explícita.
+
+`ComparisonPage` aceita 2–3 produtos com nome, detalhes, preço BRL e link opcional.
+Preço ausente continua null; valores pt-BR são normalizados em string, sem float.
+Os dados são manuais e não verificados, e os links não são consultados. Salvar é
+ação própria sem IA; análise só ocorre após salvar os dados atuais. Edição invalida
+a análise anterior. Conflito de versão exige recarga; erro de GET inicial não
+permite edição insegura. A tabela usa somente dados fornecidos pela pessoa; a
+análise textual não transforma informações ausentes em fatos verificados.
+
+`HistoryPage` busca por título, filtra conversa/comparação e pagina 20 registros.
+Excluir exige confirmação e apresenta sucesso apenas após a API concluir; cancelar,
+erro e repetir preservam estados recuperáveis. Pesquisas expiram em 90 dias desde
+a criação, sem renovação por edição. A interface informa a retenção e não promete
+eliminação de backups ou registros Google.
+
+Gates locais registrados: 366/366 testes da suíte completa e 18/18 afetados finais,
+lint e build aprovados (2.658 módulos). Jornadas SPA/API/PostgreSQL reais passaram
+4/4 e cenários de erro 6/6 no schema final, com fixture somente na geração externa.
+AC10/AC15/AC19 ainda dependem de avaliação operacional do modelo real e de sua
+configuração gratuita; a spec continua `pronta`. Ver [evidências](../../specs/0034-assistencia-compras-bestprice-ai/verification.md).
+
+## Monitoramento preservado
+
+O cabeçalho de monitoramento oferece links Início/Produtos/Alertas, sino e menu da conta. Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
 
 O preço-alvo aceita o formato brasileiro (spec 0028): `src/lib/targetPrice.ts` normaliza `99,90`, `99.90`, `1.899,90`, `1899,9` e o prefixo `R$` para o decimal do contrato (`"99.90"`), só com texto, sem `number`. Valor inválido, zero, acima de 16 dígitos inteiros ou com milhar iniciado por zero (`0.500`) não chama a API: o campo recebe `aria-invalid` e a mensagem “Informe um valor em reais, como 99,90.” em `role="alert"`. O campo de edição mostra o alvo atual com vírgula. O contrato REST `target_price` e o backend não mudaram. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 

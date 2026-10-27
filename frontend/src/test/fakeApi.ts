@@ -105,6 +105,8 @@ export function fakeApi(route: Route = () => undefined, dashboard: unknown = emp
     const method = init?.method ?? 'GET'
     if (method === 'GET') {
       if (url === '/api/auth/me') return Promise.resolve(reply(200, sessionUser))
+      if (url.startsWith('/api/research?')) return Promise.resolve(reply(200, { items: [], next_offset: null }))
+      if (url === '/api/ai/capabilities') return Promise.resolve(reply(200, { enabled: false, provider: 'google', model: 'gemini-3.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }))
       if (url === '/api/dashboard') return Promise.resolve(reply(200, dashboard))
       if (url === '/api/tracked-products') {
         const page = typeof dashboard === 'object' && dashboard !== null && 'tracked_products' in dashboard

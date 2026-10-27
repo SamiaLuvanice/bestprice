@@ -19,14 +19,14 @@ const entries = ['369.90', '349.90', '359.90', '279.90', '319.90', '299.90'].map
 const scenarios = [
   { name: 'landing', path: '/', guest: true },
   { name: 'login', path: '/login', guest: true },
-  { name: 'inicio', path: '/', guest: false },
+  { name: 'inicio', path: '/app/monitoring/overview', guest: false },
   { name: 'produtos', path: '/produtos', guest: false },
   { name: 'detalhe', path: '/produtos/tracking-1', guest: false },
   { name: 'alertas', path: '/alertas', guest: false },
   { name: 'nao-encontrada', path: '/nao-existe', guest: true },
-  { name: 'vazio', path: '/', guest: false, empty: true },
-  { name: 'erro', path: '/', guest: false, error: true },
-  { name: 'carregando', path: '/', guest: false, loading: true },
+  { name: 'vazio', path: '/app/monitoring/overview', guest: false, empty: true },
+  { name: 'erro', path: '/app/monitoring/overview', guest: false, error: true },
+  { name: 'carregando', path: '/app/monitoring/overview', guest: false, loading: true },
 ] as const
 
 for (const scenario of scenarios) {
