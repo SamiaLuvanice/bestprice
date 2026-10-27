@@ -6,14 +6,16 @@ endpoints privados, cookies, credenciais ou arquivos internos do aplicativo.
 
 ## Instalação e conexão
 
-Requer Windows, Node 22 ou superior, npm e Paper instalado. Ambiente exercitado:
-Node 22.18.0, Playwright 1.64.1 e Chromium 152 do Paper.
+Requer Windows, Node 22 ou superior, npm e Paper instalado. O navegador usado
+para gerar as referências é Chromium headless da versão fixada pelo Playwright;
+o cliente Paper é o Chromium embarcado no aplicativo via CDP.
 
 Na raiz deste checkout/worktree:
 
 ```powershell
 cd tools/paper-bridge
 npm ci
+npx playwright install chromium
 & "$env:LOCALAPPDATA\Programs\Paper\Paper.exe" --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1
 npm run paper -- status
 ```
@@ -39,7 +41,33 @@ npm run paper -- screenshot
 npm run paper -- validate
 npm run paper -- validate --parent "BestPrice IA - Dashboard" --text "BestPrice IA" --x 80 --y 64 --font-size 48 --font-weight 700 --color primary
 npm run paper -- create-screen --file examples/smoke-screen.json
+npm run paper -- sync --screen dashboard
+npm run paper -- sync --screen dashboard --viewport tablet
+npm run paper -- sync --screen dashboard --viewport mobile
 ```
+
+`sync` renderiza `/app/dashboard` com a SPA e os estilos reais do checkout, usando
+somente uma sessão sintética e respostas vazias para as pesquisas. CSS computado
+é convertido em estilos inline, fontes passam pelo fallback Arial publicado,
+controles são representados visualmente como frames e o logo local é incorporado.
+O HTML é enviado ao clipboard público do Windows e colado com Ctrl+V no Paper;
+o conteúdo anterior do clipboard é substituído, mas nunca lido. A importação só é
+considerada verificada depois que a raiz e suas camadas aparecem no DOM do canvas
+e um texto é editado e restaurado pela interface.
+
+Variantes `desktop` (1440 px), `tablet` (768 px) e `mobile` (390 px) são capturas
+estáticas da rota real; elas não mantêm regras responsivas no canvas. Cada sync
+grava `state/manifest.json` (ignorado pelo Git), HTML e screenshots em `reports/`.
+Uma repetição sem diferenças valida o mesmo ID sem criar uma cópia. Alteração na
+referência exige `--new-version`, que importa uma nova raiz mantendo a anterior.
+Mudanças observáveis de texto, geometria, fundo ou tipografia no canvas e estado
+`pending` interrompem o fluxo para inspeção; não apagam nem substituem versões.
+O fingerprint não cobre todas as propriedades possíveis do Paper. Use `inspect`
+antes de resolver conflitos.
+
+O comando suporta atualmente apenas `dashboard`. Outros caminhos reais do
+produto estão inventariados em `src/design-system.mjs`; ampliar a geração de
+rotas exige mapear os estados e contratos de cada tela antes de habilitá-los.
 
 Para reaproveitar um frame experimental ainda chamado Frame, acrescente
 `--reuse Frame` ao primeiro `create-frame`. Se o destino já existe, ele é atualizado.
@@ -139,8 +167,10 @@ idade nem inicia duas operações concorrentes.
 | Screenshot e validação por propriedades/DOM | Implementado e exercitado |
 | Opacidade, radius, border | Controles identificados; setters ainda pendentes |
 | Retângulo próprio, criação de documentos, componentes React completos | Pendentes |
-| Importação HTML pela interface | Documentada pelo fornecedor; não exercitada nesta versão |
-| Layout responsivo automático | Inventário de breakpoints disponível; conversão pendente |
+| Importação HTML pela interface | Exercitada em dashboard desktop e mobile; 140 e 123 camadas, respectivamente; texto editado e restaurado |
+| Geração desktop/tablet/mobile | Implementada a partir de `/app/dashboard`; três viewports passam em teste de geração |
+| Sincronização idempotente/manifesto | Desktop repetido reutilizou `7O-0`; conflito observável e estado pendente bloqueiam; nova versão é aditiva |
+| Outras rotas completas, interações e responsividade viva no canvas | Pendentes; variantes importadas são capturas estáticas |
 
 A idempotência foi comprovada no documento de teste pequeno, com árvore expandida.
 O cheque de cobertura compara nós renderizados e camadas presentes no DOM e recusa
@@ -159,16 +189,18 @@ como recebidos. São experimentos independentes; a CLI nova usa exclusivamente
 
 ## Evolução
 
-1. Mapear e verificar setters de opacidade, cantos e bordas; adicionar retângulos.
-2. Validar o fluxo público de [colar HTML](https://paper.design/docs/paste/html)
-   pela interface, incluindo fidelidade, fontes e idempotência.
-3. Mapear Brand, ResearchLayout/sidebar, cabeçalho e dashboard reais, com revisão
-   visual e estados vazios/erro; preservar assets e texto da aplicação.
-4. Compor variantes por breakpoints reais, validando desktop, tablet e mobile
-   separadamente; não simular regras responsivas só redimensionando frames.
-5. Ampliar seleção/inventário para documentos virtualizados e adicionar regressão
-   visual aprovada, sem usar modelo interno, endpoints privados ou MCP.
+1. Mapear setters de opacidade, cantos e bordas; adicionar retângulos como recurso
+   de correção quando um estilo não sobreviver à importação.
+2. Ampliar a geração para as rotas reais Assistente IA, Comparador e Histórico,
+   primeiro documentando seus contratos e estados vazios/erro.
+3. Melhorar a conversão de estruturas CSS com regras de posicionamento complexo,
+   tabelas e gráficos, sem incluir scripts ou chamadas externas.
+4. Importar e conferir a variante tablet no documento de teste e estabelecer uma
+   rotina de revisão visual dos screenshots antes de publicar versões.
+5. Ampliar seleção/inventário para documentos virtualizados sem usar modelo
+   interno, endpoints privados ou MCP.
 
 Referência técnica: [Playwright connectOverCDP](https://playwright.dev/docs/api/class-browsertype#browser-type-connect-over-cdp).
 O aceite e os resultados reais ficam em
-[verification.md](../../specs/0035-paper-bridge-local/verification.md).
+[verification.md](../../specs/0036-paper-bridge-html-first/verification.md) e
+[spec 0035](../../specs/0035-paper-bridge-local/verification.md).

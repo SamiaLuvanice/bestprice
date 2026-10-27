@@ -1,5 +1,22 @@
 # Progresso das specs
 
+Spec 0036 `pronta`, implementação entregue para revisão no [PR #204](https://github.com/SamiaLuvanice/bestprice/pull/204)
+em rascunho para develop, no branch/worktree
+`feature/0036-issue-203-paper-html-sync`, baseada em `origin/develop` (`b4fd94f`);
+[Issue #203](https://github.com/SamiaLuvanice/bestprice/issues/203). A Paper Bridge
+agora gera a tela real `/app/dashboard` em HTML/CSS inline e importa pelo
+clipboard público/Playwright no documento `BestPrice Bridge Test`, sem MCP do
+Paper ou endpoints privados. Dashboard desktop/tablet/mobile é gerado dos estilos,
+componentes, textos e logo reais; a importação live foi confirmada em desktop e
+mobile, com texto editado/restaurado. A repetição desktop reutilizou o mesmo ID;
+manifesto bloqueia conflito e estado pendente, e versão nova é aditiva. Gates:
+**17/17** testes Node (incluindo três viewports), `npm run check` e contrato CLI
+verdes; os checks de CI da PR ainda estão pendentes. Paper ficou minimizado antes
+de nova tentativa final; a ferramenta recusou-a sem falso sucesso. Importação
+tablet, outras rotas e responsividade viva no canvas seguem pendentes. Ver
+[README da bridge](../tools/paper-bridge/README.md) e
+[verification.md](../specs/0036-paper-bridge-html-first/verification.md).
+
 Spec 0035 `pronta`, implementação entregue para revisão no
 [PR #202](https://github.com/SamiaLuvanice/bestprice/pull/202) em rascunho para develop:
 [Issue #201](https://github.com/SamiaLuvanice/bestprice/issues/201),
@@ -62,6 +79,7 @@ Spec 0033 `pronta`, em implementação: [Issue #184](https://github.com/SamiaLuv
 
 | Spec | Refinamento e plano | Implementação | Revisão | Verificação |
 |---|---|---|---|---|
+| 0036-paper-bridge-html-first | Spec `pronta`, plano e tarefas; [Issue #203](https://github.com/SamiaLuvanice/bestprice/issues/203); base `origin/develop` (`b4fd94f`) | CLI `sync` gera HTML inline do dashboard real e importa via clipboard público/Playwright; desktop/mobile editáveis, manifesto local e versões aditivas; desktop repetido reutiliza ID. Outras rotas e tablet live pendentes | Revisão documentada do diff e limites em `verification.md`; [PR #204](https://github.com/SamiaLuvanice/bestprice/pull/204) aberta em rascunho | **17/17** testes Node, sintaxe e CLI help verdes; geração desktop/tablet/mobile; live desktop v2 (140 nós) e mobile v1 (123 nós), edição/restauração e screenshots; nova tentativa live recusada com Paper minimizado. Checks de CI da PR pendentes; ver [verification.md](../specs/0036-paper-bridge-html-first/verification.md) |
 | 0032-sonda-mercado-livre-github-actions | Spec `pronta`, plano e tarefas; [Issue #182](https://github.com/SamiaLuvanice/bestprice/issues/182); base `origin/develop` (`396f0ac`) | Workflow manual implementado; environment GitHub `stage-validation` criado, restrito a `develop` e abastecido com quatro secrets Stage/OAuth; valores não exibidos | Revisão local de segurança, PR e revisão independente pendentes | `workflow_dispatch` ainda indisponível até integração em `develop`; sonda não executada e Stage permanece com gate `false`; ver [verification.md](../specs/0032-sonda-mercado-livre-github-actions/verification.md) |
 | 0030-experiencia-visual-consistente | Spec `implementada`, auditoria P0–P3, plano e tarefas; [Issue #174](https://github.com/SamiaLuvanice/bestprice/issues/174); worktree/branch `feature/0030-issue-174-experiencia-visual`, base `origin/develop` em `e484cd3` | Tokens de ritmo/movimento, superfícies e foco comuns, hero em duas colunas no desktop, indicadores verticais, hierarquia de detalhe/listas/login/landing/404; menu público fecha com Escape e saída de foco. Sem mudança de backend, API, banco, regras ou dependências. Doc-sync-onboarding executado como última etapa após gates/revisão | Revisão independente sem achados concretos de regressão ou bloqueios; 24 baselines públicas revisadas antes de regenerar. QA independente aceitou AC01–AC11; PR #175 integrada em develop (`5219077`), Issue #174 fechada | Lint e build verdes; **350/350 Vitest** em 31 arquivos; **128/128 Playwright** na rodada anterior e **40/40** afetados após AC11; confirmação sem atualizar baselines, quatro larguras e API simulada. Detector `[]`; automações Node da raiz passaram; complexidade sem Python alterado. Figma inspecionado no Chrome e exportações locais (conector sem autenticação); Spartan observado. CI remoto verde no HEAD d9f010e. Sem validação de API real, dispositivo físico ou deploy. Ver [verification.md](../specs/0030-experiencia-visual-consistente/verification.md). |
 | 0029-identidade-bestprice-consistente | Spec `pronta`; T01–T10 concluídas; [Issue #167](https://github.com/SamiaLuvanice/bestprice/issues/167); branch/worktree `feature/0029-issue-167-identidade-bestprice-consistente`, base `origin/develop` em `2df3129`; T11 (PR, CI e integração) pendente | `Brand` compartilhado em landing, login, conta, rota não encontrada e sessão em carga/erro; fonte display, peso 600 e tracking `-.011em`; login móvel horizontal; nome acessível único; projeto Playwright de 390 px. Doc-sync-onboarding concluído após a última alteração de código | Revisão independente final aprovada após remoção do bypass de diagnóstico; QA móvel independente: 18/18 casos e 76 observações, sem violações axe. Todas as 24 baselines públicas aprovadas (12 móveis pela QA; 12 maiores pelo coordenador) | Red esperado demonstrado; frontend lint/build verdes, 348/348 Vitest em 31 arquivos, 36/36 marca/axe e 84/84 pública/redesign sem atualização de snapshots. Intermitência da logo não reproduzida; Chromium com API simulada, sem aparelho real/Safari. Backend e seus gates fora do escopo local; artefatos ignorados são apenas locais. Ver [verification.md](../specs/0029-identidade-bestprice-consistente/verification.md). |
