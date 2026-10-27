@@ -27,6 +27,59 @@ function Sync-Junction([string]$RelativePath, [string]$SourcePath) {
     Write-Output "+ $RelativePath -> $SourcePath"
 }
 
+function Convert-AgentFrontmatterForOpenCode([string]$Content) {
+    $lines = $Content -split "`r?`n"
+    if ($lines.Count -lt 3 -or $lines[0] -ne '---') { return $Content }
+
+    $end = 1
+    while ($end -lt $lines.Count -and $lines[$end] -ne '---') { $end++ }
+    if ($end -ge $lines.Count) { return $Content }
+
+    $frontmatter = if ($end -gt 1) { @($lines[1..($end - 1)]) } else { @() }
+    $converted = [System.Collections.Generic.List[string]]::new()
+    foreach ($line in $frontmatter) {
+        if ($line -match '^\s*tools\s*:\s*$') {
+            throw 'tools: em formato objeto/multilinha não é suportado pelo sync; ajuste o agente ou a conversão.'
+        }
+        if ($line -match '^\s*tools\s*:\s*\S') {
+            $converted.Add('permission:')
+            $converted.Add('  edit: deny')
+            $converted.Add('  bash: deny')
+            $converted.Add('  task: deny')
+            $converted.Add('  todowrite: deny')
+            $converted.Add('  webfetch: deny')
+            $converted.Add('  websearch: deny')
+        } else {
+            $converted.Add($line)
+        }
+    }
+
+    $result = [System.Collections.Generic.List[string]]::new()
+    $result.Add('---')
+    $result.AddRange($converted)
+    $result.Add('---')
+    if ($end + 1 -lt $lines.Count) {
+        $result.AddRange([string[]]$lines[($end + 1)..($lines.Count - 1)])
+    }
+    return ($result -join "`r`n")
+}
+
+function Sync-OpenCodeAgents {
+    $source = Join-Path $Root '.agents/agents'
+    $generated = Join-Path $Root '.opencode/generated/agents'
+    New-Item -ItemType Directory -Path $generated -Force | Out-Null
+    Get-ChildItem -LiteralPath $generated -Filter '*.md' -File -ErrorAction SilentlyContinue |
+        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+
+    foreach ($file in Get-ChildItem -LiteralPath $source -Filter '*.md' -File) {
+        $content = Get-Content -LiteralPath $file.FullName -Raw
+        $converted = Convert-AgentFrontmatterForOpenCode $content
+        Set-Content -LiteralPath (Join-Path $generated $file.Name) `
+            -Value $converted -Encoding utf8 -NoNewline
+    }
+    Write-Output '+ .opencode/generated/agents (gerado — não editar)'
+}
+
 foreach ($area in @('agents', 'skills', 'commands')) {
     Sync-Junction ".claude/$area" ".agents/$area"
 }
@@ -87,7 +140,8 @@ function Project-McpConfig {
 Project-McpConfig
 
 if ($WithOpenCode -or (Test-Path -LiteralPath (Join-Path $Root '.opencode'))) {
-    Sync-Junction '.opencode/agent' '.agents/agents'
+    Sync-OpenCodeAgents
+    Sync-Junction '.opencode/agent' '.opencode/generated/agents'
     Sync-Junction '.opencode/skills' '.agents/skills'
     Sync-Junction '.opencode/command' '.agents/commands'
 }
