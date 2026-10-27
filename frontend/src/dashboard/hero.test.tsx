@@ -43,7 +43,7 @@ const validUrl = 'https://produto.mercadolivre.com.br/MLB-2222222222-cafeteira-_
 
 describe('hero', () => {
   it('exibe exatamente os textos da spec, sem card de produto, preço ou estrelas', async () => {
-    await renderHero(() => undefined, () => undefined, '/')
+    await renderHero(() => undefined, () => undefined, '/app/monitoring/overview')
     const hero = within(screen.getByRole('region', { name: 'Seu painel de preços' }))
     expect(hero.getByRole('heading', { level: 1 })).toHaveTextContent('Seu painel de preços')
     expect(hero.getByText('Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.')).toBeInTheDocument()

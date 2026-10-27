@@ -155,7 +155,7 @@ async function requestWithStatus<T>(path: string, valid: (value: unknown) => val
   return { status: response.status, body }
 }
 
-async function request<T>(path: string, valid: (value: unknown) => value is T, init?: RequestInit): Promise<T> {
+export async function request<T>(path: string, valid: (value: unknown) => value is T, init?: RequestInit): Promise<T> {
   return (await requestWithStatus(path, valid, init)).body
 }
 
@@ -169,13 +169,13 @@ async function track(url: string): Promise<{ tracked: TrackedProduct; outcome: T
   throw new ApiFailure(status, 'invalid_response', invalidResponseMessage)
 }
 
-async function requestVoid(path: string, init: RequestInit): Promise<void> {
+export async function requestVoid(path: string, init: RequestInit): Promise<void> {
   const response = await send(path, init)
   if (response.status === 204) return
   throw failureFrom(response.status, await readJson(response))
 }
 
-function json(method: string, body: object): RequestInit {
+export function json(method: string, body: object): RequestInit {
   return { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
 }
 

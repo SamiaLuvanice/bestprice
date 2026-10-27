@@ -8,6 +8,7 @@ import { LandingPage } from './landing/LandingPage'
 import { AccountArea } from './dashboard/AccountArea'
 import { safeReturnTo } from './navigation/returnTo'
 import { Brand } from './components/Brand'
+import { ResearchArea } from './features/research/ResearchArea'
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
@@ -39,7 +40,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
       const frame = window.requestAnimationFrame(() => document.getElementById('login-title')?.focus())
       return () => window.cancelAnimationFrame(frame)
     }
-    if (!['/', '/produtos', '/alertas'].includes(location.pathname) &&
+    if (!/^\/app(?:\/|$)/.test(location.pathname) && !['/', '/produtos', '/alertas'].includes(location.pathname) &&
       !/^\/produtos\/[^/]+$/.test(location.pathname)) {
       document.title = 'Página não encontrada · BestPrice'
       const frame = window.requestAnimationFrame(() => document.querySelector<HTMLElement>('main h1')?.focus())
@@ -97,7 +98,8 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     setBusy(true)
     try {
       const result = await api.login(email, password)
-      const target = safeReturnTo(new URLSearchParams(location.search).get('returnTo'))
+      const requested = new URLSearchParams(location.search).get('returnTo')
+      const target = requested ? safeReturnTo(requested) : '/app/dashboard'
       setPostLoginTarget(target)
       setUser(result)
       setSessionState('ready')
@@ -106,7 +108,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   }
 
   const footer = <footer>BestPrice · Acompanhe com clareza</footer>
-  if (location.pathname === '/' && sessionState !== 'ready') return <LandingPage />
+  if (location.pathname === '/') return <LandingPage />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
     <header className="masthead"><Brand /></header>
@@ -130,9 +132,13 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   const protectedArea = user ? <div className="page">
     <AccountArea key={user.id} user={user} clock={clock} onUnauthenticated={endSession} onLoggedOut={loggedOut} />{footer}
   </div> : <Navigate to={logoutRedirect ? '/login' : `/login?returnTo=${encodeURIComponent(location.pathname)}`} replace />
+  const researchArea = user ? <ResearchArea key={user.id} user={user} clock={clock} onUnauthenticated={endSession} onLoggedOut={loggedOut} />
+    : <Navigate to={logoutRedirect ? '/login' : `/login?returnTo=${encodeURIComponent(location.pathname)}`} replace />
 
   return <Routes>
-    <Route path="/login" element={user ? <Navigate to={postLoginTarget ?? '/'} replace /> : loginPage} />
+    <Route path="/login" element={user ? <Navigate to={postLoginTarget ?? '/app/dashboard'} replace /> : loginPage} />
+    <Route path="/app" element={user ? <Navigate to="/app/dashboard" replace /> : researchArea} />
+    <Route path="/app/*" element={researchArea} />
     <Route path="/" element={protectedArea} />
     <Route path="/produtos" element={protectedArea} />
     <Route path="/produtos/:id" element={protectedArea} />

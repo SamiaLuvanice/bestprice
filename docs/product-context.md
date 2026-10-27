@@ -1,6 +1,6 @@
 # BestPrice — contexto e direção do produto
 
-Este documento registra a visão fornecida pelo responsável pelo produto em 07/10/2026, atualizada pela decisão da [spec 0013](../specs/0013-monitoramento-mercado-livre-brasil/spec.md). É a referência de produto para futuras specs; descreve requisitos pretendidos, não funcionalidades já entregues. O estado executável está em [arquitetura](architecture.md) e nos guias dos módulos.
+Este documento registra a visão fornecida pelo responsável pelo produto em 07/10/2026, atualizada pelas decisões das specs [0013](../specs/0013-monitoramento-mercado-livre-brasil/spec.md) e [0034](../specs/0034-assistencia-compras-bestprice-ai/spec.md). É a referência de produto para futuras specs; distingue requisitos pretendidos da implementação local identificada abaixo. O estado executável está em [arquitetura](architecture.md) e nos guias dos módulos.
 
 > **Mudança de marketplace.** A versão original deste contexto tinha a Amazon como fonte, com ASIN e uma abstração conceitual `AmazonProvider`; nenhuma integração Amazon chegou a ser implementada. A spec 0013 tornou o **Mercado Livre Brasil (MLB)** o marketplace exclusivo desta fase, consultado somente pela API oficial com autorização da conta operadora do BestPrice. As referências à Amazon abaixo foram substituídas; a premissa anterior permanece rastreável na spec 0013 e no histórico Git.
 
@@ -10,7 +10,35 @@ Este documento registra a visão fornecida pelo responsável pelo produto em 07/
 
 BestPrice é uma aplicação web destinada a usuários reais e a operação em produção. Simplicidade, segurança, confiabilidade e manutenção orientam sua evolução. O usuário não precisa preencher nome, imagem, preço, ID da publicação (`MLB…`) ou outros dados que a integração deve obter automaticamente.
 
-## Experiência principal
+## Assistência de compras — decisão da spec 0034
+
+A evolução aprovada acrescenta uma entrada por necessidade: a pessoa conversa
+sobre uso, prioridades e orçamento, compara manualmente 2–3 produtos e retoma
+pesquisas privadas por até 90 dias desde a criação. A assistência complementa o
+monitoramento. Os dados manuais de comparação não são ofertas verificadas nem
+produtos monitorados; os links são referências, sem leitura automática de páginas.
+A entrada por URL continua sendo a experiência de acompanhamento automático.
+
+A implementação local tem dashboard, assistente textual, comparador e histórico,
+com contas já provisionadas. Salvar e editar comparação independe da IA; analisar
+ou conversar exige configuração explícita. A IA fica desativada por padrão. O plano
+fixa Gemini `gemini-3.5-flash-lite`, cota gratuita, sem fallback pago e com limites
+locais; não comprova a configuração de cobrança da conta operadora. Não há busca
+de ofertas, scraping, pesquisa web autônoma ou nova fonte de marketplace.
+
+Respostas da IA devem ser identificadas como não verificadas, reconhecer lacunas
+e preservar a decisão da pessoa. Antes do envio, a interface informa processamento
+pelo Google, possível uso do conteúdo na modalidade gratuita e orienta não inserir
+dados pessoais ou confidenciais. Exclusão manual remove conteúdo do banco ativo;
+a expiração nega acesso ao completar 90 dias e a limpeza física roda a cada hora
+com a API em execução. Editar não renova o prazo. Essa política não promete apagar
+backups ou registros do fornecedor.
+
+A revisão e a QA locais da 0034 usam geração controlada na fronteira externa.
+Configuração gratuita real e avaliação do modelo em português (AC10/AC15/AC19) continuam pendentes;
+a spec permanece `pronta`, sem inferência de integração, CI ou deploy.
+
+## Experiência principal de monitoramento
 
 1. O usuário copia o link do anúncio no Mercado Livre, cola no BestPrice e clica em **Monitorar preço**.
 2. O backend valida a URL localmente, sem requisitá-la, e extrai o ID da publicação MLB.

@@ -7,9 +7,9 @@ test.beforeEach(async ({ page }) => {
   }))
 })
 
-test('banner final preserva toda a arte sem recortar o telefone', async ({ page }) => {
+test('imagem da landing preserva a arte original sem recorte', async ({ page }) => {
   await page.goto('/')
-  const banner = page.locator('.landing-signup__art')
+  const banner = page.locator('.research-public-visual img')
   await banner.scrollIntoViewIfNeeded()
   await expect(banner).toBeVisible()
   await expect.poll(() => banner.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true)
@@ -32,7 +32,7 @@ test('rodapé da landing tem fundo preto e texto claro', async ({ page }) => {
     text: getComputedStyle(element).color,
   }))
   expect(colors).toEqual({ background: 'rgb(0, 0, 0)', text: 'rgb(255, 255, 255)' })
-  await expect(footer.getByRole('link', { name: 'Entrar' })).toBeVisible()
+  await expect(footer.getByRole('link', { name: 'Entrar na sua conta' })).toBeVisible()
 })
 
 test('marca do login fica no formulário à direita, com fundo transparente', async ({ page }) => {

@@ -37,7 +37,7 @@ describe('cabeçalho', () => {
   })
 
   it('leva o foco às páginas e marca somente a rota ativada como atual', async () => {
-    const { user } = await renderArea(() => undefined, '/')
+    const { user } = await renderArea(() => undefined, '/app/monitoring/overview')
     const home = () => nav().getByRole('link', { name: 'Início' })
     const products = () => nav().getByRole('link', { name: 'Produtos' })
     const alerts = () => nav().getByRole('link', { name: 'Alertas' })
@@ -57,7 +57,7 @@ describe('cabeçalho', () => {
 
     await user.click(home())
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
-    expect(window.location.pathname).toBe('/')
+    expect(window.location.pathname).toBe('/app/monitoring/overview')
     expect(home()).toHaveAttribute('aria-current', 'page')
     expect(alerts()).not.toHaveAttribute('aria-current')
   })

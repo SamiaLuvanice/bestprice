@@ -1,5 +1,28 @@
 # Protótipo visual BestPrice
 
+## Extensão BestPrice AI em preparação — spec 0034
+
+A direção A, “Conversa em primeiro plano”, foi escolhida em 26/10/2026. Reutiliza
+logo, Brand, tema claro e tokens existentes; AI é uma indicação textual adjacente,
+sem alterar o desenho da logo. A pergunta de compra é a ação principal; categorias
+são atalhos editáveis e nenhum preço ou histórico ilustrativo é dado de aplicação.
+
+Composição original: sidebar desktop 248px, cabeçalho 88px, conteúdo com padding
+48px por 56px e intervalos de 32px; título 48/54px desktop e34/39px mobile,
+tracking até -.035em; compositor com padding24px e raio18px, ações de48px.
+Em telas estreitas, padding20px e navegação de quatro entradas; menu acessível
+contém destinos restantes. São referências de composição, adaptáveis para manter
+320px sem overflow. As famílias tipográficas e pesos da marca seguem Brand.
+
+Landing, dashboard, conversa e comparador compartilham superfícies neutras,
+verde para ação principal e rosa para links/foco. Reutilizar tokens de controle
+e bordas em vez de introduzir novos hex. Estado vazio exige resposta válida da
+API; integração ausente ou falha tem mensagem de indisponibilidade própria.
+Respostas de IA são texto identificado como não verificado; tabela de comparação
+mostra apenas informações fornecidas pela pessoa. Retenção90dias e processamento
+externo são informados antes do primeiro envio. Estados de envio, erro, limite,
+exclusão e dado expirado devem permanecer operáveis por teclado.
+
 `index.html` é uma página de demonstração do design system da BestPrice. Ela reúne tokens de cor e tipografia, componentes interativos e uma proposta de dashboard. Os produtos, preços e indicadores exibidos são exemplos, sem dados de lojas.
 
 O arquivo veio do protótipo local `designsystem/index.html` do checkout principal. Sua autoria e a origem dos trechos que ele descreve como tokens Apple ainda precisam ser esclarecidas antes de reutilizar esses trechos em outro produto.

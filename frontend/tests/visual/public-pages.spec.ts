@@ -34,7 +34,7 @@ for (const colorScheme of themes) {
     test('landing pública', async ({ page }) => {
       await replyGuestSession(page)
       await page.goto('/')
-      const title = page.getByRole('heading', { name: /O preço muda.*Você fica sabendo/i, level: 1 })
+      const title = page.getByRole('heading', { name: /Compre com.*mais clareza/i, level: 1 })
       await expect(title).toBeVisible()
       await waitForStableImages(page)
       await expect(page).toHaveScreenshot(`landing-${colorScheme}.png`, { fullPage: true })

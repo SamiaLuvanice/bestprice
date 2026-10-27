@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Aponta cada ferramenta de IA para .agents/ — a fonte única.
-# Nada é copiado: as pastas por ferramenta contêm apenas symlinks
-# (e a config exclusiva da ferramenta, ex.: .claude/settings.local.json).
+# As pastas por ferramenta contêm symlinks; exceções geradas: .opencode/agent
+# (frontmatter convertido), .cursor/rules/*.mdc e opencode.json.
 #
 #   bash .agents/sync.sh                  # Claude Code
 #   bash .agents/sync.sh --with-opencode  # + OpenCode
@@ -19,15 +19,34 @@ for arg in "$@"; do
   [[ "$arg" == "--with-opencode" ]] && WITH_OPENCODE=1
 done
 
+# Remove um link ou uma projeção gerada sem atravessar junctions do Windows.
+remove_projection() {
+  local path="$1"
+  if [[ -L "$path" ]]; then
+    rm "$path"
+    return 0
+  fi
+  if [[ -e "$path" ]] && command -v cygpath >/dev/null 2>&1 && command -v powershell.exe >/dev/null 2>&1; then
+    local winpath is_reparse
+    winpath="$(cygpath -w "$path")"
+    is_reparse="$(powershell.exe -NoProfile -Command "if ((Get-Item -LiteralPath '$winpath' -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) { '1' } else { '0' }" 2>/dev/null | tr -d '\r')"
+    if [[ "$is_reparse" == "1" ]]; then
+      powershell.exe -NoProfile -Command "Remove-Item -LiteralPath '$winpath' -Force"
+      return 0
+    fi
+  fi
+  [[ -e "$path" ]] && rm -rf "$path"
+}
+
 # link <caminho-do-link-relativo-à-raiz> <alvo-relativo-ao-link>
 link() {
   local path="$ROOT/$1" target="$2"
   if [[ -L "$path" ]]; then
     [[ "$(readlink "$path")" == "$target" ]] && { echo "  = $1"; return; }
-    rm "$path"
+    remove_projection "$path"
   elif [[ -e "$path" ]]; then
     echo "  ! $1 era cópia — removendo"
-    rm -rf "$path"
+    remove_projection "$path"
   fi
   mkdir -p "$(dirname "$path")"
   if ln -s "$target" "$path" 2>/dev/null; then
@@ -52,11 +71,47 @@ link ".claude/skills" "../$SRC/skills"
 # CLAUDE.md da raiz é um arquivo de texto com `@AGENTS.md` (não é symlink: no Windows
 # symlink exige privilégio, e o @import funciona igual).
 
+# Converte o frontmatter dos agentes para o formato do OpenCode. As regras
+# ficam em .opencode/generated/agents; .opencode/agent aponta para lá.
+opencode_agents() {
+  local src="$ROOT/$SRC/agents" gen="$ROOT/.opencode/generated/agents"
+  mkdir -p "$gen"
+  rm -f "$gen"/*.md
+  local f
+  for f in "$src"/*.md; do
+    [[ -e "$f" ]] || continue
+    awk '
+      BEGIN { fm = 0; cr = "" }
+      NR == 1 && $0 ~ /^---\r?$/ { fm = 1; cr = ($0 ~ /\r$/) ? "\r" : ""; print; next }
+      fm == 1 && $0 ~ /^---\r?$/ { fm = 0; print; next }
+      fm == 1 && $0 ~ /^[[:space:]]*tools[[:space:]]*:/ {
+        line = $0
+        sub(/\r$/, "", line)
+        if (line ~ /^[[:space:]]*tools[[:space:]]*:[[:space:]]*$/) {
+          print "tools: em formato objeto/multilinha nao suportado pelo sync" > "/dev/stderr"
+          exit 2
+        }
+        print "permission:" cr
+        print "  edit: deny" cr
+        print "  bash: deny" cr
+        print "  task: deny" cr
+        print "  todowrite: deny" cr
+        print "  webfetch: deny" cr
+        print "  websearch: deny" cr
+        next
+      }
+      { print }
+    ' "$f" > "$gen/$(basename "$f")" || return 1
+  done
+  echo "  + .opencode/generated/agents (gerado — não editar)"
+}
+
 # OpenCode lê o AGENTS.md da raiz e .opencode/{agent,skills}.
 if [[ $WITH_OPENCODE -eq 1 || -d "$ROOT/.opencode" ]]; then
   echo "OpenCode:"
   mkdir -p "$ROOT/.opencode"
-  link ".opencode/agent" "../$SRC/agents"
+  opencode_agents
+  link ".opencode/agent" "generated/agents"
   link ".opencode/skills" "../$SRC/skills"
   [[ -d "$ROOT/$SRC/commands" ]] && link ".opencode/command" "../$SRC/commands"
 fi
@@ -86,11 +141,15 @@ project_mcp() {
   cp "$canonical" "$ROOT/.mcp.json"
   echo "  + .mcp.json (gerado — não editar)"
 
-  local py=""
-  command -v python3 >/dev/null 2>&1 && py=python3
-  [[ -z "$py" ]] && command -v python >/dev/null 2>&1 && py=python
+  local py="" candidate
+  for candidate in python3 python py; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import sys' >/dev/null 2>&1; then
+      py="$candidate"
+      break
+    fi
+  done
   if [[ -z "$py" ]]; then
-    echo "  ! python3/python não encontrado — opencode.json não gerado" >&2
+    echo "  ! Python 3 funcional não encontrado — opencode.json não gerado" >&2
     return 0
   fi
   MCP_SRC="$canonical" MCP_OUT="$ROOT/opencode.json" "$py" - <<'PY'
