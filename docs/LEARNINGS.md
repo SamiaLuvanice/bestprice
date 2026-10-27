@@ -2,6 +2,27 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-27 — Confirmar a edição e o drop no Paper
+
+**Contexto:** na Paper Bridge da spec 0035, substituir um texto por outro mais
+curto com inserção em bloco podia deixar o editor ProseMirror vazio. O arraste de
+uma camada também podia soltar antes de a interface atualizar o alvo. Um clique
+ou gesto concluído não demonstrava o estado esperado.
+
+**Princípio:** neste editor, emitir eventos de teclado, concluir a edição pela
+ferramenta Move e reler conteúdo, estilo e parentesco após a transição. Para o
+drop, aguardar a atualização de renderização com prazo limitado antes de soltar
+o mouse. A execução live ampliou e reduziu o mesmo texto preservando o ID.
+
+**Anti-pattern:** tratar `fill`/`insertText`, ausência de erro de clique ou
+sobreposição visual ao frame como prova de conteúdo persistido ou de parentesco.
+Também não transformar o inventário de um DOM virtualizado em garantia global
+de unicidade.
+
+**Referências:** [Issue #201](https://github.com/SamiaLuvanice/bestprice/issues/201),
+[verificação 0035](../specs/0035-paper-bridge-local/verification.md),
+`tools/paper-bridge/src/text.mjs`, `tools/paper-bridge/src/editor.mjs`.
+
 ## 2026-10-27 — Rascunhos privados pertencem à sessão
 
 **Contexto:** na revisão da spec 0034, o rascunho enviado pelo dashboard em

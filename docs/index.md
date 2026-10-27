@@ -26,6 +26,7 @@
 | [Atualização do harness](harness-upgrade.md) | Processo de atualização |
 | [Setup do harness](harness-setup.md) | Instalação e configuração do harness |
 | [Reivindicações de agentes](agent-claims.md) | Registro operacional de agentes |
+| [Paper Bridge](../tools/paper-bridge/README.md) | Instalação, CLI/API local do Paper Desktop, evidências e limites de composição |
 
 ## Documentação por módulo/app
 

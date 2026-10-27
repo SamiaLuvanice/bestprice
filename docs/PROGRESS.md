@@ -1,5 +1,21 @@
 # Progresso das specs
 
+Spec 0035 `pronta`, implementação entregue para revisão:
+[Issue #201](https://github.com/SamiaLuvanice/bestprice/issues/201),
+branch/worktree `feature/0035-issue-201-paper-bridge-local`, base
+`origin/develop` (`b0e674e`). Paper Bridge local com CLI/API Node por
+Playwright/CDP, limitada ao documento `BestPrice Bridge Test`: frame, nome,
+W/H/X/Y, preenchimento por tokens reais, textos, reparenting, composição de frame
+com textos, screenshots e validação por propriedades/DOM. Revisão independente
+aprovou após quatro correções. Gates finais: **11/11** testes da ferramenta,
+checagem de sintaxe e **50/50** testes das automações da raiz. Uma execução live
+completa comprovou **11 operações** entre 19:49:40 e 19:50:18 UTC; a repetição
+após pequenos ajustes finais não concluiu porque a sessão não expôs a aba
+autorizada. Scripts experimentais preservados com hashes idênticos. Doc-sync
+executado ao final; PR/CI/integração ainda não presumidos. Componentes completos,
+HTML, novos documentos, retângulos próprios e responsividade automática seguem
+pendentes. Ver [verification.md](../specs/0035-paper-bridge-local/verification.md).
+
 Spec 0034 `pronta`, implementação local revisada: [Issue #195](https://github.com/SamiaLuvanice/bestprice/issues/195),
 branch/worktree `feature/0034-issue-195-assistencia-compras-ai`, base `origin/develop`
 (`de31eb7`). Direção A aprovada; assistência, comparação manual de 2–3 produtos e

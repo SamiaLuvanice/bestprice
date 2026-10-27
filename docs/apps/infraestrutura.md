@@ -26,8 +26,39 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
 | `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
+| `tools/paper-bridge/` | CLI/API local para o documento de teste do Paper Desktop, fora do Compose e do deploy |
 
-### Regras das automações GitHub
+## Paper Bridge local — spec 0035
+
+O pacote em `tools/paper-bridge/` requer Node 22, npm e Paper Desktop no Windows.
+Instale com `npm ci` nesse diretório. Inicie o Paper com depuração apenas em
+loopback:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\Paper\Paper.exe" --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1
+```
+
+Abra exatamente uma aba de `BestPrice Bridge Test`, mantenha a janela visível sem
+minimizar, feche diálogos e deixe a árvore expandida e inteira visível.
+`npm run paper -- status` confirma a conexão. `create-frame`, `add-text`,
+`screenshot`, `validate`, `inspect`, `design-system` e `create-screen` estão no
+[guia da CLI](../../tools/paper-bridge/README.md).
+
+O lock `%TEMP%\bestprice-paper-bridge-test.lock` é comum às worktrees. Após
+interrupção, confira o PID gravado e se o processo terminou antes de remover
+manualmente o arquivo; não há recuperação automática por idade. Os experimentos
+preservados e automações externas não participam desse lock e não devem disputar
+o canvas. Evidências ficam em `tools/paper-bridge/reports/`, ignoradas pelo Git.
+
+`npm test` e `npm run check` verificam a ferramenta offline.
+`npm run test:live` é opt-in e cria/atualiza elementos somente no documento de
+teste, sem remoção de camadas. Não integra o CI atual nem exige serviços
+FastAPI/PostgreSQL. A execução completa comprovou 11 operações; a repetição após
+os ajustes finais ficou pendente por não localizar a aba autorizada na última
+sessão. O [relatório](../../specs/0035-paper-bridge-local/verification.md) separa
+esses resultados. Não houve implantação ou exposição da depuração à rede.
+
+## Regras das automações GitHub
 
 | Código | Responsabilidade observada |
 |---|---|

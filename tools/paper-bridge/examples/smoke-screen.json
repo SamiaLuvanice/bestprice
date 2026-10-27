@@ -1,0 +1,20 @@
+{
+  "name": "BestPrice IA - CLI Smoke",
+  "width": 640,
+  "height": 360,
+  "x": 1600,
+  "y": 0,
+  "background": "background",
+  "components": [
+    {
+      "type": "text",
+      "name": "CLI Smoke - Title",
+      "text": "BestPrice IA",
+      "x": 40,
+      "y": 32,
+      "fontSize": 32,
+      "fontWeight": 700,
+      "color": "primary"
+    }
+  ]
+}
