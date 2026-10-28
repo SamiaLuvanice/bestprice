@@ -10,12 +10,16 @@ A fonte de configuração é `.agents/mcp.json`. Após alterá-la, execute
 `.agents/sync.ps1 -WithCursor -WithOpenCode` no Windows ou
 `bash .agents/sync.sh --with-cursor --with-opencode` em Unix. O sync projeta
 `.mcp.json`, `opencode.json` e `.cursor/mcp.json`; não edite os arquivos gerados.
-A spec 0039 retira somente o servidor Paper, preservando as outras integrações.
+O servidor MCP oficial do Paper permanece configurado para uso eventual em
+`http://127.0.0.1:29979/mcp`, conforme ajuste de escopo da spec 0039. Ele depende
+do Paper Desktop disponível; manter a configuração não comprova conexão ativa.
+Isso não reativa a Paper Bridge nem substitui o Figma como padrão de design.
+As demais integrações também são preservadas.
 
 Para design, priorize o conector MCP oficial do Figma disponível e autorizado no
 cliente. Verifique a autorização e o acesso ao arquivo/frame na tarefa que o
 consultar; ferramentas listadas não comprovam acesso. Não duplique servidores
 nem versione credenciais. Configurações e plugins globais do cliente ficam fora
-das projeções deste repositório; a retirada local de Paper não os desinstala.
+das projeções deste repositório e não são alterados pela retirada da Bridge.
 O [guia frontend](apps/frontend.md#fluxo-oficial-de-design--figma) define o fluxo
 e o uso de exportações quando o MCP estiver indisponível ou limitado.

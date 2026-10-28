@@ -52,8 +52,11 @@ manipular ferramentas de design, exigem autorização específica do usuário.
 
 O HTML em `designsystem/` e os assets locais são referências preservadas da
 identidade existente e apoio ao fallback. O Figma é a referência visual
-principal; sugestões genéricas de skills não a substituem. Paper/Paper Bridge
-foi descontinuado pela spec 0039. O Playwright existente do frontend permanece
+principal; sugestões genéricas de skills não a substituem. A Paper Bridge
+foi descontinuada pela spec 0039; o MCP oficial do Paper permanece configurado
+para uso eventual quando necessário. Ele não substitui a referência Figma nem
+reativa a Bridge ou constitui fallback automático para limites do Figma.
+O Playwright existente do frontend permanece
 restrito à verificação da aplicação.
 
 ## Identidade visual atual — specs 0015, 0027, 0028, 0029 e 0030

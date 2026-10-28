@@ -56,7 +56,9 @@ evolução gradual de cada tela e reutilização dos componentes e tokens existe
 O [guia frontend](docs/apps/frontend.md#fluxo-oficial-de-design--figma) concentra
 as convenções de frames desktop/mobile, MCP oficial e referências exportadas.
 
-Paper/Paper Bridge foi descontinuado pela spec 0039. A aplicação e seus testes
+Paper Bridge foi descontinuada pela spec 0039; o MCP oficial do Paper permanece
+configurado para uso eventual quando necessário, mantendo Figma como padrão.
+A aplicação e seus testes
 visuais continuam independentes dessa integração; histórico e evidências das
 specs 0035–0037 permanecem preservados.
 

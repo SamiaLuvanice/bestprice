@@ -4,9 +4,10 @@ As decisões ativas ficam em `.agents/`, no [contexto do produto](product-contex
 
 ## 2026-10-28 — Uma referência oficial para o fluxo de design
 
-**Contexto:** a padronização 0039 substituiu Paper/Paper Bridge por Figma como
-referência principal, preservando a implementação, a identidade e as evidências
-anteriores do BestPrice.
+**Contexto:** a padronização 0039 adotou Figma como referência principal e retirou
+a Paper Bridge, preservando implementação, identidade e evidências anteriores.
+Conforme correção do usuário, o MCP oficial do Paper permanece configurado para
+uso eventual, sem reativar a Bridge ou substituir o Figma.
 
 **Princípio:** manter uma origem visual identificável e reutilizar os componentes
 e tokens existentes reduz divergências. Quando o conector oficial não permite
@@ -19,8 +20,9 @@ não autorizada, ou tratar um export antigo como inspeção atual do arquivo rem
 **Referências:** [Issue #211](https://github.com/SamiaLuvanice/bestprice/issues/211),
 [fluxo oficial](apps/frontend.md#fluxo-oficial-de-design--figma).
 
-Os três aprendizados Paper abaixo são históricos: a integração foi descontinuada
-pela spec 0039. Seus detalhes descrevem o código anterior à retirada e não
+Os três aprendizados Paper abaixo são históricos: a Paper Bridge foi descontinuada
+pela spec 0039; o MCP oficial permanece para uso eventual. Os detalhes descrevem
+o código da Bridge anterior à retirada e não
 orientam a criação de novas automações.
 
 ## 2026-10-28 — URL temporária não identifica conteúdo visual

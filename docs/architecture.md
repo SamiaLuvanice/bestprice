@@ -8,8 +8,10 @@ validação visual. O [guia frontend](apps/frontend.md#fluxo-oficial-de-design--
 concentra o procedimento e o fallback por exportações. Essa consulta não é uma
 dependência de runtime da SPA, API, worker ou banco.
 
-Paper/Paper Bridge foi descontinuado na spec 0039. O pacote e seus gates
+Paper Bridge foi descontinuada na spec 0039. O pacote e seus gates
 exclusivos foram retirados; a arquitetura da aplicação permanece preservada.
+O MCP oficial do Paper permanece configurado para uso eventual quando
+necessário, sem reativar a Bridge ou substituir o Figma como referência principal.
 As specs 0035–0037 mantêm as evidências históricas, e o
 [código anterior à retirada](https://github.com/SamiaLuvanice/bestprice/tree/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge)
 pode ser consultado no Git. Esses registros não orientam novas automações.

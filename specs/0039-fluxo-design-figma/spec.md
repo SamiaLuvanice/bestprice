@@ -14,7 +14,7 @@ issue: https://github.com/SamiaLuvanice/bestprice/issues/211
 ## Problema e público
 
 Quem mantém o BestPrice IA precisa de um fluxo de design simples e confiável.
-A integração Paper/Paper Bridge não atingiu a qualidade esperada e mantém
+A integração Paper Bridge não atingiu a qualidade esperada e mantém
 automações e instruções que competem com o Figma e a identidade já estabelecida.
 O escopo de retirada foi apresentado e aprovado em 28/10/2026.
 
@@ -30,11 +30,14 @@ A consulta usa preferencialmente o MCP oficial do Figma quando disponível e
 autorizado. Sem acesso, autorização ou cota, utiliza exportações identificadas
 do Figma e registra seus limites, sem criar bridges ou automações alternativas
 sem autorização específica. Designs existentes não são reconstruídos nesta etapa.
+O MCP oficial do Paper permanece disponível para uso eventual quando necessário,
+conforme ajuste de escopo solicitado pelo usuário; isso não reativa a Bridge nem
+substitui o Figma como referência visual principal.
 
 ## Critérios de aceite
 
-- AC01: A integração executável Paper/Paper Bridge e suas verificações exclusivas deixam de participar do checkout entregue e do CI.
-- AC02: A configuração MCP do projeto e suas projeções deixam de configurar Paper, preservando os demais servidores.
+- AC01: A integração executável Paper Bridge e suas verificações exclusivas deixam de participar do checkout entregue e do CI.
+- AC02: A configuração MCP do projeto e suas projeções preservam o MCP oficial do Paper para uso eventual e os demais servidores existentes.
 - AC03: Regras ativas e documentação existente indicam Figma como referência visual principal e o fluxo completo até a validação visual.
 - AC04: O fluxo documenta identificação de frames/estados, organização desktop/mobile, consulta de componentes/propriedades/tokens, reutilização da biblioteca existente e comparação visual responsiva.
 - AC05: O procedimento alternativo usa exportações Figma com origem/data/limites e exige autorização para bridges ou automações de ferramentas de design.

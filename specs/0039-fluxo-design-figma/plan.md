@@ -35,7 +35,8 @@ autorização verificada quando houver tarefa real com arquivo/frame.
    `tools/paper-bridge/` na nova worktree, após validar caminhos absolutos e
    consumidores. Remover só as três etapas exclusivas da Bridge em `quality.yml`.
    Preservar testes Node gerais e actionlint. Não alterar docs, MCP ou frontend.
-2. Coordenador: retirar apenas `paper` de `.agents/mcp.json`; atualizar
+2. Coordenador: preservar `paper` em `.agents/mcp.json` para uso eventual, conforme
+   ajuste posterior solicitado pelo usuário; atualizar
    `.agents/AGENTS.md`, `.agents/rules/{workspace,frontend}.md` e
    `designsystem/{agent-guidelines,README,brand-spec}.md` para precedência Figma, componentes,
    tokens, exportações e proibição de novas bridges sem autorização. Aplicar
@@ -64,8 +65,8 @@ de detalhe essencial deve ser resolvida com referência exportada, sem inventar.
 
 - Links históricos para código removido: apontar para o snapshot Git anterior à
   retirada ou identificar caminho como histórico; não apagar evidências.
-- Projeções: sync pode normalizar formatação, mas servidores não relacionados
-  devem permanecer semanticamente idênticos; comprovar parseando JSON.
+- Projeções: sync pode normalizar formatação, mas todos os servidores existentes,
+  inclusive Paper, devem permanecer semanticamente idênticos; comprovar parseando JSON.
 - Trabalho local: nenhum `git clean`, reset, remoção de worktree, pasta de assets
   ou configuração global. Checkout principal e worktrees antigas ficam intactos.
 - Rodar testes Node gerais, actionlint disponível, hooks, diff-check, comparação

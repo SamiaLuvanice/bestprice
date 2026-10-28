@@ -36,7 +36,9 @@ Se o MCP estiver indisponível, sem autorização ou limitado por cota, use
 exportações Figma identificadas por origem/frame, data, dimensões e limites.
 Não afirme paridade com alterações remotas posteriores. Não crie bridges,
 servidores intermediários ou automações Playwright para manipular ferramentas
-de design sem autorização específica; Paper/Paper Bridge foram descontinuados.
+de design sem autorização específica. A Paper Bridge foi descontinuada; o MCP
+oficial do Paper permanece disponível para uso eventual quando necessário,
+sem substituir o Figma como referência principal ou reativar a Bridge.
 Os testes visuais existentes da aplicação continuam válidos. Compare o resultado
 com a referência aprovada nos viewports e estados relevantes; baselines exigem
 revisão explícita. Dados ilustrativos de design não viram dados reais do produto.

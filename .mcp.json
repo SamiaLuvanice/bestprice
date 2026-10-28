@@ -6,6 +6,9 @@
     },
     "mercadolibre-mcp-server": {
       "url": "https://mcp.mercadolibre.com/devsite/v1/mcp"
+    },
+    "paper": {
+      "url": "http://127.0.0.1:29979/mcp"
     }
   }
 }

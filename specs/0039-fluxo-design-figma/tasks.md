@@ -3,7 +3,7 @@
 - [x] Escopo de retirada analisado e aprovado; Issue #211, base develop e worktree própria confirmadas.
 - [x] Revisar spec independentemente e registrar parecer.
 - [x] Remover os 46 arquivos exclusivos e etapas CI após checar dependências/caminhos.
-- [x] Retirar MCP Paper e sincronizar projeções preservando os outros servidores.
+- [x] Preservar MCP Paper para uso eventual e sincronizar projeções preservando todos os servidores (ajuste de escopo do usuário).
 - [x] Alinhar regras de design a Figma, preservando identidade e componentes existentes.
 - [x] Verificar automações, workflows, configurações, diff e ausência de mudanças na aplicação.
 - [x] Revisão de arquitetura e QA independentes; resolver achados e rever se necessário.

@@ -29,7 +29,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 
 ## Integração de design
 
-A spec 0039 descontinua Paper/Paper Bridge e retira do job Automation a instalação
+A spec 0039 descontinua Paper Bridge e retira do job Automation a instalação
 do pacote, a instalação do Chromium e os testes exclusivos da Bridge. Permanecem
 os testes Node gerais e actionlint, além dos gates de backend e frontend. O
 Playwright de regressão visual da aplicação é preservado e continua separado do
@@ -40,6 +40,8 @@ bridge, porta CDP ou container adicional. As convenções e o fallback estão no
 [fluxo oficial de design](frontend.md#fluxo-oficial-de-design--figma).
 A configuração canônica e suas projeções são descritas no
 [setup do harness](../harness-setup.md).
+O MCP oficial do Paper permanece configurado para uso eventual, sem reativar
+a Bridge ou adicionar automação/porta CDP ao fluxo principal Figma.
 
 Os resultados antigos das specs 0035–0037 são históricos. Para consultar a
 implementação removida, use o
