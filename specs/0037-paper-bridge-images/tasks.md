@@ -9,4 +9,4 @@
 - [ ] Testar geração real somente após autorização específica; registrar pendência se ausente.
 - [x] Rodar gates Node e revisar diff independentemente; evidências em verification.md.
 - [x] Executar doc-sync-onboarding por último; registro em doc-sync.md.
-- [ ] Preparar handoff em PR draft; geração remota/AC4 e CI remoto pendentes.
+- [x] Preparar handoff no [PR draft #206](https://github.com/SamiaLuvanice/bestprice/pull/206); geração remota/AC4 pendentes; CI remoto em execução.

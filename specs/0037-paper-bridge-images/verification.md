@@ -87,4 +87,7 @@ autorizando, nenhuma geração real foi iniciada. Não há alegação de crédit
 gratuitos, promoção ao documento BestPrice IA, merge ou deploy. A spec permanece
 `pronta`, com AC4 pendente. Doc-sync-onboarding executado como etapa final após
 gates/revisão; documentos e arquivos conferidos estão em [doc-sync.md](doc-sync.md).
-Handoff em PR draft e CI remoto ainda pendentes.
+Implementação entregue; aguarda revisão no [PR draft #206](https://github.com/SamiaLuvanice/bestprice/pull/206),
+para develop, commit de código `67750d3`. Hooks de commit aprovados; branch publicada.
+CI remoto iniciado, com Backend/Automation na fila e Frontend/PR policy em execução
+na consulta inicial. Resultado final nos [checks da PR](https://github.com/SamiaLuvanice/bestprice/pull/206/checks).

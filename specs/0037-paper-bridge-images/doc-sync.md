@@ -38,6 +38,7 @@ O preparo real foi demonstrado; geração remota não foi autorizada ou iniciada
 Variety pack é inspecionado e recusado para geração. Fingerprint raster usa amostra
 até 128×128, sem alegar igualdade integral. Validate relata pendências sem adotar
 nós automaticamente. Download via exportação pública não foi validado; manifesto
-guarda referências. Handoff em PR draft e CI remoto continuam pendentes. Não houve
+guarda referências. Após este doc-sync, o handoff foi publicado no
+[PR draft #206](https://github.com/SamiaLuvanice/bestprice/pull/206), com CI remoto em execução. Não houve
 promoção ao documento BestPrice IA, merge ou deploy. Se o código mudar, repetir
 este doc-sync.
