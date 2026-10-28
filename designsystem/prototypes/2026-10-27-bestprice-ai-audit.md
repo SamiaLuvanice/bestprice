@@ -1,5 +1,11 @@
 # BestPrice AI — auditoria e preparação do redesign no Paper
 
+> **Registro histórico — direção Paper descontinuada em 28/10/2026 pela spec 0039.**
+> O conteúdo abaixo preserva a auditoria de 27/10 e suas limitações; pedidos de
+> criação no Paper, configuração MCP e próximos passos ali descritos foram
+> substituídos pelo [fluxo oficial Figma](../../docs/apps/frontend.md#fluxo-oficial-de-design--figma).
+> Não comprova acesso atual ao Figma nem autoriza retomada de automações Paper.
+
 Data: 27/10/2026, America/Sao_Paulo. Ferramenta: Codex, inspeção do repositório e MCP.
 Escopo: design e documentação; frontend e backend não foram alterados.
 Referências relacionadas: specs 0015, 0027, 0028, 0030 e 0034; este documento não altera seus status nem autoriza implementação.

@@ -2,6 +2,27 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-28 — Uma referência oficial para o fluxo de design
+
+**Contexto:** a padronização 0039 substituiu Paper/Paper Bridge por Figma como
+referência principal, preservando a implementação, a identidade e as evidências
+anteriores do BestPrice.
+
+**Princípio:** manter uma origem visual identificável e reutilizar os componentes
+e tokens existentes reduz divergências. Quando o conector oficial não permite
+consulta, registrar a origem, a data e os limites da exportação mantém o handoff
+revisável sem introduzir outra integração.
+
+**Anti-pattern:** contornar indisponibilidade ou cotas com uma bridge/automação
+não autorizada, ou tratar um export antigo como inspeção atual do arquivo remoto.
+
+**Referências:** [Issue #211](https://github.com/SamiaLuvanice/bestprice/issues/211),
+[fluxo oficial](apps/frontend.md#fluxo-oficial-de-design--figma).
+
+Os três aprendizados Paper abaixo são históricos: a integração foi descontinuada
+pela spec 0039. Seus detalhes descrevem o código anterior à retirada e não
+orientam a criação de novas automações.
+
 ## 2026-10-28 — URL temporária não identifica conteúdo visual
 
 **Contexto:** na spec 0037, importar PNG/JPG/WebP funcionava, mas a validação
@@ -19,7 +40,7 @@ fingerprints silenciosamente após divergência sem conferir o conteúdo.
 
 **Referências:** [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205),
 [verificação 0037](../specs/0037-paper-bridge-images/verification.md),
-`tools/paper-bridge/src/image-ui.mjs`, `tools/paper-bridge/tests/image-ui.test.mjs`.
+[tools/paper-bridge/src/image-ui.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/image-ui.mjs), [tools/paper-bridge/tests/image-ui.test.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/tests/image-ui.test.mjs).
 
 ## 2026-10-28 — Reler parâmetros antes do consumo de créditos
 
@@ -38,7 +59,7 @@ conferidos só no preparo ou sucesso baseado no primeiro resultado de um lote.
 
 **Referências:** [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205),
 [verificação 0037](../specs/0037-paper-bridge-images/verification.md),
-`tools/paper-bridge/src/images.mjs`, `tools/paper-bridge/src/image-ui.mjs`.
+[tools/paper-bridge/src/images.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/images.mjs), [tools/paper-bridge/src/image-ui.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/image-ui.mjs).
 
 ## 2026-10-27 — Confirmar a edição e o drop no Paper
 
@@ -59,7 +80,7 @@ de unicidade.
 
 **Referências:** [Issue #201](https://github.com/SamiaLuvanice/bestprice/issues/201),
 [verificação 0035](../specs/0035-paper-bridge-local/verification.md),
-`tools/paper-bridge/src/text.mjs`, `tools/paper-bridge/src/editor.mjs`.
+[tools/paper-bridge/src/text.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/text.mjs), [tools/paper-bridge/src/editor.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/editor.mjs).
 
 ## 2026-10-27 — Rascunhos privados pertencem à sessão
 

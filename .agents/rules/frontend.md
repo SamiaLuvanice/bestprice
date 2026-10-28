@@ -10,16 +10,33 @@ Prefira HTML semântico, texto de erro acessível e testes orientados ao comport
 
 ## Identidade visual BestPrice
 
-Antes de criar uma tela ou alterar visualmente uma existente, consulte o design system em
-`designsystem/index.html`, a referência de entrada em `designsystem/login.html`, a logo
-original `designsystem/logo-bestprice.png`, as observações de uso em
-`designsystem/README.md` e as regras automatizáveis de
-`designsystem/agent-guidelines.md` (toque 44 × 44 px, HTML semântico, contraste
-AA/AAA e busca nas skills de design). Preserve a logo sem redesenhá-la ou distorcê-la. Aplique a skill
-`frontend-design` ao trabalho de interface; a identidade da referência prevalece sobre
-preferências visuais genéricas da skill. Em divergências entre referências, `index.html`
-governa a identidade; `login.html` orienta somente composição. Preserve os requisitos de
-acessibilidade e os contratos funcionais das specs. Registre extensões de tokens,
-componentes ou regras em `designsystem/README.md`, com motivo e superfícies afetadas,
-antes de adotá-las em novas superfícies. Não trate produtos, preços ou indicadores
-ilustrativos do protótipo como dados reais nem os adicione ao produto.
+O Figma é a fonte principal de referência visual do BestPrice IA: interfaces web e
+mobile, componentes, tokens, protótipos e layouts responsivos. Siga
+Figma → Codex → Implementação → Validação visual, descrito em
+`docs/apps/frontend.md`. Evolua tela por tela, preservando arquitetura,
+funcionalidades, identidade, contratos e acessibilidade.
+
+Antes de implementar, identifique o arquivo/frame, node-id, rota, estado e
+viewport. Priorize o MCP oficial do Figma quando disponível e autorizado;
+consulte screenshot, estrutura, componentes, propriedades, variantes e tokens.
+Mapeie o design para os componentes locais antes de criar componentes novos.
+Reutilize a biblioteca em `frontend/src/components/ui/`, `Brand`, componentes
+das features e tokens da SPA; mantenha código modular e regras responsivas.
+
+Consulte também `designsystem/{README,agent-guidelines,brand-spec}.md`, a logo
+original `designsystem/logo-bestprice.png` e a skill `frontend-design`.
+Os HTMLs `designsystem/index.html` e `login.html` são referências locais
+preservadas, sem precedência sobre o Figma aprovado. Sugestões de skills não
+substituem esse design. Preserve a logo sem redesenho ou distorção; divergências
+de identidade ou detalhe essencial exigem esclarecimento, sem redesign implícito.
+Registre extensões de tokens/componentes em `designsystem/README.md`, com motivo,
+superfícies afetadas e referência Figma, antes de adotá-las.
+
+Se o MCP estiver indisponível, sem autorização ou limitado por cota, use
+exportações Figma identificadas por origem/frame, data, dimensões e limites.
+Não afirme paridade com alterações remotas posteriores. Não crie bridges,
+servidores intermediários ou automações Playwright para manipular ferramentas
+de design sem autorização específica; Paper/Paper Bridge foram descontinuados.
+Os testes visuais existentes da aplicação continuam válidos. Compare o resultado
+com a referência aprovada nos viewports e estados relevantes; baselines exigem
+revisão explícita. Dados ilustrativos de design não viram dados reais do produto.

@@ -14,11 +14,6 @@
       "type": "remote",
       "url": "https://mcp.mercadolibre.com/devsite/v1/mcp",
       "enabled": true
-    },
-    "paper": {
-      "type": "remote",
-      "url": "http://127.0.0.1:29979/mcp",
-      "enabled": true
     }
   }
 }
