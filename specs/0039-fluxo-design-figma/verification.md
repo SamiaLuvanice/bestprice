@@ -39,7 +39,7 @@ precedência Figma vs. HTML local, diff da aplicação, preservação da worktre
 - AC03–AC05: regras de precedência e referências locais alinhadas; guia principal em `docs/apps/frontend.md`; QA independente aprovou cobertura do fluxo, reutilização, desktop/mobile, validação e fallback.
 - AC06: zero diff frontend/backend/scripts/Compose; worktree 0038 e mudanças locais anteriores não editadas.
 - AC07: histórico 0035–0037 intacto, avisos de descontinuação e links ao snapshot anterior publicados; substituição da direção 0038 registrada sem editar sua worktree ou Issue.
-- AC08: spec-reviewer, arch-reviewer e QA independentes sem bloqueios; hooks de conteúdo e gates locais aplicáveis aprovados; doc-sync final concluído. CI remoto e PR aguardam publicação/acompanhamento.
+- AC08: spec-reviewer, arch-reviewer e QA independentes sem bloqueios; hooks de conteúdo e gates locais aplicáveis aprovados; doc-sync final concluído. PR #212 publicada e CI remoto aprovado no SHA de implementação, conforme registro abaixo.
 
 ## Revisão independente
 
@@ -64,12 +64,33 @@ Atualizou o progresso com os resultados reais e consolidou o registro final em
 canônica já registra Figma e o fluxo oficial. O procedimento continua concentrado
 em `docs/apps/frontend.md`, com referências curtas nos demais guias.
 
+## Publicação e CI
+
+Implementação entregue; aguarda revisão na
+[PR draft #212](https://github.com/SamiaLuvanice/bestprice/pull/212), para develop.
+Commit `374da450cd4ee8f48c31737ba36c39cec808432b`, com `Refs #211`;
+hooks de conteúdo e commit-msg passaram, sem bypass.
+
+O [CI 40737699608](https://github.com/SamiaLuvanice/bestprice/actions/runs/40737699608)
+terminou com sucesso nesse SHA: política de PR, Backend, Frontend, Automation
+e agregador CI. Logs confirmam **241 testes pytest**, **368 testes Vitest em
+33 arquivos** e **50 testes Node**, todos aprovados. Ruff, ESLint, build
+TypeScript/Vite e actionlint passaram. O backend do CI utiliza PostgreSQL 17;
+isso não equivale a exercício manual da aplicação com os três serviços.
+
+Esta atualização posterior ao doc-sync acrescenta somente evidência documental
+de publicação/CI; não altera código, configuração ou regras. O último push de
+documentação terá seu próprio CI acompanhado antes do handoff. A spec permanece
+`pronta` até revisão/integração em develop; não houve merge ou limpeza de worktrees.
+
 ## Limites
 
 Não houve consulta/autenticação de arquivo Figma, escrita em canvas, redesign,
 captura visual ou novo comportamento de aplicação. TDD Red/Green de produto não
 se aplica a esta retirada de tooling. Playwright de testes da SPA permanece.
-Lint/test/build de backend e frontend e actionlint serão conferidos no CI da PR;
-não executados localmente nesta etapa, pois essas camadas não mudaram e actionlint
-não está instalado no ambiente local. Sem validação ponta a ponta PostgreSQL,
-Mercado Livre ou IA, sem release, deploy ou sincronização de Project declarada.
+Lint/test/build de backend e frontend e actionlint passaram no CI identificado
+acima; não foram executados localmente, pois essas camadas não mudaram e
+actionlint não está instalado no ambiente local. Sem validação manual ponta a
+ponta PostgreSQL/API/UI, Mercado Livre ou IA. Sem release ou implantação manual;
+checks automáticos de preview do repositório não validam funcionalidades novas
+nem demonstram promoção de ambientes. Nenhuma sincronização de Project declarada.

@@ -8,5 +8,5 @@
 - [x] Verificar automações, workflows, configurações, diff e ausência de mudanças na aplicação.
 - [x] Revisão de arquitetura e QA independentes; resolver achados e rever se necessário.
 - [x] Executar doc-sync-onboarding por último, validar links e registrar evidências reais.
-- [ ] Commit com hooks, publicar branch e preparar PR para develop; acompanhar CI.
+- [x] Commit com hooks, publicar branch e preparar PR para develop; CI da implementação aprovado (run 40737699608); último push documental será conferido no handoff.
 - [ ] Revisão/integração em develop (fora desta etapa; nenhuma limpeza das worktrees anteriores).

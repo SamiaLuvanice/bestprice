@@ -54,3 +54,9 @@ Sem acesso/autenticação Figma, escrita em canvas, novas interfaces, merge,
 release, deploy ou sincronização de Project declarados. PR e CI ficam para
 publicação/acompanhamento pelo coordenador; actionlint e gates completos da
 aplicação não foram executados localmente nesta etapa.
+
+Após esta etapa, o coordenador publicou a PR draft #212 e registrou em
+`verification.md` e `docs/PROGRESS.md` o CI 40737699608 aprovado no SHA
+`374da45`: 241 pytest, 368 Vitest e 50 Node, lint/build/actionlint verdes.
+Somente evidências documentais foram acrescentadas; o código não mudou depois
+do doc-sync. A conferência do último push documental fica no handoff da PR.

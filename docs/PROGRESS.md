@@ -30,9 +30,14 @@ regras canônicas já atualizadas. Ver [verificação](../specs/0039-fluxo-desig
 e [doc-sync](../specs/0039-fluxo-design-figma/doc-sync.md), além da
 [spec](../specs/0039-fluxo-design-figma/spec.md) e do
 [plano](../specs/0039-fluxo-design-figma/plan.md).
-PR e CI remoto aguardam publicação e acompanhamento pelo coordenador; lint/test/build
-backend/frontend e actionlint não foram executados localmente nesta etapa.
-Não houve consulta/autenticação atual do Figma, merge, release ou deploy.
+Implementação entregue; aguarda revisão na
+[PR draft #212](https://github.com/SamiaLuvanice/bestprice/pull/212), para develop.
+[CI 40737699608](https://github.com/SamiaLuvanice/bestprice/actions/runs/40737699608)
+aprovado em `374da45`: **241 pytest**, **368 Vitest em 33 arquivos**, **50 Node**,
+Ruff, ESLint, build e actionlint verdes. Os gates completos rodaram no CI,
+não localmente. O último push desta evidência documental será conferido antes
+do handoff. Sem consulta/autenticação atual do Figma, merge, release ou
+implantação manual; checks automáticos de preview não representam promoção.
 
 ## Histórico de Paper — specs 0035–0037, descontinuado pela 0039
 
