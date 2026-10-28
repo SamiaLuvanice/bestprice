@@ -21,14 +21,14 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `frontend/public/_routes.json` | Invoca a Pages Function somente para `/api/*` |
 | `scripts/compose-worktree.ps1` | Isola nome Compose, volume e portas por worktree no Windows |
 | `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
-| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, Node tests e actionlint |
+| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, Node tests, testes de imagens da Bridge em Chromium local e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
 | `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
 | `tools/paper-bridge/` | CLI/API local para o documento de teste do Paper Desktop, fora do Compose e do deploy |
 
-## Paper Bridge local — spec 0035
+## Paper Bridge local — specs 0035–0037
 
 O pacote em `tools/paper-bridge/` requer Node 22, npm e Paper Desktop no Windows.
 Instale com `npm ci` nesse diretório. Inicie o Paper com depuração apenas em
@@ -41,7 +41,8 @@ loopback:
 Abra exatamente uma aba de `BestPrice Bridge Test`, mantenha a janela visível sem
 minimizar, feche diálogos e deixe a árvore expandida e inteira visível.
 `npm run paper -- status` confirma a conexão. `create-frame`, `add-text`,
-`screenshot`, `validate`, `inspect`, `design-system` e `create-screen` estão no
+`screenshot`, `validate`, `inspect`, `design-system`, `create-screen`, `sync` e
+`image inspect/generate/import/validate` estão no
 [guia da CLI](../../tools/paper-bridge/README.md).
 
 O lock `%TEMP%\bestprice-paper-bridge-test.lock` é comum às worktrees. Após
@@ -50,13 +51,32 @@ manualmente o arquivo; não há recuperação automática por idade. Os experime
 preservados e automações externas não participam desse lock e não devem disputar
 o canvas. Evidências ficam em `tools/paper-bridge/reports/`, ignoradas pelo Git.
 
-`npm test` e `npm run check` verificam a ferramenta offline.
+O módulo `image` importa PNG/JPG/WebP/SVG pelo seletor Place image, organiza
+cópias locais em `assets/bestprice-ia/images/{imported,svg}` e registra origem,
+utilização, hashes e IDs em `state/images.json`. Diretórios de cópias, estado e
+relatórios ficam ignorados pelo Git. O preparo de geração não consome créditos;
+o eventual submit exige `--confirm` com ID específico válido por 15 minutos e
+relê parâmetros antes do clique. Modelos listados não comprovam acesso gratuito;
+Variety pack fica bloqueado para geração. Erro/timeout preserva pendência que
+exige conferência manual, sem retry nem reconciliação automática pelo validate.
+
+`npm test`, `npm run check` e `npm run test:images` verificam a ferramenta offline.
 `npm run test:live` é opt-in e cria/atualiza elementos somente no documento de
-teste, sem remoção de camadas. Não integra o CI atual nem exige serviços
-FastAPI/PostgreSQL. A execução completa comprovou 11 operações; a repetição após
+teste, sem remoção de camadas. `npm run test:images:live` importa/reutiliza fixtures
+SVG/PNG/JPG/WebP sem gerar com IA; passou com seis assets locais validados no
+documento de teste. Esses ensaios live não integram o CI nem exigem serviços
+FastAPI/PostgreSQL. A execução inicial da spec 0035 comprovou 11 operações; a repetição após
 os ajustes finais ficou pendente por não localizar a aba autorizada na última
 sessão. O [relatório](../../specs/0035-paper-bridge-local/verification.md) separa
 esses resultados. Não houve implantação ou exposição da depuração à rede.
+
+O job Automation de `quality.yml` instala a Bridge e Chromium e executa
+`npm run check` + `npm run test:images` com formulário controlado, sem sessão
+Paper ou créditos. Os gates locais passaram; o CI remoto ainda precisa executar
+o PR desta mudança. A [verificação 0037](../../specs/0037-paper-bridge-images/verification.md)
+mantém AC4 pendente: o preparo real foi demonstrado, mas geração remota não foi
+autorizada nem iniciada. Download de resultados por exportação pública também
+não foi validado; o manifesto guarda metadados e referências do canvas.
 
 ## Regras das automações GitHub
 

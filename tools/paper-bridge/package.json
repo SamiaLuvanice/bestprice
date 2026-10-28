@@ -8,6 +8,8 @@
     "paper": "node src/cli.mjs",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "test:live": "node scripts/live-smoke.mjs",
+    "test:images:live": "node scripts/live-images.mjs",
+    "test:images": "node --test --test-concurrency=1 tests/images.test.mjs tests/image-ui.test.mjs",
     "check": "node scripts/check.mjs"
   },
   "keywords": [],
