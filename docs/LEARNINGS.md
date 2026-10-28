@@ -2,6 +2,65 @@
 
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
+## 2026-10-28 — URL temporária não identifica conteúdo visual
+
+**Contexto:** na spec 0037, importar PNG/JPG/WebP funcionava, mas a validação
+posterior falhava porque o Paper trocava a URL blob pela referência persistida,
+mantendo os pixels. A regressão foi reproduzida em Chromium antes da correção.
+
+**Princípio:** conferir conteúdo renderizado e propriedades relevantes sem usar
+URL transitória como identidade visual. A Bridge combina dimensões/propriedades
+e pixels decodificados amostrados até 128×128, sem alegar comparação integral.
+Os registros das fixtures antigas só foram atualizados após conferir os pixels
+completos ou a assinatura SVG anterior, com auditoria local.
+
+**Anti-pattern:** tratar troca de URL como alteração de imagem ou substituir
+fingerprints silenciosamente após divergência sem conferir o conteúdo.
+
+**Referências:** [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205),
+[verificação 0037](../specs/0037-paper-bridge-images/verification.md),
+`tools/paper-bridge/src/image-ui.mjs`, `tools/paper-bridge/tests/image-ui.test.mjs`.
+
+## 2026-10-28 — Reler parâmetros antes do consumo de créditos
+
+**Contexto:** a revisão da spec 0037 identificou que parâmetros preparados podiam
+ser alterados manualmente antes do clique de geração; o primeiro resultado de um
+pacote também não demonstrava conclusão de todos os resultados.
+
+**Princípio:** vincular a autorização ao pedido concreto e reler prompt/modelo/
+proporção imediatamente antes do consumo. Persistir a tentativa antes do clique
+impede consumo duplicado em erro/timeout. Um modo múltiplo sem conclusão comprovada
+permanece bloqueado; o fluxo individual exige uma nova camada carregada. A presença
+de modelos em menus não comprova acesso gratuito.
+
+**Anti-pattern:** autorização genérica, retry de consumo incerto, parâmetros
+conferidos só no preparo ou sucesso baseado no primeiro resultado de um lote.
+
+**Referências:** [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205),
+[verificação 0037](../specs/0037-paper-bridge-images/verification.md),
+`tools/paper-bridge/src/images.mjs`, `tools/paper-bridge/src/image-ui.mjs`.
+
+## 2026-10-27 — Confirmar a edição e o drop no Paper
+
+**Contexto:** na Paper Bridge da spec 0035, substituir um texto por outro mais
+curto com inserção em bloco podia deixar o editor ProseMirror vazio. O arraste de
+uma camada também podia soltar antes de a interface atualizar o alvo. Um clique
+ou gesto concluído não demonstrava o estado esperado.
+
+**Princípio:** neste editor, emitir eventos de teclado, concluir a edição pela
+ferramenta Move e reler conteúdo, estilo e parentesco após a transição. Para o
+drop, aguardar a atualização de renderização com prazo limitado antes de soltar
+o mouse. A execução live ampliou e reduziu o mesmo texto preservando o ID.
+
+**Anti-pattern:** tratar `fill`/`insertText`, ausência de erro de clique ou
+sobreposição visual ao frame como prova de conteúdo persistido ou de parentesco.
+Também não transformar o inventário de um DOM virtualizado em garantia global
+de unicidade.
+
+**Referências:** [Issue #201](https://github.com/SamiaLuvanice/bestprice/issues/201),
+[verificação 0035](../specs/0035-paper-bridge-local/verification.md),
+`tools/paper-bridge/src/text.mjs`, `tools/paper-bridge/src/editor.mjs`.
+
 ## 2026-10-27 — Rascunhos privados pertencem à sessão
 
 **Contexto:** na revisão da spec 0034, o rascunho enviado pelo dashboard em

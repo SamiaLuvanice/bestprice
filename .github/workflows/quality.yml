@@ -84,6 +84,17 @@ jobs:
         with:
           node-version: '22'
       - run: node --test .github/scripts/*.test.cjs
+      - name: Instalar Paper Bridge
+        working-directory: tools/paper-bridge
+        run: npm ci
+      - name: Instalar Chromium para testes locais de interface
+        working-directory: tools/paper-bridge
+        run: npx playwright install --with-deps chromium
+      - name: Validar módulo de imagens sem sessão Paper ou créditos
+        working-directory: tools/paper-bridge
+        run: |
+          npm run check
+          npm run test:images
       - name: Validar workflows
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
