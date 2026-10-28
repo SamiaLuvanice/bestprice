@@ -44,7 +44,74 @@ npm run paper -- create-screen --file examples/smoke-screen.json
 npm run paper -- sync --screen dashboard
 npm run paper -- sync --screen dashboard --viewport tablet
 npm run paper -- sync --screen dashboard --viewport mobile
+npm run paper -- image inspect
+npm run paper -- image inspect --kind svg
+npm run paper -- image generate --prompt-file examples/hero.txt --model "Grok Very fast with usable quality" --aspect-ratio 16:9
+npm run paper -- image import --file examples/basket.svg --source "SVG criado por código no BestPrice" --usage "ensaio do hero"
+npm run paper -- image validate
 ```
+
+## Imagens e SVG — spec 0037
+
+`image inspect` abre apenas a ferramenta, lê os menus públicos e fecha o painel
+sem gerar. Retorna prompt editável, modelos/proporções disponíveis com seus
+estados e inventário das imagens já renderizadas para orientar a reutilização.
+`--kind svg` inspeciona Create SVG. No ensaio de 28/10/2026, Create image expôs dez
+opções de modelo e proporções `1:1`, `3:2`, `4:3`, `16:9`, `2:3`, `3:4`, `9:16`;
+Create SVG mostrou QuiverAI Arrow 2. A lista é lida novamente a cada operação:
+presença no menu não comprova acesso gratuito, saldo ou custo.
+
+`image generate` sem `--confirm` preenche os parâmetros e retorna um pedido
+revisável com `confirmationRequired:true`, `verified:false`, ID, prazo de 15
+minutos e aviso de custo desconhecido. **Não inicia geração.** `--model` precisa
+coincidir com o rótulo completo devolvido pela inspeção, incluindo descrição.
+Sem essa opção, usa a seleção atual se for um modelo individual. Variety pack
+é inspecionado, mas recusado para geração até validar a conclusão de múltiplos
+resultados. Não há fallback automático de modelo nem confirmação genérica.
+
+Somente após a pessoa autorizar aquele pedido, repita o comando com os mesmos
+parâmetros e acrescente `--confirm ID_DO_PEDIDO`. Esta opção pode consumir créditos.
+Alterar prompt, modelo, proporção, capacidades ou documento, ou deixar o prazo
+expirar, exige novo preparo. Prompt, modelo e proporção são relidos imediatamente
+antes do clique de submit. A espera exige exatamente uma nova camada carregada;
+`--timeout-ms` aceita de 1000 a 600000 ms (padrão de geração: 180000 ms).
+
+A geração remota ainda **não foi iniciada nem validada no Paper real** nesta
+spec: o preparo Grok/16:9 foi demonstrado, e confirmação/espera foram testadas
+em formulário local. O aceite AC4 continua pendente de autorização e ensaio.
+Para criar vetores sem créditos, prefira SVG estático escrito por código, como
+`examples/basket.svg`, e use `image import`. `image generate --kind svg` compartilha
+o mesmo mecanismo de confirmação; sua geração remota também não foi validada.
+
+`image import --file` aceita PNG, JPG/JPEG, WebP e SVG locais de até 20 MiB.
+Valida extensão/assinatura e um subconjunto estático de SVG, recusando scripts,
+eventos, estilos e recursos externos. Abre o mecanismo público Place image
+(`Ctrl+Shift+K`) e preenche o seletor de arquivos `accept=image/*`. O ensaio real
+confirmou SVG, PNG, JPG e WebP; `.jpeg` usa a mesma assinatura/caminho de JPG,
+sem ensaio separado da extensão. O Paper pode inserir camadas em posições
+coincidentes; o comando importa assets, sem compor seu layout.
+
+Cópias são organizadas em `assets/bestprice-ia/images/imported/` e `svg/`, com
+nomes derivados do hash. O manifesto atômico `state/images.json` registra hash,
+origem (`--source`), utilização (`--usage`), documento, IDs e estado. Diretórios
+de cópias e estado são locais e ignorados pelo Git; exemplos permanecem versionados.
+Resultados de geração registram prompt, parâmetros e referências de canvas;
+download por exportação pública ainda não foi validado. Repetir importação por
+conteúdo ou geração pelos mesmos parâmetros reutiliza os IDs após validá-los.
+
+`image validate` confere cópias locais e camadas registradas. O fingerprint
+raster combina dimensões/propriedades com pixels decodificados amostrados em
+até 128×128, para não confundir troca da URL temporária com mudança de imagem.
+SVG usa markup renderizado normalizado. Isso não equivale a igualdade integral
+por pixels nem comprova licença. Manifesto vazio retorna `verified:false`.
+
+Falha ou timeout após tentativa deixa estado pendente persistido antes do clique
+e bloqueia nova submissão/importação. `image validate` relata essa pendência;
+não adota resultados tardios nem altera o manifesto automaticamente. Confira
+canvas e registros manualmente antes de resolver. O módulo mantém a restrição
+ao documento de teste; não promove assets ao documento BestPrice IA.
+
+## Sincronização HTML e outras operações
 
 `sync` renderiza `/app/dashboard` com a SPA e os estilos reais do checkout, usando
 somente uma sessão sintética e respostas vazias para as pesquisas. CSS computado
@@ -106,7 +173,9 @@ if (!result.success || !result.verified) throw new Error(JSON.stringify(result))
 ```
 
 Também há `createFrame`, `createScreen`, `status`, `inspect`, `screenshot` e
-`validate`. Cada chamada adquire um lock de exclusão mútua comum às worktrees.
+`validate`, além de `paper.image.inspect()`, `paper.image.generate({ promptFile,
+model, aspectRatio, confirm })`, `paper.image.import({ file, source, usage })` e
+`paper.image.validate()`. Cada chamada adquire um lock de exclusão mútua comum às worktrees.
 Não execute os scripts experimentais ou outra automação no mesmo canvas durante
 um comando: eles não participam desse lock.
 
@@ -137,13 +206,22 @@ sem usar o DPR como zoom.
 ```powershell
 npm test
 npm run check
+npm run test:images
 # Opt-in: cria/atualiza apenas elementos de teste; não remove camadas.
 npm run test:live
+# Opt-in: importa/reutiliza fixtures SVG/PNG/JPG/WebP; não gera com IA.
+npm run test:images:live
 ```
 
 Testes offline verificam política de acesso, argumentos, tokens reais, geometria,
 composição, falhas parciais, finalização e lock. O smoke ao vivo verifica IDs
 estáveis, atualização de texto e propriedades na aplicação real.
+Os testes de imagens usam Chromium headless com formulário controlado e arquivos
+temporários, sem sessão Paper nem créditos. O job Automation do CI instala a
+Bridge e Chromium e roda `check` + `test:images`; o ensaio live permanece opt-in.
+Nesta entrega, `npm test` passou 26/26 e o ensaio de imagens validou seis assets
+locais no documento de teste. Veja os limites de geração remota em
+[verification.md](../../specs/0037-paper-bridge-images/verification.md).
 
 Cada comando conectado registra `reports/*-before.png`, `*-after.png`, resultado
 JSON e `operations.jsonl`, com instantes UTC. Os artefatos ficam ignorados pelo
@@ -170,6 +248,9 @@ idade nem inicia duas operações concorrentes.
 | Importação HTML pela interface | Exercitada em dashboard desktop e mobile; 140 e 123 camadas, respectivamente; texto editado e restaurado |
 | Geração desktop/tablet/mobile | Implementada a partir de `/app/dashboard`; três viewports passam em teste de geração |
 | Sincronização idempotente/manifesto | Desktop repetido reutilizou `7O-0`; conflito observável e estado pendente bloqueiam; nova versão é aditiva |
+| Inspeção Create image/Create SVG | Exercitada pela interface, sem geração; opções são redescobertas a cada operação |
+| Importação/reutilização de imagens e SVG | Exercitada em SVG/PNG/JPG/WebP; manifesto de origem/utilização e validação de seis assets locais |
+| Geração com confirmação específica | Preparo real e confirmação/espera em formulário local; geração remota pendente de autorização; Variety pack bloqueado |
 | Outras rotas completas, interações e responsividade viva no canvas | Pendentes; variantes importadas são capturas estáticas |
 
 A idempotência foi comprovada no documento de teste pequeno, com árvore expandida.
@@ -203,4 +284,5 @@ como recebidos. São experimentos independentes; a CLI nova usa exclusivamente
 Referência técnica: [Playwright connectOverCDP](https://playwright.dev/docs/api/class-browsertype#browser-type-connect-over-cdp).
 O aceite e os resultados reais ficam em
 [verification.md](../../specs/0036-paper-bridge-html-first/verification.md) e
-[spec 0035](../../specs/0035-paper-bridge-local/verification.md).
+[spec 0035](../../specs/0035-paper-bridge-local/verification.md). O módulo de imagens
+tem [verificação própria na spec 0037](../../specs/0037-paper-bridge-images/verification.md).

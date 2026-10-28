@@ -5,3 +5,5 @@ screenshots/
 *.png
 /editor-map.json
 /state/
+/assets/bestprice-ia/images/imported/
+/assets/bestprice-ia/images/svg/

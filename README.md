@@ -50,20 +50,30 @@ Para validação operacional, configure três IDs MLB distintos em `MERCADOLIVRE
 
 ## Paper Bridge local
 
-A [Paper Bridge](tools/paper-bridge/README.md) da spec 0035 automatiza somente o
+A [Paper Bridge](tools/paper-bridge/README.md) das specs 0035–0037 automatiza somente o
 documento `BestPrice Bridge Test` do Paper Desktop no Windows, por Playwright e
 CDP local. A CLI cria/atualiza frames, nomes, dimensões, posição, preenchimento e
 textos usando tokens reais do checkout; também compõe frame com textos, captura
 screenshots e verifica propriedades e parentesco no DOM renderizado. Não usa o MCP
 oficial do Paper e não integra a execução da SPA/API.
 
+`sync` importa uma captura HTML editável do dashboard real. O módulo `image`
+inspeciona Create image/Create SVG e importa/reutiliza PNG, JPG, WebP e SVG locais,
+com cópias e manifesto de origem/utilização. `image generate --prompt-file`
+apenas prepara um pedido; eventual consumo exige confirmação específica por ID.
+O preparo real foi demonstrado, mas geração remota permanece sem autorização e
+sem ensaio concluído. A lista de modelos não comprova acesso gratuito.
+
 Em `tools/paper-bridge/`, rode `npm ci` e `npm run paper -- status`. O guia traz o
 comando para iniciar Paper com depuração restrita a `127.0.0.1:9222`, exemplos e
 limitações. Abra exatamente uma aba do documento de teste, mantenha a janela
 visível e a árvore expandida/inteira visível. `npm test` e `npm run check` são
 offline; `npm run test:live` altera esse documento de teste e exige execução
-exclusiva. A composição integral de telas, importação HTML e responsividade
-automática permanecem pendentes. Consulte a
+exclusiva. `npm run test:images` testa o módulo sem sessão Paper/créditos;
+`npm run test:images:live` importa fixtures somente no documento de teste.
+Outras rotas completas e responsividade viva no canvas permanecem pendentes.
+Consulte a [verificação 0037](specs/0037-paper-bridge-images/verification.md) para
+os quatro formatos, manifesto e limites de geração, e a
 [verificação 0035](specs/0035-paper-bridge-local/verification.md) para a execução
 live comprovada e a repetição final que não pôde ser concluída.
 

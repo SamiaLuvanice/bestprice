@@ -10,11 +10,13 @@ import { addText, verifyText } from "./text.mjs";
 import { createScreen } from "./composition.mjs";
 import { readFile } from "node:fs/promises";
 import { syncHtmlScreen } from "./html-sync.mjs";
+import { imageOperation } from "./images.mjs";
 
-const operations = new Set(["status", "inspect", "create-frame", "add-text", "screenshot", "validate", "design-system", "create-screen", "sync"]);
+const operations = new Set(["status", "inspect", "create-frame", "add-text", "screenshot", "validate", "design-system", "create-screen", "sync", "image-inspect", "image-generate", "image-import", "image-validate"]);
 
 export async function runOperation(operation, options = {}, runtime = { connect, loadDesignSystem, acquireLock, beginReport, finishReport }) {
   let release, connection, report, result;
+  const started = performance.now();
   try {
     if (!operations.has(operation)) throw new Error("Operação desconhecida: " + operation);
     release = await runtime.acquireLock();
@@ -26,6 +28,12 @@ export async function runOperation(operation, options = {}, runtime = { connect,
       try { report = await runtime.beginReport(operation, page); }
       catch { throw new Error("Screenshot indisponível. Restaure a janela do Paper se estiver minimizada e tente novamente."); }
       switch (operation) {
+        case "image-inspect":
+        case "image-generate":
+        case "image-import":
+        case "image-validate":
+          result = { ...await imageOperation(page, operation.slice(6), options), operation, element: "BestPrice Bridge Test" };
+          break;
         case "status":
           result = { success: true, operation, element: "BestPrice Bridge Test", verified: true, evidence: { title: await page.title() } };
           break;
@@ -76,6 +84,7 @@ export async function runOperation(operation, options = {}, runtime = { connect,
     const message = error.name === "TimeoutError" ? "Controle não respondeu; inspecione o documento antes de repetir." : error.message.split("\n")[0].replace(/https?:\/\/[^\s]+/g, "[endereço omitido]");
     result = { success: false, operation, element: options.name ?? null, verified: false, error: message };
   } finally {
+    if (result) result.elapsedMs = Math.round(performance.now() - started);
     const finalizationErrors = [];
     try { if (result) await runtime.finishReport(report, connection?.page, result); }
     catch { finalizationErrors.push("Não foi possível gravar todas as evidências."); }
@@ -100,5 +109,11 @@ export function createPaper(options = {}) {
     sync: values => runOperation("sync", { ...options, ...values }),
     screenshot: () => runOperation("screenshot", options),
     validate: values => runOperation("validate", { ...options, ...values }),
+    image: {
+      inspect: values => runOperation("image-inspect", { ...options, ...values }),
+      generate: values => runOperation("image-generate", { ...options, ...values }),
+      import: values => runOperation("image-import", { ...options, ...values }),
+      validate: values => runOperation("image-validate", { ...options, ...values }),
+    },
   };
 }
