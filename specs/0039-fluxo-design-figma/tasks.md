@@ -8,5 +8,9 @@
 - [x] Verificar automações, workflows, configurações, diff e ausência de mudanças na aplicação.
 - [x] Revisão de arquitetura e QA independentes; resolver achados e rever se necessário.
 - [x] Executar doc-sync-onboarding por último, validar links e registrar evidências reais.
-- [x] Commit com hooks, publicar branch e preparar PR para develop; CI da implementação aprovado (run 40737699608); último push documental será conferido no handoff.
-- [ ] Revisão/integração em develop (fora desta etapa; nenhuma limpeza das worktrees anteriores).
+- [x] Commit com hooks, publicar branch e preparar PR para develop; CI final da correção MCP aprovado no SHA d70341d (runs 40740028251 e 40865690216).
+- [x] Revisão/integração em develop: PR #212 integrada em 29/10/2026, merge 2edd206; Issue #211 encerrada. Continuação autorizada pelo usuário.
+
+O encerramento documental segue pela Issue #213. A limpeza aplica-se somente
+às worktrees e branches da implementação 0039 e deste registro de conclusão;
+checkout principal, trabalhos anteriores e volumes permanecem preservados.

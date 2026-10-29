@@ -2,6 +2,31 @@
 
 ## 0039 — Figma oficial e retirada da Paper Bridge
 
+**Atualização de 29/10/2026: spec implementada.**
+[PR #212](https://github.com/SamiaLuvanice/bestprice/pull/212) integrada em
+develop às 08:30:19 (America/Sao_Paulo), merge `2edd206`; Issue #211 encerrada.
+CI final da correção que preserva o MCP Paper aprovado no SHA `d70341d`
+([40740028251](https://github.com/SamiaLuvanice/bestprice/actions/runs/40740028251)),
+com nova validação após marcar a PR pronta também verde
+([40865690216](https://github.com/SamiaLuvanice/bestprice/actions/runs/40865690216)).
+Revisão independente, QA e doc-sync já registrados; sem bypass ou autoaprovação.
+O MCP Paper permanece para uso eventual e Figma continua como padrão.
+O registro de conclusão segue pela
+[Issue #213](https://github.com/SamiaLuvanice/bestprice/issues/213).
+
+Limpeza da implementação concluída após comprovar ancestralidade: worktree e
+branches local/remota da 0039 removidas. Resíduos de junctions Windows foram
+inventariados por QA e retirados apenas após reconferência de caminhos/arquivos;
+outras worktrees, alterações alheias do checkout principal e volumes preservados.
+Doc-sync final repetido na worktree documental, com AGENTS.md/CLAUDE.md
+conferidos sem edição e sem mudança de código/configuração. Publicação, CI e
+integração da PR documental da Issue #213 permanecem pendentes; sua worktree
+será limpa somente após essa integração.
+
+Os parágrafos abaixo preservam o histórico da entrega de 28/10, anterior à
+integração. O checkout principal contém alterações locais de outro trabalho e
+será preservado; a limpeza é restrita aos recursos criados por esta tarefa.
+
 28/10/2026: spec `pronta`, execução na branch/worktree
 `feature/0039-issue-211-fluxo-design-figma`, base `origin/develop` em
 `3f230793e6699f16e8443ecad045dc1d13ba3304`;

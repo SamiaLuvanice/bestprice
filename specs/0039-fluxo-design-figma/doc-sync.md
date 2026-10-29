@@ -1,5 +1,49 @@
 # Doc-sync final — 0039
 
+## Fechamento após integração — 29/10/2026
+
+Doc-sync final realizado na worktree `docs-issue-213-conclusao-spec-0039`, branch
+`docs/issue-213-conclusao-spec-0039`, pela
+[Issue #213](https://github.com/SamiaLuvanice/bestprice/issues/213), após revisão
+independente dos metadados, hooks aplicáveis e diff-check aprovados.
+A [PR #212](https://github.com/SamiaLuvanice/bestprice/pull/212) já foi integrada
+em develop no commit `2edd2060de8ff6d6929971f2a5ba47958e3a018b`, em
+29/10/2026 às 08:30:19 (America/Sao_Paulo); Issue #211 encerrada.
+Os CIs finais do SHA `d70341d` foram aprovados nos runs
+[40740028251](https://github.com/SamiaLuvanice/bestprice/actions/runs/40740028251) e
+[40865690216](https://github.com/SamiaLuvanice/bestprice/actions/runs/40865690216).
+Não houve alteração de código após o doc-sync da implementação.
+
+A etapa conferiu spec, plano, tarefas, verificação, progresso e seus diffs.
+Atualizou somente este registro, `verification.md` e `docs/PROGRESS.md`, sem
+criar manual ou alterar código, configuração, CI, regras ou tokens.
+`AGENTS.md` e `CLAUDE.md` foram reconferidos sem edição: encaminham à fonte
+canônica `.agents/`, já alinhada ao Figma principal e ao MCP Paper eventual.
+Os guias de setup, arquitetura e módulos permanecem válidos porque esta
+continuação registra integração e limpeza, sem mudança funcional.
+
+O coordenador concluiu a limpeza da worktree e das branches local/remota da
+implementação 0039 após comprovar ancestralidade. A remoção normal do registro
+Git deixou resíduos de junctions Windows; QA inventariou 491 arquivos (466 do
+snapshot `d70341d`, 24 projeções e um `.git` administrativo), oito junctions
+internas e zero arquivos desconhecidos. O coordenador reconfirmou alvo absoluto
+e contagens, desvinculou somente esses links e removeu os resíduos conferidos,
+sem force/prune, Compose ou volumes. Nesta etapa, `git worktree list`, consultas
+às branches e `Test-Path` confirmaram ausência do registro, das referências e da
+pasta da implementação.
+
+O checkout principal contém alterações de outro trabalho e foi preservado, assim
+como as outras worktrees. A worktree documental da Issue #213 permanece até sua
+própria PR ser integrada; publicação, CI e integração desse registro ainda são
+pendentes. Sem teste remoto de links, sessão Figma/Paper, novas interfaces,
+release, promoção para stage ou implantação manual nesta etapa.
+
+Validação documental final executada nesta worktree: seis Markdown UTF-8,
+40 links locais existentes, zero problemas de links ou cercas. `git diff --check`
+e `git diff --cached --check` aprovados. Links remotos não foram consultados.
+
+## Histórico de doc-sync da implementação — 28/10/2026
+
 Data: 28/10/2026, America/Sao_Paulo. Issue #211.
 Branch/worktree: `feature/0039-issue-211-fluxo-design-figma`.
 Etapa executada após gates e revisões, seguindo
