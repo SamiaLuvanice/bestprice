@@ -1,5 +1,64 @@
 # Módulo frontend
 
+## Fluxo oficial de design — Figma
+
+O Figma é a ferramenta oficial de UI/UX e a referência visual principal do
+BestPrice IA para interfaces web/mobile, componentes reutilizáveis, tokens,
+protótipos, layouts responsivos e evolução da experiência. O fluxo é
+**Figma → Codex → Implementação → Validação visual**. O redesign avança tela por
+tela, preservando arquitetura, funcionalidades e identidade visual existentes.
+
+A referência já registrada é o [arquivo Figma BestPrice](https://www.figma.com/design/LZVtUEAycEzfbwL0H5YL3r/BestPrice).
+A [exportação de 21/10/2026](../../designsystem/prototypes/2026-10-21-bestprice-figma/README.md)
+registra as páginas **00 · Design system**, **01 · Telas desktop** e
+**02 · Telas mobile**. Preserve essa organização como convenção e agrupe telas por
+fluxo, com estados e variantes identificados. A exportação é histórica e não
+comprova a estrutura nem o conteúdo atual do arquivo remoto; esta padronização
+não criou ou reorganizou frames no Figma.
+
+1. **Referenciar.** Em cada tarefa, registre o link do arquivo e frame com
+   `node-id`, nome da tela, rota existente, estado e viewport/dimensões. Relacione
+   as versões desktop/mobile da mesma tela e indique os estados necessários
+   (carga, vazio, erro, sucesso, foco e sobreposições, quando existirem).
+2. **Consultar.** Priorize o MCP oficial do Figma quando disponível e autorizado.
+   Consulte frame e screenshot, hierarquia, auto layout, dimensões, constraints,
+   propriedades, variantes de componentes, variáveis e estilos/tokens. Verifique
+   acesso ao arquivo na tarefa; a disponibilidade do conector não comprova
+   autenticação, leitura ou fidelidade atual.
+3. **Mapear e implementar.** Antes de criar componentes, confira os equivalentes
+   em `frontend/src/components/`, `components/ui/`, `dashboard/` e
+   `features/research/`, incluindo `Brand`, `Button`, campos, cards e gráficos.
+   Reutilize composição e variantes existentes, adaptando a referência à stack
+   React/TypeScript atual. Mapeie os tokens Figma aos tokens semânticos de
+   `frontend/src/styles.css`; registre extensões em `designsystem/README.md`.
+   Preserve contratos, estados reais, acessibilidade e logo oficial. Divergências
+   de identidade ou de comportamento devem ser registradas e resolvidas antes
+   de uma alteração visual; não autorizam reconstrução ou redesign implícito.
+4. **Validar visualmente.** Compare a implementação com o frame/export aprovado
+   no mesmo viewport e estado: tipografia, cor, espaçamento, alinhamento,
+   componentes, conteúdo e assets. Confira desktop/mobile e larguras
+   intermediárias, inclusive 320, 390, 768 e 1280 px, overflow, toque, teclado,
+   contraste e movimento reduzido. Use os testes visuais existentes da aplicação
+   e registre diferenças e limites; novas baselines exigem revisão da referência.
+
+**MCP indisponível, sem autorização ou com limite:** use referências exportadas do
+Figma (PNG/SVG/PDF e informações de tokens/componentes quando necessárias).
+Registre arquivo de origem, link/node-id quando conhecido, data da exportação,
+estado, dimensões/escala e detalhes não verificáveis. Identifique capturas antigas
+como tal. Se faltar informação essencial, solicite a referência exportada ou o
+detalhe antes de implementar a parte dependente; não invente variantes, valores
+ou comportamento. Bridges e automações alternativas, inclusive Playwright para
+manipular ferramentas de design, exigem autorização específica do usuário.
+
+O HTML em `designsystem/` e os assets locais são referências preservadas da
+identidade existente e apoio ao fallback. O Figma é a referência visual
+principal; sugestões genéricas de skills não a substituem. A Paper Bridge
+foi descontinuada pela spec 0039; o MCP oficial do Paper permanece configurado
+para uso eventual quando necessário. Ele não substitui a referência Figma nem
+reativa a Bridge ou constitui fallback automático para limites do Figma.
+O Playwright existente do frontend permanece
+restrito à verificação da aplicação.
+
 ## Identidade visual atual — specs 0015, 0027, 0028, 0029 e 0030
 
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
@@ -20,7 +79,8 @@ links “BestPrice — Início”, o componente inteiro é decorativo e o link f
 nome. Desde a correção de revisão da 0030, o login mostra uma única marca
 acessível na coluna do formulário, em todas as larguras. O ícone tem fundo CSS
 transparente, preservando o alpha do PNG original; a fotografia é decorativa.
-`designsystem/index.html` orienta os tokens. A spec 0027 aplica a composição
+`designsystem/index.html` preserva a referência local anterior de tokens; a
+precedência atual é definida no fluxo Figma acima. A spec 0027 aplica a composição
 aprovada no Figma às telas públicas e autenticadas, usando os quadros editáveis em
 `designsystem/prototypes/2026-10-21-bestprice-figma/`. A referência local foi usada
 porque o conector Figma repetiu autenticação; alterações posteriores no serviço
@@ -31,8 +91,8 @@ criar ou alterar HTML/CSS também exige ler
 publica as regras automatizáveis obrigatórias (toque de 44 × 44 px, HTML semântico,
 contraste AA/AAA, tokens de cor, `prefers-reduced-motion` e ausência de rolagem
 horizontal) e os comandos das skills de design instaladas (`ui-ux-pro-max`,
-`huashu-design` e `impeccable`); a identidade de `index.html` continua prevalecendo
-sobre sugestões dessas ferramentas.
+`huashu-design` e `impeccable`); suas sugestões respeitam a referência Figma
+aprovada, a identidade preservada e os requisitos funcionais/de acessibilidade.
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema

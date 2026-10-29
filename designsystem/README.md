@@ -1,5 +1,12 @@
 # Protótipo visual BestPrice
 
+O Figma é a ferramenta oficial de UI/UX e a referência visual principal desde a
+spec 0039. O fluxo é Figma → Codex → Implementação → Validação visual, com
+evolução gradual das telas. Consulte o
+[procedimento de implementação](../docs/apps/frontend.md#fluxo-oficial-de-design--figma)
+para frames, desktop/mobile, reutilização e exportações quando o MCP não estiver
+disponível. Os assets e protótipos locais abaixo permanecem preservados.
+
 ## Extensão BestPrice AI em preparação — spec 0034
 
 A direção A, “Conversa em primeiro plano”, foi escolhida em 26/10/2026. Reutiliza
@@ -29,11 +36,12 @@ O arquivo veio do protótipo local `designsystem/index.html` do checkout princip
 
 ## Uso na aplicação
 
-Conforme a spec 0015, `index.html` governa a identidade visual e seus tokens;
-`logo-bestprice.png` é a logo oficial fornecida, preservada sem redesenho ou distorção.
-`login.html` orienta a composição da entrada: se divergir dos tokens do catálogo,
-prevalece `index.html`. Consulte a skill `frontend-design` e a regra ativa
-`.agents/rules/frontend.md` antes de criar ou alterar uma tela.
+Desde a spec 0039, o Figma aprovado governa a referência visual.
+`index.html` preserva o catálogo de origem da spec 0015; `login.html` é uma
+referência histórica de composição. `logo-bestprice.png` é a logo oficial
+fornecida, preservada sem redesenho ou distorção. Consulte a skill
+`frontend-design` e a regra ativa `.agents/rules/frontend.md` antes de criar ou
+alterar uma tela. Divergências que alterem a identidade exigem esclarecimento.
 
 A partir da spec 0025, `agent-guidelines.md` publica as regras automatizáveis
 obrigatórias para agentes (toque 44 × 44 px, HTML semântico, contraste AA/AAA) e os
@@ -103,8 +111,9 @@ Referência visual externa: [Nudge Portfolio Template](https://nudge-folio.frame
 
 Referência: [Figma BestPrice](https://www.figma.com/design/LZVtUEAycEzfbwL0H5YL3r/BestPrice),
 com fontes editáveis em `prototypes/2026-10-21-bestprice-figma/`. O usuário aprovou
-implementar essa composição com shadcn/ui e Recharts/shadcn Charts. A identidade de
-`index.html` continua governando verde, rosa, fonte do sistema e logo original.
+implementar essa composição com shadcn/ui e Recharts/shadcn Charts.
+O Figma aprovado passa a ser a referência principal (spec 0039); verde, rosa,
+fonte do sistema e logo original continuam preservados na identidade existente.
 
 | Token/componente | Motivo | Superfícies |
 |---|---|---|

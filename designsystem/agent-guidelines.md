@@ -2,9 +2,13 @@
 
 Leia este arquivo antes de criar ou alterar qualquer HTML/CSS/JSX na SPA. Ele
 publica as regras automatizáveis obrigatórias do projeto e os comandos das skills
-de design instaladas (spec 0025). Em divergência, a precedência é:
-`designsystem/index.html` (identidade oficial) → `.agents/rules/frontend.md` →
-skill `frontend-design` → sugestões de ferramentas externas.
+de design instaladas (spec 0025). A referência visual principal é o Figma
+aprovado (spec 0039); siga `.agents/rules/frontend.md` e o fluxo em
+[`docs/apps/frontend.md`](../docs/apps/frontend.md). Os HTMLs locais e as skills
+apoiam a implementação, preservando marca, contratos e acessibilidade; não
+substituem o Figma nem autorizam redesign ou novas interfaces. Sem acesso MCP,
+use exportações Figma com origem/data/dimensões e registre limites. Novas bridges
+ou automações de ferramentas de design exigem autorização específica.
 
 ## Regras automatizáveis obrigatórias
 

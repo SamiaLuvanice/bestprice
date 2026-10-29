@@ -1,5 +1,56 @@
 # Progresso das specs
 
+## 0039 — Figma oficial e retirada da Paper Bridge
+
+28/10/2026: spec `pronta`, execução na branch/worktree
+`feature/0039-issue-211-fluxo-design-figma`, base `origin/develop` em
+`3f230793e6699f16e8443ecad045dc1d13ba3304`;
+[Issue #211](https://github.com/SamiaLuvanice/bestprice/issues/211).
+Escopo aprovado: retirar o tooling e os gates exclusivos da Paper Bridge, preservar
+o MCP oficial do Paper para uso eventual e todos os demais servidores, conforme
+correção posterior do usuário, e padronizar Figma → Codex → Implementação →
+Validação visual nos guias existentes. Nenhuma alteração de interface,
+funcionalidade, estilo, runtime ou asset da aplicação é prevista.
+
+A direção de canvas no Paper da tarefa 0038 foi substituída por esta decisão.
+Sua worktree, código pendente, arquivos locais e Issue #210 foram preservados;
+esta entrega não migra ou recria seus designs. A preservação do MCP não reativa
+a Bridge nem o canvas planejado da 0038; Figma permanece a referência principal.
+Plugins/aplicativos e configurações globais do cliente não foram alterados.
+
+Retirada concluída na worktree: 46 arquivos exclusivos e três etapas CI removidos;
+quatro configurações MCP comparadas após a correção, todas semanticamente
+idênticas à base, com Paper preservado para uso eventual. Aplicação,
+assets, testes visuais, checkout principal e trabalhos locais anteriores
+preservados. Gates locais: **50/50 testes Node**, zero falhas/skips; sete hooks
+de conteúdo verdes; diff-check e complexidade sem Python alterado aprovados.
+Comparação YAML confirmou os demais gates intactos. Spec-reviewer,
+arch-reviewer e QA independentes sem bloqueios; QA aprovou AC01–AC07.
+Após a correção MCP, QA e arch-reviewer aprovaram o ajuste; pre-commit passou
+nos hooks aplicáveis (YAML sem arquivos aplicáveis) e diff-check passou.
+
+Doc-sync-onboarding final repetido após a correção, gates e revisões: guias, links e cercas
+conferidos; AGENTS.md e CLAUDE.md não exigiram edição porque encaminham para as
+regras canônicas já atualizadas. Ver [verificação](../specs/0039-fluxo-design-figma/verification.md)
+e [doc-sync](../specs/0039-fluxo-design-figma/doc-sync.md), além da
+[spec](../specs/0039-fluxo-design-figma/spec.md) e do
+[plano](../specs/0039-fluxo-design-figma/plan.md).
+Implementação entregue; aguarda revisão na
+[PR draft #212](https://github.com/SamiaLuvanice/bestprice/pull/212), para develop.
+[CI anterior 40738187782](https://github.com/SamiaLuvanice/bestprice/actions/runs/40738187782)
+aprovado em `c0d7577`, antes da correção MCP. O CI inicial em `374da45` registrou
+**241 pytest**, **368 Vitest em 33 arquivos**, **50 Node**, Ruff, ESLint, build e
+actionlint verdes. Esses resultados não validam o estado corrigido atual, cujo
+novo CI ainda será acompanhado pelo coordenador. Os gates completos rodaram
+no CI, não localmente. Sem consulta/autenticação atual do Figma, merge, release ou
+implantação manual; checks automáticos de preview não representam promoção.
+
+## Histórico de Paper — specs 0035–0037, descontinuado pela 0039
+
+Os registros abaixo preservam as evidências e pendências da época. Referências
+a comandos, gates e trabalhos futuros do Paper não constituem fluxo ativo nem
+exigem retomada; consulte o [fluxo Figma](apps/frontend.md#fluxo-oficial-de-design--figma).
+
 Spec 0037 `pronta`, implementação entregue no [PR draft #206](https://github.com/SamiaLuvanice/bestprice/pull/206); aguarda revisão e
 ensaio remoto de geração autorizado. [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205),
 branch/worktree `feature/0037-issue-205-paper-images`, base `origin/develop`
@@ -33,7 +84,7 @@ manifesto bloqueia conflito e estado pendente, e versão nova é aditiva. Gates:
 verdes; os checks de CI da PR ainda estão pendentes. Paper ficou minimizado antes
 de nova tentativa final; a ferramenta recusou-a sem falso sucesso. Importação
 tablet, outras rotas e responsividade viva no canvas seguem pendentes. Ver
-[README da bridge](../tools/paper-bridge/README.md) e
+[README histórico da bridge](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/README.md) e
 [verification.md](../specs/0036-paper-bridge-html-first/verification.md).
 
 Spec 0035 `pronta`, implementação entregue para revisão no
@@ -52,6 +103,8 @@ autorizada. Scripts experimentais preservados com hashes idênticos. Doc-sync
 executado ao final; PR/CI/integração ainda não presumidos. Componentes completos,
 HTML, novos documentos, retângulos próprios e responsividade automática seguem
 pendentes. Ver [verification.md](../specs/0035-paper-bridge-local/verification.md).
+
+## Histórico das demais specs
 
 Spec 0034 `pronta`, implementação local revisada: [Issue #195](https://github.com/SamiaLuvanice/bestprice/issues/195),
 branch/worktree `feature/0034-issue-195-assistencia-compras-ai`, base `origin/develop`
@@ -98,8 +151,8 @@ Spec 0033 `pronta`, em implementação: [Issue #184](https://github.com/SamiaLuv
 
 | Spec | Refinamento e plano | Implementação | Revisão | Verificação |
 |---|---|---|---|---|
-| 0037-paper-bridge-images | Spec `pronta`; plano/tarefas; [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205), base `7eb470f` | CLI/API `image inspect/generate/import/validate`, confirmação específica, manifesto/reutilização; preparo real sem submit; Variety pack bloqueado | Revisão independente sem bloqueios após correções; doc-sync final concluído; [PR draft #206](https://github.com/SamiaLuvanice/bestprice/pull/206) para develop | **26/26** Bridge, **9/9** focados, **50/50** automações, sintaxe/actionlint/diff verdes; live dos quatro formatos com seis assets validados. AC4/geração remota pendente e CI remoto em execução; [verification](../specs/0037-paper-bridge-images/verification.md) |
-| 0036-paper-bridge-html-first | Spec `pronta`, plano e tarefas; [Issue #203](https://github.com/SamiaLuvanice/bestprice/issues/203); base `origin/develop` (`b4fd94f`) | CLI `sync` gera HTML inline do dashboard real e importa via clipboard público/Playwright; desktop/mobile editáveis, manifesto local e versões aditivas; desktop repetido reutiliza ID. Outras rotas e tablet live pendentes | Revisão documentada do diff e limites em `verification.md`; [PR #204](https://github.com/SamiaLuvanice/bestprice/pull/204) aberta em rascunho | **17/17** testes Node, sintaxe e CLI help verdes; geração desktop/tablet/mobile; live desktop v2 (140 nós) e mobile v1 (123 nós), edição/restauração e screenshots; nova tentativa live recusada com Paper minimizado. Checks de CI da PR pendentes; ver [verification.md](../specs/0036-paper-bridge-html-first/verification.md) |
+| 0037-paper-bridge-images (histórico descontinuado) | Spec `pronta`; plano/tarefas; [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205), base `7eb470f` | CLI/API `image inspect/generate/import/validate`, confirmação específica, manifesto/reutilização; preparo real sem submit; Variety pack bloqueado | Revisão independente sem bloqueios após correções; doc-sync final concluído; [PR draft #206](https://github.com/SamiaLuvanice/bestprice/pull/206) para develop | **26/26** Bridge, **9/9** focados, **50/50** automações, sintaxe/actionlint/diff verdes; live dos quatro formatos com seis assets validados. AC4/geração remota pendente e CI remoto em execução; [verification](../specs/0037-paper-bridge-images/verification.md) |
+| 0036-paper-bridge-html-first (histórico descontinuado) | Spec `pronta`, plano e tarefas; [Issue #203](https://github.com/SamiaLuvanice/bestprice/issues/203); base `origin/develop` (`b4fd94f`) | CLI `sync` gera HTML inline do dashboard real e importa via clipboard público/Playwright; desktop/mobile editáveis, manifesto local e versões aditivas; desktop repetido reutiliza ID. Outras rotas e tablet live pendentes | Revisão documentada do diff e limites em `verification.md`; [PR #204](https://github.com/SamiaLuvanice/bestprice/pull/204) aberta em rascunho | **17/17** testes Node, sintaxe e CLI help verdes; geração desktop/tablet/mobile; live desktop v2 (140 nós) e mobile v1 (123 nós), edição/restauração e screenshots; nova tentativa live recusada com Paper minimizado. Checks de CI da PR pendentes; ver [verification.md](../specs/0036-paper-bridge-html-first/verification.md) |
 | 0032-sonda-mercado-livre-github-actions | Spec `pronta`, plano e tarefas; [Issue #182](https://github.com/SamiaLuvanice/bestprice/issues/182); base `origin/develop` (`396f0ac`) | Workflow manual implementado; environment GitHub `stage-validation` criado, restrito a `develop` e abastecido com quatro secrets Stage/OAuth; valores não exibidos | Revisão local de segurança, PR e revisão independente pendentes | `workflow_dispatch` ainda indisponível até integração em `develop`; sonda não executada e Stage permanece com gate `false`; ver [verification.md](../specs/0032-sonda-mercado-livre-github-actions/verification.md) |
 | 0030-experiencia-visual-consistente | Spec `implementada`, auditoria P0–P3, plano e tarefas; [Issue #174](https://github.com/SamiaLuvanice/bestprice/issues/174); worktree/branch `feature/0030-issue-174-experiencia-visual`, base `origin/develop` em `e484cd3` | Tokens de ritmo/movimento, superfícies e foco comuns, hero em duas colunas no desktop, indicadores verticais, hierarquia de detalhe/listas/login/landing/404; menu público fecha com Escape e saída de foco. Sem mudança de backend, API, banco, regras ou dependências. Doc-sync-onboarding executado como última etapa após gates/revisão | Revisão independente sem achados concretos de regressão ou bloqueios; 24 baselines públicas revisadas antes de regenerar. QA independente aceitou AC01–AC11; PR #175 integrada em develop (`5219077`), Issue #174 fechada | Lint e build verdes; **350/350 Vitest** em 31 arquivos; **128/128 Playwright** na rodada anterior e **40/40** afetados após AC11; confirmação sem atualizar baselines, quatro larguras e API simulada. Detector `[]`; automações Node da raiz passaram; complexidade sem Python alterado. Figma inspecionado no Chrome e exportações locais (conector sem autenticação); Spartan observado. CI remoto verde no HEAD d9f010e. Sem validação de API real, dispositivo físico ou deploy. Ver [verification.md](../specs/0030-experiencia-visual-consistente/verification.md). |
 | 0029-identidade-bestprice-consistente | Spec `pronta`; T01–T10 concluídas; [Issue #167](https://github.com/SamiaLuvanice/bestprice/issues/167); branch/worktree `feature/0029-issue-167-identidade-bestprice-consistente`, base `origin/develop` em `2df3129`; T11 (PR, CI e integração) pendente | `Brand` compartilhado em landing, login, conta, rota não encontrada e sessão em carga/erro; fonte display, peso 600 e tracking `-.011em`; login móvel horizontal; nome acessível único; projeto Playwright de 390 px. Doc-sync-onboarding concluído após a última alteração de código | Revisão independente final aprovada após remoção do bypass de diagnóstico; QA móvel independente: 18/18 casos e 76 observações, sem violações axe. Todas as 24 baselines públicas aprovadas (12 móveis pela QA; 12 maiores pelo coordenador) | Red esperado demonstrado; frontend lint/build verdes, 348/348 Vitest em 31 arquivos, 36/36 marca/axe e 84/84 pública/redesign sem atualização de snapshots. Intermitência da logo não reproduzida; Chromium com API simulada, sem aparelho real/Safari. Backend e seus gates fora do escopo local; artefatos ignorados são apenas locais. Ver [verification.md](../specs/0029-identidade-bestprice-consistente/verification.md). |

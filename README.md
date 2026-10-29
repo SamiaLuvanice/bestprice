@@ -48,34 +48,19 @@ O código dispõe de armazenamento cifrado e renovação OAuth da conta operador
 
 Para validação operacional, configure três IDs MLB distintos em `MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID` e `MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID`, usando apenas anúncios de terceiros autorizados para a conta. Mantenha `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`. Com banco local saudável e migrado e tokens da conta operadora provisionados, execute `docker compose run --rm backend python -m app.marketplace.validate_live --confirm-live-requests`; a ferramenta faz três consultas somente de leitura (até seis GETs de item/preço e, quando necessário, uma renovação OAuth) e imprime JSON sem títulos, URLs nem tokens. O relatório usa `passed` somente quando os três cenários correspondem e a renovação OAuth foi observada; usa `requires_manual_action` quando faltam IDs válidos ou credenciais OAuth, um anúncio não corresponde ao cenário ou a renovação ainda precisa ser agendada. Falhas reais de consulta permanecem `failed`, mesmo se outro cenário exigir ação manual. Para confirmar renovação, execute quando a credencial provisionada estiver a até cinco minutos do vencimento. Não provoque 429: use os testes simulados para falha e recuperação e siga a cadência informada oficialmente. A sonda não demonstra cadastro/worker ponta a ponta nem ativa o flag. Registre a saída sanitizada e os limites em [verificação 0026](specs/0026-validacao-operacional-mercado-livre/verification.md). Até obter evidência real e operacional, mantenha a integração desligada.
 
-## Paper Bridge local
+## Design e implementação
 
-A [Paper Bridge](tools/paper-bridge/README.md) das specs 0035–0037 automatiza somente o
-documento `BestPrice Bridge Test` do Paper Desktop no Windows, por Playwright e
-CDP local. A CLI cria/atualiza frames, nomes, dimensões, posição, preenchimento e
-textos usando tokens reais do checkout; também compõe frame com textos, captura
-screenshots e verifica propriedades e parentesco no DOM renderizado. Não usa o MCP
-oficial do Paper e não integra a execução da SPA/API.
+O Figma é a ferramenta oficial de UI/UX e a referência visual principal do
+BestPrice IA. O fluxo é **Figma → Codex → Implementação → Validação visual**, com
+evolução gradual de cada tela e reutilização dos componentes e tokens existentes.
+O [guia frontend](docs/apps/frontend.md#fluxo-oficial-de-design--figma) concentra
+as convenções de frames desktop/mobile, MCP oficial e referências exportadas.
 
-`sync` importa uma captura HTML editável do dashboard real. O módulo `image`
-inspeciona Create image/Create SVG e importa/reutiliza PNG, JPG, WebP e SVG locais,
-com cópias e manifesto de origem/utilização. `image generate --prompt-file`
-apenas prepara um pedido; eventual consumo exige confirmação específica por ID.
-O preparo real foi demonstrado, mas geração remota permanece sem autorização e
-sem ensaio concluído. A lista de modelos não comprova acesso gratuito.
-
-Em `tools/paper-bridge/`, rode `npm ci` e `npm run paper -- status`. O guia traz o
-comando para iniciar Paper com depuração restrita a `127.0.0.1:9222`, exemplos e
-limitações. Abra exatamente uma aba do documento de teste, mantenha a janela
-visível e a árvore expandida/inteira visível. `npm test` e `npm run check` são
-offline; `npm run test:live` altera esse documento de teste e exige execução
-exclusiva. `npm run test:images` testa o módulo sem sessão Paper/créditos;
-`npm run test:images:live` importa fixtures somente no documento de teste.
-Outras rotas completas e responsividade viva no canvas permanecem pendentes.
-Consulte a [verificação 0037](specs/0037-paper-bridge-images/verification.md) para
-os quatro formatos, manifesto e limites de geração, e a
-[verificação 0035](specs/0035-paper-bridge-local/verification.md) para a execução
-live comprovada e a repetição final que não pôde ser concluída.
+Paper Bridge foi descontinuada pela spec 0039; o MCP oficial do Paper permanece
+configurado para uso eventual quando necessário, mantendo Figma como padrão.
+A aplicação e seus testes
+visuais continuam independentes dessa integração; histórico e evidências das
+specs 0035–0037 permanecem preservados.
 
 ## Verificar
 
