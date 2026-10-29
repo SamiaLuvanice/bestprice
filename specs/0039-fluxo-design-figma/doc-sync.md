@@ -28,14 +28,16 @@ Git deixou resíduos de junctions Windows; QA inventariou 491 arquivos (466 do
 snapshot `d70341d`, 24 projeções e um `.git` administrativo), oito junctions
 internas e zero arquivos desconhecidos. O coordenador reconfirmou alvo absoluto
 e contagens, desvinculou somente esses links e removeu os resíduos conferidos,
-sem force/prune, Compose ou volumes. Nesta etapa, `git worktree list`, consultas
+sem `git worktree remove --force` ou `git worktree prune`, Compose ou volumes.
+Nesta etapa, `git worktree list`, consultas
 às branches e `Test-Path` confirmaram ausência do registro, das referências e da
 pasta da implementação.
 
 O checkout principal contém alterações de outro trabalho e foi preservado, assim
 como as outras worktrees. A worktree documental da Issue #213 permanece até sua
-própria PR ser integrada; publicação, CI e integração desse registro ainda são
-pendentes. Sem teste remoto de links, sessão Figma/Paper, novas interfaces,
+própria PR ser integrada. O registro foi publicado na
+[PR #214](https://github.com/SamiaLuvanice/bestprice/pull/214), com CI e integração
+acompanhados no handoff. Sem teste remoto de links, sessão Figma/Paper, novas interfaces,
 release, promoção para stage ou implantação manual nesta etapa.
 
 Validação documental final executada nesta worktree: seis Markdown UTF-8,

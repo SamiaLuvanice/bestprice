@@ -38,7 +38,8 @@ resíduos de junctions Windows. QA identificou 491 arquivos (466 do snapshot
 `d70341d`, 24 projeções, um `.git` administrativo), oito junctions internas e
 zero arquivos desconhecidos. Após reconferir o alvo absoluto e a contagem, foram
 desvinculados somente esses links e removidos os resíduos inventariados.
-Não foram usados force/prune; nenhum serviço Compose foi iniciado e nenhum
+Não foram usados `git worktree remove --force` ou `git worktree prune`;
+nenhum serviço Compose foi iniciado e nenhum
 volume foi tocado. Outras worktrees e alterações alheias do checkout principal
 foram preservadas.
 
@@ -100,7 +101,7 @@ substituem a verificação da configuração corrigida.
 - AC03–AC05: regras de precedência e referências locais alinhadas; guia principal em `docs/apps/frontend.md`; QA independente aprovou cobertura do fluxo, reutilização, desktop/mobile, validação e fallback.
 - AC06: zero diff frontend/backend/scripts/Compose; worktree 0038 e mudanças locais anteriores não editadas.
 - AC07: histórico 0035–0037 intacto, avisos de descontinuação e links ao snapshot anterior publicados; substituição da direção 0038 registrada sem editar sua worktree ou Issue.
-- AC08: spec-reviewer, arch-reviewer e QA independentes sem bloqueios; correção MCP e doc-sync aprovados, CI final verde no SHA d70341d (runs 40740028251 e 40865690216), PR #212 integrada e Issue #211 encerrada. Doc-sync de fechamento repetido na Issue #213; publicação/CI da PR documental ainda pendentes.
+- AC08: spec-reviewer, arch-reviewer e QA independentes sem bloqueios; correção MCP e doc-sync aprovados, CI final verde no SHA d70341d (runs 40740028251 e 40865690216), PR #212 integrada e Issue #211 encerrada. Doc-sync de fechamento repetido na Issue #213; registro publicado na PR #214, com CI e integração acompanhados no handoff.
 
 ## Revisão independente
 

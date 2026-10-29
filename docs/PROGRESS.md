@@ -19,9 +19,10 @@ branches local/remota da 0039 removidas. Resíduos de junctions Windows foram
 inventariados por QA e retirados apenas após reconferência de caminhos/arquivos;
 outras worktrees, alterações alheias do checkout principal e volumes preservados.
 Doc-sync final repetido na worktree documental, com AGENTS.md/CLAUDE.md
-conferidos sem edição e sem mudança de código/configuração. Publicação, CI e
-integração da PR documental da Issue #213 permanecem pendentes; sua worktree
-será limpa somente após essa integração.
+conferidos sem edição e sem mudança de código/configuração. O registro da
+Issue #213 foi publicado na [PR #214](https://github.com/SamiaLuvanice/bestprice/pull/214);
+CI e integração são acompanhados no handoff. Sua worktree será limpa somente
+após essa integração.
 
 Os parágrafos abaixo preservam o histórico da entrega de 28/10, anterior à
 integração. O checkout principal contém alterações locais de outro trabalho e
