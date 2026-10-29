@@ -2,12 +2,25 @@
   "mcpServers": {
     "chrome-devtools": {
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"]
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp/oauth"
+    },
+    "figma": {
+      "type": "http",
+      "url": "https://mcp.figma.com/mcp"
     },
     "mercadolibre-mcp-server": {
+      "type": "http",
       "url": "https://mcp.mercadolibre.com/devsite/v1/mcp"
     },
     "paper": {
+      "type": "http",
       "url": "http://127.0.0.1:29979/mcp"
     }
   }
