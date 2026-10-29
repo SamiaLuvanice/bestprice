@@ -24,7 +24,8 @@ não criou ou reorganizou frames no Figma.
    Consulte frame e screenshot, hierarquia, auto layout, dimensões, constraints,
    propriedades, variantes de componentes, variáveis e estilos/tokens. Verifique
    acesso ao arquivo na tarefa; a disponibilidade do conector não comprova
-   autenticação, leitura ou fidelidade atual.
+   autenticação, leitura ou fidelidade atual. A configuração do servidor e a
+   autorização por cliente estão no [setup do harness](../harness-setup.md).
 3. **Mapear e implementar.** Antes de criar componentes, confira os equivalentes
    em `frontend/src/components/`, `components/ui/`, `dashboard/` e
    `features/research/`, incluindo `Brand`, `Button`, campos, cards e gráficos.
