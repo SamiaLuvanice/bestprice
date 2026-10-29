@@ -133,13 +133,12 @@ fi
 
 # MCP agnóstico: .agents/mcp.json é a fonte. Geramos o .mcp.json da raiz no formato
 # mcpServers (lido por Claude e afins) e o bloco mcp do opencode.json, cujo formato
-# é próprio do OpenCode.
+# é próprio do OpenCode. Claude exige "type": "http" em entradas com url e trata a
+# ausência do campo como servidor stdio; por isso a projeção não é uma cópia.
 project_mcp() {
   local canonical="$ROOT/$SRC/mcp.json"
   [[ -f "$canonical" ]] || return 0
   echo "MCP:"
-  cp "$canonical" "$ROOT/.mcp.json"
-  echo "  + .mcp.json (gerado — não editar)"
 
   local py="" candidate
   for candidate in python3 python py; do
@@ -149,16 +148,20 @@ project_mcp() {
     fi
   done
   if [[ -z "$py" ]]; then
-    echo "  ! Python 3 funcional não encontrado — opencode.json não gerado" >&2
+    echo "  ! Python 3 funcional não encontrado — .mcp.json e opencode.json não gerados" >&2
     return 0
   fi
-  MCP_SRC="$canonical" MCP_OUT="$ROOT/opencode.json" "$py" - <<'PY'
+  MCP_SRC="$canonical" MCP_CLAUDE_OUT="$ROOT/.mcp.json" MCP_OPENCODE_OUT="$ROOT/opencode.json" "$py" - <<'PY'
 import json, os, re
 with open(os.environ["MCP_SRC"], encoding="utf-8") as f:
     data = json.load(f)
+claude = {}
 mcp = {}
 for name, srv in (data.get("mcpServers") or {}).items():
     if srv.get("url"):
+        claude_entry = {"type": "http", "url": srv["url"]}
+        if srv.get("headers"):
+            claude_entry["headers"] = dict(srv["headers"])
         entry = {"type": "remote", "url": srv["url"], "enabled": srv.get("disabled") is not True}
         if srv.get("headers"):
             entry["headers"] = {
@@ -167,16 +170,25 @@ for name, srv in (data.get("mcpServers") or {}).items():
             }
             entry["oauth"] = False
     else:
+        claude_entry = {"command": srv["command"]}
+        if srv.get("args"):
+            claude_entry["args"] = list(srv["args"])
+        if srv.get("env"):
+            claude_entry["env"] = srv["env"]
         command = [srv["command"]] + list(srv.get("args") or [])
         entry = {"type": "local", "command": command, "enabled": srv.get("disabled") is not True}
         if srv.get("env"):
             entry["environment"] = srv["env"]
+    claude[name] = claude_entry
     mcp[name] = entry
-config = {"$schema": "https://opencode.ai/config.json", "mcp": mcp}
-with open(os.environ["MCP_OUT"], "w", encoding="utf-8") as f:
-    json.dump(config, f, indent=2, ensure_ascii=False)
+with open(os.environ["MCP_CLAUDE_OUT"], "w", encoding="utf-8") as f:
+    json.dump({"mcpServers": claude}, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+with open(os.environ["MCP_OPENCODE_OUT"], "w", encoding="utf-8") as f:
+    json.dump({"$schema": "https://opencode.ai/config.json", "mcp": mcp}, f, indent=2, ensure_ascii=False)
     f.write("\n")
 PY
+  echo "  + .mcp.json (gerado — não editar)"
   echo "  + opencode.json (gerado — não editar)"
 }
 

@@ -12,9 +12,12 @@ Leia [docs/product-context.md](../../docs/product-context.md) antes de definir o
 - Diagnóstico com evidência: evidencia.md.
 - API e persistência: architecture.md, backend.md, errors.md.
 - Interface: frontend.md. Contrato REST: skill api-contract.
-- Identidade visual: antes de alterar ou criar uma tela, siga `frontend.md` e consulte
-  `designsystem/`, `designsystem/agent-guidelines.md`, a skill `frontend-design` e as
-  skills de design instaladas (ui-ux-pro-max, huashu-design, impeccable).
+- Identidade visual: Figma é a referência principal de UI/UX; siga o fluxo
+  Figma → Codex → Implementação → Validação visual em `docs/apps/frontend.md`.
+  Antes de alterar ou criar uma tela, siga `frontend.md`, consulte
+  `designsystem/`, `designsystem/agent-guidelines.md` e a skill `frontend-design`.
+  Skills de design apoiam o trabalho sem substituir o Figma ou autorizar novas
+  interfaces. Preserve identidade, componentes, contratos e acessibilidade.
 - Convenções: naming.md, testing.md, security.md e datetime-pipeline.md.
 - Processo: git.md, git-worktree-required.md, implementation-handoff.md, task-done-criteria.md.
 - Descoberta: skill monorepo-navigation. Gates: skill quality-gates.

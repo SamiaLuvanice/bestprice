@@ -1,9 +1,0 @@
-node_modules/
-reports/*
-!reports/.gitkeep
-screenshots/
-*.png
-/editor-map.json
-/state/
-/assets/bestprice-ia/images/imported/
-/assets/bestprice-ia/images/svg/

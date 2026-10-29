@@ -3,19 +3,27 @@
 Protocolo de assets da marca para ferramentas de design conversacional (skill
 `huashu-design` e equivalentes). Toda ferramenta que gerar artefato visual de alta
 fidelidade para o BestPrice lê os assets reais deste repositório antes de desenhar e
-grava a saída em `designsystem/prototypes/`. A identidade de `index.html` prevalece
-sobre qualquer estilo sugerido por ferramenta externa.
+grava exportações ou artefatos locais solicitados em `designsystem/prototypes/`.
+O Figma aprovado é a referência visual principal (spec 0039); este protocolo
+preserva a marca e o catálogo local de origem. Skills e sugestões externas não
+autorizam novo design, redesenho da logo ou automações de ferramentas de design.
+Siga o [fluxo oficial](../docs/apps/frontend.md#fluxo-oficial-de-design--figma).
 
 ## Assets de marca (nunca redesenhar)
 
 | Asset | Caminho | Regra |
 |---|---|---|
 | Logo oficial | `designsystem/logo-bestprice.png` | Usar sem redesenho, recorte, distorção ou substituição (spec 0015, AC02) |
-| Identidade de referência | `designsystem/index.html` | Governa cor, tipografia, espaçamento e forma |
-| Composição de entrada | `designsystem/login.html` | Somente composição; em divergência, prevalece `index.html` |
+| Referência visual principal | Figma aprovado, identificado no handoff por arquivo/frame | Governa a implementação gradual; preservar identidade, contratos e acessibilidade |
+| Catálogo local de origem | `designsystem/index.html` | Referência preservada de cor, tipografia, espaçamento e forma; sem precedência sobre o Figma aprovado |
+| Composição de entrada | `designsystem/login.html` | Referência histórica de composição |
 | Arte da entrada | `frontend/src/assets/redesign/login-left.webp` | Arte do redesign (0027), convertida para WebP na 0028; a anterior `imagem-lateral.png` foi removida. Ilustração estática, sem dados de anúncio ou da conta; a marca oficial fica sobre a área clara da arte |
 
-## Tokens oficiais (extraídos de `index.html`)
+## Tokens locais preservados (extraídos de `index.html`)
+
+Os valores abaixo registram a identidade existente; nenhum token da SPA foi
+alterado nesta padronização. Novas extensões partem do Figma aprovado e são
+registradas em `designsystem/README.md` antes da implementação.
 
 Cores: fundo `--bg: #ffffff`; superfície `--surface: #f5f5f7`; texto `--fg: #1d1d1f`;
 apoio `--fg-2: #424245`, `--muted: #6e6e73`, `--meta: #86868b`; borda `--border: #d2d2d7`;

@@ -86,19 +86,31 @@ foreach ($area in @('agents', 'skills', 'commands')) {
 
 # MCP agnóstico: .agents/mcp.json é a fonte. Geramos o .mcp.json da raiz no
 # formato mcpServers (lido por Claude e afins) e o bloco mcp do opencode.json,
-# que o OpenCode expõe num formato próprio.
+# que o OpenCode expõe num formato próprio. Claude exige "type": "http" em
+# entradas com url e trata a ausência do campo como servidor stdio; por isso a
+# projeção não é uma cópia do canônico.
 function Project-McpConfig {
     $canonical = Join-Path $Root '.agents/mcp.json'
     if (-not (Test-Path -LiteralPath $canonical)) { return }
 
-    Copy-Item -LiteralPath $canonical -Destination (Join-Path $Root '.mcp.json') -Force
-    Write-Output '+ .mcp.json (gerado — não editar)'
-
     $def = Get-Content -LiteralPath $canonical -Raw | ConvertFrom-Json
+    $claude = [ordered]@{}
     $mcp = [ordered]@{}
     foreach ($prop in $def.mcpServers.PSObject.Properties) {
         $srv = $prop.Value
         if ($srv.url) {
+            $claudeEntry = [ordered]@{
+                type = 'http'
+                url  = $srv.url
+            }
+            if ($srv.headers) {
+                $headers = [ordered]@{}
+                foreach ($header in $srv.headers.PSObject.Properties) {
+                    $headers[$header.Name] = [string]$header.Value
+                }
+                $claudeEntry.headers = $headers
+            }
+
             $entry = [ordered]@{
                 type    = 'remote'
                 url     = $srv.url
@@ -117,6 +129,10 @@ function Project-McpConfig {
                 $entry.oauth = $false
             }
         } else {
+            $claudeEntry = [ordered]@{ command = $srv.command }
+            if ($srv.args) { $claudeEntry.args = @($srv.args) }
+            if ($srv.env) { $claudeEntry.env = $srv.env }
+
             $command = @($srv.command)
             if ($srv.args) { $command += @($srv.args) }
             $entry = [ordered]@{
@@ -126,8 +142,14 @@ function Project-McpConfig {
             }
             if ($srv.env) { $entry.environment = $srv.env }
         }
+        $claude[$prop.Name] = $claudeEntry
         $mcp[$prop.Name] = $entry
     }
+    $claudeConfig = [ordered]@{ mcpServers = $claude }
+    Set-Content -LiteralPath (Join-Path $Root '.mcp.json') `
+        -Value ($claudeConfig | ConvertTo-Json -Depth 10) -Encoding utf8
+    Write-Output '+ .mcp.json (gerado — não editar)'
+
     $config = [ordered]@{
         '$schema' = 'https://opencode.ai/config.json'
         mcp       = $mcp
