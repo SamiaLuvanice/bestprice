@@ -73,4 +73,7 @@ de detalhe essencial deve ser resolvida com referência exportada, sem inventar.
   das árvores frontend/backend com a base e revisão/QA independentes.
 - Lint/test/build frontend/backend completos rodam no CI da PR; gates locais dessas
   camadas não são necessários para alteração sem diff nelas. Registrar limites.
-- Preparar PR para develop com Closes #211, sem merge ou deploy nesta tarefa.
+- A primeira entrega preparou a PR para develop com Closes #211, sem deploy.
+  A continuação de 29/10/2026 autorizou a integração após CI e revisão, seguida
+  da limpeza somente dos recursos criados por esta tarefa. PR #212 integrada;
+  status/evidências de conclusão são registrados na Issue #213 por PR documental.

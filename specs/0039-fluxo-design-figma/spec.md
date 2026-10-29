@@ -3,7 +3,7 @@ numero: 0039
 titulo: Figma como referência oficial de design
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [tooling, design, docs]
 depende_de: [0027, 0035, 0036, 0037]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/211
@@ -50,7 +50,12 @@ substitui o Figma como referência visual principal.
 Novas interfaces, redesign, alterações no backend/frontend/banco, mudanças de
 API, migração ou criação de telas no Figma, novas automações de ferramentas de
 design, instalação/desinstalação global de aplicativos ou plugins, exclusão de
-worktrees/trabalhos locais anteriores, merge, release e deploy.
+worktrees/trabalhos locais anteriores, release e deploy.
+
+A continuação solicitada em 29/10/2026 autorizou seguir a orquestração para
+integrar em develop e limpar somente os recursos exclusivos desta tarefa.
+A PR #212 foi integrada em 29/10/2026; o registro de conclusão segue pela
+Issue #213, sem commit direto em develop.
 
 ## Perguntas em aberto
 

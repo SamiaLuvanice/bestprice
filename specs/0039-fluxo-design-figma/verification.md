@@ -2,7 +2,59 @@
 
 Data: 28/10/2026, America/Sao_Paulo. Issue #211; base `origin/develop`
 `3f230793e6699f16e8443ecad045dc1d13ba3304`.
-Status: implementação entregue para revisão; sem merge ou deploy.
+Status atual em 29/10/2026: implementada, PR #212 integrada em develop.
+Os registros abaixo de 28/10 preservam o histórico das verificações anteriores.
+
+## Integração confirmada — 29/10/2026
+
+O usuário solicitou seguir agent-orchestration após preservar o MCP Paper.
+Foi confirmado que a PR #212 estava sem conflitos, sem conversas pendentes e
+com CI aprovado no SHA final `d70341d4ab8bca14faf9f6cb3ccd0c5196bb17a6`:
+[run 40740028251](https://github.com/SamiaLuvanice/bestprice/actions/runs/40740028251).
+Marcar a PR como pronta disparou nova validação no mesmo SHA, também aprovada:
+[run 40865690216](https://github.com/SamiaLuvanice/bestprice/actions/runs/40865690216).
+Backend, Frontend, Automation, política de PR e agregador CI passaram.
+Não foi necessário repetir testes locais nem alterar código.
+
+O ruleset consultado exigia CI, resolução de conversas e zero aprovações humanas
+obrigatórias. A revisão independente e QA registrados já cobriam o SHA final.
+O merge ocorreu pelo fluxo normal, sem autoaprovação ou bypass, com conferência
+do head exato. A [PR #212](https://github.com/SamiaLuvanice/bestprice/pull/212)
+foi integrada em **29/10/2026 às 08:30:19 (America/Sao_Paulo)**, commit
+`2edd2060de8ff6d6929971f2a5ba47958e3a018b`. Issue #211 encerrada.
+`git merge-base --is-ancestor d70341d origin/develop` passou após fetch.
+
+O MCP Paper e as demais configurações permaneceram preservados. Não houve
+alteração de telas, estilos, funcionalidades ou promoção para stage/release.
+Os metadados de conclusão são atualizados pela Issue #213, em worktree própria,
+sem commit direto em develop. O checkout principal tem alterações locais
+alheias e não será atualizado por pull/reset/stash desta tarefa.
+
+### Limpeza e sincronização documental final
+
+Após comprovar ancestralidade, o coordenador removeu a worktree da implementação
+e suas branches local (`-d`) e remota. A remoção normal do registro Git deixou
+resíduos de junctions Windows. QA identificou 491 arquivos (466 do snapshot
+`d70341d`, 24 projeções, um `.git` administrativo), oito junctions internas e
+zero arquivos desconhecidos. Após reconferir o alvo absoluto e a contagem, foram
+desvinculados somente esses links e removidos os resíduos inventariados.
+Não foram usados `git worktree remove --force` ou `git worktree prune`;
+nenhum serviço Compose foi iniciado e nenhum
+volume foi tocado. Outras worktrees e alterações alheias do checkout principal
+foram preservadas.
+
+O doc-sync final na branch documental da Issue #213 reconferiu o diff e
+AGENTS.md/CLAUDE.md, sem necessidade de editar esses índices. `git worktree list`,
+consultas às branches e `Test-Path` confirmaram ausência do registro, referências
+e pasta da implementação. O diff de código/configuração/CI desta continuação é
+vazio. Não houve novo teste de produto nem mudança após o CI final da PR #212.
+A revisão independente dos cinco documentos de conclusão e os hooks aplicáveis
+foram aprovados antes desta etapa, conforme evidência do coordenador.
+A worktree documental só será limpa após sua própria PR integrada.
+Validação final do doc-sync na nova worktree: seis documentos Markdown UTF-8,
+40 links locais existentes e zero problemas de links/cercas; `git diff --check`
+e `git diff --cached --check` aprovados. Sem consulta a serviços externos ou
+reexecução de testes da aplicação nesta etapa documental.
 
 ## Entrada e revisão da spec
 
@@ -49,7 +101,7 @@ substituem a verificação da configuração corrigida.
 - AC03–AC05: regras de precedência e referências locais alinhadas; guia principal em `docs/apps/frontend.md`; QA independente aprovou cobertura do fluxo, reutilização, desktop/mobile, validação e fallback.
 - AC06: zero diff frontend/backend/scripts/Compose; worktree 0038 e mudanças locais anteriores não editadas.
 - AC07: histórico 0035–0037 intacto, avisos de descontinuação e links ao snapshot anterior publicados; substituição da direção 0038 registrada sem editar sua worktree ou Issue.
-- AC08: spec-reviewer, arch-reviewer e QA independentes sem bloqueios; a correção MCP recebeu QA e revisão aprovadas, hooks aplicáveis verdes e novo doc-sync final. PR #212 publicada; CI anterior aprovado em SHA identificado abaixo, novo CI da correção pendente.
+- AC08: spec-reviewer, arch-reviewer e QA independentes sem bloqueios; correção MCP e doc-sync aprovados, CI final verde no SHA d70341d (runs 40740028251 e 40865690216), PR #212 integrada e Issue #211 encerrada. Doc-sync de fechamento repetido na Issue #213; registro publicado na PR #214, com CI e integração acompanhados no handoff.
 
 ## Revisão independente
 
@@ -80,7 +132,7 @@ PROGRESS, LEARNINGS, verification e doc-sync para distinguir a Bridge retirada d
 MCP preservado. Os quatro JSONs foram comparados novamente com a base e passaram.
 AGENTS.md e CLAUDE.md foram reconferidos sem necessidade de alteração.
 
-## Publicação e CI
+## Histórico de publicação e CI — 28/10/2026
 
 Implementação entregue; aguarda revisão na
 [PR draft #212](https://github.com/SamiaLuvanice/bestprice/pull/212), para develop.
