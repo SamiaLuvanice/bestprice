@@ -71,13 +71,13 @@ ocorrências não são removidas.
 ## Critérios de aceite
 
 - [ ] **AC01 — Inventário:** antes da edição, a evidência lista cada quadro, camada e componente em que "Compar" aparece no texto visível ou no nome da camada/componente, com ID, nome, tipo de ocorrência e destino. Uma versão nomeada do arquivo é salva antes da primeira alteração.
-- [ ] **AC02 — Remoção:** nenhum quadro do Comparador permanece. A nova busca por "Compar" (textos e nomes de camadas e componentes) só encontra ocorrências permitidas pela seção "O que conta como comparador", cada uma listada com justificativa.
-- [ ] **AC03 — Navegação:** os quadros 59:204, 59:716, 59:254, 59:752, 151:11, 152:312, 132:27, 132:361, 133:169 e 132:468, a biblioteca 6:805 e o componente mestre Navegação/Mobile 6:931 exibem exatamente três destinos (Assistente, Histórico e Monitoramento, com os rótulos atuais de cada formato), com ícone, rótulo completo e destaque só no destino corrente. O componente mestre mantém seu ID.
-- [ ] **AC04 — Histórico:** 59:204 e 59:716 mostram só conversas, sem filtro de tipo nem item "Comparação". A busca, a ação de continuar em cada item e os exemplos permanecem.
-- [ ] **AC05 — Landing:** o conteúdo público e a prévia apresentam assistente, histórico de conversas e monitoramento por link, sem mencionar comparador.
-- [ ] **AC06 — Consistência:** as exportações dos quadros alterados não têm sobreposição, corte ou lacuna. Mantêm o rosa `#c7005e` nas ações principais, header de 80 px, sidebar de 240 px, margens de 32 px no desktop e 16–20 px no mobile, e controles de ao menos 44 px.
+- [x] **AC02 — Remoção:** nenhum quadro do Comparador permanece. A nova busca por "Compar" (textos e nomes de camadas e componentes) só encontra ocorrências permitidas pela seção "O que conta como comparador", cada uma listada com justificativa.
+- [x] **AC03 — Navegação:** os quadros 59:204, 59:716, 59:254, 59:752, 151:11, 152:312, 132:27, 132:361, 133:169 e 132:468, a biblioteca 6:805 e o componente mestre Navegação/Mobile 6:931 exibem exatamente três destinos (Assistente, Histórico e Monitoramento, com os rótulos atuais de cada formato), com ícone, rótulo completo e destaque só no destino corrente. O componente mestre mantém seu ID.
+- [x] **AC04 — Histórico:** 59:204 e 59:716 mostram só conversas, sem filtro de tipo nem item "Comparação". A busca, a ação de continuar em cada item e os exemplos permanecem.
+- [x] **AC05 — Landing:** o conteúdo público e a prévia apresentam assistente, histórico de conversas e monitoramento por link, sem mencionar comparador.
+- [x] **AC06 — Consistência:** as exportações dos quadros alterados não têm sobreposição, corte ou lacuna. Mantêm o rosa `#c7005e` nas ações principais, header de 80 px, sidebar de 240 px, margens de 32 px no desktop e 16–20 px no mobile, e controles de ao menos 44 px.
 - [ ] **AC07 — Evidência:** quadros alterados têm exportação antes e depois. Quadros apagados têm exportação antes e prova de ausência pela árvore de camadas ou pela busca. A conferência da árvore de camadas dos quadros alterados está registrada em `verification.md`, com os textos ainda como camadas de texto, sem rasterizar a página.
-- [ ] **AC08 — Escopo:** o diff da branch altera só `specs/0043-*`.
+- [x] **AC08 — Escopo:** o diff da branch altera só `specs/0043-*`.
 
 ## Fora de escopo
 

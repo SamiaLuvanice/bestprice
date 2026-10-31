@@ -1,0 +1,306 @@
+{
+  "date": "2026-10-31",
+  "png_count": 50,
+  "files": [
+    {
+      "path": "after/desktop/0040 · Assistente IA com robô · Desktop · Conversa.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "4aeaebc24962c008c09736b8c0c844dbc914511c2e7bc313754d98f912071487"
+    },
+    {
+      "path": "after/desktop/0040 · Assistente IA com robô · Desktop · Inicial.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "87306b13a48f698dfd559e9b463ac932a997108dff444d36d0ffaddec4def85e"
+    },
+    {
+      "path": "after/desktop/0041 · Monitoramento · Desktop.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "24df8b1ad8be85b17f11066f005ec9d139d38eba7522fa523f9982e26d8d0b4d"
+    },
+    {
+      "path": "after/desktop/01 · Landing · Desktop.png",
+      "width": 1440,
+      "height": 2880,
+      "sha256": "74d7345f8160b890bf2ff8abefe7b2e9e892dd223585904a306eb5bead363035"
+    },
+    {
+      "path": "after/desktop/02 · Entrar · Desktop.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "292a58f9dd19f8150eaf0ce4af057f84cd744659fc9e35e6ca58098b322f928d"
+    },
+    {
+      "path": "after/desktop/05 · Histórico · Desktop.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "5f2713e2be06c8d3761b2872a49ca6fbfcf54e3753ef7b56ef31864fac7382d3"
+    },
+    {
+      "path": "after/desktop/06 · Monitoramento · Desktop.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "83e481a4bbede57e036f034d051820bdde34728e1b456648e5866be088e2750b"
+    },
+    {
+      "path": "after/desktop-history-ui.png",
+      "width": 1346,
+      "height": 670,
+      "sha256": "dde9319b03b59b7643109e8a5185fd3b62fa1231ee35a4da9372d7a08273f0fc"
+    },
+    {
+      "path": "after/mobile/0040 · Assistente IA com robô · Mobile · Conversa.png",
+      "width": 390,
+      "height": 1320,
+      "sha256": "c9b99b69b47ea7136c308536568d9f12066f9789981f93649d4ad0f62c9ba6c8"
+    },
+    {
+      "path": "after/mobile/0040 · Assistente IA com robô · Mobile · Inicial.png",
+      "width": 390,
+      "height": 1190,
+      "sha256": "5d6895fe177340e4b6353a0584c540457799b4f4eb6fb7f177f22c2f0853dc5d"
+    },
+    {
+      "path": "after/mobile/0041 · Monitoramento · Mobile.png",
+      "width": 390,
+      "height": 1920,
+      "sha256": "a3cd81cdaa2507d90770f4db61e75253599d42f767650a8bb8f567b12f795c34"
+    },
+    {
+      "path": "after/mobile/01 · Landing · Mobile.png",
+      "width": 390,
+      "height": 2270,
+      "sha256": "ac0284d32d0f8b9201c3f9a2b33a1733978e61f2520236526782b2dcd59adc56"
+    },
+    {
+      "path": "after/mobile/02 · Entrar · Mobile.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "c71d0ac97c214ec36d66bead8b389bcc272881325396cc55c9a0875e11fdb099"
+    },
+    {
+      "path": "after/mobile/05 · Histórico · Mobile.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "4cd43a5118df94885eaf43fcbb780735c5d432661f05c64b946c4326f4fe10ac"
+    },
+    {
+      "path": "after/mobile/06 · Monitoramento · Mobile.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "7f0068c2c11599d9f01002820e2bda09c1cebf12d7c108e90ccf920981c570a8"
+    },
+    {
+      "path": "after/mobile-history-ui.png",
+      "width": 1346,
+      "height": 670,
+      "sha256": "e8ede3ed45dac8eeb6feb265dd50784aa565dcfb9143772c64f28f463e13445b"
+    },
+    {
+      "path": "after/search-final-ui.png",
+      "width": 1346,
+      "height": 670,
+      "sha256": "5ede890b393eb3cd4ba980136dcea7a1eb602818626939bdc1048cb1114f1f23"
+    },
+    {
+      "path": "after/system/00 · Sistema visual.png",
+      "width": 1440,
+      "height": 1890,
+      "sha256": "521c3a7d89068e783ceef26b7aec8af82bd1d879fbefbae5b3835f96fcd7a034"
+    },
+    {
+      "path": "after/system/0040 · Assistente IA · Estados e recuperação.png",
+      "width": 1440,
+      "height": 780,
+      "sha256": "06e6815c12e5fd6322cb941d8a609a90f967586dc11c553d58b5a05d152777c7"
+    },
+    {
+      "path": "after/system/0040 · Assistente IA · Estados e recuperação@2x.png",
+      "width": 2880,
+      "height": 1560,
+      "sha256": "69e9c5cfa72216a5e15d047777d5784ca698d329d8dee994ec6ca9b7960f7cc0"
+    },
+    {
+      "path": "after/system/0041 · Monitoramento · Estados e recuperação.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "1605912b3e63e886462e5ad53c2b3aab7fecec88984fcfd31a39385e5d39004e"
+    },
+    {
+      "path": "after/system/00b · Biblioteca de componentes.png",
+      "width": 1440,
+      "height": 1710,
+      "sha256": "5fa0df179a2aa7980c25393372f4b8af1024466cd23ccfc6ac81ff8be587faea"
+    },
+    {
+      "path": "after/system/00b · Biblioteca de componentes@2x.png",
+      "width": 2880,
+      "height": 3420,
+      "sha256": "f7a9f51745054f0a75d2e2fc1aef2a233ac6be2af3c651b6393b85f04e422fe1"
+    },
+    {
+      "path": "after/system-library-ui.png",
+      "width": 1346,
+      "height": 670,
+      "sha256": "d35e2f13a320fcfc09286d60080daa42f0ef832fe2e209756977681c81149c0a"
+    },
+    {
+      "path": "before/baseline-0042/desktop-assistant.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "bbcaffb3656eaacc15ecf791c60c004d974f2199a654054c73b0a7e07213ae1e"
+    },
+    {
+      "path": "before/baseline-0042/desktop-comparator.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "95983aceb8f03cfe98bbd98147f9a56355c5cab3aa2e2d6137a19d7dbdfa8f7d"
+    },
+    {
+      "path": "before/baseline-0042/desktop-conversation.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "f3f6ea5fae6d28ee765a69113259f082bbabc6a0d9144e99af5976498e2f0620"
+    },
+    {
+      "path": "before/baseline-0042/desktop-history.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "5710bb7d9ff14bd00e24ff7fdf81be7ff2636a717e6f2e09bd20e31f89047a7a"
+    },
+    {
+      "path": "before/baseline-0042/desktop-landing.png",
+      "width": 1440,
+      "height": 2880,
+      "sha256": "369d7b5e70502d0ee499bb0bbf85460c20f34f00c878b85b4d4c77d64ce301a6"
+    },
+    {
+      "path": "before/baseline-0042/desktop-login.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "085e3abf9039ff090b68229fdb442c2bb6140ea8f5a73c369f43213ec9190908"
+    },
+    {
+      "path": "before/baseline-0042/desktop-monitoring-empty.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "e0086d5b061c0ea36271772dcd0e4d76c777a5e700cb797e3dc0a528fa948675"
+    },
+    {
+      "path": "before/baseline-0042/desktop-monitoring.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "f62076d0b53e1a0ccac76ee33deb0c5bcf530c85f253e599d353d9c65b1c890d"
+    },
+    {
+      "path": "before/baseline-0042/mobile-assistant.png",
+      "width": 390,
+      "height": 1190,
+      "sha256": "efff6ea7c4f94c4be7a5d2aa707b9a40f5b77247d0e421db63fe539356c2d03f"
+    },
+    {
+      "path": "before/baseline-0042/mobile-comparator.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "609b586ef7c9749feb23ebc16d3ab3d9a726c48158ad04b232a88375b8196d26"
+    },
+    {
+      "path": "before/baseline-0042/mobile-conversation.png",
+      "width": 390,
+      "height": 1320,
+      "sha256": "6a00cbeaacb6eddae9dcd21a1726e41b7909ffab3363531696a809de26565a57"
+    },
+    {
+      "path": "before/baseline-0042/mobile-history.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "d8a5107df6dd38e85599733915cc03bd8a702f8ecd40102411a86da51f2c89c9"
+    },
+    {
+      "path": "before/baseline-0042/mobile-landing.png",
+      "width": 390,
+      "height": 2270,
+      "sha256": "77fbd9ab757ebeab806d10be17e9d2082f1bc4b851db7b6627025a013e575c6c"
+    },
+    {
+      "path": "before/baseline-0042/mobile-login.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "229d22d91a6cf1de3991d360752e57a23deb789fbe6f173912ab206b4be38406"
+    },
+    {
+      "path": "before/baseline-0042/mobile-monitoring-empty.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "15259a054f96ee035775498915a155296638e141a3bb71ae52c851f1ef4b61bc"
+    },
+    {
+      "path": "before/baseline-0042/mobile-monitoring.png",
+      "width": 390,
+      "height": 1920,
+      "sha256": "126206aa487251370a13f828709b257af08ea805b5abdef5cbc57db43167c922"
+    },
+    {
+      "path": "before/baseline-0042/system-assistant-states.png",
+      "width": 1440,
+      "height": 780,
+      "sha256": "bd94a2db26999cc271959ae1ead3e91bcb018e7cf1e371dc77c13832d0e9b7d1"
+    },
+    {
+      "path": "before/baseline-0042/system-foundations.png",
+      "width": 1440,
+      "height": 1890,
+      "sha256": "eff5fd4a5eb9b72fdb9c184349e78a3085d741353cd9c21c3d64e54e1133a020"
+    },
+    {
+      "path": "before/baseline-0042/system-library.png",
+      "width": 1440,
+      "height": 1710,
+      "sha256": "6bd4259d6f865b448da0a6b2cdef11c6c0ba9bd23c3da2498562c91fbf3c1b41"
+    },
+    {
+      "path": "before/baseline-0042/system-monitoring-states.png",
+      "width": 1440,
+      "height": 900,
+      "sha256": "1605912b3e63e886462e5ad53c2b3aab7fecec88984fcfd31a39385e5d39004e"
+    },
+    {
+      "path": "before/mobile-comparator-ui.png",
+      "width": 1346,
+      "height": 726,
+      "sha256": "2b724d4958aed76caec08bfa3b7768e3f2a5dbdca669e7194e660cf26abf8b86"
+    },
+    {
+      "path": "before/mobile-history-ui.png",
+      "width": 1346,
+      "height": 670,
+      "sha256": "37040a12c512b61072f50559852f48830b96ea783c7edcc55f287a5e006cc9c6"
+    },
+    {
+      "path": "before/system-navigation-ui.png",
+      "width": 1346,
+      "height": 670,
+      "sha256": "36bf4117514cd0646945a5bd269d796968801af6a969b5d152bde60f71e12a2e"
+    },
+    {
+      "path": "design/desktop-assistant.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "87306b13a48f698dfd559e9b463ac932a997108dff444d36d0ffaddec4def85e"
+    },
+    {
+      "path": "design/desktop-history.png",
+      "width": 1440,
+      "height": 1040,
+      "sha256": "5f2713e2be06c8d3761b2872a49ca6fbfcf54e3753ef7b56ef31864fac7382d3"
+    },
+    {
+      "path": "review/mobile-landing-before-fix.png",
+      "width": 390,
+      "height": 2270,
+      "sha256": "de4eacef94a3046ac56f476a77363515ea4f197e9bb92d68dd757021049b4148"
+    }
+  ]
+}
