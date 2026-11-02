@@ -1,0 +1,129 @@
+[
+  {
+    "oldText": "Comparação de smartphones",
+    "newText": "Escolha de smartphone",
+    "matches": [
+      "Comparação de smartphones",
+      "Comparação de smartphones"
+    ]
+  },
+  {
+    "oldText": "Retome análises e comparações salvas na sua conta.",
+    "newText": "Retome suas conversas salvas na sua conta.",
+    "matches": [
+      "Valor originalRetome análises e comparações salvas na sua conta.Substituído porEscolha de smartphone"
+    ]
+  },
+  {
+    "oldText": "Buscar conversa ou comparação",
+    "newText": "Buscar conversa por palavra-chave",
+    "matches": [
+      "Valor originalBuscar conversa ou comparaçãoSubstituído porRetome suas conversas salvas na sua conta."
+    ]
+  },
+  {
+    "oldText": "Entre para retomar recomendações e comparações.",
+    "newText": "Entre para retomar suas conversas.",
+    "matches": [
+      "Valor originalEntre para retomar recomendações e comparações.Substituído porBuscar conversa por palavra-chave"
+    ]
+  },
+  {
+    "oldText": "Comparações privadas",
+    "newText": "Monitoramento por link",
+    "matches": [
+      "Conversas salvas\nValor originalComparações privadasSubstituído porEntre para retomar suas conversas."
+    ]
+  },
+  {
+    "oldText": "Abrir comparação",
+    "newText": "Continuar",
+    "matches": [
+      "Valor originalAbrir comparaçãoSubstituído porMonitoramento por link"
+    ]
+  },
+  {
+    "oldText": "Dados fornecidos por você",
+    "newText": "Conversa salva",
+    "matches": [
+      "Valor originalDados fornecidos por vocêSubstituído porContinuar"
+    ]
+  },
+  {
+    "oldText": "Compare com contexto",
+    "newText": "Escolha com contexto",
+    "matches": [
+      "Compare com contexto"
+    ]
+  },
+  {
+    "oldText": "Compare e decida.",
+    "newText": "Converse e escolha.",
+    "matches": [
+      "Valor originalCompare e decida.Substituído porEscolha com contexto"
+    ]
+  },
+  {
+    "oldText": "Compare pelos critérios que importam.",
+    "newText": "Escolha pelos critérios que importam.",
+    "matches": [
+      "Valor originalCompare pelos critérios que importam.Substituído porConverse e escolha."
+    ]
+  },
+  {
+    "oldText": "critérios para comparar.",
+    "newText": "critérios para escolher.",
+    "matches": [
+      "… pedido em Valor originalcritérios para comparar.Substituído porEscolha pelos critérios que importam."
+    ]
+  },
+  {
+    "oldText": "A IA ajuda a comparar os critérios.",
+    "newText": "A IA ajuda a orientar sua escolha.",
+    "matches": [
+      "… que precisa. Valor originalA IA ajuda a comparar os critérios.Substituído porCritérios para escolher."
+    ]
+  },
+  {
+    "oldText": "Compare com IA.",
+    "newText": "Converse com a IA.",
+    "matches": [
+      "… que precisa. Valor originalCompare com IA.Substituído porA IA ajuda a orientar sua escolha.\nEntenda o que faz sentido para você."
+    ]
+  },
+  {
+    "oldText": "Compare opções.",
+    "newText": "Converse com a IA.",
+    "matches": [
+      "Organize critérios. Valor originalCompare opções.Substituído porConverse com a IA. Entenda o que ainda falta saber."
+    ]
+  },
+  {
+    "oldText": "comparar opções",
+    "newText": "escolher melhor",
+    "matches": [
+      "… ajuda a Valor originalcomparar opçõesSubstituído porConverse com a IA.\ne entender o que faz sentido para você."
+    ]
+  },
+  {
+    "oldText": "Comparação",
+    "newText": "Conversa",
+    "matches": [
+      "Valor originalComparaçãoSubstituído porEscolher melhor"
+    ]
+  },
+  {
+    "oldText": "Comparador",
+    "newText": "Monitoramento",
+    "matches": [
+      "Valor originalComparadorSubstituído porComparador"
+    ]
+  },
+  {
+    "oldText": "Converse e escolha.",
+    "newText": "Escolha com IA.",
+    "matches": [
+      "Converse e escolha."
+    ]
+  }
+]

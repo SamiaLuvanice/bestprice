@@ -1,0 +1,252 @@
+- application
+- status: O suporte para leitor de tela no quadro está desativado no momento. Para ativá-lo nas configurações de acessibilidade, pressione Ctrl+K, digite configurações de acessibilidade e pressione Enter. Para ver os shortcuts de teclado disponíveis, digite Ctrl+Shift+Ponto de interrogação .
+- status
+- region "Comentários na tela de trabalho":
+  - button "Criar novo comentário"
+- region "Barra lateral à esquerda":
+  - toolbar "Barra de navegação":
+    - button "Menu principal":
+    - separator
+    - button "Arquivo" [expanded]:
+      - generic: Arquivo
+    - button "Agentes":
+      - generic: Agentes
+    - button "Recursos":
+      - generic: Recursos
+    - button "Ferramentas":
+      - generic: Ferramentas
+    - separator
+    - button "Variáveis":
+      - generic: Variáveis
+  - button "BestPrice IA, nome do arquivo": BestPrice IA
+  - generic: Nome do arquivo
+  - button "Editar menu de arquivo":
+  - button "Minimizar a UI":
+  - link "Residência em TIC":
+    - /url: https://www.figma.com/files/team/1516112882698717539/project/401148837
+  - button "Gratuito":
+    - generic: Gratuito
+  - generic: Localizar
+  - textbox "Localizar":
+    - /placeholder: Localizar...
+    - text: Suas conversas
+  - button "Configurações":
+  - button "Fechar":
+  - status: 6 resultados
+  - alert: Carregando suas conversas…, 00 · BestPrice IA — Design system, resultado 1 de 6
+  - generic: ·
+  - button "Escopo de busca definido como Todas as páginas":
+    - text: Todas as páginas
+  - button "Resultado anterior":
+  - button "Próximo resultado":
+  - listbox "Resultados da busca":
+    - button "00 · BestPrice IA — Design system, 2 resultados" [expanded]:
+      - generic: 00 · BestPrice IA — Design system
+      - generic: "2"
+    - option "Texto Carregando suas conversas…" [selected]:
+      - img "Texto":
+      - generic: Carregando suas conversas…
+    - option "Texto Não foi possível carregar suas conversas.":
+      - img "Texto":
+      - generic: Não foi possível carregar suas conversas.
+    - button "01 · BestPrice IA — Desktop, 3 resultados" [expanded]:
+      - generic: 01 · BestPrice IA — Desktop
+      - generic: "3"
+    - option "Texto Entre para retomar suas conversas.":
+      - img "Texto":
+      - generic: Entre para retomar suas conversas.
+    - option "Texto Suas conversas":
+      - img "Texto":
+      - generic: Suas conversas
+    - option "Texto Retome suas conversas e continue de onde parou.":
+      - img "Texto":
+      - generic: Retome suas conversas e continue de onde parou.
+    - button "02 · BestPrice IA — Mobile, 1 resultado" [expanded] [active]:
+      - generic: 02 · BestPrice IA — Mobile
+      - generic: "1"
+    - option "Texto Suas conversas":
+      - img "Texto":
+      - generic: Suas conversas
+  - slider "Alça de redimensionamento"
+- region "Barra lateral à direita":
+  - button "Ferramentas colaborativas":
+  - group "Visualização de protótipo":
+    - button "Apresentar":
+    - button "Visualização de protótipo":
+  - button "Compartilhar":
+    - generic: Compartilhar
+  - tablist:
+    - tab "Criar" [selected]:
+      - generic: Criar
+      - generic: Criar
+    - tab "Protótipo":
+      - generic: Protótipo
+      - generic: Protótipo
+  - button "100%, opções de zoom e visualização":
+    - text: 100%
+  - heading "Texto" [level=1]
+  - button "Selecionar camadas correspondentes":
+  - checkbox "Criar link"
+  - generic: Criar link
+  - button "Aplicar variável":
+  - button "Mais ações":
+  - heading "Alinhamento" [level=2]
+  - group "Alinhamento":
+    - generic: Alinhamento
+    - button "Alinhar à esquerda":
+    - button "Alinhar centros horizontais":
+    - button "Alinhar à direita":
+    - button "Alinhar ao topo":
+    - button "Alinhar centros verticais":
+    - button "Alinhar à base":
+  - group "Alinhamento":
+    - generic: Alinhamento
+    - generic: X
+    - spinbutton "Posição X": "64"
+    - generic: "Y"
+    - spinbutton "Posição Y": "202"
+    - button "Restrições" [expanded]:
+  - generic: Restrições
+  - generic: Restrições horizontais
+  - combobox "Restrições horizontais":
+    - generic: Escala
+  - generic: Restrições verticais
+  - combobox "Restrições verticais":
+    - generic: Escala
+  - group "Rotação":
+    - generic: Rotação
+    - spinbutton "Rotação": 0°
+    - button "Girar 90˚ para a direita":
+    - button "Inverter na horizontal":
+    - button "Inverter na vertical":
+  - heading "Layout" [level=2]
+  - group "Redimensionamento":
+    - generic: Redimensionamento
+    - radiogroup "Redimensionamento":
+      - generic: Redimensionamento
+      - radio "Largura automática" [checked]
+      - generic: Largura automática
+      - radio "Altura automática"
+      - generic: Altura automática
+      - radio "Tamanho fixo"
+      - generic: Tamanho fixo
+  - group "Dimensões":
+    - generic: Dimensões
+    - generic "Largura":
+      - generic: L
+      - textbox "Largura" [disabled]: "196"
+    - generic "Altura":
+      - generic: A
+      - textbox "Altura" [disabled]: "17"
+    - checkbox "Bloquear proporção"
+    - generic: Bloquear proporção
+  - heading "Aparência" [level=2]
+  - checkbox "Ocultar"
+  - generic: Ocultar
+  - button "Aplicar modo de mesclagem":
+  - generic: Opacidade
+  - textbox: 100%
+  - generic: Raio do canto
+  - textbox [disabled]: "0"
+  - heading "Tipografia" [level=2]
+  - button "Tipografia, Aplicar estilos":
+  - combobox "Família de fontes":
+    - generic: Inter
+  - generic: Estilo da fonte
+  - combobox "Estilo da fonte":
+    - generic: Regular
+  - 'listbox "Tamanho da fonte: 14 px"'
+  - generic "Tamanho da fonte":
+    - 'combobox "Tamanho da fonte: 14 px"': "14"
+  - generic: Altura da linha
+  - textbox "Altura da linha":
+    - /placeholder: "17"
+    - text: Automático
+  - generic: Espaçamento entre letras
+  - textbox "Espaçamento entre letras": 0%
+  - group "Alinhamento":
+    - generic: Alinhamento
+    - radiogroup "Horizontal":
+      - generic: Horizontal
+      - radio "Alinhar à esquerda" [checked]
+      - generic: Alinhar à esquerda
+      - radio "Alinhar ao centro"
+      - generic: Alinhar ao centro
+      - radio "Alinhar à direita"
+      - generic: Alinhar à direita
+    - radiogroup "Vertical":
+      - generic: Vertical
+      - radio "Alinhar ao topo" [checked]
+      - generic: Alinhar ao topo
+      - radio "Centralizar"
+      - generic: Centralizar
+      - radio "Alinhar à base"
+      - generic: Alinhar à base
+    - button "Configurações de tipo":
+  - heading "Preenchimento" [level=2]
+  - button "Preenchimento, Aplicar estilos e variáveis":
+  - button "Adicionar preenchimento":
+  - grid:
+    - 'row "Cor sólida em hexadecimal: 626267 Cor 626267 100 % Alternar visibilidade Remover"':
+      - 'gridcell "Cor sólida em hexadecimal: 626267 Cor 626267 100 %"':
+        - 'button "Cor sólida em hexadecimal: 626267"'
+        - generic: Cor
+        - generic: Preenchimento automático disponível. Digite para ver sugestões.
+        - combobox "Cor": "626267"
+        - textbox "%": "100"
+        - generic: "%"
+      - gridcell "Alternar visibilidade":
+        - checkbox "Alternar visibilidade" [checked]
+        - generic: Alternar visibilidade
+      - gridcell "Remover":
+        - button "Remover":
+  - button "Traçado":
+    - heading "Traçado" [level=2]
+  - button "Traçado, Aplicar estilos e variáveis":
+  - button "Adicionar traçado":
+  - button "Efeitos":
+    - heading "Efeitos" [level=2]
+  - button "Efeitos, Aplicar estilos":
+  - button "Adicionar efeito":
+  - button "Exportar":
+    - generic: Exportar
+  - button "Adicionar configurações de exportação":
+  - slider "Alça de redimensionamento"
+- region "Barra de ferramentas do aplicativo":
+  - toolbar "Editor":
+    - group "Mover":
+      - button "Mover" [pressed]:
+      - button "Ferramentas de movimento":
+    - group "Quadro":
+      - button "Quadro":
+      - button "Ferramentas de região":
+    - group "Retângulo":
+      - button "Retângulo":
+      - button "Ferramentas de formas":
+    - group "Caneta":
+      - button "Caneta":
+      - button "Ferramentas de criação":
+    - group "Texto":
+      - button "Texto":
+      - button "Ferramentas de texto":
+    - group "Código":
+      - button "Código":
+      - button "Ferramentas de programação":
+    - button "Comentário":
+    - button "Ações":
+    - radiogroup "Modo de conjunto de ferramentas":
+      - generic: Modo de conjunto de ferramentas
+      - radio "Desenhar"
+      - generic: Desenhar
+      - radio "Design" [checked]
+      - generic: Design
+      - radio "Movimento"
+      - generic: Movimento
+      - radio "Dev Mode"
+      - generic: Dev Mode
+- region "Barra de ferramentas de ajuda/zoom":
+  - toolbar "Barra de ferramentas de ajuda/zoom":
+    - button "Ajuda":
+- status
+- alert
+- alert
