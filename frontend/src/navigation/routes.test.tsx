@@ -269,7 +269,7 @@ it('navegação entre Início, Produtos, detalhe e Alertas acompanha o históric
   expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Produtos' })).toHaveAttribute('aria-current', 'page')
   window.history.back()
-  await waitFor(() => expect(window.location.pathname).toBe('/produtos'))
+  await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring'))
   expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
 })
 
