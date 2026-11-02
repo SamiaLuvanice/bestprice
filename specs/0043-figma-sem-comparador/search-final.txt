@@ -1,0 +1,110 @@
+- application
+- status: O suporte para leitor de tela no quadro está desativado no momento. Para ativá-lo nas configurações de acessibilidade, pressione Ctrl+K, digite configurações de acessibilidade e pressione Enter. Para ver os shortcuts de teclado disponíveis, digite Ctrl+Shift+Ponto de interrogação .
+- status
+- region "Comentários na tela de trabalho":
+  - button "Criar novo comentário"
+- region "Barra lateral à esquerda":
+  - toolbar "Barra de navegação":
+    - button "Menu principal":
+    - separator
+    - button "Arquivo" [expanded]:
+      - generic: Arquivo
+    - button "Agentes":
+      - generic: Agentes
+    - button "Recursos":
+      - generic: Recursos
+    - button "Ferramentas":
+      - generic: Ferramentas
+    - separator
+    - button "Variáveis":
+      - generic: Variáveis
+  - button "BestPrice IA, nome do arquivo": BestPrice IA
+  - generic: Nome do arquivo
+  - button "Editar menu de arquivo":
+  - button "Minimizar a UI":
+  - link "Residência em TIC":
+    - /url: https://www.figma.com/files/team/1516112882698717539/project/401148837
+  - button "Gratuito":
+    - generic: Gratuito
+  - generic: Localizar
+  - textbox "Localizar" [active]:
+    - /placeholder: Localizar...
+    - text: Compar
+  - button "Configurações":
+  - button "Fechar":
+  - alert: Nenhum resultado neste arquivo
+  - listbox "Resultados da busca"
+  - slider "Alça de redimensionamento"
+- region "Barra lateral à direita":
+  - button "Ferramentas colaborativas":
+  - group "Visualização de protótipo":
+    - button "Apresentar":
+    - button "Visualização de protótipo":
+  - button "Compartilhar":
+    - generic: Compartilhar
+  - tablist:
+    - tab "Criar" [selected]:
+      - generic: Criar
+      - generic: Criar
+    - tab "Protótipo":
+      - generic: Protótipo
+      - generic: Protótipo
+  - button "100%, opções de zoom e visualização":
+    - text: 100%
+  - text: Página
+  - 'button "Cor sólida em hexadecimal: 1E1E1E"'
+  - generic: Cor
+  - spinbutton "Cor": 1E1E1E
+  - textbox "%": "100"
+  - generic: "%"
+  - checkbox "Alternar visibilidade" [checked]
+  - generic: Alternar visibilidade
+  - heading "Estilos" [level=2]:
+    - button "Estilos"
+  - button "Criar estilo":
+  - button "Exportar":
+    - generic: Exportar
+  - button "Adicionar configurações de exportação":
+  - generic: MCP
+  - strong:
+    - generic: 1 conexão
+  - button "Configurar agentes para o Figma MCP":
+  - slider "Alça de redimensionamento"
+- region "Barra de ferramentas do aplicativo":
+  - toolbar "Editor":
+    - group "Mover":
+      - button "Mover" [pressed]:
+      - button "Ferramentas de movimento":
+    - group "Quadro":
+      - button "Quadro":
+      - button "Ferramentas de região":
+    - group "Retângulo":
+      - button "Retângulo":
+      - button "Ferramentas de formas":
+    - group "Caneta":
+      - button "Caneta":
+      - button "Ferramentas de criação":
+    - group "Texto":
+      - button "Texto":
+      - button "Ferramentas de texto":
+    - group "Código":
+      - button "Código":
+      - button "Ferramentas de programação":
+    - button "Comentário":
+    - button "Ações":
+    - radiogroup "Modo de conjunto de ferramentas":
+      - generic: Modo de conjunto de ferramentas
+      - radio "Desenhar"
+      - generic: Desenhar
+      - radio "Design" [checked]
+      - generic: Design
+      - radio "Movimento"
+      - generic: Movimento
+      - radio "Dev Mode"
+      - generic: Dev Mode
+- region "Barra de ferramentas de ajuda/zoom":
+  - toolbar "Barra de ferramentas de ajuda/zoom":
+    - button "Ajuda":
+- status
+- alert
+- alert
