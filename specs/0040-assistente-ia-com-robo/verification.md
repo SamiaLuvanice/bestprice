@@ -250,3 +250,11 @@ A documentação de design já registra a variante rosa e o asset original.
 PR e verificações remotas seguem como próximos passos; não houve merge ou deploy.
 Na retomada documental, sete documentos e 117 links locais foram conferidos sem
 destinos ausentes ou cercas Markdown abertas; `git diff --check` passou.
+
+### Publicação para revisão — 02/11/2026
+
+Implementação publicada no commit `fb46498`, com hooks de pre-commit e commit-msg
+aprovados, sem bypass. [PR #226](https://github.com/SamiaLuvanice/bestprice/pull/226)
+aberto em rascunho, da branch da feature para `develop`, com `Closes #225`.
+A consulta ao PR comprovou CI iniciado e checks ainda em execução; não foi feito
+merge. A spec continua `pronta` e a worktree fica preservada para revisão.

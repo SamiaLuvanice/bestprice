@@ -2,7 +2,7 @@
 
 ## 0040 — Assistente IA com robô e conversas recentes
 
-**Atualização de 31/10/2026: implementação entregue; aguarda revisão do PR.**
+**Atualização de 02/11/2026: implementação entregue; aguarda revisão no [PR #226](https://github.com/SamiaLuvanice/bestprice/pull/226), em rascunho para develop.**
 Spec `pronta`, [Issue #225](https://github.com/SamiaLuvanice/bestprice/issues/225),
 branch/worktree `feature/0040-issue-225-assistente-ia`, base `a9e76e3` de
 `origin/develop`. O Assistente usa o robô original, escrita em destaque e quatro
@@ -19,7 +19,8 @@ após código, gates e revisão, concluído na retomada de 02/11/2026 sem altera
 adicional de código. Evidências e capturas na
 [verificação](../specs/0040-assistente-ia-com-robo/verification.md).
 Teclado virtual real e fluxo com backend/banco/IA reais permanecem pendentes;
-PR, CI remoto, merge, deploy e Project não são inferidos nesta etapa documental.
+PR publicado e CI iniciado; a primeira consulta encontrou checks em execução.
+Merge, deploy e sincronização com Project não são inferidos.
 
 ## 0039 — Figma oficial e retirada da Paper Bridge
 

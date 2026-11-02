@@ -8,4 +8,4 @@
 - [x] Rodar lint, testes, build e verificação visual responsiva/acessível; limites de teclado virtual real e backend/banco reais registrados em verification.md.
 - [x] Documentar revisão e evidências sem declarar serviços externos validados.
 - [x] Executar doc-sync-onboarding como último agente após código e gates.
-- [ ] Preparar branch e PR para revisão em develop.
+- [x] Preparar branch e [PR #226](https://github.com/SamiaLuvanice/bestprice/pull/226) em rascunho para revisão em develop; merge e validações operacionais permanecem pendentes.
