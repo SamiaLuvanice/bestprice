@@ -52,6 +52,7 @@ function unauthenticated(error: unknown): error is ApiFailure {
 type PendingFocus = { kind: 'rowMenu'; id: string } | { kind: 'rowDetails'; id: string } | { kind: 'productsHeading' } | { kind: 'linkInput' } | null
 
 type Props = {
+  embedded?: boolean
   user: User
   clock: () => Date
   /** 401 em qualquer chamada: encerra a sessão local e mostra a entrada (0011) com a mensagem da API. */
@@ -60,7 +61,7 @@ type Props = {
 }
 
 /** Área autenticada: orquestra estado e ações; componentes de apresentação não chamam fetch. */
-export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Props) {
+export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embedded = false }: Props) {
   const location = useLocation()
   const navigateTo = useNavigate()
   const canonicalPath = location.pathname === '/app/monitoring/overview' ? '/' : location.pathname === '/app/monitoring/alerts' ? '/alertas'
@@ -630,7 +631,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut }: Pro
   }
 
   return <>
-    <AppHeader key={location.pathname} email={user.email} current={currentSection}
+    <AppHeader embedded={embedded} key={location.pathname} email={user.email} current={currentSection}
       bell={<NotificationBell unread={notifications.unread} onRetry={notifications.reloadUnread}
         onMarkRead={notifications.markRead} />}
       logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />

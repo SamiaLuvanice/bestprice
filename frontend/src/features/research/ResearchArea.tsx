@@ -1,7 +1,7 @@
 import { failureText, type ResearchProps } from './state'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowRight, ChartNoAxesCombined, Columns2, History, Home, Laptop, Menu, MessageSquare, Smartphone, Headphones, X } from 'lucide-react'
+import { ArrowRight, ChartNoAxesCombined, Columns2, Clock3, Laptop, Menu, MessageSquare, Monitor, Smartphone, Headphones, X } from 'lucide-react'
 import { api, ApiFailure, type User } from '../../api'
 import { Brand } from '../../components/Brand'
 import { Button } from '../../components/ui/button'
@@ -13,13 +13,12 @@ import { AssistantPage } from './AssistantPage'
 import { ComparisonPage } from './ComparisonPage'
 import { HistoryPage } from './HistoryPage'
 import './research.css'
+import './assistant.css'
 
 const navigation = [
-  { href: '/app/dashboard', label: 'Dashboard', Icon: Home },
   { href: '/app/assistant', label: 'Assistente IA', Icon: MessageSquare },
-  { href: '/app/compare', label: 'Comparador', Icon: Columns2 },
-  { href: '/app/history', label: 'Histórico', Icon: History },
-  { href: '/app/monitoring', label: 'Monitoramento', Icon: ChartNoAxesCombined },
+  { href: '/app/history', label: 'Histórico', Icon: Clock3 },
+  { href: '/app/monitoring', label: 'Monitoramento', Icon: Monitor },
 ]
 
 function ResearchLayout({ user, children, onUnauthenticated, onLoggedOut, monitoring }: ResearchProps & {
@@ -35,10 +34,13 @@ function ResearchLayout({ user, children, onUnauthenticated, onLoggedOut, monito
   useEffect(() => {
     if (menuOpen) document.querySelector<HTMLElement>('#research-navigation a')?.focus()
   }, [menuOpen])
-  const current = navigation.find((item) => location.pathname === item.href || location.pathname.startsWith(`${item.href}/`))?.label ?? 'Seu espaço de compras'
+  const current = navigation.find((item) => location.pathname === item.href || location.pathname.startsWith(`${item.href}/`))?.label ?? (location.pathname.startsWith('/app/compare') ? 'Comparador' : 'Dashboard')
   useEffect(() => {
     document.title = `${current} · BestPrice AI`
-    const frame = requestAnimationFrame(() => document.querySelector<HTMLElement>('.research-body h1')?.focus())
+    const previousFocus = document.activeElement
+    const frame = requestAnimationFrame(() => {
+      if (document.activeElement === previousFocus || document.activeElement === document.body) document.querySelector<HTMLElement>('.research-body h1')?.focus()
+    })
     return () => cancelAnimationFrame(frame)
   }, [location.pathname, current])
   async function logout() {
@@ -58,23 +60,24 @@ function ResearchLayout({ user, children, onUnauthenticated, onLoggedOut, monito
       if (!event.currentTarget.contains(event.relatedTarget) && event.relatedTarget?.id !== 'research-menu-toggle') setMenuOpen(false)
     }} onKeyDown={(event) => {
       if (event.key === 'Escape') { setMenuOpen(false); document.getElementById('research-menu-toggle')?.focus() }
+      if (menuOpen && event.key === 'Tab' && !event.shiftKey && document.activeElement === event.currentTarget.querySelector('nav a:last-child')) {
+        event.preventDefault(); setMenuOpen(false); document.getElementById('research-menu-toggle')?.focus()
+      }
     }}>
-      <Link className="research-brand" to="/app/dashboard" aria-label="BestPrice AI — Dashboard"><Brand decorative />{' '}<span className="research-ai">AI</span></Link>
+      <Link className="research-brand" to="/app/assistant" aria-label="BestPrice IA — Assistente"><Brand decorative />{' '}<span className="research-ai">IA</span></Link>
       <nav aria-label="Espaço de compras" id="research-navigation">
         {navigation.map(({ href, label, Icon }) => <NavLink key={href} to={href} onClick={() => setMenuOpen(false)}><Icon aria-hidden="true" /><span>{label}</span></NavLink>)}
       </nav>
-      <div className="research-sidebar-note"><strong>Escolhas com mais clareza</strong><p>A IA ajuda a decidir.<br />Você escolhe o que faz sentido.</p></div>
+      <div className="research-sidebar-note"><strong>Escolhas inteligentes.</strong><p>Compras melhores.</p></div>
     </aside>
     <div className="research-body">
-      {monitoring && <Link to="/app/dashboard" className="research-monitoring-return">Espaço de compras</Link>}
-      {!monitoring && <header className="research-topbar"><strong className="research-current-section">{current}</strong><Link className="research-mobile-brand research-brand" to="/app/dashboard" aria-label="BestPrice AI — Dashboard"><Brand decorative />{' '}<span className="research-ai">AI</span></Link><div className="research-topbar-actions">
+      <header className="research-topbar"><Button id="research-menu-toggle" variant="ghost" size="icon" aria-label={menuOpen ? 'Fechar navegação' : 'Abrir navegação'} aria-expanded={menuOpen} aria-controls="research-navigation" onClick={() => setMenuOpen((value) => !value)}>{menuOpen ? <X /> : <Menu />}</Button><strong className="research-current-section">{current}</strong><Link className="research-mobile-brand research-brand" to="/app/assistant" aria-label="BestPrice IA — Assistente"><Brand decorative />{' '}<span className="research-ai">IA</span></Link><div className="research-topbar-actions">
         <AccountMenu email={user.email} loggingOut={busy} onLogout={() => void logout()} />
-        <Button id="research-menu-toggle" variant="ghost" size="icon" aria-label={menuOpen ? 'Fechar navegação' : 'Abrir navegação'} aria-expanded={menuOpen} aria-controls="research-navigation" onClick={() => setMenuOpen((value) => !value)}>{menuOpen ? <X /> : <Menu />}</Button>
-      </div></header>}
+      </div></header>
       {error && <ResearchError text={error} />}
       {children}
     </div>
-    <nav className="research-bottom-nav" aria-label="Atalhos móveis">{navigation.slice(0, 4).map(({ href, label, Icon }) => <NavLink key={href} to={href}><Icon aria-hidden="true" /><span>{label === 'Dashboard' ? 'Início' : label === 'Assistente IA' ? 'Assistente' : label === 'Comparador' ? 'Comparar' : label}</span></NavLink>)}</nav>
+    <nav className="research-bottom-nav" aria-label="Atalhos móveis">{navigation.map(({ href, label, Icon }) => <NavLink key={href} to={href}><Icon aria-hidden="true" /><span>{label === 'Assistente IA' ? 'Assistente' : label === 'Monitoramento' ? 'Monitorar' : label}</span></NavLink>)}</nav>
   </div>
 }
 
@@ -127,7 +130,7 @@ export function ResearchArea({ user, clock, onUnauthenticated, onLoggedOut }: Re
   const draft = typeof state === 'object' && state !== null && 'draftToken' in state && typeof state.draftToken === 'string' ? drafts.get(state.draftToken) ?? '' : ''
   const monitoring = /^\/app\/monitoring(?:\/[^/]+)?$/.test(location.pathname)
   let page: ReactNode
-  if (monitoring) page = <AccountArea user={user} clock={clock} onUnauthenticated={onUnauthenticated} onLoggedOut={onLoggedOut} />
+  if (monitoring) page = <AccountArea embedded user={user} clock={clock} onUnauthenticated={onUnauthenticated} onLoggedOut={onLoggedOut} />
   else if (location.pathname === '/app/dashboard') page = <DashboardPage onUnauthenticated={onUnauthenticated} createDraft={createDraft} />
   else if (/^\/app\/assistant(?:\/[^/]+)?$/.test(location.pathname)) page = <AssistantPage key={location.key} onUnauthenticated={onUnauthenticated} initialDraft={draft} />
   else if (/^\/app\/compare(?:\/[^/]+)?$/.test(location.pathname)) page = <ComparisonPage key={location.key} onUnauthenticated={onUnauthenticated} />

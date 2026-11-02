@@ -44,6 +44,18 @@ ou 401, com revalidação ao restaurar uma página pelo histórico. Nginx resolv
 caminhos da SPA por `index.html` e reserva `/api/*` ao proxy. A revisão 0034 foi
 verificada localmente, sem deploy.
 
+A spec 0040 atualiza a apresentação do Assistente e o shell de `/app/*`.
+`RecentConversations` reutiliza `/api/research` com `kind=conversation` e limite
+de quatro, com carga e recuperação independentes do chat; a lista revalida após
+envio e descarta respostas após desmontagem. O robô é um asset local original.
+Sidebar/header e atalhos móveis oferecem Assistente, Histórico e Monitoramento;
+dashboard e comparador permanecem acessíveis por suas rotas e o histórico continua
+misto. No monitoramento interno, `AccountArea`/`AppHeader` em modo `embedded`
+compartilham marca e conta do shell e conservam subnavegação/sino no fluxo.
+Não há mudança de contrato, persistência, dependências ou configuração de IA.
+Os testes desta revisão usam a fronteira HTTP controlada; não comprovam teclado
+virtual real, backend/banco reais, disponibilidade do fornecedor ou deploy.
+
 A spec 0027 aplica o redesign aprovado às telas públicas e autenticadas usando
 Tailwind CSS v4 e componentes shadcn/ui locais em `frontend/src/components/ui/`.
 `components.json`, o alias `@/` e `src/lib/utils.ts` mantêm a geração e combinação

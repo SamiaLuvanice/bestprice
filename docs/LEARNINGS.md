@@ -442,3 +442,22 @@ workspace e o tratamento de cada cota; registre o resultado observado no painel.
 
 **Referências:** Issue #60, `render.yaml`,
 [limites do Render Free](https://render.com/docs/free).
+
+## 2026-10-31 — Preservar foco após interação e navegação ao incorporar uma tela
+
+**Contexto:** na spec 0040, o foco de título agendado por `requestAnimationFrame`
+podia tomar o foco do campo depois de escolher uma sugestão. A revisão também
+identificou a interceptação de Tab desktop para um botão móvel oculto e duas
+navegações fixas disputando o rodapé do Monitoramento incorporado ao shell.
+
+**Princípio:** antes de aplicar foco agendado, confira se a pessoa já mudou o foco.
+Restrinja a lógica de saída do menu ao estado em que ele está aberto. Ao incorporar
+uma área a outro shell, mantenha uma única navegação fixa e coloque os destinos
+secundários no fluxo; teste o teclado e a geometria dos controles em desktop/mobile.
+
+**Anti-pattern:** mover foco incondicionalmente após o render ou reutilizar o
+posicionamento fixo de uma área autônoma dentro de outra navegação fixa.
+
+**Referências:** Issue #225; `frontend/src/features/research/ResearchArea.tsx`,
+`research.css`, `frontend/tests/visual/assistant.spec.ts` e
+[verificação da spec 0040](../specs/0040-assistente-ia-com-robo/verification.md).

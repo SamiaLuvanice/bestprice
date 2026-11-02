@@ -44,14 +44,14 @@ describe('cabeçalho', () => {
 
     await user.click(products())
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
-    expect(window.location.pathname).toBe('/produtos')
+    expect(window.location.pathname).toBe('/app/monitoring')
     expect(products()).toHaveAttribute('aria-current', 'page')
     expect(home()).not.toHaveAttribute('aria-current')
     expect(alerts()).not.toHaveAttribute('aria-current')
 
     await user.click(alerts())
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Alertas', level: 1 })).toHaveFocus())
-    expect(window.location.pathname).toBe('/alertas')
+    expect(window.location.pathname).toBe('/app/monitoring/alerts')
     expect(alerts()).toHaveAttribute('aria-current', 'page')
     expect(products()).not.toHaveAttribute('aria-current')
 
