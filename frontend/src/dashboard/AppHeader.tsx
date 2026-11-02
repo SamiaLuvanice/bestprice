@@ -13,6 +13,7 @@ const items: { key: SectionKey; href: string; label: string; icon: ReactNode }[]
 ]
 
 type Props = {
+  embedded?: boolean
   email: string
   current: SectionKey
   bell?: ReactNode
@@ -22,14 +23,15 @@ type Props = {
 }
 
 /** Marca, navegação de página única (aria-current no item ativado), sino e menu da conta. */
-export function AppHeader({ email, current, bell, logoutError, loggingOut, onLogout }: Props) {
-  return <header className="app-header">
+export function AppHeader({ email, current, bell, logoutError, loggingOut, onLogout, embedded = false }: Props) {
+  const Root = embedded ? 'div' : 'header'
+  return <Root className="app-header">
     <div className="app-header-inner">
-      <Brand />
+      {!embedded && <Brand />}
       <nav aria-label="Principal" className="main-nav">
         <ul>
           {items.map((item) => <li key={item.key}>
-            <NavLink to={item.href} aria-current={current === item.key ? 'page' : undefined}>
+            <NavLink end={embedded && item.key === 'products' && current !== 'products'} to={embedded && item.key === 'products' ? '/app/monitoring' : embedded && item.key === 'alerts' ? '/app/monitoring/alerts' : item.href} aria-current={current === item.key ? 'page' : undefined}>
               {item.icon}<span>{item.label}</span>
             </NavLink>
           </li>)}
@@ -37,9 +39,9 @@ export function AppHeader({ email, current, bell, logoutError, loggingOut, onLog
       </nav>
       <div className="header-actions">
         {bell}
-        <AccountMenu email={email} onLogout={onLogout} loggingOut={loggingOut} />
+        {!embedded && <AccountMenu email={email} onLogout={onLogout} loggingOut={loggingOut} />}
       </div>
     </div>
     {logoutError && <p role="alert" className="header-error">{logoutError}</p>}
-  </header>
+  </Root>
 }

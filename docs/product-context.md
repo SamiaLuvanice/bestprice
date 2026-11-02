@@ -26,6 +26,14 @@ fixa Gemini `gemini-3.5-flash-lite`, cota gratuita, sem fallback pago e com limi
 locais; não comprova a configuração de cobrança da conta operadora. Não há busca
 de ofertas, scraping, pesquisa web autônoma ou nova fonte de marketplace.
 
+Na implementação local da [spec 0040](../specs/0040-assistente-ia-com-robo/spec.md),
+o Assistente passa a apresentar o robô original e até quatro conversas recentes
+obtidas da API existente. O shell interno acompanha o Figma atual com Assistente,
+Histórico e Monitoramento; a saída de dashboard e comparador dessa navegação não
+remove suas páginas, dados ou APIs. Chat, retenção, privacidade e disponibilidade
+da IA conservam as regras acima. Essa entrega de frontend tem validação local
+controlada e ainda não comprova integração ou publicação em ambiente externo.
+
 Respostas da IA devem ser identificadas como não verificadas, reconhecer lacunas
 e preservar a decisão da pessoa. Antes do envio, a interface informa processamento
 pelo Google, possível uso do conteúdo na modalidade gratuita e orienta não inserir

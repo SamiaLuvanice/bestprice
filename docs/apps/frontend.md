@@ -98,8 +98,9 @@ aprovada, a identidade preservada e os requisitos funcionais/de acessibilidade.
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
 operacional (`prefers-color-scheme`); a SPA não oferece seletor nem grava uma
-preferência de tema. A ação principal usa verde com texto preto; o rosa marca
-links e destaques. Desde a 0028, os nomes não se repetem com significados
+preferência de tema. A ação principal padrão usa verde com texto preto; o rosa marca
+links e destaques e, na tela do Assistente da 0040, também o envio aprovado no Figma.
+Desde a 0028, os nomes não se repetem com significados
 diferentes: no tema shadcn, `--primary` é o rosa da marca (`bg-primary`,
 `text-primary`) e `--action` é o verde das ações (`bg-action`, variante `default`
 do `Button`); no CSS próprio, `--color-brand` deriva de `--primary`; `text-muted`
@@ -329,9 +330,56 @@ lint e build aprovados (2.658 módulos). Jornadas SPA/API/PostgreSQL reais passa
 AC10/AC15/AC19 ainda dependem de avaliação operacional do modelo real e de sua
 configuração gratuita; a spec continua `pronta`. Ver [evidências](../../specs/0034-assistencia-compras-bestprice-ai/verification.md).
 
+## Assistente e navegação compartilhada — spec 0040
+
+O Assistente inicial usa o robô original de
+`src/assets/research/assistant-robot.png`, com transparência e proporções
+preservadas, saudação e campo de mensagem em destaque. Ao iniciar ou retomar uma
+conversa, as mensagens ocupam o espaço principal e o robô aparece apenas como
+avatar discreto das respostas. Sugestões continuam preenchendo texto editável,
+sem enviar automaticamente. O botão de envio usa a variante `brand` do `Button`,
+com `--primary` e `--primary-foreground`; o padrão das outras ações não muda.
+
+`RecentConversations` consulta o contrato existente por
+`GET /api/research?kind=conversation&q=&offset=0&limit=4`. A API mantém autorização,
+expiração e ordem por atividade. A seção mostra título, data no fuso local e link
+para retomar, sem pictogramas ou conteúdo ilustrativo. Nova conversa fica junto
+da seção; Ver todas abre o histórico. O primeiro envio e os envios seguintes
+recarregam a lista. Carga, vazio e erro com nova tentativa são independentes do
+chat; uma falha na lista não apaga nem impede editar o rascunho. Respostas de
+requisições desmontadas são descartadas, inclusive ao trocar de conta.
+
+O shell de `/app/*` acompanha os três destinos da referência Figma atual:
+Assistente IA, Histórico e Monitoramento. Desktop usa sidebar de 240 px e header
+de 80 px; mobile usa menu, marca com IA elevada, conta e três atalhos inferiores.
+Dashboard e comparador mantêm páginas, rotas, dados e APIs, embora seus atalhos
+tenham saído dessa navegação. A landing e a entrada preservam a composição pública.
+
+Em `/app/monitoring`, `AccountArea` e `AppHeader` recebem `embedded`: o shell
+fornece marca e conta uma única vez, enquanto a subnavegação Início/Produtos/Alertas
+e o sino permanecem no fluxo, sem disputar o rodapé móvel. Os links dessa
+subnavegação usam os caminhos internos de monitoramento. O modo anterior e seus
+links `/produtos` e `/alertas` permanecem disponíveis. O foco de título agendado
+não toma o foco quando a pessoa já interagiu com outro controle; a saída por Tab
+para o botão do menu aplica-se somente ao menu móvel aberto.
+
+`assistant.css` organiza a coluna de recentes à direita em desktop e abaixo do
+formulário em telas estreitas. Avisos de processamento Google, retenção,
+conteúdo não verificado e cotas continuam acessíveis antes de enviar, associados
+ao campo por `aria-describedby`. A implementação não ativa o fornecedor de IA.
+
+A [verificação 0040](../../specs/0040-assistente-ia-com-robo/verification.md)
+registra 375 testes da suíte completa antes dos ajustes finais, 47 testes afetados
+após os ajustes, 32 cenários Playwright e quatro verificações finais de navegação,
+lint/build e revisão independente. `tests/visual/assistant.spec.ts` verifica
+320/390/768/1280 px, axe nos estados inicial/conversa, geometria do robô,
+toque, overflow e navegação. Capturas aprovadas estão na pasta `evidence/` da
+spec. As APIs são controladas: teclado virtual em aparelho real, backend/banco
+reais e disponibilidade operacional da IA continuam pendentes.
+
 ## Monitoramento preservado
 
-O cabeçalho de monitoramento oferece links Início/Produtos/Alertas, sino e menu da conta. Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
+O monitoramento oferece links Início/Produtos/Alertas e sino; o acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040). Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
 
 O preço-alvo aceita o formato brasileiro (spec 0028): `src/lib/targetPrice.ts` normaliza `99,90`, `99.90`, `1.899,90`, `1899,9` e o prefixo `R$` para o decimal do contrato (`"99.90"`), só com texto, sem `number`. Valor inválido, zero, acima de 16 dígitos inteiros ou com milhar iniciado por zero (`0.500`) não chama a API: o campo recebe `aria-invalid` e a mensagem “Informe um valor em reais, como 99,90.” em `role="alert"`. O campo de edição mostra o alvo atual com vírgula. O contrato REST `target_price` e o backend não mudaram. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 

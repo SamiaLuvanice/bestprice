@@ -32,7 +32,7 @@ it('abre dashboard A e transporta o rascunho sem incluir a mensagem na URL', asy
   const fetch = researchApi()
   visit('/app/dashboard')
   expect(await screen.findByRole('heading', { name: /Uma boa compra começa/ })).toBeInTheDocument()
-  screen.getAllByRole('link', { name: 'BestPrice AI — Dashboard' }).forEach((brand) => expect(brand).toHaveTextContent('BestPrice AI'))
+  screen.getAllByRole('link', { name: 'BestPrice IA — Assistente' }).forEach((brand) => expect(brand).toHaveTextContent('BestPrice IA'))
   fireEvent.change(screen.getByLabelText('O que você deseja comprar hoje?'), { target: { value: 'Notebook para estudar' } })
   await userEvent.setup().click(screen.getByRole('button', { name: 'Conversar com a IA' }))
   expect(await screen.findByLabelText('Sua mensagem')).toHaveValue('Notebook para estudar')
@@ -74,7 +74,7 @@ it('conserva rascunho ao falhar e não executa HTML retornado pela IA', async ()
   expect(screen.getByLabelText('Sua mensagem')).toHaveValue('Preciso de um notebook')
   fireEvent.click(screen.getByRole('button', { name: 'Enviar mensagem' }))
   expect(await screen.findByText('<img src=x onerror=alert(1)>')).toBeInTheDocument()
-  expect(document.querySelector('.ai-message img')).toBeNull()
+  expect(document.querySelector('.ai-message p img')).toBeNull()
 })
 
 it.each([404, 503])('não permite criar por engano quando a comparação existente falha com %s', async (status) => {

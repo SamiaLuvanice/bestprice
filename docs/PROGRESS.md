@@ -1,5 +1,27 @@
 # Progresso das specs
 
+## 0040 — Assistente IA com robô e conversas recentes
+
+**Atualização de 02/11/2026: implementação entregue; aguarda revisão no [PR #226](https://github.com/SamiaLuvanice/bestprice/pull/226), em rascunho para develop.**
+Spec `pronta`, [Issue #225](https://github.com/SamiaLuvanice/bestprice/issues/225),
+branch/worktree `feature/0040-issue-225-assistente-ia`, base `a9e76e3` de
+`origin/develop`. O Assistente usa o robô original, escrita em destaque e quatro
+conversas recentes pela API existente, com falhas independentes do chat. O shell
+de `/app/*` segue os três destinos do Figma atual; comparador e dashboard mantêm
+suas rotas e dados. Monitoramento interno usa header único e subnavegação no fluxo.
+
+Lint/build finais aprovados (2.661 módulos); 375 testes Vitest da suíte completa
+antes dos ajustes finais e 47 afetados aprovados depois, incluindo primeiro envio
+e resposta tardia da sessão anterior. Playwright: 32/32 nos quatro viewports,
+mais 4/4 finais de navegação; automações Node 50/50. Revisão independente aceitou
+as correções dos dois P2 encontrados, sem outros bloqueios. Doc-sync executado
+após código, gates e revisão, concluído na retomada de 02/11/2026 sem alteração
+adicional de código. Evidências e capturas na
+[verificação](../specs/0040-assistente-ia-com-robo/verification.md).
+Teclado virtual real e fluxo com backend/banco/IA reais permanecem pendentes;
+PR publicado e CI iniciado; a primeira consulta encontrou checks em execução.
+Merge, deploy e sincronização com Project não são inferidos.
+
 ## 0039 — Figma oficial e retirada da Paper Bridge
 
 **Atualização de 29/10/2026: spec implementada.**

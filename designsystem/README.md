@@ -217,3 +217,15 @@ formulário a uma coluna legível; landing preserva as artes, com título neutro
 sequência mais discreta. As transições compartilhadas se limitam a cor/borda;
 o feedback de pressão já existente no login permanece. Movimento reduzido
 desativa transições e shimmer. Veja a [auditoria](../specs/0030-experiencia-visual-consistente/audit.md).
+
+## Assistente IA — spec 0040
+
+A tela adota o robô original fornecido, sem edição, em PNG com transparência.
+O shell interno usa sidebar de 240 px, header de 80 px e marca IA elevada.
+A navegação segue os três destinos da revisão 0043, preservando rotas existentes.
+O Button oferece a variante `brand` com `--primary` e `--primary-foreground`,
+para o envio rosa aprovado; o padrão verde das outras ações é preservado.
+As luzes junto ao personagem usam os tokens existentes `--color-brand-soft` e
+`--color-down-soft`; fundos, texto e controles continuam usando tokens oficiais.
+Sugestões editáveis e avisos reais complementam o protótipo estático para manter
+as informações necessárias antes do envio. Não são acrescentados anexos ou voz.
