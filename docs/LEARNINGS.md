@@ -1,5 +1,23 @@
 # Aprendizados
 
+## 2026-11-04 — Trap de foco não substitui o ciclo de um diálogo
+
+**Contexto:** o teste de exclusão da spec 0045 falhou porque o diálogo herdado
+prendia Tab e tratava Escape, mas mantinha o foco no botão Excluir atrás dele.
+Esperar mais no teste não corrigiu a falha. O CTA do vazio também expôs a cor
+global de links sobrepondo o texto de um Button brand.
+
+**Princípio:** conferir entrada do foco, circulação e retorno separadamente. Ao
+remover o acionador após sucesso, devolver foco a um destino estável da página.
+Verificar a cor calculada e contraste de Button asChild no contexto do CSS real;
+uma variante isolada não comprova a composição final.
+
+**Anti-pattern:** considerar o hook de trap como gestão completa do diálogo ou
+adicionar espera a um teste cujo comportamento nunca é executado.
+
+**Referências:** Issue #235; spec 0045; `DeleteResearchDialog` em
+`frontend/src/features/research/common.tsx`; teste de foco em `HistoryPage.test.tsx`.
+
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
 
 ## 2026-10-28 — Uma referência oficial para o fluxo de design

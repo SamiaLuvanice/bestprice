@@ -277,7 +277,7 @@ A conta precisa ser provisionada no backend antes do login.
 | `/app/dashboard` | Necessidade de compra, sugestões editáveis e seis pesquisas recentes |
 | `/app/assistant`, `/app/assistant/:id` | Nova conversa ou conversa própria salva |
 | `/app/compare`, `/app/compare/:id` | Nova comparação manual ou comparação própria salva |
-| `/app/history` | Busca por título, tipo, paginação e exclusão confirmada |
+| `/app/history` | Conversas salvas, busca por título, paginação, Continuar e exclusão confirmada (0045) |
 | `/app/monitoring` | Lista de monitoramentos e formulário “Adicionar anúncio” |
 | `/app/monitoring/overview` | Painel completo de acompanhamento anterior |
 | `/app/monitoring/:id` | Detalhe do vínculo próprio, histórico, alerta e ações |
@@ -319,17 +319,49 @@ a análise anterior. Conflito de versão exige recarga; erro de GET inicial não
 permite edição insegura. A tabela usa somente dados fornecidos pela pessoa; a
 análise textual não transforma informações ausentes em fatos verificados.
 
-`HistoryPage` busca por título, filtra conversa/comparação e pagina 20 registros.
-Excluir exige confirmação e apresenta sucesso apenas após a API concluir; cancelar,
-erro e repetir preservam estados recuperáveis. Pesquisas expiram em 90 dias desde
-a criação, sem renovação por edição. A interface informa a retenção e não promete
-eliminação de backups ou registros Google.
+O histórico misto original foi substituído pela apresentação de conversas da
+spec 0045, descrita abaixo. A API de pesquisas e as comparações salvas continuam
+disponíveis; a retenção de 90 dias desde a criação não se renova por edição.
 
 Gates locais registrados: 366/366 testes da suíte completa e 18/18 afetados finais,
 lint e build aprovados (2.658 módulos). Jornadas SPA/API/PostgreSQL reais passaram
 4/4 e cenários de erro 6/6 no schema final, com fixture somente na geração externa.
 AC10/AC15/AC19 ainda dependem de avaliação operacional do modelo real e de sua
 configuração gratuita; a spec continua `pronta`. Ver [evidências](../../specs/0034-assistencia-compras-bestprice-ai/verification.md).
+
+## Histórico de conversas — spec 0045
+
+`HistoryPage` apresenta “Suas conversas” e consulta o cliente tipado existente por
+`GET /api/research?kind=conversation&q=<título>&offset=<n>&limit=20`. Não há filtro
+de tipo. Buscar com Enter ou pelo botão de ícone aplica o título sem espaços nas
+extremidades e volta à primeira página; a paginação preserva o termo. Limpar o
+campo e enviar recupera todas as conversas. Respostas de consultas anteriores
+são descartadas. O contrato REST e a persistência não mudaram.
+
+Cards mostram título, data real de atualização no fuso local e “Continuar” para
+`/app/assistant/:id`. Desktop organiza ações ao lado do conteúdo; mobile as coloca
+abaixo, mantendo Excluir acessível. A composição usa `history.css`, `Button`,
+`Input`, `Brand` e tokens existentes, com estados de carregamento, primeiro uso,
+busca sem resultados e erro com nova tentativa. O prazo de 90 dias da criação
+continua visível. A API fornece os dados; exemplos do Figma não preenchem contas.
+
+Excluir abre `DeleteResearchDialog`, compartilhado com as demais pesquisas. O foco
+inicial vai a Cancelar; fechar devolve o foco ao acionador conectado, ou ao título
+estável da página quando o acionador desaparece. A confirmação envia
+`DELETE /api/ai/conversations/:id`; somente sucesso fecha o diálogo e recarrega a
+primeira página da mesma busca. Falha conserva o diálogo e permite tentar de novo;
+401 usa o tratamento existente de sessão expirada. O conteúdo e o contrato de
+exclusão das outras pesquisas foram preservados.
+
+Referência visual: Figma BestPrice IA, frames 59:204 (1440×1040) e 59:716
+(390×844), exportações identificadas da spec 0043 de 31/10/2026. O MCP retornou
+limite do plano Starter; não foi comprovada paridade com alterações remotas
+posteriores. Datas reais, exclusão mobile e aviso de retenção substituem elementos
+ilustrativos; bordas de controles preservam o token acessível. A comparação e os
+limites estão na [verificação da 0045](../../specs/0045-historico-conversas-conforme-figma/verification.md).
+Lint/build aprovados, 390 testes Vitest completos e 9 focados finais, 20 cenários
+Playwright com teclado, axe e overflow em quatro viewports; não houve validação
+com backend/banco reais, teclado virtual, leitor de tela ou deploy nesta revisão.
 
 ## Assistente e navegação compartilhada — specs 0040 e 0044
 

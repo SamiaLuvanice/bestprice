@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react'
+import { useId, useLayoutEffect, useRef } from 'react'
 import { Button } from '../../components/ui/button'
 import { useModalFocus } from '../../lib/focus'
 
@@ -21,6 +21,14 @@ export function DeleteResearchDialog({ title, busy, error, onCancel, onConfirm }
   const titleId = useId()
   const descriptionId = useId()
   useModalFocus(true, dialog, cancel, () => { if (!busy) onCancel() })
+  useLayoutEffect(() => {
+    const trigger = document.activeElement
+    cancel.current?.focus()
+    return () => {
+      if (trigger instanceof HTMLElement && trigger.isConnected) trigger.focus()
+      else document.querySelector<HTMLElement>('#research-content h1')?.focus()
+    }
+  }, [])
   return <div className="dialog-backdrop" role="presentation">
     <div ref={dialog} className="confirm-panel" role="alertdialog" aria-modal="true" aria-labelledby={titleId} aria-describedby={descriptionId}>
       <h2 id={titleId}>Excluir pesquisa?</h2><p id={descriptionId}>“{title}” será removida, junto com suas mensagens ou análise. Essa ação não pode ser desfeita.</p>

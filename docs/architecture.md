@@ -53,8 +53,13 @@ dois tamanhos e reutiliza `useDisclosure`, com foco e rascunho preservados. A
 composição e os textos mudam somente no frontend; contrato e dependências ficam
 na fronteira existente. Ver [guia frontend](apps/frontend.md#assistente-e-navegação-compartilhada--specs-0040-e-0044).
 Sidebar/header e atalhos móveis oferecem Assistente, Histórico e Monitoramento;
-dashboard e comparador permanecem acessíveis por suas rotas e o histórico continua
-misto. No monitoramento interno, `AccountArea`/`AppHeader` em modo `embedded`
+dashboard e comparador permanecem acessíveis por suas rotas. Na revisão local
+0045, `HistoryPage` lista apenas conversas por `/api/research` com
+`kind=conversation`, busca por título e páginas de 20 registros. Cards retomam a
+conversa por ID e a exclusão usa a rota existente de conversas; a API e as
+comparações salvas permanecem preservadas. O diálogo compartilhado de exclusão
+gere foco inicial em Cancelar e retorno ao acionador ou título da página.
+No monitoramento interno, `AccountArea`/`AppHeader` em modo `embedded`
 compartilham marca e conta do shell e conservam subnavegação/sino no fluxo.
 Não há mudança de contrato, persistência, dependências ou configuração de IA.
 Os testes desta revisão usam a fronteira HTTP controlada; não comprovam teclado
