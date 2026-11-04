@@ -132,3 +132,44 @@ Migration (container descartável): `alembic upgrade 20261026research` deixou a 
 - Reutilizado e preservado: `bestprice-0047-testdb`, criado pela tarefa backend e com limpeza
   prevista no `task-cleanup`.
 - Nenhum outro container ou volume foi alterado.
+
+## Rodada de correções (após a QA em `c336a1d`)
+
+| Item | Commit | Evidência |
+|---|---|---|
+| I1 replay antigo sem `grounding` → 500 | `96a7cc0` | Red `ResponseValidationError ... Field required`; Green 200 com corpo idêntico e sem nova geração |
+| Bug QA `'null'::jsonb` | `96a7cc0` | Red no PostgreSQL `('assistant', False) != ('assistant', True)`; Green `grounding IS NULL`; `alembic check` sem operações novas |
+| I2/I4 fallback amplo (400/403, transporte, grounding inválido) | `96a7cc0` | Testes parametrizados: 2 chamadas, `unavailable`; segunda falha mantém erros existentes |
+| S1 orçamento total 50 s | `96a7cc0` | Timeouts enviados 25 s e 20 s; fallback pulado com < 5 s restantes → `ai_timeout` |
+| I3/S2 chips do Google | `7b45d87` | Red Playwright `waitForEvent "popup"` timeout; Green popup aberto sem `Referer`, iframe em `about:srcdoc` |
+| N1 log do fallback | `194847a` | Red 3 failed (nenhum registro); Green `status=` e `motivo=` sem corpo, chave ou pergunta |
+| Proxy Nginx 35 s < 50 s | `6599759` | `nginx -t` OK em `nginx:1.27-alpine`; backend falso de 45 s: config de develop **504 em 35 s**, nova config **200 em 45 s** |
+| Modelo nos dados simulados | `95b2a2d` | Sem mudança de comportamento |
+
+Revisão independente das correções: **aprovar** (seção "Revisão das correções" em `review.md`).
+N2 registrado, sem mudança.
+
+### Gates finais (SHA `95b2a2d`, código; docs até `1195d7c`)
+
+- Backend: `uv run ruff check .` → All checks passed!; pytest completo com PostgreSQL 17 →
+  **302 passed, 2 skipped** (`test_stage_start`, somente POSIX).
+- Frontend: `npm run lint` exit 0; `npm test -- --run` → **35 arquivos, 413 testes**; `npm run build` ok.
+  Três execuções completas do Vitest em `7b45d87` → 413/413 nas três.
+- Playwright `grounding.spec.ts` → 2 passed (frontend-evidence.md).
+- doc-sync-onboarding executado por último, duas rodadas (`5675afa`, `1195d7c`); AGENTS.md e
+  CLAUDE.md conferidos sem mudança.
+
+### AC → status final
+
+AC01–AC10 demonstrados localmente com Gemini simulado na fronteira HTTP. AC11 demonstrado: gates
+verdes com contagem positiva e documentação sincronizada. A instabilidade preexistente de
+`App.test.tsx` vem de `origin/develop` (arquivo idêntico) e fica como pendência fora da 0047.
+
+### Pendências explícitas
+
+- Chamada real à conta Gemini, para confirmar o free tier do grounding, o HTML real de sugestões,
+  a altura de 72 px e a validade das URIs de fonte (S5).
+- Qualidade das respostas do `gemini-2.5-flash-lite` em português.
+- Riscos aceitos S3, S4 e S6 (plan.md).
+- O Vite em 55473 relatado acima já não respondia em verificação posterior: porta livre.
+- O container `bestprice-0047-testdb` sai no `task-cleanup`.
