@@ -2,8 +2,8 @@
 
 ## 0046 — Login de stage sem rodapé
 
-**04/11/2026: implementação entregue; aguarda revisão na [PR #240](https://github.com/SamiaLuvanice/bestprice/pull/240) para develop.**
-Spec `pronta`, [Issue #239](https://github.com/SamiaLuvanice/bestprice/issues/239).
+**04/11/2026: spec implementada; [PR #240](https://github.com/SamiaLuvanice/bestprice/pull/240) integrada em develop no commit `b331588`.**
+Spec `implementada`, [Issue #239](https://github.com/SamiaLuvanice/bestprice/issues/239) fechada pela integração.
 Base origin/develop `72689fe`, branch `feature/0046-issue-239-login-stage-sem-rodape`.
 Login aprovado de stage preservado, com retirada somente do rodapé dessa rota e
 da reserva de 72 px, inclusive durante carga/erro de sessão. O matcher do roteador
@@ -25,9 +25,14 @@ telas e baselines não foram alteradas para encobrir essa dívida anterior.
 Doc-sync-onboarding final concluído após código, gates, revisão e QA: guia
 frontend e aprendizado do matcher sincronizados; AGENTS.md/CLAUDE.md conferidos
 sem edição. Commit de código `9f49eab` publicado com hooks aprovados e
-Refs #239. PR #240 aberta com Closes #239; o workflow CI foi observado na fila
-na consulta inicial. Conferir checks do SHA atual antes de integrar.
-Sem alteração REST, backend/banco, merge ou deploy; Project não presumido.
+Refs #239. O [CI final](https://github.com/SamiaLuvanice/bestprice/actions/runs/41880936096)
+passou em `441c177`, incluindo backend, frontend, automações, política e agregador;
+Cloudflare Pages publicou o preview. Worktree e branches exclusivas da feature
+removidas sem força após os checks de limpeza; nenhum Compose/volume foi criado.
+Checkout local atualizado e rascunho inicial preservado na pasta de artefatos.
+Registro de conclusão: Issue #241. A promoção de develop para stage foi
+solicitada em 04/11 e ainda depende da PR e da validação do ambiente publicado.
+Sem alteração REST ou backend/banco; sem release ou tag nesta etapa.
 Ver [spec e evidências](../specs/0046-login-stage-sem-rodape/verification.md).
 
 ## 0045 — Histórico de conversas conforme Figma

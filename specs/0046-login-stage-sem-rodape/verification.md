@@ -113,7 +113,7 @@ em stage não foi alterado por esta tarefa. Não houve teste local de autentica�
 contra backend/PostgreSQL reais, nem dispositivos assistivos/teclado virtual reais.
 Backend, infraestrutura e ação de release não foram alterados; os checks remotos
 devem ser conferidos no SHA atual da PR antes da integração. A spec não é
-implementada até integrar em develop.
+implementada antes da integração; a PR #240 foi integrada conforme registro abaixo.
 
 As alterações preexistentes no checkout principal foram preservadas. A implementação
 seguiu plano, worktree baseada em origin/develop, TDD, gates e doc-sync final.
@@ -148,7 +148,28 @@ Validação documental executada: `git diff --check` aprovado; script Python loc
 confirmou cercas Markdown equilibradas e links relativos da 0046 existentes nos
 cinco documentos tocados nesta sincronização.
 
-## Handoff
+## Integração e limpeza — 04/11/2026
+
+- PR #240 confirmada MERGED para develop em 04/11/2026 às 14:55:41
+  (America/Sao_Paulo), commit b3315883b51b3a3550e67fc40969c2983339f4b3.
+- Issue #239 confirmada CLOSED. O [CI 41880936096](https://github.com/SamiaLuvanice/bestprice/actions/runs/41880936096)
+  foi aprovado no head 441c1776f0ad78eb71a05c510421b4b483b569af; checks de
+  frontend/backend/automações/política/CI e Cloudflare Pages aprovados.
+- Após git fetch origin, a ancestralidade de 441c177 em origin/develop foi
+  confirmada. A worktree da feature estava limpa, com somente dist, node_modules,
+  resultados de testes/PR e tsbuildinfo ignorados e regeneráveis. Sem .env,
+  dados desconhecidos, Compose ou volumes criados pela tarefa.
+- Caminho absoluto da worktree conferido sob .worktrees antes da remoção.
+  git worktree remove sem força, git branch -d e exclusão somente da branch
+  remota feature/0046-issue-239-login-stage-sem-rodape concluídos.
+- Checkout principal atualizado por fast-forward, mantendo as alterações
+  preexistentes do usuário. O rascunho inicial não rastreado da 0046 foi movido,
+  sem descarte, para a pasta de artefatos 0046-intake-local-preservado.
+- Conclusão documental registrada na Issue #241, sem alteração de código,
+  testes ou snapshots; sem necessidade de repetir gates locais de aplicação.
+  Promoção para stage solicitada separadamente; não se afirma deploy antes da validação.
+
+## Handoff da implementação (registro anterior)
 
 Implementação entregue; aguarda revisão na [PR #240](https://github.com/SamiaLuvanice/bestprice/pull/240)
 para develop, com Closes #239. Commit de código `9f49eab89262a18535963310bc10938c5216fd79`
