@@ -1,5 +1,18 @@
 # Protótipo visual BestPrice
 
+## Histórico de conversas (spec 0045)
+
+Referência: BestPrice IA no Figma, frames 59:204 e 59:716, exportações identificadas
+da spec 0043 em 31/10/2026. O histórico usa cards brancos de raio 16 px, altura
+mínima 128 px e intervalos de 24 px desktop/16 px mobile, margem desktop 32 px e
+mobile 16 px (título recuado mais 4 px). Busca de 48 px com botão de ícone nomeado;
+Continuar usa Button outline e Excluir usa Button link, com alvos de 44 px.
+Reutilizam-se tokens existentes, Brand, Input, Button e Search. Bordas de controles
+mantêm o token acessível em vez da borda decorativa clara do desenho. Datas reais,
+exclusão mobile e prazo de 90 dias preservam as funções existentes. Não há novo
+token nem imagem estática; o aviso de exemplos do desenho não entra na aplicação.
+MCP indisponível por cota: alterações remotas posteriores não foram verificadas.
+
 O Figma é a ferramenta oficial de UI/UX e a referência visual principal desde a
 spec 0039. O fluxo é Figma → Codex → Implementação → Validação visual, com
 evolução gradual das telas. Consulte o
