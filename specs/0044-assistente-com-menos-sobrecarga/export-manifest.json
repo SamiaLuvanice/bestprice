@@ -1,0 +1,61 @@
+{
+  "date": "2026-11-03",
+  "origin": "Figma UI exports",
+  "file_key": "LZVtUEAycEzfbwL0H5YL3r",
+  "exports": [
+    {
+      "file": "before/desktop-conversation.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "4aeaebc24962c008c09736b8c0c844dbc914511c2e7bc313754d98f912071487"
+    },
+    {
+      "file": "before/desktop-initial.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "87306b13a48f698dfd559e9b463ac932a997108dff444d36d0ffaddec4def85e"
+    },
+    {
+      "file": "before/mobile-conversation.png",
+      "width": 390,
+      "height": 1320,
+      "sha256": "c849dd07ea67045e14f989e60b4ac062c61ce7bce33e48fa7c7c07eca08647f4"
+    },
+    {
+      "file": "before/mobile-initial.png",
+      "width": 390,
+      "height": 1190,
+      "sha256": "07b601b93b38054e687850ca638df6a510d518cc6d6edfc3d477c866afead825"
+    },
+    {
+      "file": "after/desktop-conversation.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "21473c21df0e93134c4ca183966681b8fa854fe39fafa66a3336f7a37c83c1a4"
+    },
+    {
+      "file": "after/desktop-initial.png",
+      "width": 1440,
+      "height": 960,
+      "sha256": "62cae6aeb161a98433a76c42c5cac9d7a639ce9027576442c39bc04fb778fbc4"
+    },
+    {
+      "file": "after/disclosures-and-states.png",
+      "width": 1440,
+      "height": 1280,
+      "sha256": "c55ae30d675ad782b4a901eb56c6550f9715f517f70f66d84bcfd3361a1f08ae"
+    },
+    {
+      "file": "after/mobile-conversation.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "5280e201a31045a522a650ec9c349005c4a99c0fe0c32f4bba3c3e4eb6e3e388"
+    },
+    {
+      "file": "after/mobile-initial.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "a431be6e44f5073de02eb9f76cda2390a7e64b4c8e5592ecc4ec2a4dc56086f4"
+    }
+  ]
+}

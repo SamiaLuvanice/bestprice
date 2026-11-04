@@ -1,5 +1,34 @@
 # Progresso das specs
 
+## 0044 — Assistente IA com menos sobrecarga
+
+**Atualização de 04/11/2026: implementação entregue; preparação do PR para develop.**
+Spec `pronta`, na worktree `.worktrees/codex-0044-assistente-simples`, branch
+local `feature/0044-issue-231-assistente-simples`, baseada em origin/develop `9d3b482`.
+A responsável confirmou os mesmos cortes editoriais do Figma desktop no mobile.
+A entrada tem pergunta direta, exemplo no campo e robô compacto; recentes ficam
+recolhidos nos dois tamanhos, sem apagar o rascunho ou enviar ao abrir/fechar.
+Aviso essencial do Google junto ao envio e contador contextual aos últimos 200
+caracteres. Backend, API, política e dependências preservados.
+
+Lint/build aprovados; Vitest 381/381 em 34 arquivos com dois workers; Playwright
+32/32 nos quatro viewports, incluindo captura 390 × 844; detector local sem
+ocorrências nos três arquivos de UI; automações Node 50/50. Revisão independente
+e QA aceitas sem achados de produto P0–P2 pendentes. A lacuna das capturas de
+estados foi corrigida e reinspecionada. Doc-sync-onboarding executado por último:
+guias de frontend/arquitetura e contexto do produto sincronizados; AGENTS.md e
+CLAUDE.md conferidos sem necessidade de edição. Ver
+[verificação](../specs/0044-assistente-com-menos-sobrecarga/verification.md).
+
+Validação de UI com API controlada; sem ensaio de teclado virtual ou leitor de
+tela reais e sem geração externa. Após autorização explícita da responsável,
+foi criada a [Issue #231](https://github.com/SamiaLuvanice/bestprice/issues/231),
+confirmada aberta. O bloqueio anterior da criação da Issue foi resolvido.
+Continuidade da orquestração solicitada em 04/11; branch ajustada à convenção e
+base reconferida sem avanço. Corpo de PR preparado com Closes #231.
+Publicação e CI serão registrados após observados. Não houve limpeza da worktree
+porque a implementação continua em revisão.
+
 ## 0040 — Assistente IA com robô e conversas recentes
 
 **Atualização de 02/11/2026: implementação entregue; aguarda revisão no [PR #226](https://github.com/SamiaLuvanice/bestprice/pull/226), em rascunho para develop.**

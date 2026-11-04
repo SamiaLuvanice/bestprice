@@ -48,6 +48,10 @@ A spec 0040 atualiza a apresentação do Assistente e o shell de `/app/*`.
 `RecentConversations` reutiliza `/api/research` com `kind=conversation` e limite
 de quatro, com carga e recuperação independentes do chat; a lista revalida após
 envio e descarta respostas após desmontagem. O robô é um asset local original.
+Na simplificação local da spec 0044, o acesso aos recentes começa recolhido nos
+dois tamanhos e reutiliza `useDisclosure`, com foco e rascunho preservados. A
+composição e os textos mudam somente no frontend; contrato e dependências ficam
+na fronteira existente. Ver [guia frontend](apps/frontend.md#assistente-e-navegação-compartilhada--specs-0040-e-0044).
 Sidebar/header e atalhos móveis oferecem Assistente, Histórico e Monitoramento;
 dashboard e comparador permanecem acessíveis por suas rotas e o histórico continua
 misto. No monitoramento interno, `AccountArea`/`AppHeader` em modo `embedded`

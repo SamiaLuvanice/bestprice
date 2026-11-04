@@ -20,9 +20,72 @@ function setup(extra: Parameters<typeof fakeApi>[0] = () => undefined, path = '/
   return fetch
 }
 
+async function openRecent() {
+  await userEvent.setup().click(await screen.findByRole('button', { name: 'Conversas recentes' }))
+  return screen.getByRole('region', { name: 'Conversas recentes' })
+}
+
+it.each(['/app/assistant', '/app/assistant/c1'])('recentes começam recolhidos e preservam rascunho ao fechar em %s', async (path) => {
+  const fetch = setup((url) => {
+    if (url.startsWith('/api/research?')) return reply(200, { items: [conversation('c1', 'Notebook real')], next_offset: null })
+    if (url === '/api/ai/conversations/c1') return reply(200, { ...conversation('c1'), messages: [] })
+    return undefined
+  }, path)
+  const user = userEvent.setup()
+  const toggle = await screen.findByRole('button', { name: 'Conversas recentes' })
+  await waitFor(() => expect(screen.getByLabelText('Sua mensagem')).toBeEnabled())
+  const input = screen.getByLabelText('Sua mensagem')
+  fireEvent.change(input, { target: { value: 'Meu rascunho' } })
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  expect(screen.queryByRole('region', { name: 'Conversas recentes' })).not.toBeInTheDocument()
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  const panel = screen.getByRole('region', { name: 'Conversas recentes' })
+  await user.tab()
+  expect(within(panel).getByRole('link', { name: 'Ver todas' })).toHaveFocus()
+  await user.keyboard('{Escape}')
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  expect(toggle).toHaveFocus()
+  await user.click(toggle)
+  await user.click(toggle)
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await user.click(toggle)
+  await user.click(input)
+  expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  expect(input).toHaveValue('Meu rascunho')
+  expect(window.location.pathname).toBe(path)
+  expect(fetch.mock.calls.some(([url]) => url === '/api/ai/chat')).toBe(false)
+})
+
+it('mostra pergunta e exemplo únicos com transparência junto ao envio e descrição curta', async () => {
+  setup()
+  expect(await screen.findByRole('heading', { name: 'O que você quer comprar?' })).toBeInTheDocument()
+  const input = screen.getByLabelText('Sua mensagem')
+  expect(input).toHaveAttribute('placeholder', 'Ex.: notebook para estudar, até R$ 3.500')
+  expect(input).toHaveAccessibleDescription('Até 2.000 caracteres')
+  const form = input.closest('form')!
+  expect(within(form).getByText(/O Google processa suas mensagens/)).toHaveTextContent('Na modalidade gratuita, o conteúdo pode ser usado para melhorar seus produtos. Não envie dados pessoais ou confidenciais.')
+  expect(screen.queryByRole('button', { name: /Ver exemplos|Sobre a IA|Um notebook para estudar/ })).not.toBeInTheDocument()
+  expect(screen.queryByText(/20 análises|contexto mais recente|Volte quando quiser|excluídas do BestPrice/)).not.toBeInTheDocument()
+})
+
+it('mostra contador apenas nos últimos 200 caracteres e permite voltar a editar', async () => {
+  setup()
+  const input = await screen.findByLabelText('Sua mensagem')
+  expect(input).toHaveAttribute('maxlength', '2000')
+  fireEvent.change(input, { target: { value: 'a'.repeat(1799) } })
+  expect(screen.queryByText(/caracteres restantes/)).not.toBeInTheDocument()
+  fireEvent.change(input, { target: { value: 'a'.repeat(1800) } })
+  expect(input).toHaveAccessibleDescription('Até 2.000 caracteres 200 caracteres restantes')
+  fireEvent.change(input, { target: { value: 'a'.repeat(2000) } })
+  expect(screen.getByText('0 caracteres restantes')).toBeInTheDocument()
+  fireEvent.change(input, { target: { value: 'Texto menor' } })
+  expect(screen.queryByText(/caracteres restantes/)).not.toBeInTheDocument()
+})
+
 it('mostra quatro conversas reais e solicita somente conversas recentes', async () => {
   const fetch = setup((url) => url.startsWith('/api/research?') ? reply(200, { items: ['A', 'B', 'C', 'D'].map((id) => conversation(id)), next_offset: 4 }) : undefined)
-  const recent = await screen.findByRole('region', { name: 'Conversas recentes' })
+  const recent = await openRecent()
   await waitFor(() => expect(within(recent).getAllByRole('listitem')).toHaveLength(4))
   expect(within(recent).getByRole('link', { name: /A.*30/ })).toHaveAttribute('href', '/app/assistant/A')
   expect(within(recent).getByRole('link', { name: 'Ver todas' })).toHaveAttribute('href', '/app/history')
@@ -38,6 +101,7 @@ it('falha da lista preserva a escrita e permite tentar novamente sem enviar', as
     attempts += 1
     return attempts === 1 ? reply(503, apiError('research_unavailable', 'Não foi possível listar conversas.')) : reply(200, { items: [conversation('c1', 'Notebook real')], next_offset: null })
   })
+  await openRecent()
   expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível listar conversas.')
   fireEvent.change(screen.getByLabelText('Sua mensagem'), { target: { value: 'Rascunho preservado' } })
   await userEvent.setup().click(screen.getByRole('button', { name: 'Tentar novamente' }))
@@ -50,9 +114,10 @@ it('falha da lista preserva a escrita e permite tentar novamente sem enviar', as
 it('distingue carregamento e vazio sem inventar conversas', async () => {
   let complete!: (response: ReturnType<typeof reply>) => void
   setup((url) => url.startsWith('/api/research?') ? new Promise<ReturnType<typeof reply>>((resolve) => { complete = resolve }) : undefined)
+  await openRecent()
   expect(await screen.findByText('Carregando conversas recentes…')).toBeInTheDocument()
   await act(async () => complete(reply(200, { items: [], next_offset: null })))
-  expect(await screen.findByText(/Escreva uma mensagem para iniciar a primeira/)).toBeInTheDocument()
+  expect(await screen.findByText('Nenhuma conversa ainda.')).toBeInTheDocument()
   expect(screen.queryByRole('listitem')).not.toBeInTheDocument()
 })
 
@@ -63,21 +128,25 @@ it('retoma conversa salva com IA desativada e não exibe a ilustração grande',
     if (url === '/api/ai/conversations/c1') return reply(200, { ...conversation('c1', 'Notebook real'), messages: [{ id: 'm1', role: 'assistant', content: 'Qual o seu uso?', created_at: conversation('c1').created_at }] })
     return undefined
   })
+  await openRecent()
   await userEvent.setup().click(await screen.findByRole('link', { name: /Notebook real/ }))
   expect(await screen.findByText('Qual o seu uso?')).toBeInTheDocument()
   expect(screen.getByText(/O assistente está indisponível/)).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Enviar mensagem' })).toBeDisabled()
   expect(screen.queryByRole('img', { name: /Robô do assistente/ })).not.toBeInTheDocument()
-  expect(screen.getByText(/Resposta de IA. Dados de mercado não verificados/)).toBeInTheDocument()
+  const response = screen.getByRole('article', { name: 'Resposta de BestPrice IA. Dados de mercado não verificados.' })
+  expect(within(response).getByText('BestPrice IA')).toHaveAttribute('title', 'Resposta de IA. Preços, estoque e especificações não verificados.')
+  expect(screen.queryByText('Resposta de IA. Dados de mercado não verificados.')).not.toBeInTheDocument()
 })
 
-it('sugestão preenche texto editável sem envio e nova conversa limpa o rascunho', async () => {
+it('nova conversa limpa o rascunho sem enviar', async () => {
   const fetch = setup()
   const user = userEvent.setup()
-  await user.click(await screen.findByRole('button', { name: 'Um notebook para estudar' }))
+  await screen.findByLabelText('Sua mensagem')
+  fireEvent.change(screen.getByLabelText('Sua mensagem'), { target: { value: 'Um notebook para estudar' } })
   expect(screen.getByLabelText('Sua mensagem')).toHaveValue('Um notebook para estudar')
-  expect(screen.getByLabelText('Sua mensagem')).toHaveFocus()
   expect(fetch.mock.calls.some(([url]) => url === '/api/ai/chat')).toBe(false)
+  await openRecent()
   await user.click(screen.getByRole('link', { name: 'Nova conversa' }))
   expect(await screen.findByLabelText('Sua mensagem')).toHaveValue('')
 })
@@ -93,7 +162,7 @@ it('atualiza a ordem após envio em conversa existente sem duplicar entradas', a
     }
     return undefined
   }, '/app/assistant/c1')
-  const recent = await screen.findByRole('region', { name: 'Conversas recentes' })
+  const recent = await openRecent()
   await waitFor(() => expect(within(recent).getAllByRole('listitem')[0]).toHaveTextContent('c2'))
   await waitFor(() => expect(screen.getByRole('button', { name: 'Enviar mensagem' })).toBeEnabled())
   fireEvent.change(screen.getByLabelText('Sua mensagem'), { target: { value: 'Quero estudar' } })
@@ -129,6 +198,9 @@ it('inclui a primeira conversa na lista após envio e mudança de URL', async ()
   await waitFor(() => expect(screen.getByRole('button', { name: 'Enviar mensagem' })).toBeEnabled())
   fireEvent.change(screen.getByLabelText('Sua mensagem'), { target: { value: 'Notebook' } })
   fireEvent.click(screen.getByRole('button', { name: 'Enviar mensagem' }))
+  await screen.findByText('Qual será o uso?')
+  await screen.findByRole('heading', { name: 'Minha primeira conversa' })
+  await openRecent()
   expect(await screen.findByRole('link', { name: /Minha primeira conversa/ })).toBeInTheDocument()
   expect(window.location.pathname).toBe('/app/assistant/c1')
 })
@@ -143,6 +215,7 @@ it('não mostra resultado atrasado da lista da conta anterior após sair e entra
     requests += 1
     return requests === 1 ? new Promise<ReturnType<typeof reply>>((resolve) => { complete = resolve }) : reply(200, { items: [conversation('c2', 'Conversa da nova conta')], next_offset: null })
   })
+  await openRecent()
   await screen.findByText('Carregando conversas recentes…')
   const user = userEvent.setup()
   await user.click(screen.getByRole('button', { name: /Conta:/ }))
@@ -150,6 +223,9 @@ it('não mostra resultado atrasado da lista da conta anterior após sair e entra
   await user.type(await screen.findByLabelText('E-mail'), 'outra@example.com')
   await user.type(screen.getByLabelText('Senha', { exact: true }), 'senha')
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
+  await screen.findByRole('button', { name: /outra@example.com/ })
+  // O login retoma a rota do assistente com um novo painel recolhido.
+  if (screen.queryByRole('button', { name: 'Conversas recentes' })) await openRecent()
   expect(await screen.findByRole('link', { name: /Conversa da nova conta/ })).toBeInTheDocument()
   await act(async () => complete(reply(200, { items: [conversation('private', 'Conversa privada da conta anterior')], next_offset: null })))
   expect(screen.queryByText('Conversa privada da conta anterior')).not.toBeInTheDocument()
