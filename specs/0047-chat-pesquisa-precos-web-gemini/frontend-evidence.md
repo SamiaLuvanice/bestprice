@@ -71,6 +71,52 @@ ser alterado. A spec também confere o aviso de `web_search` e salva capturas.
   é ignorado pelo Git e não foi versionado. As de 320 e 1280 foram inspecionadas: bloco dentro
   da coluna, título longo quebrando linha e chips de sugestão visíveis.
 
+## Correções da revisão (review.md I3/S2)
+
+**Commit `7b45d87`.** O `srcDoc` do iframe passa a ser este prefixo fixo, seguido do HTML do
+Google intacto: `'<base target="_blank"><meta name="referrer" content="no-referrer">' + html`.
+O sandbox continua igual. Assim os chips sem `target` abrem em nova página, em vez de navegar
+o iframe (que o Google recusa por `X-Frame-Options`). O documento `srcdoc` também deixa de
+herdar a política de referrer da SPA.
+
+- **Red:**
+  - Vitest (`assistant.test.tsx`, teste "mostra fontes…"): `srcdoc.startsWith(prefix)`
+    → `expected false to be true`.
+  - Playwright (`grounding.spec.ts`, teste novo "chip de sugestão do Google abre em nova
+    página…"): `TimeoutError: page.waitForEvent: Timeout 5000ms exceeded while waiting for
+    event "popup"`.
+- **Green:**
+  - Vitest: o teste novo passou (1 passed).
+  - Playwright: `2 passed`. O popup abre em
+    `https://www.google.com/search?q=notebook+pre%C3%A7o`, atendido por `context.route`
+    local, sem sair da máquina. A requisição sai sem cabeçalho `Referer` e o iframe continua
+    em `about:srcdoc`.
+
+**Teste instável fora do diff:** `App.test.tsx > preserva preço desconhecido sem criar valor
+zero no detalhe`. O arquivo do teste e `dashboard/AccountArea.tsx` são idênticos aos de
+`origin/develop` (`git diff --stat origin/develop` vazio), então a instabilidade não nasce
+desta branch.
+
+- Isolado (`npx vitest run src/App.test.tsx`), passou 5 de 5 vezes (23/23).
+- Testei `{ timeout: 5000 }` no `findByRole` e no `findByText` desse teste. A suíte
+  completa ainda falhou 1 vez em 5. No DOM da falha, a tela continuava em
+  "Carregando produto…" depois de 5s, embora o dublê responda com `Promise.resolve`.
+- Ou seja, a causa não é só um timeout curto: o detalhe não sai do carregamento sob carga
+  (havia outros processos node/python ativos na máquina, incluindo o backend em paralelo).
+- Por isso a alteração foi **revertida e não versionada**. O teste e o código de produção
+  ficaram inalterados.
+- A investigação de `open()` / `openSequence` em `AccountArea.tsx` sob carga fica como
+  pendência separada, fora da 0047.
+
+**Gates após a correção** (em `frontend/`):
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | exit 0 |
+| `npm test -- --run` ×3 | 35/35 arquivos e 413/413 testes nas três execuções |
+| `npm run build` | exit 0 |
+| `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5199 npx playwright test grounding.spec.ts --project=viewport-1280` | `2 passed` |
+
 ## Desvios e limites
 
 - `unavailable` aceita `searched_at` ausente, `null` ou instante. O contrato o mostra no
