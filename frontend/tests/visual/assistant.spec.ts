@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright'
 const summary = { id: 'c1', title: 'Notebook para estudar', kind: 'conversation', created_at: '2026-10-26T12:00:00Z', updated_at: '2026-10-30T12:00:00Z', expires_at: '2027-01-24T12:00:00Z' }
 const messages = [
   { id: 'u1', role: 'user', content: 'Quero um notebook para estudar e programar, até R$ 3.500.', created_at: summary.created_at },
-  { id: 'a1', role: 'assistant', content: 'Vamos começar pelo seu uso. Além do navegador e das aulas on-line, quais programas você pretende usar?\n\nE o que pesa mais na sua escolha: leveza e bateria ou uma tela maior?', created_at: summary.updated_at },
+  { id: 'a1', role: 'assistant', content: 'Quais programas você pretende usar, além do navegador e das aulas on-line?', created_at: summary.updated_at },
 ]
 
 async function api(page: Page, state: 'ready' | 'empty' | 'error' | 'disabled' | 'loading' = 'ready') {
@@ -36,31 +36,59 @@ async function fit(page: Page) {
 test('inicial: composição, imagem original, navegação e acessibilidade', async ({ page }, info) => {
   await api(page)
   await page.goto('/app/assistant')
-  await expect(page.getByRole('heading', { name: 'Olá!' })).toBeVisible()
-  await expect(page.getByRole('region', { name: 'Conversas recentes' }).getByRole('listitem')).toHaveCount(4)
+  await expect(page.getByRole('heading', { name: 'O que você quer comprar?' })).toBeVisible()
+  const recentToggle = page.getByRole('button', { name: 'Conversas recentes', exact: true })
+  await expect(recentToggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.getByRole('region', { name: 'Conversas recentes' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Ver exemplos' })).toHaveCount(0)
+  await expect(page.getByText('Sobre a IA e seus dados', { exact: true })).toHaveCount(0)
   const robot = page.getByRole('img', { name: 'Robô do assistente BestPrice IA' })
   await expect(robot).toBeVisible()
   expect(await robot.evaluate((element: HTMLImageElement) => ({ loaded: element.complete && element.naturalWidth > 0, proportion: element.clientWidth / element.clientHeight, original: element.naturalWidth / element.naturalHeight }))).toMatchObject({ loaded: true })
   const geometry = await robot.evaluate((element: HTMLImageElement) => ({ width: element.clientWidth, height: element.clientHeight, originalWidth: element.naturalWidth, originalHeight: element.naturalHeight }))
   expect(Math.abs(geometry.width / geometry.height - geometry.originalWidth / geometry.originalHeight)).toBeLessThan(0.01)
-  const recent = await page.locator('.assistant-recent').boundingBox()
-  const stage = await page.locator('.assistant-stage').boundingBox()
-  if ((page.viewportSize()?.width ?? 0) >= 1280) expect(recent!.x).toBeGreaterThan(stage!.x + stage!.width)
-  else expect(recent!.y).toBeGreaterThan(stage!.y)
   await fit(page)
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await page.locator('main').click({ position: { x: 4, y: 4 } })
   await page.screenshot({ path: info.outputPath('assistant-initial.png'), fullPage: true })
-  await page.getByRole('button', { name: 'Um notebook para estudar', exact: true }).click()
-  await expect(page.getByLabel('Sua mensagem')).toHaveValue('Um notebook para estudar')
-  await expect(page.getByLabel('Sua mensagem')).toBeFocused()
+  const chatRequests: string[] = []
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/ai/chat') chatRequests.push(request.method())
+  })
+  await page.getByLabel('Sua mensagem').fill('Meu rascunho')
+  await recentToggle.click()
+  const recent = page.getByRole('region', { name: 'Conversas recentes' })
+  await expect(recent.getByRole('listitem')).toHaveCount(4)
+  await fit(page)
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await recent.getByRole('link', { name: /Notebook para estudar/ }).focus()
+  await page.keyboard.press('Escape')
+  await expect(recentToggle).toHaveAttribute('aria-expanded', 'false')
+  await expect(recentToggle).toBeFocused()
+  await expect(page.getByLabel('Sua mensagem')).toHaveValue('Meu rascunho')
+  expect(chatRequests).toEqual([])
+  if (info.project.name === 'viewport-390') {
+    await page.getByLabel('Sua mensagem').fill('')
+    await page.setViewportSize({ width: 390, height: 844 })
+    const notice = await page.getByText(/O Google processa suas mensagens/).boundingBox()
+    const send = await page.getByRole('button', { name: 'Enviar mensagem' }).boundingBox()
+    const navigation = await page.getByRole('navigation', { name: 'Atalhos móveis' }).boundingBox()
+    expect(notice!.y).toBeGreaterThanOrEqual(0)
+    expect(notice!.y + notice!.height).toBeLessThanOrEqual(navigation!.y)
+    expect(send!.y + send!.height).toBeLessThanOrEqual(navigation!.y)
+    await page.locator('main').click({ position: { x: 4, y: 4 } })
+    await page.screenshot({ path: info.outputPath('assistant-initial-390x844.png'), fullPage: true })
+  }
 })
 
 test('conversa: retomada, texto longo e escrita móvel alcançável', async ({ page }, info) => {
   await api(page)
   await page.goto('/app/assistant')
+  await page.getByRole('button', { name: 'Conversas recentes', exact: true }).click()
   await page.getByRole('region', { name: 'Conversas recentes' }).getByRole('link', { name: /Notebook para estudar/ }).click()
-  await expect(page.getByText('Vamos começar pelo seu uso.', { exact: false })).toBeVisible()
+  await expect(page.getByText('Quais programas você pretende usar, além do navegador e das aulas on-line?', { exact: true })).toBeVisible()
   await expect(page.locator('.assistant-welcome')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Conversas recentes', exact: true })).toHaveAttribute('aria-expanded', 'false')
   await page.getByLabel('Sua mensagem').fill('Notebook '.repeat(220))
   await page.getByLabel('Sua mensagem').focus()
   await page.getByRole('button', { name: 'Enviar mensagem' }).scrollIntoViewIfNeeded()
@@ -72,6 +100,8 @@ test('conversa: retomada, texto longo e escrita móvel alcançável', async ({ p
   }
   await fit(page)
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([])
+  await page.locator('main').click({ position: { x: 4, y: 4 } })
+  await page.evaluate(() => window.scrollTo(0, 0))
   await page.screenshot({ path: info.outputPath('assistant-conversation.png'), fullPage: true })
 })
 
@@ -79,14 +109,16 @@ for (const state of ['empty', 'error', 'disabled', 'loading'] as const) {
   test(`estado ${state}: escrita e lista independentes`, async ({ page }, info) => {
     await api(page, state)
     await page.goto('/app/assistant')
-    if (state === 'empty') await expect(page.getByText(/Escreva uma mensagem para iniciar a primeira/)).toBeVisible()
+    await page.getByRole('button', { name: 'Conversas recentes', exact: true }).click()
+    if (state === 'empty') await expect(page.getByText(/Nenhuma conversa ainda/)).toBeVisible()
     if (state === 'error') await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible()
     if (state === 'loading') await expect(page.getByText('Carregando conversas recentes…')).toBeVisible()
     if (state === 'disabled') await expect(page.getByRole('button', { name: 'Enviar mensagem' })).toBeDisabled()
     else await expect(page.getByRole('button', { name: 'Enviar mensagem' })).toBeEnabled()
-    await page.getByLabel('Sua mensagem').fill('Meu rascunho')
     await fit(page)
     await page.screenshot({ path: info.outputPath(`assistant-${state}.png`), fullPage: true })
+    await page.getByLabel('Sua mensagem').fill('Meu rascunho')
+    await expect(page.getByLabel('Sua mensagem')).toHaveValue('Meu rascunho')
   })
 }
 
@@ -96,6 +128,7 @@ test('títulos e mensagens sem espaços não criam rolagem horizontal', async ({
   await page.route('**/api/ai/conversations/c1', (route) => route.fulfill({ json: { ...summary, title: 'Notebook'.repeat(50), messages: [{ ...messages[1], content: 'Mensagem'.repeat(200) }] } }))
   await page.goto('/app/assistant/c1')
   await expect(page.locator('.assistant-messages article')).toHaveCount(1)
+  await page.getByRole('button', { name: 'Conversas recentes', exact: true }).click()
   await expect(page.getByRole('region', { name: 'Conversas recentes' }).getByRole('listitem')).toHaveCount(1)
   await fit(page)
 })

@@ -36,7 +36,14 @@ describe('conteúdo da interface', () => {
     expect(files.length).toBeGreaterThan(10)
     const findings = files.flatMap((file) => {
       const text = readFileSync(file, 'utf-8')
-      return forbidden.filter(([, pattern]) => pattern.test(text)).map(([label]) => `${relative(sourceRoot, file)}: ${label}`)
+      return forbidden.filter(([label, pattern]) => {
+        // Orçamento ilustrativo aprovado na 0044; não é preço de oferta/produto.
+        // A exceção exata não libera outros valores nem outras superfícies.
+        const content = label === 'preço fixo' && file === join(sourceRoot, 'features', 'research', 'AssistantPage.tsx')
+          ? text.replace("'Ex.: notebook para estudar, até R$ 3.500'", "''")
+          : text
+        return pattern.test(content)
+      }).map(([label]) => `${relative(sourceRoot, file)}: ${label}`)
     })
     expect(findings).toEqual([])
   })
