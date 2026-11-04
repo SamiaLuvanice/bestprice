@@ -29,9 +29,12 @@ def extract_grounding(candidate: dict) -> dict | None:
     chunks = metadata.get("groundingChunks") or []
     if not isinstance(chunks, list):
         raise InvalidGroundingError("Invalid grounding chunks")
+    if not (chunks or metadata.get("webSearchQueries") or metadata.get("searchEntryPoint")):
+        return None  # The model chose not to search.
     sources = unique_sources(chunks)
     if not sources:
-        return None
+        # It searched but nothing can be shown with suggestions: never present it as a plain answer.
+        raise InvalidGroundingError("Searched without valid sources")
     return {"status": "searched", "sources": sources, "search_suggestions_html": suggestions_html(metadata)}
 
 

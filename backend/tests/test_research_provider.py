@@ -6,7 +6,12 @@ import pytest
 
 from app.errors import ApiError
 from app.research.cleanup import cleanup_loop
-from app.research.provider import MODEL, GeminiProvider, bounded_context
+from app.research.provider import (
+    CHAT_BUDGET_SECONDS,
+    MODEL,
+    GeminiProvider,
+    bounded_context,
+)
 from app.research.settings import AISettings, ai_settings
 
 
@@ -184,6 +189,16 @@ def test_comparison_never_sends_tools_even_with_web_search() -> None:
     httpx.Response(500, json={"private": "secret"}),
     httpx.Response(503, json={"private": "secret"}),
     httpx.ConnectError("upstream private detail"),
+    httpx.ReadTimeout("upstream private detail"),
+    httpx.Response(400, json={"error": {"status": "FAILED_PRECONDITION"}}),
+    httpx.Response(403, json={"error": {"status": "PERMISSION_DENIED"}}),
+    httpx.Response(200, json=gemini_body(metadata=grounded_metadata(html=None))),
+    httpx.Response(200, json=gemini_body(metadata=grounded_metadata(html="x" * 32001))),
+    httpx.Response(200, json=gemini_body(metadata={
+        "webSearchQueries": ["preço notebook"], "searchEntryPoint": {"renderedContent": GROUNDED_HTML},
+        "groundingChunks": [{"web": {"uri": "http://inseguro.example/p", "title": "Sem TLS"}}],
+    })),
+    httpx.Response(200, json=gemini_body(metadata={"webSearchQueries": ["preço notebook"]})),
 ])
 def test_grounding_failure_retries_once_without_tools(failure) -> None:
     seen, transport = recording(failure, httpx.Response(200, json=gemini_body("Sem pesquisa na web.")))
@@ -204,20 +219,61 @@ def test_failed_fallback_keeps_existing_errors() -> None:
     assert "secret" not in result.value.message
 
 
-def test_non_retryable_error_does_not_spend_another_call() -> None:
-    seen, transport = recording(httpx.Response(403, json={"private": "secret"}))
+@pytest.mark.parametrize("second,code", [
+    (httpx.Response(403, json={"private": "secret"}), "ai_unavailable"),
+    (httpx.Response(200, json={"candidates": []}), "ai_invalid_response"),
+])
+def test_fallback_failure_after_any_grounding_failure_uses_existing_errors(second, code) -> None:
+    seen, transport = recording(httpx.Response(400, json={"private": "secret"}), second)
     with pytest.raises(ApiError) as result:
         web_provider(transport).generate_chat([{"role": "user", "content": "Preço?"}])
+    assert len(seen) == 2
+    assert result.value.code == code
+    assert "secret" not in result.value.message
+
+
+def test_answer_without_search_metadata_is_plain_and_single_call() -> None:
+    seen, transport = recording(httpx.Response(200, json=gemini_body("Resposta sem pesquisa.")))
+    result = web_provider(transport).generate_chat([{"role": "user", "content": "Oi"}])
     assert len(seen) == 1
-    assert result.value.code == "ai_unavailable"
+    assert result.grounding is None
 
 
-def test_sources_without_suggestions_are_an_invalid_response() -> None:
-    seen, transport = recording(httpx.Response(200, json=gemini_body(metadata=grounded_metadata(html=None))))
+class FakeMonotonic:
+    def __init__(self, *values):
+        self.values = list(values)
+
+    def __call__(self):
+        return self.values.pop(0)
+
+
+def timed_recording(*responses):
+    timeouts = []
+    queue = list(responses)
+
+    def respond(request):
+        timeouts.append(request.extensions["timeout"])
+        return queue.pop(0)
+
+    return timeouts, httpx.MockTransport(respond)
+
+
+def test_fallback_receives_only_the_remaining_total_budget() -> None:
+    timeouts, transport = timed_recording(httpx.Response(429), httpx.Response(200, json=gemini_body("Sem busca.")))
+    provider = GeminiProvider(AISettings(True, "dummy", web_search=True), transport, monotonic=FakeMonotonic(100.0, 130.0))
+    assert provider.generate_chat([{"role": "user", "content": "Preço?"}]).grounding["status"] == "unavailable"
+    assert CHAT_BUDGET_SECONDS < 90
+    assert set(timeouts[0].values()) == {min(25.0, CHAT_BUDGET_SECONDS)}
+    assert set(timeouts[1].values()) == {min(25.0, CHAT_BUDGET_SECONDS - 30.0)}
+
+
+def test_fallback_is_skipped_when_budget_is_exhausted() -> None:
+    timeouts, transport = timed_recording(httpx.Response(503))
+    provider = GeminiProvider(AISettings(True, "dummy", web_search=True), transport, monotonic=FakeMonotonic(0.0, CHAT_BUDGET_SECONDS - 1))
     with pytest.raises(ApiError) as result:
-        web_provider(transport).generate_chat([{"role": "user", "content": "Preço?"}])
-    assert len(seen) == 1
-    assert result.value.code == "ai_invalid_response"
+        provider.generate_chat([{"role": "user", "content": "Preço?"}])
+    assert len(timeouts) == 1
+    assert result.value.code == "ai_timeout"
 
 
 def test_web_search_is_opt_in_by_environment(monkeypatch) -> None:

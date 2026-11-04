@@ -369,6 +369,17 @@ def test_grounding_migration_is_nullable_jsonb_and_keeps_old_messages_null(postg
         assert connection.scalar(text("SELECT grounding FROM research_messages WHERE id = :id"), {"id": message_id}) is None
 
 
+def test_messages_without_search_store_sql_null_not_json_null(postgres_research) -> None:
+    engine, owner_id = postgres_research
+    now = datetime(2026, 11, 4, 12, tzinfo=UTC)
+    with Session(engine) as session:
+        result = send_chat(session, owner_id, ChatInput(conversation_id=None, request_id=uuid4(), message="Oi"), Provider(), lambda: now)
+        rows = session.execute(text(
+            "SELECT role, grounding IS NULL FROM research_messages WHERE conversation_id = :id ORDER BY position"
+        ), {"id": UUID(result["conversation_id"])}).all()
+    assert rows == [("user", True), ("assistant", True)]
+
+
 def test_grounding_persists_in_postgres_replays_and_is_purged_with_conversation(postgres_research) -> None:
     engine, owner_id = postgres_research
     now = datetime(2026, 11, 4, 12, tzinfo=UTC)

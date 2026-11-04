@@ -110,7 +110,8 @@ class MessageOutput(BaseModel):
     role: Literal["user", "assistant"]
     content: str
     created_at: datetime
-    grounding: GroundingOutput | None
+    # Default keeps replays of results saved before spec 0047 valid.
+    grounding: GroundingOutput | None = None
 
 
 class ConversationOutput(Summary):

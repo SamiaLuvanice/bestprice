@@ -76,10 +76,9 @@ Nenhum container ou volume preexistente foi alterado.
 
 ## Desvios e decisões locais
 
-- Fallback: além de 429 e 5xx, o envio com `tools` também cai no fallback em erro de
-  transporte `httpx.HTTPError` (conexão e timeout), como na tarefa ("erro HTTP"). Cada
-  chamada tem 25 s, então o pior caso fica em 50 s, abaixo dos 90 s do attempt. Os demais
-  4xx (400/403) não geram nova tentativa e mantêm `ai_unavailable`.
+- Fallback: substituído na correção de revisão (ver abaixo). A versão inicial cobria 429, 5xx
+  e erro de transporte com 25 s por chamada, e afirmava "pior caso 50 s". A afirmação era
+  imprecisa, porque o timeout do httpx vale por fase, não por chamada (achado S1).
 - A retentativa sem busca usa o prompt sem busca atual ("Não há busca web"), coerente com
   a ausência de `tools`. O aviso ao usuário vem de `grounding.status = "unavailable"`.
 - O teto do corpo bruto da resposta Gemini subiu de 128.000 para 160.000 bytes, para
@@ -88,15 +87,76 @@ Nenhum container ou volume preexistente foi alterado.
 - O provider expõe `generate_chat(history) -> Generation(text, grounding)`, e `generate`
   segue só para a comparação. O `searched_at` é carimbado no service com o relógio injetado,
   no formato ISO 8601 com `Z`.
-- `research_messages.grounding` usa `JSON().with_variant(JSONB(), "postgresql")`: JSONB
-  no PostgreSQL e JSON no SQLite dos testes HTTP rápidos.
+- `research_messages.grounding` usa
+  `JSON(none_as_null=True).with_variant(JSONB(none_as_null=True), "postgresql")`: JSONB no
+  PostgreSQL, JSON no SQLite dos testes HTTP rápidos e `None` gravado como SQL NULL.
 
 ## Pendências (fora de `backend/**`)
 
-- `docker-compose.yml` e `.env.example` ainda não repassam nem documentam
-  `AI_WEB_SEARCH_ENABLED`. Sem isso, a busca fica desligada no Compose (default seguro
-  `false`). Basta incluir `AI_WEB_SEARCH_ENABLED: ${AI_WEB_SEARCH_ENABLED:-false}` e
-  `AI_WEB_SEARCH_ENABLED=false`. Cabe ao doc-sync/orquestrador.
+- `AI_WEB_SEARCH_ENABLED` no Compose e no `.env.example`: resolvido pelo orquestrador no
+  commit `c336a1d`.
 - Chamada real à conta Gemini com grounding (free tier) não executada, por decisão da spec.
 - Remover o container `bestprice-0047-testdb` na limpeza da tarefa
   (`docker rm -f bestprice-0047-testdb`).
+
+## Correções de revisão e QA (04/11/2026)
+
+Origem: `review.md`, achados I1, I2, I4 e S1, e o bug de `null` JSONB em `verification.md`.
+Decisão do orquestrador para I2/I4: **qualquer** falha da chamada com `tools` gera uma única
+nova tentativa sem `tools`, com status `unavailable`. O contrato continua com `searched`
+sempre trazendo ≥ 1 fonte e o HTML.
+
+### Red (antes da correção)
+
+| Item | Teste | Falha observada |
+|---|---|---|
+| I1 | `test_research_http.py::test_replay_of_result_saved_before_grounding_still_succeeds` (`result` sem a chave `grounding`) | `fastapi.exceptions.ResponseValidationError: ... ('response', 'user_message', 'grounding'), 'msg': 'Field required'` (500) |
+| I2 | `test_research_grounding.py::test_searched_without_valid_sources_is_invalid` (3 casos) e `test_unsafe_or_oversized_uris_are_discarded` (7 casos) | `Failed: DID NOT RAISE InvalidGroundingError` (10 falhas; antes o resultado era `None`) |
+| I4 e S1 | `test_research_provider.py`: 400, 403, `ReadTimeout`, HTML ausente ou acima do limite com fontes, pesquisou só com fonte `http`, só `webSearchQueries`, orçamento restante e orçamento esgotado | erro de coleta `ImportError: cannot import name 'CHAT_BUDGET_SECONDS' from 'app.research.provider'` |
+| Bug QA | `test_research_integration.py::test_messages_without_search_store_sql_null_not_json_null` (PG real) | `At index 1 diff: ('assistant', False) != ('assistant', True)`. O assistente sem busca gravava `'null'::jsonb`, e o usuário já gravava SQL NULL porque não atribuía o campo. |
+
+Resumo do Red nos testes rápidos: **11 failed, 48 passed** (grounding + HTTP), mais o erro
+de coleta do arquivo do provider.
+
+### Green
+
+- I1: `MessageOutput.grounding: GroundingOutput | None = None`. O replay antigo devolve 200
+  igual ao original, sem nova geração.
+- Bug QA: `JSON(none_as_null=True)` e `JSONB(none_as_null=True)`, sem migration nova. O tipo
+  do banco não muda. `alembic current` = `20261104grounding (head)`, e `alembic check`
+  respondeu "No new upgrade operations detected.". Linhas `'null'::jsonb` gravadas antes
+  continuam aparecendo como `grounding: null` na API, porque o JSON `null` vira `None`.
+- I2: `extract_grounding` considera que houve busca quando existem `groundingChunks`,
+  `webSearchQueries` ou `searchEntryPoint`. Com busca e sem fonte `https` válida, ou com
+  fontes e HTML ausente, vazio ou acima de 32.000 caracteres, levanta
+  `InvalidGroundingError`. Sem nenhum desses sinais, o resultado é `null`, ou seja, o modelo
+  não pesquisou.
+- I4: na chamada com `tools`, qualquer `httpx.HTTPError` ou `ApiError` gera uma nova
+  tentativa sem `tools`. Isso inclui 429, 400, 403, 5xx, transporte, timeout, 200 com
+  grounding inválido e resposta truncada ou vazia. A resposta 200 válida sem metadata faz
+  uma só chamada, com `grounding = null`. Se o fallback falhar, valem os erros existentes:
+  `ai_unavailable`, `ai_invalid_response`, `ai_rate_limited` e `ai_timeout`.
+- S1: o orçamento total do chat com busca é `CHAT_BUDGET_SECONDS = 50`, abaixo dos 90 s do
+  attempt, medido com um relógio monotônico injetável (`GeminiProvider(..., monotonic=)`).
+  - A primeira chamada usa `min(25, 50)`.
+  - O fallback usa `min(25, restante)`.
+  - Com menos de 5 s restantes, não há segunda chamada, e o resultado é `ai_timeout`.
+  - Limite real, já corrigido no comentário do código: o httpx aplica o timeout **a cada
+    fase** (connect, write, pool e cada leitura), não à chamada inteira. O orçamento
+    garante que o fallback só começa com tempo restante e que cada fase dele fica limitada
+    a esse resto. Não é um limite rígido de relógio de parede para um servidor que envie
+    bytes muito devagar. Nesse caso extremo, a janela de 90 s do attempt
+    (`ensure_active_attempt`) continua descartando o resultado de forma consistente.
+
+### Gates após as correções
+
+| Comando (em `backend/`) | Resultado |
+|---|---|
+| `uv run ruff check .` | All checks passed! |
+| `uv run pytest -q tests/test_research_grounding.py tests/test_research_provider.py tests/test_research_http.py -p no:cacheprovider` | **93 passed** |
+| `TEST_DATABASE_URL=postgresql://bestprice:***@127.0.0.1:55447/bestprice_test uv run pytest -q -p no:cacheprovider -rs` | **299 passed, 2 skipped, 1 warning** em 79,25 s. Os skips são `test_stage_start.py`, POSIX. |
+| `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
+| `complexity_report.py backend/app --changed origin/develop` (raiz) | 166 blocos, média 3,10 (A), A 139 · B 25 · C 2 (testes preexistentes). Nenhum bloco ≥ D. |
+
+Custo de cota (S6, registro): com fallback, uma unidade da cota local pode gerar duas
+requisições ao Google. A resposta continua sem cobrança, mas consome cota do fornecedor.

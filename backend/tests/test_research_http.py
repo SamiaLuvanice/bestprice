@@ -159,6 +159,23 @@ def test_chat_persists_grounding_with_clock_instant_and_replays_it(research_clie
     assert [entry["grounding"] for entry in detail["messages"]] == [None, body["assistant_message"]["grounding"]]
 
 
+def test_replay_of_result_saved_before_grounding_still_succeeds(research_client, fake_provider) -> None:
+    client, _, engine = research_client
+    payload = chat_payload(message="Pergunta antes do deploy")
+    first = client.post("/api/ai/chat", json=payload).json()
+    with Session(engine) as session:
+        attempt = session.scalar(select(AIRequest).where(AIRequest.request_id == UUID(payload["request_id"])))
+        legacy = {**attempt.result}
+        for key in ("user_message", "assistant_message"):
+            legacy[key] = {name: value for name, value in legacy[key].items() if name != "grounding"}
+        attempt.result = legacy
+        session.commit()
+    replay = client.post("/api/ai/chat", json=payload)
+    assert replay.status_code == 200
+    assert replay.json() == first
+    assert fake_provider.chat_calls == 1
+
+
 def test_chat_records_unavailable_search_and_plain_answers(research_client, fake_provider) -> None:
     client, _, _ = research_client
     fake_provider.grounding = {"status": "unavailable", "sources": [], "search_suggestions_html": None}

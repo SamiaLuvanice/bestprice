@@ -26,10 +26,17 @@ def test_searched_grounding_keeps_https_sources_and_suggestions() -> None:
     assert "webSearchQueries" not in str(result)
 
 
-def test_without_metadata_or_sources_there_is_no_grounding() -> None:
-    assert extract_grounding({}) is None
-    assert extract_grounding(candidate([])) is None
-    assert extract_grounding(candidate([], html=None)) is None
+@pytest.mark.parametrize("value", [{}, {"groundingMetadata": {}}, {"groundingMetadata": {"groundingChunks": [], "webSearchQueries": []}}])
+def test_without_search_evidence_there_is_no_grounding(value) -> None:
+    # The model chose not to search: a plain answer, no grounding block.
+    assert extract_grounding(value) is None
+
+
+@pytest.mark.parametrize("value", [candidate([]), candidate([], html=None), candidate([chunk("http://loja.example/p")], html=None)])
+def test_searched_without_valid_sources_is_invalid(value) -> None:
+    # A search happened (queries or suggestions present) but nothing can be shown as searched.
+    with pytest.raises(InvalidGroundingError):
+        extract_grounding(value)
 
 
 @pytest.mark.parametrize("uri", [
@@ -37,7 +44,10 @@ def test_without_metadata_or_sources_there_is_no_grounding() -> None:
     "https://loja.example/" + "a" * 2048, 42, None,
 ])
 def test_unsafe_or_oversized_uris_are_discarded(uri) -> None:
-    assert extract_grounding(candidate([chunk(uri), "texto", {"web": "x"}])) is None
+    result = extract_grounding(candidate([chunk(uri), "texto", {"web": "x"}, chunk("https://ok.example/p")]))
+    assert result["sources"] == [{"title": "Loja", "url": "https://ok.example/p"}]
+    with pytest.raises(InvalidGroundingError):
+        extract_grounding(candidate([chunk(uri), "texto", {"web": "x"}]))
 
 
 def test_sources_are_unique_limited_and_titles_truncated() -> None:

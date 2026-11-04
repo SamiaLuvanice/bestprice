@@ -1,3 +1,5 @@
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import httpx
@@ -39,6 +41,11 @@ WEB_SEARCH_INSTRUCTION = (
 ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 WEB_SEARCH_TOOLS = [{"google_search": {}}]
 UNAVAILABLE_GROUNDING = {"status": "unavailable", "sources": [], "search_suggestions_html": None}
+CALL_TIMEOUT_SECONDS = 25.0
+# Shared by the grounded call and its fallback; well below the 90s attempt window.
+CHAT_BUDGET_SECONDS = 50.0
+MIN_FALLBACK_SECONDS = 5.0
+TIMEOUT_ERROR = ("ai_timeout", "A resposta demorou demais. Tente novamente.")
 
 
 @dataclass(frozen=True)
@@ -49,9 +56,13 @@ class Generation:
 
 
 class GeminiProvider:
-    def __init__(self, settings: AISettings, transport: httpx.BaseTransport | None = None):
+    def __init__(
+        self, settings: AISettings, transport: httpx.BaseTransport | None = None,
+        monotonic: Callable[[], float] = time.monotonic,
+    ):
         self.settings = settings
         self.transport = transport
+        self.monotonic = monotonic
 
     def ensure_available(self) -> None:
         if not self.settings.available:
@@ -67,25 +78,31 @@ class GeminiProvider:
         contents = bounded_context(history)
         if not self.settings.web_search_enabled:
             return parse_response(self.send(contents, SYSTEM_INSTRUCTION))
+        deadline = self.monotonic() + CHAT_BUDGET_SECONDS
         try:
-            response = self.post(contents, WEB_SEARCH_INSTRUCTION, WEB_SEARCH_TOOLS)
-        except httpx.HTTPError:
-            response = None
-        if response is not None and not retryable(response):
-            return parse_response(response)
-        # One free-tier retry without the tool; its errors are the existing ones.
-        fallback = parse_response(self.send(contents, SYSTEM_INSTRUCTION))
+            timeout = min(CALL_TIMEOUT_SECONDS, CHAT_BUDGET_SECONDS)
+            return parse_response(self.post(contents, WEB_SEARCH_INSTRUCTION, WEB_SEARCH_TOOLS, timeout))
+        except (httpx.HTTPError, ApiError):
+            pass  # Any grounded failure (quota, 4xx, 5xx, transport, invalid grounding) falls back once.
+        remaining = deadline - self.monotonic()
+        if remaining < MIN_FALLBACK_SECONDS:
+            raise ApiError(504, *TIMEOUT_ERROR)
+        # One free-tier retry without the tool and within the remaining budget; its errors are the existing ones.
+        fallback = parse_response(self.send(contents, SYSTEM_INSTRUCTION, min(CALL_TIMEOUT_SECONDS, remaining)))
         return Generation(fallback.text, dict(UNAVAILABLE_GROUNDING))
 
-    def send(self, contents: list[dict], instruction: str) -> httpx.Response:
+    def send(self, contents: list[dict], instruction: str, timeout: float = CALL_TIMEOUT_SECONDS) -> httpx.Response:
         try:
-            return self.post(contents, instruction)
+            return self.post(contents, instruction, timeout=timeout)
         except httpx.TimeoutException as exc:
-            raise ApiError(504, "ai_timeout", "A resposta demorou demais. Tente novamente.") from exc
+            raise ApiError(504, *TIMEOUT_ERROR) from exc
         except httpx.HTTPError as exc:
             raise ApiError(503, "ai_unavailable", "Assistente indisponível no momento.") from exc
 
-    def post(self, contents: list[dict], instruction: str, tools: list[dict] | None = None) -> httpx.Response:
+    def post(
+        self, contents: list[dict], instruction: str, tools: list[dict] | None = None,
+        timeout: float = CALL_TIMEOUT_SECONDS,
+    ) -> httpx.Response:
         body = {
             "systemInstruction": {"parts": [{"text": instruction}]},
             "contents": contents,
@@ -93,13 +110,10 @@ class GeminiProvider:
         }
         if tools:
             body["tools"] = tools
-        # 25s per call keeps one grounded attempt plus the fallback inside the 90s attempt window.
-        with httpx.Client(timeout=25, follow_redirects=False, transport=self.transport) as client:
+        # httpx applies the timeout to each phase (connect, write, pool, every read), not to the
+        # whole call; the fallback only starts with budget left and its phases are capped by it.
+        with httpx.Client(timeout=timeout, follow_redirects=False, transport=self.transport) as client:
             return client.post(ENDPOINT, headers={"x-goog-api-key": self.settings.api_key}, json=body)
-
-
-def retryable(response: httpx.Response) -> bool:
-    return response.status_code == 429 or response.status_code >= 500
 
 
 def bounded_context(history: list[dict[str, str]]) -> list[dict]:
