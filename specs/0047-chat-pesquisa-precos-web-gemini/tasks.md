@@ -15,4 +15,4 @@
 - [x] Revisão independente (arch-reviewer) e QA.
 - [x] verification.md e docs/PROGRESS.md.
 - [x] doc-sync-onboarding por último.
-- [ ] PR para develop com Closes #245; CI.
+- [x] PR #246 para develop com Closes #245; CI aprovado; integrada em c569bc6; limpeza registrada em docs/PROGRESS.md.

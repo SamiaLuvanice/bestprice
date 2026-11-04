@@ -3,7 +3,7 @@ numero: 0047
 titulo: Chat pesquisa preços na web com Gemini
 tipo: feature
 prioridade: P2
-status: pronta
+status: implementada
 toca: [backend, frontend, contrato]
 depende_de: [0034, 0040, 0044]
 ---
