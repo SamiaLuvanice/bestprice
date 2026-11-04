@@ -143,3 +143,88 @@ do Google em cenários plausíveis. Corrigir I3 ou validá-lo com um payload rea
 `AI_WEB_SEARCH_ENABLED` em qualquer ambiente. Para I4, alinhar spec e código, de preferência ampliando o
 fallback. As sugestões podem virar follow-up. Esta revisão não substitui o QA nem a validação com a conta real
 do Gemini, que continua pendente.
+
+## Revisão das correções
+
+Revisor: papel `arch-reviewer`. Data: 04/11/2026. Escopo: `git diff 4c26b6c~4 4c26b6c -- backend frontend`
+(commits 7b45d87 e 96a7cc0), somente leitura, exceto este arquivo. Referências: achados acima, `spec.md` AC04
+(texto já atualizado), `plan.md` seção "Fallback" e o bug de `null` JSONB de `verification.md`.
+
+### Gates reexecutados pelo revisor
+
+| Comando | Resultado |
+|---|---|
+| `uv run ruff check .` (backend) | All checks passed! |
+| `uv run pytest -q tests/test_research_grounding.py tests/test_research_provider.py tests/test_research_http.py` | 93 passed (antes 77) |
+| `TEST_DATABASE_URL=postgresql://bestprice:***@127.0.0.1:55447/bestprice_test uv run pytest -q -p no:cacheprovider tests/test_research_integration.py` | 11 passed (PG real, container `bestprice-0047-testdb`) |
+| `python .agents/skills/cyclomatic-complexity/scripts/complexity_report.py backend/app --changed 4c26b6c~4` | Nenhum bloco >= D. Os únicos blocos C são os mesmos dois testes preexistentes; nada piorou. |
+| `npx vitest run src/assistant.test.tsx src/features/research` (frontend) | 3 arquivos, 41 passed |
+
+Não reexecutei o Playwright (`grounding.spec.ts`, inclusive o teste novo do chip), o build do frontend nem a
+chamada real ao Gemini. Para o Playwright, vale a evidência de `frontend-evidence.md` ("2 passed", popup aberto).
+O Red dos testes novos foi conferido apenas pelo registro em `backend-evidence.md`. Pela leitura do diff, cada
+teste novo falharia no código anterior pelo motivo registrado.
+
+### Veredito por item
+
+- **I1 — corrigido e provado.** `schemas.py:114` agora tem `= None`. O teste
+  `test_replay_of_result_saved_before_grounding_still_succeeds` remove a chave `grounding` das duas mensagens do
+  `result` gravado e confirma 200, corpo igual ao original e uma única geração.
+- **I2 — corrigido e provado (opção b).** `grounding.py:32-37`: com sinal de busca (`groundingChunks`,
+  `webSearchQueries` ou `searchEntryPoint`) e sem fonte `https` válida, a função levanta `InvalidGroundingError`,
+  e o provider aciona o fallback com `unavailable`. O contrato `searched` (>= 1 fonte e HTML) continua igual, e o
+  validador do frontend não mudou. Os testes cobrem: sem metadata, metadata vazia e listas vazias (sem busca, `None`),
+  busca sem fonte, busca só com `http`, só `webSearchQueries` e fontes válidas sem HTML ou com HTML grande demais.
+- **I3 — corrigido; provado na fronteira local.** `MessageGrounding.tsx:6` e `:23` usam um prefixo fixo, e o HTML
+  do Google vem depois, sem alteração. No parsing, `<base>` e `<meta>` vão para o `<head>` implícito antes do
+  `<style>` do Google, e o `<div>` abre o `<body>`. A ausência de DOCTYPE não muda nada, porque documentos
+  `srcdoc` são no-quirks por definição e o HTML original também não tinha DOCTYPE. Um `target` explícito no HTML
+  do Google continuaria valendo sobre o `<base>`. O Vitest confere o prefixo e o HTML byte a byte, e o Playwright
+  confere o popup, o iframe ainda em `about:srcdoc` e a ausência de `Referer`. Falta confirmar com o
+  `renderedContent` real.
+- **I4 — corrigido; spec, plano e código alinhados.** `provider.py:82-92`: qualquer `httpx.HTTPError` ou `ApiError`
+  da chamada com `tools` gera uma nova tentativa, sem `tools`. Isso inclui 400, 403, timeout e 200 com grounding
+  inválido, porque `InvalidGroundingError` é `ValueError` e vira `ApiError(502)` em `parse_response`. Sobre o risco
+  de um 400 permanente ficar mascarado: um 400 de conteúdo falha de novo sem `tools` e devolve o erro existente
+  (`ai_unavailable`), e o teste `test_fallback_failure_after_any_grounding_failure_uses_existing_errors` prova isso.
+  Nada é mascarado. O custo é uma chamada extra. O risco que sobra é de observabilidade (ver N1).
+- **S1 — corrigido, dentro do que o httpx permite.** O deadline é monotônico e injetável
+  (`deadline = monotonic() + 50`). O fallback recebe `min(25, restante)` e é pulado com `ai_timeout` quando restam
+  menos de 5 s. A ordem dos cálculos está correta, e o `remaining` é medido depois da primeira chamada. Os testes
+  conferem os timeouts por fase enviados (25 e depois 20) e o caminho de orçamento esgotado (uma chamada só). O
+  comentário do código e o plano agora dizem, corretamente, que o limite vale por fase. Um servidor que manda os
+  bytes muito devagar ainda pode passar de 50 s. Nesse caso, a janela de 90 s do attempt continua protegendo a
+  consistência.
+- **S2 — corrigido**, pelo mesmo `<meta name="referrer" content="no-referrer">`. O Playwright observou
+  `referer` indefinido na navegação para `www.google.com`.
+- **Bug `null` JSONB — corrigido e provado no PG real.** `models.py:52-54`: `none_as_null=True` vale só para a
+  coluna `grounding`. `AIRequest.result` e as outras colunas JSON não mudam. Não há migration, porque o tipo do banco
+  é o mesmo, e o `alembic check` está limpo segundo `backend-evidence.md`. O teste
+  `test_messages_without_search_store_sql_null_not_json_null` passou aqui. Linhas antigas com `'null'::jsonb` só
+  existem em bancos locais, porque a coluna não está em `origin/develop`, e mesmo assim são lidas como `None`.
+  Nenhum código filtra por `grounding IS NULL`.
+
+### Achados novos
+
+Nenhum bloqueante nem importante.
+
+- **N1 (Sugestão) — Fallback silencioso.** `backend/app/research/provider.py:85-86`: `except (httpx.HTTPError,
+  ApiError): pass` não registra nada. Se o Google recusar a ferramenta de forma permanente (400/403 ligado ao
+  `google_search`), cada mensagem passa a custar duas requisições ao fornecedor e mostra "pesquisa indisponível",
+  e o operador não recebe nenhum sinal para desligar `AI_WEB_SEARCH_ENABLED` ou investigar. Sugestão:
+  `logger.warning` só com o status HTTP ou a classe da exceção, sem corpo, chave ou prompt, como já faz
+  `cleanup.py`.
+- **N2 (Sugestão) — Erro do orçamento esgotado.** `provider.py:88-89`: quando a chamada com `tools` falha de forma
+  lenta (por exemplo, 429 depois de mais de 45 s), a resposta é `ai_timeout`, sem `retry_after_seconds`, e não
+  `ai_rate_limited`. É um caso raro, e a mensagem continua honesta. Só registro.
+- **Observação (sem ação):** com `allow-popups-to-escape-sandbox` e sem `noopener` nos chips, a página do Google
+  aberta recebe `window.opener`, que aponta para o iframe sandboxed de origem opaca. Ela só conseguiria navegar o
+  iframe, não a SPA. O risco é aceitável, porque o destino é o próprio Google e o HTML não pode ser alterado pelos
+  termos.
+
+### Veredito
+
+**Aprovar.** I1, I2, I3, I4, S1, S2 e o bug de `null` foram corrigidos, com testes que executaram e contagens
+positivas, sem regressão de contrato nem de complexidade. N1 vale como follow-up de baixo custo antes de ativar
+`AI_WEB_SEARCH_ENABLED` em stage. As pendências de S3 a S6 e a validação com a conta real do Gemini (formato do
+`renderedContent`, validade das URIs de redirecionamento) continuam abertas. Esta revisão não substitui o QA.

@@ -160,3 +160,14 @@ de coleta do arquivo do provider.
 
 Custo de cota (S6, registro): com fallback, uma unidade da cota local pode gerar duas
 requisições ao Google. A resposta continua sem cobrança, mas consome cota do fornecedor.
+
+## Revisão das correções — N1 (log do fallback)
+
+Achado N1 da segunda revisão: o fallback era silencioso. Uma recusa permanente da ferramenta (400/403) custaria duas chamadas por mensagem sem sinal operacional.
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_research_provider.py -k logged` → 3 failed (`ValueError: not enough values to unpack (expected 1, got 0)`: nenhum registro emitido).
+- Green: `logger.warning` em `app.research.provider` com apenas `status=<HTTP ou ->` e `motivo=<código ApiError ou classe da exceção>`; o teste garante ausência de corpo, chave, detalhe do upstream e texto da pergunta.
+- `uv run ruff check .` → All checks passed!
+- pytest completo com PostgreSQL 17 (`bestprice-0047-testdb`, 127.0.0.1:55447) → **302 passed, 2 skipped**, 34,40 s.
+
+N2 (orçamento esgotado após falha lenta vira `ai_timeout` sem `retry_after`) fica registrado, sem mudança.

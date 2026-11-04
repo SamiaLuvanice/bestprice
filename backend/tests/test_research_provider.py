@@ -210,6 +210,23 @@ def test_grounding_failure_retries_once_without_tools(failure) -> None:
     assert result.grounding == {"status": "unavailable", "sources": [], "search_suggestions_html": None}
 
 
+@pytest.mark.parametrize("failure,status,reason", [
+    (httpx.Response(403, json={"private": "secret"}), "403", "ai_unavailable"),
+    (httpx.ConnectError("upstream private detail"), "-", "ConnectError"),
+    (httpx.Response(200, json=gemini_body(metadata={"webSearchQueries": ["x"]})), "200", "ai_invalid_response"),
+])
+def test_grounding_fallback_is_logged_without_private_details(failure, status, reason, caplog) -> None:
+    _, transport = recording(failure, httpx.Response(200, json=gemini_body("Sem pesquisa na web.")))
+    with caplog.at_level("WARNING", logger="app.research.provider"):
+        web_provider(transport).generate_chat([{"role": "user", "content": "Preço secreto?"}])
+    [record] = [r for r in caplog.records if r.name == "app.research.provider"]
+    message = record.getMessage()
+    assert record.levelname == "WARNING"
+    assert f"status={status}" in message and f"motivo={reason}" in message
+    for private in ("secret", "dummy", "upstream private detail", "Preço secreto"):
+        assert private not in message
+
+
 def test_failed_fallback_keeps_existing_errors() -> None:
     seen, transport = recording(httpx.Response(429), httpx.Response(429, json={"private": "secret"}))
     with pytest.raises(ApiError) as result:
