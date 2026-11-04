@@ -570,7 +570,7 @@ h1, h2 { text-wrap: balance; }
 }
 
 /* Entrada (0023/0027): a arte fornecida ocupa a metade esquerda, sem sobreposições. */
-.login-shell { display: grid; width: 100%; min-height: calc(100svh - 72px); margin: 0 auto; }
+.login-shell { display: grid; width: 100%; min-height: 100svh; margin: 0 auto; }
 .login-card { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; min-height: inherit; margin: 0 auto; background: var(--color-bg); }
 .login-visual { display: none; }
 .login-brand { font-size: 26px; align-self: flex-start; margin: 0 0 40px; }

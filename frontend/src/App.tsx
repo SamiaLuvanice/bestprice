@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { useCallback, useEffect, useState } from 'react'
-import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter, matchPath, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type User } from './api'
 import { LoginForm } from './LoginForm'
 import { NotFoundPage } from './NotFoundPage'
@@ -107,7 +107,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     finally { setBusy(false) }
   }
 
-  const footer = <footer>BestPrice · Acompanhe com clareza</footer>
+  const footer = matchPath('/login', location.pathname) ? null : <footer>BestPrice · Acompanhe com clareza</footer>
   if (location.pathname === '/') return <LandingPage />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">

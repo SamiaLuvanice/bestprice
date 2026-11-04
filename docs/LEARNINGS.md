@@ -1,5 +1,21 @@
 # Aprendizados
 
+## 2026-11-04 — Condições visuais devem seguir o matcher da rota
+
+**Contexto:** a revisão da spec 0046 encontrou o rodapé em `/login/` e `/LOGIN`:
+o React Router aceitava essas entradas como login, mas a condição de composição
+comparava literalmente o pathname com `/login`.
+
+**Princípio:** reutilizar o matcher do roteador para decisões visuais que pertencem
+à mesma rota. Cobrir variantes aceitas pela rota e manter um controle positivo
+em outras páginas evita divergências entre navegação e composição.
+
+**Anti-pattern:** criar uma segunda normalização de URL ou assumir que igualdade
+textual de pathname representa a semântica do roteador.
+
+**Referências:** Issue #239; spec 0046, T03/T06; `frontend/src/App.tsx:110`;
+regressão Red/Green de variantes em `frontend/src/App.test.tsx`.
+
 ## 2026-11-04 — Trap de foco não substitui o ciclo de um diálogo
 
 **Contexto:** o teste de exclusão da spec 0045 falhou porque o diálogo herdado
