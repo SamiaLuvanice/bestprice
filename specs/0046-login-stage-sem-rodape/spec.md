@@ -3,7 +3,7 @@ numero: 0046
 titulo: Login de stage como referência, sem rodapé
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend]
 depende_de: [0039]
 ---
@@ -72,4 +72,5 @@ e não a orientação e o link de retorno dentro do login. A retirada vale para
 desktop e mobile e somente para o login. A sincronização Figma foi realizada
 pelo Chrome. A fonte Arial não estava disponível no editor web: Arimo foi usada
 como equivalente visual, sem alterar a fonte da aplicação; não se declara
-igualdade pixel a pixel de tipografia. A implementação local foi verificada; integração e publicação seguem pendentes.
+igualdade pixel a pixel de tipografia. A implementação foi integrada em develop
+pela PR #240; a promoção e a validação de stage são uma etapa de entrega separada.

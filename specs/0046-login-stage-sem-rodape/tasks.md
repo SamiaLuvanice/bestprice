@@ -8,4 +8,4 @@
 - [x] T06 — Revisão independente aprovada após correção do P2 de variantes da rota; sem P0–P2 no escopo.
 - [x] T07 — Doc-sync-onboarding executado por último; frontend, progresso e aprendizado sincronizados; AGENTS.md/CLAUDE.md conferidos sem edição.
 - [x] T08 — Commit 9f49eab com hooks, push, PR #240 para develop; CI observado na fila na consulta inicial, sem declarar aprovação antes da conclusão.
-- [ ] T09 — Integração verificada em develop e limpeza exclusiva da tarefa, quando aplicável.
+- [x] T09 — PR #240 integrada em develop no commit b331588; worktree e branches local/remota exclusivas da feature removidas após confirmar ancestralidade, estado limpo e artefatos regeneráveis. Sem Compose ou volumes criados nesta tarefa.
