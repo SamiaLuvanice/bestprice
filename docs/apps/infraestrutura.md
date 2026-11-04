@@ -84,7 +84,8 @@ O isolamento de projeto cria nomes e volumes distintos por worktree. As portas a
 
 ## Operação local da assistência — spec 0034
 
-Compose repassa `AI_ENABLED` (padrão `false`) e `GEMINI_API_KEY` (padrão vazio)
+Compose repassa `AI_ENABLED` (padrão `false`), `GEMINI_API_KEY` (padrão vazio) e,
+desde a spec 0047, `AI_WEB_SEARCH_ENABLED` (padrão `false`, também em `.env.example`)
 apenas ao backend. A chave não vai para o bundle da SPA. A configuração opt-in
 não provisiona conta, faturamento ou segredo remoto, nem ativa monitoramento MLB.
 O modelo e as cotas locais estão no [guia backend](backend.md#assistência-e-pesquisas-privadas--spec-0034).
@@ -93,13 +94,18 @@ billing e a validação externa permanece pendente.
 
 `frontend/nginx.conf` permite `proxy_read_timeout 35s` somente para
 `/api/ai/chat` e `/api/comparisons/{id}/analyze`, acima dos 25 s do adapter Google.
+Com `AI_WEB_SEARCH_ENABLED=true`, o chat pode somar a chamada com busca e o fallback
+em até 50 s no backend, acima desses 35 s; o `nginx.conf` não mudou na 0047 e esse
+caso não foi exercitado (a QA usou o proxy Vite).
 O restante de `/api/` mantém 5 s de leitura; conexão usa 2 s e envio 5 s em ambos.
 O proxy de desenvolvimento Vite aceita `API_PROXY_TARGET`, com padrão
 `http://localhost:8000`, para uma API isolada da worktree. Essa variável não
 configura a Pages Function nem representa verificação do proxy Stage.
 
 A migration local passa a `20261026research` e deve ser aplicada antes de servir
-a revisão 0034. As seis tabelas research recebem RLS; o head conhecido de Stage
+a revisão 0034; a spec 0047 acrescenta `20261104grounding` (coluna
+`research_messages.grounding`), aplicada pelo mesmo `alembic upgrade head` do Compose.
+As seis tabelas research recebem RLS; o head conhecido de Stage
 na evidência histórica abaixo continua separado da nova revisão. O lifespan da
 API agenda limpeza física horária de pesquisas; não é tarefa do worker de MLB.
 Com a API parada, não há limpeza periódica, mas leituras negam registros vencidos

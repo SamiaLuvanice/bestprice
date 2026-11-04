@@ -325,7 +325,8 @@ leitura das pesquisas e salvamento manual.
 
 `AssistantPage` carrega mensagens próprias, mostra carga, vazio, erro recuperável
 e envio ocupado com trava contra duplicação. Texto de IA é renderizado como texto,
-identificado como não verificado, sem executar HTML/Markdown. Mensagem tem até
+identificado como não verificado, sem executar HTML/Markdown (o HTML de sugestões
+da spec 0047 fica isolado em iframe com sandbox, descrito adiante). Mensagem tem até
 2.000 caracteres; conversas longas usam contexto recente limitado. IDs são
 `crypto.randomUUID()`: falha de rede reaproveita o request ID dentro de 24 h para
 consultar o resultado; falha conhecida permite nova tentativa explícita.
@@ -445,6 +446,47 @@ adicional 390 × 844. Nesse tamanho, aviso e envio aparecem antes da navegação
 sem teclado virtual. Testes cobrem recentes recolhidos, foco, rascunho sem POST,
 contador contextual, estados e texto longo. Revisão independente e QA locais
 aceitas; publicação, CI remoto e integração em develop ainda pendentes.
+
+## Pesquisa na web no Assistente — spec 0047
+
+`features/research/api.ts` acrescenta `Message.grounding` (`null`, `searched` ou
+`unavailable`) e `Capabilities.web_search`. O validador exige, em `searched`,
+`searched_at` instantâneo, pelo menos uma fonte com URL `https` (`safeHttpsUrl`) e
+HTML de sugestões em string; em `unavailable`, `sources: []`, HTML `null` e
+`searched_at` opcional. Mensagens anteriores sem o campo viram `null`, e capabilities
+sem `web_search` viram `false`; essa normalização ocorre dentro do type guard, que
+muta o objeto recebido (achado S3 da revisão, aceito nesta entrega). Uma fonte que o
+backend aceita e `new URL()` rejeita invalida a resposta inteira (S4, risco baixo).
+
+`MessageGrounding.tsx` aparece abaixo de cada resposta do assistente:
+
+| `grounding` | Interface |
+|---|---|
+| `null` | Nada |
+| `unavailable` | Nota "A pesquisa na web está indisponível agora; esta resposta não usou a web." |
+| `searched` | Região "Fontes da pesquisa na web" com rótulo **Não verificado**, "Pesquisado em" (`<time>` e `Intl` pt-BR no fuso local), lista de fontes e sugestões do Google |
+
+As fontes abrem com `target="_blank"` e `rel="noopener noreferrer"`, sem handler de
+clique, e têm nome acessível "… (abre em nova aba)" e altura mínima de 44 px. Os
+termos do Google proíbem alterar as sugestões, então o HTML vai intacto num iframe
+`srcDoc` com `sandbox="allow-popups allow-popups-to-escape-sandbox"` (sem scripts,
+mesma origem ou formulários), `referrerPolicy="no-referrer"` e `title`. O `srcDoc`
+recebe um prefixo fixo `<base target="_blank"><meta name="referrer" content="no-referrer">`
+para que os chips abram em nova página sem `Referer`. O iframe tem altura fixa de
+72 px. Com `capabilities.web_search`, o aviso essencial do composer acrescenta
+`webSearchNotice` (`common.tsx`): a pergunta pode ser pesquisada pelo Google, que
+guarda pergunta e resposta por 30 dias. `AIInformation` da comparação não muda.
+O estilo em `assistant.css` usa somente tokens existentes; não há frame Figma para o
+bloco.
+
+`src/assistant.test.tsx`, `features/research/api.test.ts` e
+`tests/visual/grounding.spec.ts` cobrem contrato, estados, prefixo do `srcDoc`,
+popup sem `Referer`, foco, teclado, axe (iframe excluído) e overflow em
+320/390/768/1280/1440 px, com API simulada. O HTML real de `renderedContent` e a
+adequação dos 72 px seguem sem validação; tema escuro não se aplica (tema claro
+fixo). A suíte completa registrou intermitência preexistente em `App.test.tsx`,
+fora do diff. Ver [evidência frontend](../../specs/0047-chat-pesquisa-precos-web-gemini/frontend-evidence.md)
+e [verificação](../../specs/0047-chat-pesquisa-precos-web-gemini/verification.md).
 
 ## Monitoramento preservado
 

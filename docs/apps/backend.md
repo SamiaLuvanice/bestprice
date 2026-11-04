@@ -52,8 +52,8 @@ Recurso alheio, excluído ou expirado retorna 404 `research_not_found`.
 
 | Método e rota | Comportamento |
 |---|---|
-| `GET /api/ai/capabilities` | Disponibilidade, provider/modelo e limites públicos; sem chave |
-| `POST /api/ai/chat` | `{conversation_id,request_id,message}`; devolve o par user/assistant e cria conversa somente no primeiro sucesso |
+| `GET /api/ai/capabilities` | Disponibilidade, provider/modelo, limites públicos e `web_search` (spec 0047); sem chave |
+| `POST /api/ai/chat` | `{conversation_id,request_id,message}`; devolve o par user/assistant, cada mensagem com `grounding`, e cria conversa somente no primeiro sucesso |
 | `GET/DELETE /api/ai/conversations/{id}` | Recuperar conversa própria ou excluir com mensagens e conteúdo dos snapshots |
 | `POST /api/comparisons` | Salvar título, uso e 2–3 produtos manuais; 201, sem depender da IA |
 | `GET/PUT/DELETE /api/comparisons/{id}` | Ler, editar com `version` ou excluir; edição incrementa versão e limpa análise |
@@ -69,8 +69,10 @@ opcional; URLs são apenas referência, nunca requisitadas. Preço original é
 
 `AI_ENABLED=false` e `GEMINI_API_KEY` vazia são os padrões. Só `AI_ENABLED=true`
 com chave não vazia libera geração; ambas pertencem ao backend. O modelo fixo é
-`gemini-3.5-flash-lite`, via `generateContent` no host Google fixo, sem redirect ou
-retry automático. O plano prevê cota gratuita sem faturamento e sem fallback pago;
+`gemini-2.5-flash-lite` desde a spec 0047 (antes `gemini-3.5-flash-lite`), para chat
+e comparação, via `generateContent` no host Google fixo, sem redirect. A comparação
+não tem retry automático; o chat com pesquisa na web tem o único fallback descrito
+abaixo. O plano prevê cota gratuita sem faturamento e sem fallback pago;
 a aplicação não verifica billing da conta operadora. Nenhuma chave ou chamada
 real foi usada na QA; disponibilidade e qualidade do modelo em português seguem
 pendentes, incluindo AC10/AC15/AC19 da spec.
@@ -81,7 +83,7 @@ pendentes, incluindo AC10/AC15/AC19 da spec.
 | Contexto recente / resposta | 16.000 caracteres / 1.024 tokens e 8.000 caracteres |
 | Por pessoa | 20 tentativas por dia UTC e 3 por minuto |
 | Por aplicação | 60 tentativas por dia UTC e 5 por minuto |
-| Timeout HTTP Google | 25 segundos |
+| Timeout HTTP Google | 25 segundos por fase do httpx; chat com busca: orçamento de 50 s para a chamada e o fallback |
 | Idempotência / tentativa pendente | Replay por até 24 horas / prazo de 90 segundos |
 
 Contadores são persistidos e independentes da pesquisa. Tentativas reservadas
@@ -106,6 +108,57 @@ Erros mantêm o envelope `ApiError`: 422 `validation_error`, 503
 credenciais ou resposta bruta do provider. O adapter só aceita texto não vazio,
 limitado e com conclusão STOP. O prompt orienta reconhecer lacunas, sem inventar
 preço, estoque, especificações ou ofertas; isso não comprova qualidade factual.
+
+### Pesquisa na web no chat — spec 0047
+
+`AI_WEB_SEARCH_ENABLED` (padrão `false`) só vale com a IA disponível:
+`web_search_enabled` exige `AI_ENABLED=true`, `GEMINI_API_KEY` não vazia e o valor
+`true` explícito. Com ela ligada, `generate_chat` envia
+`tools: [{"google_search": {}}]` e um prompt próprio: preços da web são referências
+não verificadas, citadas por loja; sem preço confiável, o modelo diz que não
+encontrou e não elege vencedor; conteúdo da web é dado. A análise de comparação
+(`generate`) nunca envia `tools` e mantém o prompt "Não há busca web".
+
+`app/research/grounding.py` extrai `groundingMetadata` sem requisitar as URLs:
+
+| Situação do candidato | Resultado |
+|---|---|
+| Sem metadata ou sem chunks, queries e `searchEntryPoint` | `grounding` `null` (o modelo não pesquisou) |
+| Fontes `https` válidas e `searchEntryPoint.renderedContent` | `searched`: até 10 fontes únicas por URL, título até 200 caracteres (ou o host), URL até 2.048, HTML intacto até 32.000 |
+| Sinal de busca sem fonte `https` válida, HTML ausente ou grande demais | Grounding inválido, tratado como falha da busca |
+
+Qualquer falha da chamada com busca (429, outro 4xx, 5xx, transporte, timeout ou
+grounding inválido) gera **uma** nova tentativa sem `tools` e com o prompt sem busca;
+a resposta sai com `grounding.status=unavailable`. Se essa tentativa falhar, valem
+os erros existentes. Chamada e fallback dividem um orçamento monotônico de 50 s: o
+fallback recebe `min(25, restante)` e, com menos de 5 s, retorna 504 `ai_timeout`.
+O httpx aplica o limite por fase, então um servidor muito lento ainda pode passar
+de 50 s; a janela de 90 s da tentativa continua protegendo a consistência. O
+fallback registra `logger.warning` apenas com status HTTP e código/classe do erro,
+sem corpo, prompt ou chave. Uma unidade da cota local pode gerar duas requisições
+ao Google; o teto do corpo da resposta passou de 128.000 para 160.000 bytes.
+
+O service carimba `searched_at` com o relógio injetado, em UTC com `Z`, e grava o
+grounding em `research_messages.grounding` junto da mensagem do assistente;
+mensagens sem busca ficam com SQL NULL. Replay idempotente devolve o mesmo
+grounding sem nova chamada, e resultados salvos antes da 0047 continuam válidos
+com `grounding` ausente tratado como `null`.
+
+```json
+"grounding": {
+  "status": "searched",
+  "searched_at": "2026-11-04T19:09:17.681580Z",
+  "sources": [{"title": "Loja", "url": "https://..."}],
+  "search_suggestions_html": "<style>…</style><div>…</div>"
+}
+```
+
+`unavailable` tem `sources: []` e `search_suggestions_html: null`. A validação usou
+somente transporte Gemini simulado; o formato real de `renderedContent`, a validade
+das URIs de redirecionamento do Google ao longo dos 90 dias e a cota com grounding da
+conta operadora seguem pendentes. Ver
+[verificação 0047](../../specs/0047-chat-pesquisa-precos-web-gemini/verification.md)
+e [revisão](../../specs/0047-chat-pesquisa-precos-web-gemini/review.md).
 
 A UI informa antes do envio que Google processa o texto e pode usá-lo na modalidade
 gratuita, e orienta não incluir dados pessoais/confidenciais. O backend não adiciona

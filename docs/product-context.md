@@ -1,6 +1,6 @@
 # BestPrice — contexto e direção do produto
 
-Este documento registra a visão fornecida pelo responsável pelo produto em 07/10/2026, atualizada pelas decisões das specs [0013](../specs/0013-monitoramento-mercado-livre-brasil/spec.md) e [0034](../specs/0034-assistencia-compras-bestprice-ai/spec.md). É a referência de produto para futuras specs; distingue requisitos pretendidos da implementação local identificada abaixo. O estado executável está em [arquitetura](architecture.md) e nos guias dos módulos.
+Este documento registra a visão fornecida pelo responsável pelo produto em 07/10/2026, atualizada pelas decisões das specs [0013](../specs/0013-monitoramento-mercado-livre-brasil/spec.md), [0034](../specs/0034-assistencia-compras-bestprice-ai/spec.md) e [0047](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md). É a referência de produto para futuras specs; distingue requisitos pretendidos da implementação local identificada abaixo. O estado executável está em [arquitetura](architecture.md) e nos guias dos módulos.
 
 > **Mudança de marketplace.** A versão original deste contexto tinha a Amazon como fonte, com ASIN e uma abstração conceitual `AmazonProvider`; nenhuma integração Amazon chegou a ser implementada. A spec 0013 tornou o **Mercado Livre Brasil (MLB)** o marketplace exclusivo desta fase, consultado somente pela API oficial com autorização da conta operadora do BestPrice. As referências à Amazon abaixo foram substituídas; a premissa anterior permanece rastreável na spec 0013 e no histórico Git.
 
@@ -22,9 +22,38 @@ A entrada por URL continua sendo a experiência de acompanhamento automático.
 A implementação local tem dashboard, assistente textual, comparador e histórico,
 com contas já provisionadas. Salvar e editar comparação independe da IA; analisar
 ou conversar exige configuração explícita. A IA fica desativada por padrão. O plano
-fixa Gemini `gemini-3.5-flash-lite`, cota gratuita, sem fallback pago e com limites
-locais; não comprova a configuração de cobrança da conta operadora. Não há busca
-de ofertas, scraping, pesquisa web autônoma ou nova fonte de marketplace.
+fixa cota gratuita, sem fallback pago e com limites locais; não comprova a
+configuração de cobrança da conta operadora. A 0034 escolheu `gemini-3.5-flash-lite`;
+a spec 0047 trocou o modelo de todo o Assistente (chat e comparação) para
+`gemini-2.5-flash-lite`, descrito abaixo. Não há scraping, leitura automática de
+páginas, comparação automática de lojas ou nova fonte de marketplace.
+
+### Pesquisa de preços na web no chat — spec 0047
+
+A [spec 0047](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md) reverte
+parcialmente a exclusão de "pesquisa web autônoma" da 0034, apenas no chat livre.
+Quando a pergunta pede preços ou ofertas atuais, o modelo pode usar o grounding
+com Google Search do próprio Gemini e responder citando as fontes. O modelo decide
+quando pesquisar; resposta sem busca continua válida. A resposta com busca mostra
+fontes, sugestões de pesquisa do Google, momento da consulta e o rótulo
+**não verificado**. Preços da web são referência: não criam monitoramento, produto
+monitorado ou alerta, e o chat não elege vencedor sem evidência. A análise de
+comparação continua sem busca.
+
+A escolha de `gemini-2.5-flash-lite` segue a documentação oficial consultada em
+04/11/2026: o grounding não tem free tier no `gemini-3.5-flash-lite`, enquanto o
+2.5 Flash-Lite oferece cota gratuita compartilhada com o Flash. A busca só funciona
+com `AI_ENABLED=true`, chave configurada e `AI_WEB_SEARCH_ENABLED=true` explícito;
+sem cota ou com falha da busca, o chat tenta uma vez sem busca e avisa que a
+pesquisa na web está indisponível, sem fallback pago. Com a busca ativa, o aviso
+antes do envio acrescenta que a pergunta pode ser pesquisada pelo Google e que o
+fornecedor guarda pergunta e resposta por 30 dias. Fontes e sugestões ficam com a
+mensagem e seguem a retenção de 90 dias da conversa.
+
+A implementação local foi validada com o Gemini simulado na fronteira HTTP. A
+chamada real com grounding no free tier da conta operadora, o HTML real das
+sugestões e a qualidade em português do novo modelo continuam pendentes; a spec
+permanece `pronta`, sem integração, CI ou deploy presumidos.
 
 Na implementação local da [spec 0040](../specs/0040-assistente-ia-com-robo/spec.md),
 o Assistente passa a apresentar o robô original e até quatro conversas recentes
