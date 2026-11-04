@@ -230,3 +230,69 @@ it('não mostra resultado atrasado da lista da conta anterior após sair e entra
   await act(async () => complete(reply(200, { items: [conversation('private', 'Conversa privada da conta anterior')], next_offset: null })))
   expect(screen.queryByText('Conversa privada da conta anterior')).not.toBeInTheDocument()
 })
+
+const searchedAt = '2026-11-04T12:00:00Z'
+const suggestions = '<style>.chip{color:#000}</style><div class="chip"><a href="https://www.google.com/search?q=notebook">notebook preço</a></div>'
+function groundedConversation(grounding: unknown) {
+  const assistant: Record<string, unknown> = { id: 'a1', role: 'assistant', content: 'Encontrei ofertas a partir de R$ 3.199,00.', created_at: searchedAt }
+  if (grounding !== undefined) assistant.grounding = grounding
+  return { ...conversation('c1', 'Preço de notebook'), messages: [{ id: 'u1', role: 'user', content: 'Quanto custa o notebook X?', created_at: searchedAt, grounding: null }, assistant] }
+}
+function setupGrounded(grounding: unknown, caps: Record<string, unknown> = capabilities) {
+  return setup((url) => {
+    if (url === '/api/ai/capabilities') return reply(200, caps)
+    if (url === '/api/ai/conversations/c1') return reply(200, groundedConversation(grounding))
+    return undefined
+  }, '/app/assistant/c1')
+}
+
+it('mostra fontes, sugestões isoladas, rótulo e instante da pesquisa na resposta com busca', async () => {
+  setupGrounded({ status: 'searched', searched_at: searchedAt, sources: [{ title: 'Loja X', url: 'https://loja.example/notebook' }, { title: 'Loja Y', url: 'https://y.example/oferta' }], search_suggestions_html: suggestions })
+  const response = await screen.findByRole('article', { name: /Resposta de BestPrice IA/ })
+  const block = within(response).getByRole('region', { name: 'Fontes da pesquisa na web' })
+  expect(within(block).getByText('Não verificado')).toBeInTheDocument()
+  const time = block.querySelector('time')!
+  expect(time).toHaveAttribute('dateTime', searchedAt)
+  const local = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(searchedAt))
+  expect(time.parentElement).toHaveTextContent(`Pesquisado em ${local}`)
+  const link = within(block).getByRole('link', { name: 'Loja X (abre em nova aba)' })
+  expect(link).toHaveAttribute('href', 'https://loja.example/notebook')
+  expect(link).toHaveAttribute('target', '_blank')
+  expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  expect(link).not.toHaveAttribute('onclick')
+  expect(within(block).getAllByRole('link')).toHaveLength(2)
+  const frame = within(block).getByTitle('Sugestões de pesquisa do Google')
+  expect(frame.tagName).toBe('IFRAME')
+  expect(frame).toHaveAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox')
+  expect(frame.getAttribute('srcdoc')).toBe(suggestions)
+  expect(frame.getAttribute('sandbox')).not.toMatch(/allow-scripts|allow-same-origin/)
+  expect(screen.getByText('Encontrei ofertas a partir de R$ 3.199,00.')).toBeInTheDocument()
+})
+
+it('avisa que a pesquisa na web ficou indisponível sem mostrar fontes', async () => {
+  setupGrounded({ status: 'unavailable', searched_at: searchedAt, sources: [], search_suggestions_html: null })
+  const response = await screen.findByRole('article', { name: /Resposta de BestPrice IA/ })
+  expect(within(response).getByText('A pesquisa na web está indisponível agora; esta resposta não usou a web.')).toBeInTheDocument()
+  expect(within(response).queryByRole('region', { name: 'Fontes da pesquisa na web' })).not.toBeInTheDocument()
+  expect(response.querySelector('iframe')).toBeNull()
+})
+
+it.each([['nulo', null], ['ausente', undefined]])('não mostra bloco de pesquisa quando grounding é %s', async (_name, grounding) => {
+  setupGrounded(grounding)
+  const response = await screen.findByRole('article', { name: /Resposta de BestPrice IA/ })
+  expect(within(response).queryByText('Não verificado')).not.toBeInTheDocument()
+  expect(within(response).queryByText(/pesquisa na web está indisponível/)).not.toBeInTheDocument()
+  expect(response.querySelector('iframe, time')).toBeNull()
+})
+
+it('acrescenta aviso de pesquisa pelo Google somente quando a busca na web está ativa', async () => {
+  setup((url) => url === '/api/ai/capabilities' ? reply(200, { ...capabilities, web_search: true }) : undefined)
+  const form = (await screen.findByLabelText('Sua mensagem')).closest('form')!
+  expect(await within(form).findByText(/pode ser pesquisada pelo Google/)).toHaveTextContent('Sua pergunta pode ser pesquisada pelo Google, e o fornecedor guarda a pergunta e a resposta por 30 dias.')
+  expect(within(form).getByText(/O Google processa suas mensagens/)).toBeInTheDocument()
+  cleanup()
+  setup((url) => url === '/api/ai/capabilities' ? reply(200, { ...capabilities, web_search: false }) : undefined)
+  const other = (await screen.findByLabelText('Sua mensagem')).closest('form')!
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Enviar mensagem' })).toBeEnabled())
+  expect(within(other).queryByText(/pode ser pesquisada pelo Google/)).not.toBeInTheDocument()
+})

@@ -1,7 +1,13 @@
 import { json, request, requestVoid } from '../../api'
+import { safeHttpsUrl } from '../../lib/url'
 
 export type Summary = { id: string; title: string; created_at: string; updated_at: string; expires_at: string }
-export type Message = { id: string; role: 'user' | 'assistant'; content: string; created_at: string }
+export type GroundingSource = { title: string; url: string }
+/** Pesquisa na web da resposta (spec 0047). `null`: sem busca; `unavailable`: a busca falhou e a resposta veio sem web. */
+export type Grounding =
+  | { status: 'searched'; searched_at: string; sources: GroundingSource[]; search_suggestions_html: string }
+  | { status: 'unavailable'; searched_at?: string | null; sources: []; search_suggestions_html: null }
+export type Message = { id: string; role: 'user' | 'assistant'; content: string; created_at: string; grounding: Grounding | null }
 export type Conversation = Summary & { messages: Message[] }
 export type ChatResult = { conversation_id: string; request_id: string; user_message: Message; assistant_message: Message; expires_at: string }
 export type ProductInput = { name: string; details: string; price: string | null; currency: 'BRL'; url: string | null }
@@ -10,7 +16,7 @@ export type Analysis = { version: number; content: string; created_at: string }
 export type Comparison = Summary & ComparisonInput & { version: number; analysis: Analysis | null }
 export type ResearchItem = Summary & { kind: 'conversation' | 'comparison' }
 export type ResearchPage = { items: ResearchItem[]; next_offset: number | null }
-export type Capabilities = { enabled: boolean; provider: string; model: string; retention_days: number; max_message_chars: number; user_daily_limit: number }
+export type Capabilities = { enabled: boolean; provider: string; model: string; retention_days: number; max_message_chars: number; user_daily_limit: number; web_search: boolean }
 export type ResearchKind = 'all' | 'conversation' | 'comparison'
 
 const record = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -21,8 +27,21 @@ const integer = (value: unknown): value is number => typeof value === 'number' &
 function summary(value: unknown): value is Summary & Record<string, unknown> {
   return record(value) && text(value.id) && text(value.title) && instant(value.created_at) && instant(value.updated_at) && instant(value.expires_at)
 }
+function source(value: unknown): value is GroundingSource {
+  return record(value) && text(value.title) && text(value.url) && safeHttpsUrl(value.url) !== null
+}
+function grounding(value: unknown): value is Grounding | null {
+  if (value === null) return true
+  if (!record(value) || !Array.isArray(value.sources)) return false
+  if (value.status === 'searched') return instant(value.searched_at) && value.sources.length > 0 && value.sources.every(source) && text(value.search_suggestions_html)
+  return value.status === 'unavailable' && value.sources.length === 0 && value.search_suggestions_html === null &&
+    (value.searched_at === undefined || value.searched_at === null || instant(value.searched_at))
+}
 function message(value: unknown): value is Message {
-  return record(value) && text(value.id) && (value.role === 'user' || value.role === 'assistant') && text(value.content) && instant(value.created_at)
+  if (!record(value)) return false
+  // Mensagens anteriores à 0047 não trazem o campo: equivalem a "sem busca".
+  if (value.grounding === undefined) value.grounding = null
+  return text(value.id) && (value.role === 'user' || value.role === 'assistant') && text(value.content) && instant(value.created_at) && grounding(value.grounding)
 }
 function conversation(value: unknown): value is Conversation {
   return summary(value) && record(value) && Array.isArray(value.messages) && value.messages.every(message)
@@ -49,7 +68,8 @@ function page(value: unknown): value is ResearchPage {
     (item.kind === 'conversation' || item.kind === 'comparison')) && (value.next_offset === null || integer(value.next_offset))
 }
 function capabilities(value: unknown): value is Capabilities {
-  return record(value) && typeof value.enabled === 'boolean' && text(value.provider) && text(value.model) &&
+  if (record(value) && value.web_search === undefined) value.web_search = false
+  return record(value) && typeof value.web_search === 'boolean' && typeof value.enabled === 'boolean' && text(value.provider) && text(value.model) &&
     value.retention_days === 90 && value.max_message_chars === 2000 && value.user_daily_limit === 20
 }
 
