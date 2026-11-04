@@ -12,7 +12,7 @@
 - [x] I08 — Executar doc-sync-onboarding após a última alteração de código e os gates/revisão.
 - [x] I09 — Registrar evidências e preparar handoff/PR sem presumir publicação, merge ou deploy.
 - [x] I10 — Vincular branch à Issue #231, publicar commit com hooks e abrir PR #232 para develop.
-- [ ] I11 — Confirmar o CI obrigatório no SHA final do PR antes da integração.
+- [x] I11 — Comprovar CI externo do PR (run 41830207670 aprovado); reconferir o SHA atual antes da integração.
 
 O restante deste documento preserva o checklist da etapa anterior de design.
 

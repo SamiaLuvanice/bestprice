@@ -26,8 +26,9 @@ foi criada a [Issue #231](https://github.com/SamiaLuvanice/bestprice/issues/231)
 confirmada aberta. O bloqueio anterior da criação da Issue foi resolvido.
 Continuidade da orquestração solicitada em 04/11; branch ajustada à convenção e
 base reconferida sem avanço. Commit `58d49f2` publicado com Refs #231 e hooks
-aprovados. PR #232 aberto com Closes #231; política de PR aprovada e CI em
-execução na conferência inicial. Integração pendente. Não houve limpeza da worktree
+aprovados. PR #232 aberto com Closes #231; [CI 41830207670](https://github.com/SamiaLuvanice/bestprice/actions/runs/41830207670)
+aprovado em `f9674b1` (backend, frontend, automações, política e agregador).
+Conferir o check do SHA atual antes de integrar. Integração pendente. Não houve limpeza da worktree
 porque a implementação continua em revisão.
 
 ## 0040 — Assistente IA com robô e conversas recentes

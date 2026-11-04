@@ -2,6 +2,14 @@
 
 ## Preparação do PR — 04/11/2026
 
+CI externo aprovado no SHA `f9674b13c4b026b07bad32577314e823f2c6f95c`:
+[run 41830207670](https://github.com/SamiaLuvanice/bestprice/actions/runs/41830207670).
+`gh run watch 41830207670 --repo SamiaLuvanice/bestprice --interval 15 --compact
+--exit-status` terminou com exit 0: Backend (48 s), Frontend (1 min 40 s),
+Automation (23 s), PR policy (8 s) e agregador CI (3 s) aprovados. PR sem
+conflitos, confirmado pela API. Esta atualização é somente documental;
+o check obrigatório do novo SHA deve ser reconferido antes da integração.
+
 Publicação confirmada: [PR #232](https://github.com/SamiaLuvanice/bestprice/pull/232),
 OPEN, base develop, head feature/0044-issue-231-assistente-simples no commit
 `58d49f2efe064f20d6a89f9386811897589c1485`. Branch vinculada à Issue por
