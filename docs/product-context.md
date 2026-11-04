@@ -42,6 +42,13 @@ caracteres aparece perto do limite. Isso reduz o texto inicial sem alterar chat,
 política de dados, limites ou disponibilidade. A validação é local e controlada;
 a spec permanece pronta, com publicação e integração pendentes.
 
+A implementação local da [spec 0045](../specs/0045-historico-conversas-conforme-figma/spec.md)
+concentra o histórico nas conversas: busca por título, cards para continuar,
+paginação e exclusão confirmada também no mobile. Datas vêm dos dados reais e o
+prazo de 90 dias continua informado. Comparações já salvas, suas rotas e APIs não
+foram removidas. A validação desta revisão usa API controlada e exportações Figma
+identificadas de 31/10/2026; não comprova edições remotas posteriores nem deploy.
+
 Respostas da IA devem ser identificadas como não verificadas, reconhecer lacunas
 e preservar a decisão da pessoa. Antes do envio, a interface informa processamento
 pelo Google, possível uso do conteúdo na modalidade gratuita e orienta não inserir

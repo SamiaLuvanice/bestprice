@@ -172,8 +172,8 @@ it('oculta análise desatualizada ao editar e exige salvar antes de analisar', a
 
 it('cancelar exclusão não envia DELETE e falha conserva pesquisa acessível', async () => {
   const fetch = researchApi((url, init) => {
-    if (url.startsWith('/api/research?')) return reply(200, { items: [{ ...summary, kind: 'comparison' }], next_offset: null })
-    if (url === '/api/comparisons/comparison-1' && init?.method === 'DELETE') return reply(503, apiError('research_unavailable', 'Não foi possível excluir.'))
+    if (url.startsWith('/api/research?')) return reply(200, { items: [{ ...summary, kind: 'conversation' }], next_offset: null })
+    if (url === '/api/ai/conversations/comparison-1' && init?.method === 'DELETE') return reply(503, apiError('research_unavailable', 'Não foi possível excluir.'))
     return undefined
   })
   visit('/app/history')

@@ -1,5 +1,29 @@
 # Progresso das specs
 
+## 0045 — Histórico de conversas conforme Figma
+
+**04/11/2026: implementação local entregue; aguarda publicação do PR e revisão para develop.**
+Spec `pronta`, [Issue #235](https://github.com/SamiaLuvanice/bestprice/issues/235),
+branch/worktree `feature/0045-issue-235-historico-conversas`, base
+origin/develop `cbda78c`. Histórico com conversas reais, busca única por título,
+cards responsivos, Continuar, data local, paginação e exclusão confirmada no
+desktop/mobile. Diálogo compartilhado com foco inicial em Cancelar e retorno ao
+acionador ou título após sucesso. Sem alterar API, banco ou comparações salvas.
+
+Lint/build aprovados; Vitest **390/390** em 35 arquivos e **9/9** afetados finais;
+Playwright **20/20** finais, incluindo teclado, axe e overflow em
+320/390/768/1280 px e capturas 1440×1040/390×844; Node **50/50**; detector
+local sem ocorrências. Revisão independente e QA visual sem achados bloqueantes
+após corrigir contraste do vazio e ciclo de foco do diálogo. Doc-sync final
+concluído: frontend, arquitetura e contexto do produto sincronizados;
+AGENTS.md/CLAUDE.md conferidos sem alteração. Ver
+[verificação e capturas](../specs/0045-historico-conversas-conforme-figma/verification.md).
+
+Referências Figma exportadas de 31/10/2026, frames 59:204 e 59:716; MCP limitado
+pela cota Starter. Validação com API controlada, sem backend/banco reais, leitor
+de tela, teclado virtual ou deploy. Publicação do PR, CI remoto e integração
+pendentes; Project não presumido.
+
 ## 0044 — Assistente IA com menos sobrecarga
 
 **Atualização de 04/11/2026: implementação entregue; aguarda revisão no [PR #232](https://github.com/SamiaLuvanice/bestprice/pull/232) para develop.**
