@@ -23,13 +23,47 @@ function fillLogin(email: string, password: string) {
   fireEvent.change(screen.getByLabelText('Senha'), { target: { value: password } })
 }
 
-it('mostra login diretamente ao visitante, sem formulário de monitoramento', async () => {
+it.each(['/login', '/login?returnTo=%2Fprodutos', '/login/', '/LOGIN'])('mostra login sem rodapé e preserva seu conteúdo em %s', async (path) => {
   guestApi()
-  visit('/login')
+  visit(path)
   expect(await screen.findByRole('heading', { name: 'Entrar na sua conta', level: 1 })).toBeInTheDocument()
   expect(screen.getByRole('main').firstElementChild).toContainElement(screen.getByLabelText('E-mail'))
   expect(screen.queryByRole('banner')).not.toBeInTheDocument()
   expect(screen.queryByPlaceholderText('https://www.mercadolivre.com.br/...')).not.toBeInTheDocument()
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+  expect(screen.getByText('O monitoramento começa com um link do Mercado Livre.')).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Voltar para o início' })).toHaveAttribute('href', '/')
+})
+
+it.each(['HTTP 503', 'falha de rede'])('mantém o login sem rodapé durante a sessão pendente, %s e recuperação', async (failure) => {
+  const session = deferred()
+  let attempt = 0
+  fakeApi((url) => url === '/api/auth/me'
+    ? ++attempt === 1 ? session.promise : reply(401, apiError('unauthenticated', 'Entre para continuar.'))
+    : undefined)
+  visit('/login?returnTo=%2Fprodutos')
+  expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+  if (failure === 'HTTP 503') session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
+  else session.reject(new TypeError('Failed to fetch'))
+  const retry = await screen.findByRole('button', { name: 'Tentar novamente' })
+  expect(screen.getByRole('alert')).toHaveTextContent(failure === 'HTTP 503'
+    ? 'Serviço temporariamente indisponível.' : 'Não foi possível conectar ao BestPrice. Tente novamente.')
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+  fireEvent.click(retry)
+  expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+  expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/produtos')
+})
+
+it.each([
+  { path: '/', title: /Compre com.*mais clareza/i },
+  { path: '/endereco-inexistente', title: 'Este endereço saiu do radar.' },
+])('preserva o rodapé público em $path', async ({ path, title }) => {
+  guestApi()
+  visit(path)
+  expect(await screen.findByRole('heading', { name: title, level: 1 })).toBeInTheDocument()
+  expect(screen.getByRole('contentinfo')).toBeInTheDocument()
 })
 
 // 0028/AC14: enquanto a sessão é verificada (ou falha), a tela não oferece o formulário de link.
@@ -39,6 +73,7 @@ it('mantém a marca sem formulário de link enquanto verifica a sessão e quando
   visit('/produtos')
   expect(screen.getByRole('banner')).toBeInTheDocument()
   expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
+  expect(screen.getByRole('contentinfo')).toHaveTextContent('BestPrice · Acompanhe com clareza')
   expect(screen.getByRole('banner')).toHaveTextContent('BestPrice')
   expect(screen.getAllByRole('img', { name: 'BestPrice' })).toHaveLength(1)
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
@@ -48,6 +83,7 @@ it('mantém a marca sem formulário de link enquanto verifica a sessão e quando
   expect(screen.getByRole('banner')).toHaveTextContent('BestPrice')
   expect(screen.getAllByRole('img', { name: 'BestPrice' })).toHaveLength(1)
   expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
+  expect(screen.getByRole('contentinfo')).toHaveTextContent('BestPrice · Acompanhe com clareza')
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
 })
@@ -82,6 +118,7 @@ it('abre detalhe direto por URL com valores e histórico da API', async () => {
   })
   visit('/produtos/tracking-1')
   expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
+  expect(screen.getByRole('contentinfo')).toHaveTextContent('BestPrice · Acompanhe com clareza')
   expect(screen.getByRole('link', { name: /Ver anúncio no Mercado Livre/ })).toHaveAttribute('href', item.product.canonical_url)
   expect(screen.getByText(/Menor: R\$\s*80,00/)).toBeInTheDocument()
   expect(screen.getByText('Histórico de preços')).toBeInTheDocument()
@@ -153,11 +190,13 @@ it('mostra envio ocupado sem reenviar, preserva campos após 401 e entra na tent
   fillLogin('pessoa@example.com', 'errada')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   const busyButton = await screen.findByRole('button', { name: 'Entrando…' })
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   expect(busyButton).toHaveAttribute('aria-disabled', 'true')
   fireEvent.click(busyButton)
   expect(callsTo(mockFetch, '/api/auth/login', 'POST')).toHaveLength(1)
   pending.resolve(reply(401, apiError('invalid_credentials', 'E-mail ou senha inválidos.')))
   await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.'))
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
   expect(screen.getByLabelText('Senha')).toHaveValue('errada')
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
@@ -178,6 +217,7 @@ it('limpa alerta do servidor se novo envio falha na validação', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   expect(screen.getByText('Informe sua senha.')).toBeInTheDocument()
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   expect(callsTo(mockFetch, '/api/auth/login', 'POST')).toHaveLength(1)
 })
 
@@ -188,6 +228,7 @@ it('mostra falha de conexão no login e mantém os campos', async () => {
   fillLogin('pessoa@example.com', 'segredo')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível conectar ao BestPrice. Tente novamente.'))
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
   expect(screen.getByLabelText('Senha')).toHaveValue('segredo')
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
