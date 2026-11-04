@@ -1,6 +1,9 @@
 import { ExternalLink } from 'lucide-react'
 import type { Grounding } from './api'
 
+// Prefixo fixo antes do HTML do Google, que segue intacto: links sem target abririam dentro do
+// iframe (o Google recusa enquadramento), e um srcdoc herdaria a política de referrer da SPA.
+const suggestionsPrefix = '<base target="_blank"><meta name="referrer" content="no-referrer">'
 const searchedFormat = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 
 /**
@@ -17,7 +20,7 @@ export function MessageGrounding({ grounding }: { grounding: Grounding | null })
     <ul className="message-grounding-sources">{grounding.sources.map((source) => <li key={source.url}>
       <a href={source.url} target="_blank" rel="noopener noreferrer">{source.title} <ExternalLink aria-hidden="true" focusable="false" />{' '}<span className="sr-only">(abre em nova aba)</span></a>
     </li>)}</ul>
-    <iframe className="message-grounding-suggestions" title="Sugestões de pesquisa do Google" srcDoc={grounding.search_suggestions_html}
+    <iframe className="message-grounding-suggestions" title="Sugestões de pesquisa do Google" srcDoc={suggestionsPrefix + grounding.search_suggestions_html}
       sandbox="allow-popups allow-popups-to-escape-sandbox" referrerPolicy="no-referrer" loading="lazy" />
   </section>
 }

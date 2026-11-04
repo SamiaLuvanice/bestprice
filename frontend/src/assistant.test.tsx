@@ -264,7 +264,10 @@ it('mostra fontes, sugestões isoladas, rótulo e instante da pesquisa na respos
   const frame = within(block).getByTitle('Sugestões de pesquisa do Google')
   expect(frame.tagName).toBe('IFRAME')
   expect(frame).toHaveAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox')
-  expect(frame.getAttribute('srcdoc')).toBe(suggestions)
+  const prefix = '<base target="_blank"><meta name="referrer" content="no-referrer">'
+  const srcdoc = frame.getAttribute('srcdoc')!
+  expect(srcdoc.startsWith(prefix)).toBe(true)
+  expect(srcdoc.slice(prefix.length)).toBe(suggestions)
   expect(frame.getAttribute('sandbox')).not.toMatch(/allow-scripts|allow-same-origin/)
   expect(screen.getByText('Encontrei ofertas a partir de R$ 3.199,00.')).toBeInTheDocument()
 })

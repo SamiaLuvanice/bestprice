@@ -58,3 +58,25 @@ test('bloco de pesquisa na web cabe e é acessível em 320/390/768/1280/1440 px'
   await expect(block.getByRole('link', { name: /Outra Loja/ })).toBeFocused()
   expect((await new AxeBuilder({ page }).exclude('.message-grounding-suggestions').analyze()).violations).toEqual([])
 })
+
+test('chip de sugestão do Google abre em nova página sem navegar o iframe nem enviar referrer', async ({ page }, info) => {
+  test.skip(info.project.name !== 'viewport-1280', 'comportamento independente da largura')
+  test.setTimeout(120_000)
+  const google: { url: string; referer: string | undefined }[] = []
+  // Nada sai da máquina: as navegações para o Google são atendidas localmente.
+  await page.context().route('https://www.google.com/**', async (route) => {
+    google.push({ url: route.request().url(), referer: route.request().headers()['referer'] })
+    await route.fulfill({ status: 200, contentType: 'text/html', body: '<title>Google simulado</title>' })
+  })
+  await api(page)
+  await page.goto('/app/assistant/c1')
+  const frame = page.frameLocator('iframe[title="Sugestões de pesquisa do Google"]')
+  const popupPromise = page.waitForEvent('popup', { timeout: 5_000 })
+  await frame.getByRole('link', { name: 'notebook preço' }).click()
+  const popup = await popupPromise
+  await popup.waitForLoadState()
+  expect(popup.url()).toBe('https://www.google.com/search?q=notebook+pre%C3%A7o')
+  expect(google.map((entry) => entry.referer)).toEqual([undefined])
+  const iframe = page.frames().find((item) => item !== page.mainFrame() && item.parentFrame() === page.mainFrame())!
+  expect(iframe.url()).toBe('about:srcdoc')
+})
