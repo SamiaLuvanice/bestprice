@@ -111,8 +111,9 @@ de .worktrees e ausência de alterações rastreadas; a worktree da feature perm
 Esta entrega inclui implementação local, testes, revisão e QA. O login publicado
 em stage não foi alterado por esta tarefa. Não houve teste local de autenticação
 contra backend/PostgreSQL reais, nem dispositivos assistivos/teclado virtual reais.
-Backend, infraestrutura e ação de release não foram alterados; CI remoto ainda
-deve ser observado. A spec não é implementada até integrar em develop.
+Backend, infraestrutura e ação de release não foram alterados; os checks remotos
+devem ser conferidos no SHA atual da PR antes da integração. A spec não é
+implementada até integrar em develop.
 
 As alterações preexistentes no checkout principal foram preservadas. A implementação
 seguiu plano, worktree baseada em origin/develop, TDD, gates e doc-sync final.
@@ -149,6 +150,13 @@ cinco documentos tocados nesta sincronização.
 
 ## Handoff
 
-Código aprovado em revisão independente e QA local aceita. Próximos passos:
-commit/push e PR para develop com Closes #239;
-observar CI antes de qualquer integração. Sem promoção de stage ou release.
+Implementação entregue; aguarda revisão na [PR #240](https://github.com/SamiaLuvanice/bestprice/pull/240)
+para develop, com Closes #239. Commit de código `9f49eab89262a18535963310bc10938c5216fd79`
+publicado; pre-commit/commit-msg aprovados, sem bypass e sem atribuição de agente
+nos commits. Worktree limpa após o commit de código, sem alteração de dependências.
+
+A consulta inicial de 04/11/2026 observou Cloudflare Pages em andamento e o
+workflow CI enfileirado; não se declarou aprovação de CI ou sincronização de
+Project a partir disso. O resultado deve ser conferido nos checks do SHA atual.
+O registro dos links de entrega ocorre após o doc-sync, sem nova alteração
+de código, testes ou snapshots. PR aberta; sem merge, promoção ou release.

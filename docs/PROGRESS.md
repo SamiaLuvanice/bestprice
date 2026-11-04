@@ -2,7 +2,7 @@
 
 ## 0046 — Login de stage sem rodapé
 
-**04/11/2026: implementação local verificada; publicação da PR e CI pendentes.**
+**04/11/2026: implementação entregue; aguarda revisão na [PR #240](https://github.com/SamiaLuvanice/bestprice/pull/240) para develop.**
 Spec `pronta`, [Issue #239](https://github.com/SamiaLuvanice/bestprice/issues/239).
 Base origin/develop `72689fe`, branch `feature/0046-issue-239-login-stage-sem-rodape`.
 Login aprovado de stage preservado, com retirada somente do rodapé dessa rota e
@@ -24,8 +24,10 @@ telas e baselines não foram alteradas para encobrir essa dívida anterior.
 
 Doc-sync-onboarding final concluído após código, gates, revisão e QA: guia
 frontend e aprendizado do matcher sincronizados; AGENTS.md/CLAUDE.md conferidos
-sem edição. Sem alteração REST, backend/banco, merge ou deploy. CI remoto,
-PR e integração devem ser observados no handoff; Project não presumido.
+sem edição. Commit de código `9f49eab` publicado com hooks aprovados e
+Refs #239. PR #240 aberta com Closes #239; o workflow CI foi observado na fila
+na consulta inicial. Conferir checks do SHA atual antes de integrar.
+Sem alteração REST, backend/banco, merge ou deploy; Project não presumido.
 Ver [spec e evidências](../specs/0046-login-stage-sem-rodape/verification.md).
 
 ## 0045 — Histórico de conversas conforme Figma
