@@ -2,6 +2,14 @@
 
 ## Preparação do PR — 04/11/2026
 
+Publicação confirmada: [PR #232](https://github.com/SamiaLuvanice/bestprice/pull/232),
+OPEN, base develop, head feature/0044-issue-231-assistente-simples no commit
+`58d49f2efe064f20d6a89f9386811897589c1485`. Branch vinculada à Issue por
+`gh issue develop 231`; push normal e abertura com Closes #231 concluídos.
+Hooks de commit passaram; somente linhas vazias finais de cinco documentos foram
+normalizadas no pre-commit. A política de PR foi aprovada e os jobs de qualidade
+estavam em execução na conferência inicial. Nenhum merge ou deploy declarado.
+
 Após continuidade solicitada pela responsável, `git fetch origin` confirmou
 origin/develop em `9d3b482a924d14fa8ff9f33cfb1fdac4a5044acb`, sem avanço sobre a
 base validada. Issue #231 confirmada OPEN e nenhum PR aberto correspondente.

@@ -2,7 +2,7 @@
 
 ## 0044 — Assistente IA com menos sobrecarga
 
-**Atualização de 04/11/2026: implementação entregue; preparação do PR para develop.**
+**Atualização de 04/11/2026: implementação entregue; aguarda revisão no [PR #232](https://github.com/SamiaLuvanice/bestprice/pull/232) para develop.**
 Spec `pronta`, na worktree `.worktrees/codex-0044-assistente-simples`, branch
 local `feature/0044-issue-231-assistente-simples`, baseada em origin/develop `9d3b482`.
 A responsável confirmou os mesmos cortes editoriais do Figma desktop no mobile.
@@ -25,8 +25,9 @@ tela reais e sem geração externa. Após autorização explícita da responsáv
 foi criada a [Issue #231](https://github.com/SamiaLuvanice/bestprice/issues/231),
 confirmada aberta. O bloqueio anterior da criação da Issue foi resolvido.
 Continuidade da orquestração solicitada em 04/11; branch ajustada à convenção e
-base reconferida sem avanço. Corpo de PR preparado com Closes #231.
-Publicação e CI serão registrados após observados. Não houve limpeza da worktree
+base reconferida sem avanço. Commit `58d49f2` publicado com Refs #231 e hooks
+aprovados. PR #232 aberto com Closes #231; política de PR aprovada e CI em
+execução na conferência inicial. Integração pendente. Não houve limpeza da worktree
 porque a implementação continua em revisão.
 
 ## 0040 — Assistente IA com robô e conversas recentes
