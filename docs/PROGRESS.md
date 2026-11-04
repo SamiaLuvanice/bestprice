@@ -2,7 +2,7 @@
 
 ## 0045 — Histórico de conversas conforme Figma
 
-**04/11/2026: implementação local entregue; aguarda publicação do PR e revisão para develop.**
+**04/11/2026: implementação entregue; aguarda revisão no [PR #236](https://github.com/SamiaLuvanice/bestprice/pull/236) para develop.**
 Spec `pronta`, [Issue #235](https://github.com/SamiaLuvanice/bestprice/issues/235),
 branch/worktree `feature/0045-issue-235-historico-conversas`, base
 origin/develop `cbda78c`. Histórico com conversas reais, busca única por título,
@@ -21,8 +21,11 @@ AGENTS.md/CLAUDE.md conferidos sem alteração. Ver
 
 Referências Figma exportadas de 31/10/2026, frames 59:204 e 59:716; MCP limitado
 pela cota Starter. Validação com API controlada, sem backend/banco reais, leitor
-de tela, teclado virtual ou deploy. Publicação do PR, CI remoto e integração
-pendentes; Project não presumido.
+de tela ou teclado virtual reais. Commit `dffa5cf` publicado com hooks aprovados;
+PR aberto, sem conflitos na consulta inicial. Política de PR e automações aprovadas;
+[CI 41839093282](https://github.com/SamiaLuvanice/bestprice/actions/runs/41839093282)
+em execução na consulta inicial. Conferir checks do SHA atual antes de integrar.
+Sem merge ou promoção de release; Project não presumido.
 
 ## 0044 — Assistente IA com menos sobrecarga
 

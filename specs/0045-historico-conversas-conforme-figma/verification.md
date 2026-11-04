@@ -5,7 +5,23 @@ Data: 04/11/2026. Implementação na worktree
 `feature/0045-issue-235-historico-conversas`, base origin/develop
 `cbda78cbeb00a9e4d86078a8292574cf04b1bd05`.
 Issue [#235](https://github.com/SamiaLuvanice/bestprice/issues/235).
-Spec pronta; entrega aguarda revisão/integração. Nenhum merge ou deploy.
+Spec pronta; entrega aguarda revisão/integração. Sem merge ou promoção de release.
+
+## Publicação do PR — 04/11/2026
+
+Commit `dffa5cfff56aa790f346de0b726654b168db5413` publicado; hooks pre-commit e
+commit-msg aprovados. `git log --format=%B origin/develop..HEAD` confirmou
+Conventional Commit e Refs #235, sem trailers de ferramenta. `gh issue develop`
+vinculou a branch à Issue; `git fetch origin` confirmou a mesma base sem avanço.
+
+[PR #236](https://github.com/SamiaLuvanice/bestprice/pull/236) OPEN, pronto para
+revisão, base develop e head feature/0045-issue-235-historico-conversas.
+Consulta inicial confirmou MERGEABLE, política de PR, automações e check Pages
+aprovados; Backend e Frontend em execução no
+[CI 41839093282](https://github.com/SamiaLuvanice/bestprice/actions/runs/41839093282).
+`projectItems` da Issue estava vazio; não se presume sincronização com Project.
+Esta atualização é documental: reconsultar o check obrigatório no SHA atual antes
+da integração. Nenhuma alteração de código após doc-sync final.
 
 ## Referência e comparação visual
 

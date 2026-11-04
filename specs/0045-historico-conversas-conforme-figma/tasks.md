@@ -8,4 +8,4 @@
 - [x] Executar lint, testes completos, build e Playwright visual/a11y focado.
 - [x] Registrar evidência por aceite e revisão documentada do diff.
 - [x] Executar doc-sync-onboarding como último agente e conferir AGENTS/CLAUDE/docs.
-- [ ] Publicar branch/PR para develop e registrar CI; aguardar revisão, sem merge.
+- [x] Publicar branch/PR para develop e registrar CI; aguardar revisão, sem merge. PR #236; consulta inicial do CI em execução, reconferir SHA atual antes de integrar.
