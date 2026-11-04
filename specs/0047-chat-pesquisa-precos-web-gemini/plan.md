@@ -31,11 +31,22 @@ somente quando `AI_WEB_SEARCH_ENABLED=true`. Leitura da resposta em
 O backend deve conferir esse formato na documentação atual pelo Context7 ou pela documentação
 oficial antes do Red e registrar a referência em `backend-evidence.md`.
 
-**Fallback (AC04):** se o envio com a ferramenta der 429 ou 5xx, uma única nova tentativa
-sem `tools`. Se ela tiver sucesso, a mensagem recebe
+**Fallback (AC04, ajustado pela revisão I2/I4):** qualquer falha do envio com a ferramenta
+gera uma única nova tentativa sem `tools`. Contam como falha: erro HTTP (inclusive 400/403),
+falha de transporte, timeout e resposta 200 com grounding inválido. Grounding inválido é ter
+sinal de busca (`groundingChunks`, `webSearchQueries` ou `searchEntryPoint`) sem fonte `https`
+válida, ou ter fontes sem HTML válido. Se a nova tentativa tiver sucesso, a mensagem recebe
 `grounding = {"status": "unavailable", ...}` e nenhuma fonte. Se falhar, valem os erros atuais
-(`ai_rate_limited`, `ai_unavailable`, `ai_timeout`). Timeout total respeita os 90s do attempt:
-25s por chamada no máximo.
+(`ai_rate_limited`, `ai_unavailable`, `ai_timeout`). O orçamento total é de 50 s
+(`CHAT_BUDGET_SECONDS`), medido por relógio monotônico. A segunda chamada recebe o tempo
+restante e não acontece se restarem menos de 5 s. O httpx aplica o timeout a cada fase, então
+um servidor muito lento ainda pode passar de 50 s. A janela de 90 s do attempt continua
+descartando resultados atrasados.
+
+**Sugestões do Google (revisão I3/S2):** um prefixo fixo
+`<base target="_blank"><meta name="referrer" content="no-referrer">` vem antes do HTML, que
+continua intacto. Assim os chips abrem em nova aba, e não dentro do iframe, e a origem do
+BestPrice não é enviada.
 
 **Prompt de sistema:** retira "Não há busca web". Passa a dizer, quando a busca estiver ativa,
 que preços da web são referências não verificadas e devem citar a loja. Sem evidência, deve
@@ -102,3 +113,10 @@ existentes, sem criar tela nova. A validação visual é local, com capturas nos
   herdada).
 - A cota real de 500 RPD é compartilhada; os limites locais (60/dia globais) ficam abaixo dela.
 - A conta real não foi testada: é pendência explícita.
+- Riscos aceitos na revisão:
+  - S3: o validador do frontend preenche os defaults no próprio objeto recebido.
+  - S4: backend e frontend validam URLs por regras diferentes. Uma URL aceita pelo backend e
+    recusada pelo cliente torna a conversa ilegível.
+  - S5: as URIs de fonte podem ser redirecionadores do Google que expiram antes dos 90 dias.
+  - S6: com a nova tentativa, uma unidade da cota local pode gerar duas requisições ao Google.
+  - Esses riscos ficam para a validação com a conta real ou para uma spec própria.
