@@ -1,0 +1,206 @@
+{
+  "mode": "on",
+  "conversationUrl": "http://127.0.0.1:55473/app/assistant/c2e815fd-e33c-41df-a4d5-8e281e74c2be",
+  "results": [
+    {
+      "name": "login sintético",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "capabilities.web_search",
+      "ok": true,
+      "detail": "{\"enabled\":true,\"model\":\"gemini-2.5-flash-lite\",\"web_search\":true}"
+    },
+    {
+      "name": "capabilities.model 2.5-flash-lite",
+      "ok": true,
+      "detail": "gemini-2.5-flash-lite"
+    },
+    {
+      "name": "capabilities sem chave",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "aviso de privacidade extra presente antes do envio",
+      "ok": true,
+      "detail": "O Google processa suas mensagens. Na modalidade gratuita, o conteúdo pode ser usado para melhorar seus produtos. Não envie dados pessoais ou confidenciais. Sua pergunta pode ser pesquisada pelo Google, e o fornecedor guarda a pergunta e a resposta por 30 dias."
+    },
+    {
+      "name": "POST /api/ai/chat 200",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "contrato: grounding.status searched",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "contrato: searched_at UTC com Z",
+      "ok": true,
+      "detail": "2026-11-04T19:09:17.681580Z"
+    },
+    {
+      "name": "contrato: só fontes https, sem duplicata, título do host",
+      "ok": true,
+      "detail": "[{\"title\":\"Loja QA — Notebook X\",\"url\":\"https://loja-qa.example/notebook-x\"},{\"title\":\"outra-qa.example\",\"url\":\"https://outra-qa.example/oferta\"}]"
+    },
+    {
+      "name": "contrato: user_message.grounding null",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "UI: rótulo Não verificado",
+      "ok": true,
+      "detail": "NÃO VERIFICADO"
+    },
+    {
+      "name": "UI: data no fuso do usuário (America/Sao_Paulo)",
+      "ok": true,
+      "detail": "datetime=2026-11-04T19:09:17.681580Z exibido=04/11/2026, 16:09 esperado=04/11/2026, 16:09"
+    },
+    {
+      "name": "UI: 2 links de fonte",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "UI: link 0 https/noopener/_blank/nome",
+      "ok": true,
+      "detail": "https://loja-qa.example/notebook-x rel=noopener noreferrer target=_blank nome=\"Loja QA — Notebook X  (abre em nova aba)\""
+    },
+    {
+      "name": "UI: link 1 https/noopener/_blank/nome",
+      "ok": true,
+      "detail": "https://outra-qa.example/oferta rel=noopener noreferrer target=_blank nome=\"outra-qa.example  (abre em nova aba)\""
+    },
+    {
+      "name": "UI: iframe sandbox sem allow-scripts/allow-same-origin",
+      "ok": true,
+      "detail": "allow-popups allow-popups-to-escape-sandbox"
+    },
+    {
+      "name": "UI: iframe com nome acessível",
+      "ok": true,
+      "detail": "Sugestões de pesquisa do Google"
+    },
+    {
+      "name": "UI: iframe referrerpolicy no-referrer",
+      "ok": true,
+      "detail": "no-referrer"
+    },
+    {
+      "name": "UI: script do HTML de sugestões não executou",
+      "ok": true,
+      "detail": "data-qa-script-ran=null"
+    },
+    {
+      "name": "UI: sugestões renderizadas intactas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "UI: foco por teclado e foco visível na fonte",
+      "ok": true,
+      "detail": "foco=https://loja-qa.example/notebook-x outline=solid"
+    },
+    {
+      "name": "URL da conversa",
+      "ok": true,
+      "detail": "http://127.0.0.1:55473/app/assistant/c2e815fd-e33c-41df-a4d5-8e281e74c2be"
+    },
+    {
+      "name": "429 no grounding: chat 200 com status unavailable",
+      "ok": true,
+      "detail": "HTTP 200 {\"status\":\"unavailable\",\"searched_at\":\"2026-11-04T19:09:18.088019Z\",\"sources\":[],\"search_suggestions_html\":null}"
+    },
+    {
+      "name": "UI: aviso de indisponibilidade",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "busca sem fontes: grounding null",
+      "ok": true,
+      "detail": "null"
+    },
+    {
+      "name": "UI: um único bloco de fontes após 3 respostas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "recarga: GET conversa devolve grounding persistido",
+      "ok": true,
+      "detail": "[\"searched\",\"unavailable\",null]"
+    },
+    {
+      "name": "recarga: bloco e aviso visíveis",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "viewport 320: sem overflow horizontal, bloco dentro, links >= 44px",
+      "ok": true,
+      "detail": "overflow=0 bloco=[16,304] menorLink=44"
+    },
+    {
+      "name": "viewport 390: sem overflow horizontal, bloco dentro, links >= 44px",
+      "ok": true,
+      "detail": "overflow=0 bloco=[16,374] menorLink=44"
+    },
+    {
+      "name": "viewport 768: sem overflow horizontal, bloco dentro, links >= 44px",
+      "ok": true,
+      "detail": "overflow=0 bloco=[16,752] menorLink=44"
+    },
+    {
+      "name": "viewport 1280: sem overflow horizontal, bloco dentro, links >= 44px",
+      "ok": true,
+      "detail": "overflow=0 bloco=[374,1146] menorLink=44"
+    },
+    {
+      "name": "viewport 1440: sem overflow horizontal, bloco dentro, links >= 44px",
+      "ok": true,
+      "detail": "overflow=0 bloco=[400,1280] menorLink=44"
+    },
+    {
+      "name": "axe no bloco de fontes: sem violações",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "falha de rede: alerta e texto preservado",
+      "ok": true,
+      "detail": "alerta=\"Não foi possível conectar ao BestPrice. Tente novamente.\" texto=\"Mensagem durante falha de rede\""
+    },
+    {
+      "name": "cota local por minuto: análise recebe 429 com Retry-After após 3 chats",
+      "ok": true,
+      "detail": "Retry-After=41 corpo={\"error\":{\"code\":\"ai_rate_limited\",\"message\":\"Limite de uso atingido. Tente novamente depois.\",\"fields\":[],\"tracked_product_id\":null,\"retry_after_seconds\":41}}"
+    },
+    {
+      "name": "comparação analisada (200) sem campo grounding",
+      "ok": true,
+      "detail": "create=201 analyze=200"
+    },
+    {
+      "name": "nenhuma requisição do navegador fora de 127.0.0.1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "sandbox: navegador bloqueou o <script> do HTML de sugestões",
+      "ok": true,
+      "detail": "3 bloqueio(s)"
+    },
+    {
+      "name": "console sem outros erros (fora a falha de rede injetada e o bloqueio do sandbox)",
+      "ok": true,
+      "detail": "Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed and the 'allow-scripts' permission is not set. | Blocked script execution in 'about:srcdoc' because the document's frame is sandboxed and the 'allow-scripts' permission is not set. | Blocked script execution in 'abo"
+    }
+  ]
+}

@@ -16,7 +16,7 @@ from app.research.models import (
     Conversation,
     Message,
 )
-from app.research.provider import GeminiProvider
+from app.research.provider import GeminiProvider, Generation
 from app.research.schemas import (
     AnalysisInput,
     ChatInput,
@@ -172,9 +172,9 @@ def generation_context(session: Session, kind: str, resource, payload: dict) -> 
     return [{"role": "user", "content": content}]
 
 
-def generate(session: Session, attempt: AIRequest, provider: GeminiProvider, history: list[dict[str, str]]) -> str:
+def generate[T](session: Session, attempt: AIRequest, call: Callable[[], T]) -> T:
     try:
-        return provider.generate(history)
+        return call()
     except ApiError as error:
         fail_attempt(session, attempt, error)
         raise
@@ -191,16 +191,22 @@ def send_chat(session: Session, owner_id: UUID, payload: ChatInput, provider: Ge
     if replay is not None:
         return replay
     history.append({"role": "user", "content": payload.message})
-    content = generate(session, attempt, provider, history)
+    generation = generate(session, attempt, lambda: provider.generate_chat(history))
     try:
-        return complete_chat(session, attempt, payload, content, clock())
+        return complete_chat(session, attempt, payload, generation, clock())
     except ApiError as error:
         session.rollback()
         fail_attempt(session, attempt, error)
         raise
 
 
-def complete_chat(session: Session, attempt: AIRequest, payload: ChatInput, content: str, now: datetime) -> dict:
+def stamped_grounding(grounding: dict | None, now: datetime) -> dict | None:
+    if grounding is None:
+        return None
+    return {**grounding, "searched_at": now.astimezone(UTC).isoformat().replace("+00:00", "Z")}
+
+
+def complete_chat(session: Session, attempt: AIRequest, payload: ChatInput, generation: Generation, now: datetime) -> dict:
     if payload.conversation_id is None:
         conversation = Conversation(
             user_id=attempt.user_id, title=payload.message[:100], created_at=now,
@@ -213,7 +219,10 @@ def complete_chat(session: Session, attempt: AIRequest, payload: ChatInput, cont
     ensure_active_attempt(session, attempt, now)
     position = len(repo.messages(session, conversation.id))
     user_message = Message(conversation_id=conversation.id, role="user", content=payload.message, position=position, created_at=now)
-    assistant_message = Message(conversation_id=conversation.id, role="assistant", content=content, position=position + 1, created_at=now)
+    assistant_message = Message(
+        conversation_id=conversation.id, role="assistant", content=generation.text, position=position + 1,
+        created_at=now, grounding=stamped_grounding(generation.grounding, now),
+    )
     session.add_all([user_message, assistant_message])
     conversation.updated_at = now
     session.flush()
@@ -236,7 +245,7 @@ def analyze_comparison(session: Session, owner_id: UUID, resource_id: UUID, payl
     attempt, replay, history = reserve_attempt(session, owner_id, payload.request_id, "comparison", resource_id, request_payload, now, provider)
     if replay is not None:
         return replay
-    content = generate(session, attempt, provider, history)
+    content = generate(session, attempt, lambda: provider.generate(history))
     try:
         resource = repo.owned(session, Comparison, resource_id, owner_id, clock(), lock=True)
         ensure_active_attempt(session, attempt, clock())
