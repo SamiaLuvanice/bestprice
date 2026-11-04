@@ -1,5 +1,40 @@
 # Progresso das specs
 
+## 0046 — Login de stage sem rodapé
+
+**04/11/2026: spec implementada; [PR #240](https://github.com/SamiaLuvanice/bestprice/pull/240) integrada em develop no commit `b331588`.**
+Spec `implementada`, [Issue #239](https://github.com/SamiaLuvanice/bestprice/issues/239) fechada pela integração.
+Base origin/develop `72689fe`, branch `feature/0046-issue-239-login-stage-sem-rodape`.
+Login aprovado de stage preservado, com retirada somente do rodapé dessa rota e
+da reserva de 72 px, inclusive durante carga/erro de sessão. O matcher do roteador
+cobre também /login/ e /LOGIN. Formulário, fontes, assets e autenticação preservados.
+Figma desktop/mobile atualizado pelo Chrome e exportado em 04/11; Arimo é apenas
+equivalência no desenho e não muda as fontes da aplicação.
+
+TDD Red/Green registrado; lint/build aprovados, Vitest **397/397** em 35 arquivos,
+direcionados **66/66**, Node **50/50** e Playwright pertinente final **28/28**.
+QA independente aceitou o layout/estados e revisão independente aprovou a correção
+do P2 de variantes da rota e a renovação das oito baselines de login.
+
+A suíte visual global não está verde: 67 passaram, 12 falharam e 117 não rodaram
+após max-failures=12. Quatro eram snapshots antigos de login, renovados e
+revalidados; oito falhas de landing/marca foram reproduzidas na base 72689fe,
+com capturas atuais de landing byte-idênticas entre base e feature. Outras
+telas e baselines não foram alteradas para encobrir essa dívida anterior.
+
+Doc-sync-onboarding final concluído após código, gates, revisão e QA: guia
+frontend e aprendizado do matcher sincronizados; AGENTS.md/CLAUDE.md conferidos
+sem edição. Commit de código `9f49eab` publicado com hooks aprovados e
+Refs #239. O [CI final](https://github.com/SamiaLuvanice/bestprice/actions/runs/41880936096)
+passou em `441c177`, incluindo backend, frontend, automações, política e agregador;
+Cloudflare Pages publicou o preview. Worktree e branches exclusivas da feature
+removidas sem força após os checks de limpeza; nenhum Compose/volume foi criado.
+Checkout local atualizado e rascunho inicial preservado na pasta de artefatos.
+Registro de conclusão: Issue #241. A promoção de develop para stage foi
+solicitada em 04/11 e ainda depende da PR e da validação do ambiente publicado.
+Sem alteração REST ou backend/banco; sem release ou tag nesta etapa.
+Ver [spec e evidências](../specs/0046-login-stage-sem-rodape/verification.md).
+
 ## 0045 — Histórico de conversas conforme Figma
 
 **04/11/2026: implementação entregue; aguarda revisão no [PR #236](https://github.com/SamiaLuvanice/bestprice/pull/236) para develop.**

@@ -153,15 +153,17 @@ e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
 [`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
 
-## Tela de entrada — specs 0017, 0020, 0023 e 0027
+## Tela de entrada — specs 0017, 0020, 0023, 0027 e 0046
 
 Na rota `/login`, sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) direto,
-sem o cabeçalho (masthead) nem o hero com o campo de link (spec 0020, que revoga o
-trecho da 0017 que os mantinha acima do login); só o rodapé acompanha. A composição
+sem o cabeçalho (masthead), o hero com o campo de link (spec 0020) ou o rodapé
+(spec 0046). A composição
 em duas metades da 0023 foi atualizada pela 0027 com a arte e a marca do redesign,
 mantendo os controles e a autenticação existentes:
 
-- **Composição:** `.login-shell` e `.login-card` ocupam a largura disponível. Acima
+- **Composição:** `.login-shell` e `.login-card` ocupam a largura disponível. A
+  superfície tem altura mínima `100svh`, sem reservar os antigos 72 px do rodapé;
+  o conteúdo pode crescer e rolar verticalmente quando necessário. Acima
   de 840 px, o card divide a tela em duas metades, com arte à esquerda e formulário
   sobre branco à direita. Na correção de revisão da 0030, a marca oficial e o
   texto BestPrice passaram para a coluna do formulário, acima do título,
@@ -196,6 +198,23 @@ mantendo os controles e a autenticação existentes:
   sucesso, o `LoginForm` desmonta e a senha é descartada.
 - **Movimento:** com `prefers-reduced-motion: reduce`, o botão não encolhe ao ser
   pressionado.
+
+A implementação local da [spec 0046](../../specs/0046-login-stage-sem-rodape/spec.md)
+preserva o login aprovado em stage e retira somente seu rodapé. A composição do
+rodapé em `App.tsx` usa `matchPath('/login', location.pathname)`, o mesmo padrão
+do roteador; isso inclui `/login/`, `/LOGIN` e a entrada com `returnTo`. A ausência
+vale também durante carga, HTTP 503, falha de rede e recuperação da sessão.
+Landing, páginas autenticadas e rota inexistente conservam seus rodapés.
+A orientação sobre o link do Mercado Livre e “Voltar para o início” fazem parte
+do formulário e permanecem visíveis.
+
+Os quadros Figma de login desktop `59:44` (1440×1040) e mobile `59:602` (390×844)
+foram atualizados pelo Chrome, com autorização expressa, e exportados em
+04/11/2026. A implementação mantém as fontes do sistema da SPA; Arimo é apenas
+a equivalência disponível no desenho e não foi importada no código. Referências,
+QA com API controlada, revisão dos oito snapshots de login e limites estão na
+[verificação da 0046](../../specs/0046-login-stage-sem-rodape/verification.md).
+Essa validação local não comprova integração nem publicação em stage.
 
 A verificação (QA em Chrome headless com axe, larguras de 320, 768 e 1280 px, com
 desfoque e em modo sólido simulado) e os limites estão em
