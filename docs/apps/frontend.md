@@ -299,7 +299,8 @@ atalhos móveis. O dashboard transporta rascunho por token em estado de navegaç
 o texto fica no Map da montagem autenticada, sem persistir conteúdo no histórico
 do browser. Categorias apenas preenchem texto editável. A chamada de IA exige
 outra ação explícita na tela do assistente, após a informação sobre Google,
-conteúdo confidencial e retenção local. A interface consulta capabilities e
+possível uso do conteúdo gratuito e dados pessoais/confidenciais. A retenção local
+de 90 dias permanece na política e no histórico. A interface consulta capabilities e
 mantém envio/análise indisponíveis quando a configuração falta, sem impedir
 leitura das pesquisas e salvamento manual.
 
@@ -330,14 +331,16 @@ lint e build aprovados (2.658 módulos). Jornadas SPA/API/PostgreSQL reais passa
 AC10/AC15/AC19 ainda dependem de avaliação operacional do modelo real e de sua
 configuração gratuita; a spec continua `pronta`. Ver [evidências](../../specs/0034-assistencia-compras-bestprice-ai/verification.md).
 
-## Assistente e navegação compartilhada — spec 0040
+## Assistente e navegação compartilhada — specs 0040 e 0044
 
 O Assistente inicial usa o robô original de
 `src/assets/research/assistant-robot.png`, com transparência e proporções
-preservadas, saudação e campo de mensagem em destaque. Ao iniciar ou retomar uma
+preservadas, pergunta “O que você quer comprar?” e campo de mensagem em destaque.
+A simplificação da 0044 aplica os cortes editoriais aprovados no desktop também
+ao mobile: ajuda opcional curta e um exemplo de orçamento no campo, sem atalhos
+de sugestões ou acesso separado Sobre a IA na tela principal. Ao iniciar ou retomar uma
 conversa, as mensagens ocupam o espaço principal e o robô aparece apenas como
-avatar discreto das respostas. Sugestões continuam preenchendo texto editável,
-sem enviar automaticamente. O botão de envio usa a variante `brand` do `Button`,
+avatar discreto das respostas. O botão de envio usa a variante `brand` do `Button`,
 com `--primary` e `--primary-foreground`; o padrão das outras ações não muda.
 
 `RecentConversations` consulta o contrato existente por
@@ -347,7 +350,10 @@ para retomar, sem pictogramas ou conteúdo ilustrativo. Nova conversa fica junto
 da seção; Ver todas abre o histórico. O primeiro envio e os envios seguintes
 recarregam a lista. Carga, vazio e erro com nova tentativa são independentes do
 chat; uma falha na lista não apaga nem impede editar o rascunho. Respostas de
-requisições desmontadas são descartadas, inclusive ao trocar de conta.
+requisições desmontadas são descartadas, inclusive ao trocar de conta. O acesso
+começa recolhido em desktop e mobile, usando `useDisclosure`: Escape fecha e
+devolve foco ao acionador, clique fora ou saída do foco fecha o painel. Abrir e
+fechar não navega, não remonta a conversa, não apaga o rascunho e não envia mensagem.
 
 O shell de `/app/*` acompanha os três destinos da referência Figma atual:
 Assistente IA, Histórico e Monitoramento. Desktop usa sidebar de 240 px e header
@@ -363,10 +369,14 @@ links `/produtos` e `/alertas` permanecem disponíveis. O foco de título agenda
 não toma o foco quando a pessoa já interagiu com outro controle; a saída por Tab
 para o botão do menu aplica-se somente ao menu móvel aberto.
 
-`assistant.css` organiza a coluna de recentes à direita em desktop e abaixo do
-formulário em telas estreitas. Avisos de processamento Google, retenção,
-conteúdo não verificado e cotas continuam acessíveis antes de enviar, associados
-ao campo por `aria-describedby`. A implementação não ativa o fornecedor de IA.
+`assistant.css` organiza uma coluna de tarefa e um painel de recentes sobreposto,
+com altura limitada e rolagem própria. O aviso essencial sobre Google, uso gratuito
+e dados pessoais fica dentro do formulário antes do envio. `aria-describedby`
+contém só o limite de 2.000 caracteres e, quando restam 200 ou menos, o contador.
+A resposta identifica BestPrice IA; dados não verificados ficam no nome acessível
+do artigo e no título contextual do autor, sem repetir o rodapé visual removido.
+Retenção, cota e contratos não mudam; `AIInformation` compartilhado continua intacto
+para comparação. A implementação não ativa o fornecedor de IA.
 
 A [verificação 0040](../../specs/0040-assistente-ia-com-robo/verification.md)
 registra 375 testes da suíte completa antes dos ajustes finais, 47 testes afetados
@@ -376,6 +386,14 @@ lint/build e revisão independente. `tests/visual/assistant.spec.ts` verifica
 toque, overflow e navegação. Capturas aprovadas estão na pasta `evidence/` da
 spec. As APIs são controladas: teclado virtual em aparelho real, backend/banco
 reais e disponibilidade operacional da IA continuam pendentes.
+
+A [verificação 0044](../../specs/0044-assistente-com-menos-sobrecarga/verification.md)
+registra a simplificação local: lint/build aprovados, 381 testes Vitest em 34
+arquivos com `--maxWorkers=2`, 32 cenários Playwright nos quatro viewports e captura
+adicional 390 × 844. Nesse tamanho, aviso e envio aparecem antes da navegação fixa,
+sem teclado virtual. Testes cobrem recentes recolhidos, foco, rascunho sem POST,
+contador contextual, estados e texto longo. Revisão independente e QA locais
+aceitas; publicação, CI remoto e integração em develop ainda pendentes.
 
 ## Monitoramento preservado
 

@@ -155,6 +155,7 @@ it('reutiliza request_id após 409 pendente e limpa rascunho em nova conversa', 
   expect(bodies[1].request_id).toBe(bodies[0].request_id)
   expect(screen.getAllByText('Notebook', { exact: true })).toHaveLength(1)
   fireEvent.change(screen.getByLabelText('Sua mensagem'), { target: { value: 'Outro rascunho' } })
+  await userEvent.setup().click(screen.getByRole('button', { name: 'Conversas recentes' }))
   await userEvent.setup().click(screen.getByRole('link', { name: 'Nova conversa' }))
   expect(await screen.findByLabelText('Sua mensagem')).toHaveValue('')
 })

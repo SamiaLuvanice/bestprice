@@ -34,6 +34,14 @@ remove suas páginas, dados ou APIs. Chat, retenção, privacidade e disponibili
 da IA conservam as regras acima. Essa entrega de frontend tem validação local
 controlada e ainda não comprova integração ou publicação em ambiente externo.
 
+A [spec 0044](../specs/0044-assistente-com-menos-sobrecarga/spec.md) simplifica a
+apresentação local do Assistente conforme os cortes aprovados no Figma, aplicados
+ao desktop e ao mobile: pergunta direta, um exemplo no campo, robô compacto e
+recentes recolhidos. O aviso essencial permanece junto ao envio e o contador de
+caracteres aparece perto do limite. Isso reduz o texto inicial sem alterar chat,
+política de dados, limites ou disponibilidade. A validação é local e controlada;
+a spec permanece pronta, com publicação e integração pendentes.
+
 Respostas da IA devem ser identificadas como não verificadas, reconhecer lacunas
 e preservar a decisão da pessoa. Antes do envio, a interface informa processamento
 pelo Google, possível uso do conteúdo na modalidade gratuita e orienta não inserir
