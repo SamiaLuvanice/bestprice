@@ -2,8 +2,17 @@
 
 ## 0047 — Chat pesquisa preços na web com Gemini
 
-**04/11/2026: implementação entregue; aguarda revisão e abertura do PR para develop.**
-Spec `pronta`, [Issue #245](https://github.com/SamiaLuvanice/bestprice/issues/245),
+**04/11/2026: spec implementada; [PR #246](https://github.com/SamiaLuvanice/bestprice/pull/246) integrada em develop no commit `c569bc6`.**
+O CI do PR passou: Quality backend, frontend e automações, além da política de PR. A limpeza
+removeu a branch local e a remota, o registro da worktree e o container de teste
+`bestprice-0047-testdb`. O volume anônimo desse container foi preservado. Parte da pasta
+`.worktrees/feature-0047-issue-245-chat-pesquisa-precos-web` ficou no disco, porque o Windows
+recusou apagá-la (`Invalid argument`); ela não está mais registrada como worktree.
+A instabilidade herdada de `App.test.tsx` segue na
+[Issue #247](https://github.com/SamiaLuvanice/bestprice/issues/247). Ainda faltam a promoção
+para stage e a validação com a conta Gemini real.
+
+Registro da entrega: [Issue #245](https://github.com/SamiaLuvanice/bestprice/issues/245),
 branch/worktree `feature/0047-issue-245-chat-pesquisa-precos-web`, base
 origin/develop `eb7d657`. O chat livre pode usar o grounding com Google Search do
 Gemini, opt-in por `AI_WEB_SEARCH_ENABLED=true` além de `AI_ENABLED` e chave; todo
@@ -38,9 +47,7 @@ leitura do `nginx.conf`; a correção `6599759` elevou chat/analyze para 60 s
 (`nginx -t` válido em `nginx:1.27-alpine`; backend falso de 45 s: 504 aos 35 s
 antes, 200 aos 45 s depois). Os dados simulados de teste passaram a
 `gemini-2.5-flash-lite` (`95b2a2d`; lint, Vitest 413/413 em 35 arquivos e build
-aprovados). O doc-sync foi repetido após essas mudanças. A branch remota
-contém só o commit inicial da spec; sem push dos demais commits, PR, CI, merge ou
-deploy nesta etapa. Ver [spec](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md),
+aprovados). O doc-sync foi repetido após essas mudanças. Ver [spec](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md),
 [verificação](../specs/0047-chat-pesquisa-precos-web-gemini/verification.md),
 [revisão](../specs/0047-chat-pesquisa-precos-web-gemini/review.md) e
 [doc-sync](../specs/0047-chat-pesquisa-precos-web-gemini/doc-sync.md).
