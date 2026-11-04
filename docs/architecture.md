@@ -113,9 +113,9 @@ o chat livre pode enviar a ferramenta nativa `google_search` do Gemini quando
 o HTML de sugestões, sem requisitar essas URLs, e qualquer falha da busca gera uma
 única nova tentativa sem a ferramenta, dentro de um orçamento de 50 s. A análise
 de comparação continua sem busca e sem retry automático. Nginx local permite
-leitura de 35 s somente em chat/analyze, conservando 5 s no restante; com a busca
-ligada, o pior caso do chat (até 50 s) passa desse limite do proxy, divergência
-inferida da configuração e não exercitada pela QA, que usou o proxy Vite. Sem opt-in e chave, geração retorna indisponibilidade;
+leitura de 60 s somente em chat/analyze (35 s antes da 0047), acima do orçamento
+de 50 s do chat com busca e abaixo da janela de 90 s da tentativa, conservando 5 s
+no restante. Sem opt-in e chave, geração retorna indisponibilidade;
 comparações e pesquisas salvas continuam acessíveis. A configuração gratuita e a
 qualidade do modelo real permanecem pendentes; o app não audita billing Google.
 

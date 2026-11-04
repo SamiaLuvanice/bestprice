@@ -92,11 +92,14 @@ O modelo e as cotas locais estão no [guia backend](backend.md#assistência-e-pe
 A gratuidade depende da configuração Google da pessoa operadora; o app não audita
 billing e a validação externa permanece pendente.
 
-`frontend/nginx.conf` permite `proxy_read_timeout 35s` somente para
-`/api/ai/chat` e `/api/comparisons/{id}/analyze`, acima dos 25 s do adapter Google.
-Com `AI_WEB_SEARCH_ENABLED=true`, o chat pode somar a chamada com busca e o fallback
-em até 50 s no backend, acima desses 35 s; o `nginx.conf` não mudou na 0047 e esse
-caso não foi exercitado (a QA usou o proxy Vite).
+`frontend/nginx.conf` permite `proxy_read_timeout 60s` somente para
+`/api/ai/chat` e `/api/comparisons/{id}/analyze`. A spec 0047 elevou o valor de
+35 s para 60 s porque, com `AI_WEB_SEARCH_ENABLED=true`, o chat pode somar a chamada
+com busca e o fallback em até 50 s no backend; 60 s fica abaixo da janela de 90 s da
+tentativa. Evidência registrada na correção (commit `6599759`, não reexecutada no
+doc-sync): `nginx -t` em `nginx:1.27-alpine` válido; com um backend falso que demora
+45 s, a configuração anterior devolveu 504 aos 35 s e a nova devolveu 200 aos 45 s.
+O proxy do Cloudflare Pages de stage não foi verificado.
 O restante de `/api/` mantém 5 s de leitura; conexão usa 2 s e envio 5 s em ambos.
 O proxy de desenvolvimento Vite aceita `API_PROXY_TARGET`, com padrão
 `http://localhost:8000`, para uma API isolada da worktree. Essa variável não

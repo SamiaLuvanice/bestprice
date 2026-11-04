@@ -10,18 +10,27 @@ Nenhum código, teste, spec anterior ou status de spec foi alterado. Nenhum gate
 neste doc-sync; os resultados citados vêm de `backend-evidence.md`, `frontend-evidence.md`,
 `review.md` e `verification.md`.
 
+**Segunda rodada (após `5675afa`).** Repetida depois de dois commits de código:
+`6599759` (`frontend/nginx.conf`: `proxy_read_timeout` de chat/analyze de 35 s para 60 s) e
+`95b2a2d` (dados simulados de teste do frontend de `gemini-3.5-flash-lite` para
+`gemini-2.5-flash-lite`). Escopo conferido por `git diff 5675afa HEAD`. A evidência citada
+dessas correções foi informada pela etapa de correção e não foi reexecutada aqui:
+`nginx -t` em `nginx:1.27-alpine` válido; backend falso de 45 s com 504 aos 35 s na
+configuração de origin/develop e 200 aos 45 s na nova; frontend com lint exit 0,
+Vitest 35 arquivos/413 testes e build aprovados.
+
 ## Documentos alterados
 
 | Documento | Motivo |
 |---|---|
 | `docs/product-context.md` | Afirmava `gemini-3.5-flash-lite` e "não há pesquisa web autônoma". Agora registra a troca de modelo de todo o Assistente, a nova subseção da 0047 (grounding opt-in só no chat, rótulo não verificado, fallback sem busca, aviso de 30 dias, preços web sem monitoramento) e as pendências de validação real. Cabeçalho cita a 0047. |
 | `README.md` | Modelo fixo atualizado e `AI_WEB_SEARCH_ENABLED` mencionado; a frase "não há busca de ofertas" foi ajustada para não contradizer a pesquisa na web. |
-| `docs/architecture.md` | Tabela de variáveis (modelo e nova `AI_WEB_SEARCH_ENABLED`), visão do cliente research (HTML isolado em iframe) e parágrafo do adapter, que dizia "nenhum retry ou ferramenta de busca". |
+| `docs/architecture.md` | Tabela de variáveis (modelo e nova `AI_WEB_SEARCH_ENABLED`), visão do cliente research (HTML isolado em iframe) e parágrafo do adapter, que dizia "nenhum retry ou ferramenta de busca"; na segunda rodada, leitura do Nginx em 60 s. |
 | `docs/apps/backend.md` | Linhas de capabilities/chat no contrato, modelo, timeout com orçamento de 50 s e nova subseção da 0047: flag, prompt, regras de extração do grounding, fallback único, log seguro, carimbo `searched_at`, persistência e exemplo JSON. |
 | `docs/apps/frontend.md` | Nova seção da 0047: validador do contrato, estados de `MessageGrounding`, links, iframe com sandbox e prefixo fixo, aviso `webSearchNotice`, testes e limites (72 px, HTML real, S3/S4). |
-| `docs/apps/infraestrutura.md` | Compose repassa `AI_WEB_SEARCH_ENABLED`; nova revisão Alembic; observação sobre o proxy de 35 s. |
+| `docs/apps/infraestrutura.md` | Compose repassa `AI_WEB_SEARCH_ENABLED`; nova revisão Alembic; leitura do proxy de chat/analyze em 60 s (antes 35 s), com o motivo e a evidência da correção. |
 | `docs/database.md` | Coluna `research_messages.grounding` JSONB nullable, migration `20261104grounding`, SQL NULL sem busca e cascata. |
-| `docs/PROGRESS.md` | Entrada da 0047: implementação entregue, aguarda revisão/PR; gates, revisão e pendências. |
+| `docs/PROGRESS.md` | Entrada da 0047: implementação entregue, aguarda revisão/PR; gates, revisão e pendências; na segunda rodada, correção do proxy e dos dados simulados. |
 
 ## Conferidos sem alteração
 
@@ -36,15 +45,11 @@ neste doc-sync; os resultados citados vêm de `backend-evidence.md`, `frontend-e
 
 ## Observações para quem integra
 
-1. **Proxy de 35 s (inferência, não exercitada).** `frontend/nginx.conf` mantém
-   `proxy_read_timeout 35s` para `/api/ai/chat`. Com `AI_WEB_SEARCH_ENABLED=true`, o chat pode
-   levar até 50 s no backend (chamada com busca até 25 s + fallback até 25 s, limitado pelo
-   orçamento). Nesse pior caso o Nginx encerraria a leitura antes da resposta. A QA usou o proxy
-   Vite. Registrado em arquitetura, infraestrutura e PROGRESS; nenhum código foi mudado.
-2. Fixtures de teste do frontend (`assistant.test.tsx`, `research.test.tsx`, `fakeApi.ts`,
-   `api.test.ts`, `tests/visual/assistant.spec.ts`) ainda usam
-   `model: 'gemini-3.5-flash-lite'` em capabilities simuladas. Não afeta o comportamento (o
-   validador não confere o modelo), mas diverge do backend.
-3. Pendências mantidas: conta Gemini real com grounding no free tier, HTML real de
+1. **Proxy de chat/analyze — resolvido em `6599759`.** O primeiro doc-sync apontou que os
+   35 s de `proxy_read_timeout` do `frontend/nginx.conf` ficavam abaixo do pior caso de 50 s do
+   chat com busca. A correção elevou o valor para 60 s; arquitetura, infraestrutura e PROGRESS
+   foram atualizados com o novo valor e a evidência informada. O proxy do Cloudflare Pages de
+   stage não foi verificado.
+2. Pendências mantidas: conta Gemini real com grounding no free tier, HTML real de
    `renderedContent` e altura de 72 px, qualidade em português, intermitência de
    `App.test.tsx` herdada de develop e riscos S3–S6 da revisão.

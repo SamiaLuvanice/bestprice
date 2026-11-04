@@ -32,9 +32,13 @@ de `renderedContent` e adequação da altura fixa de 72 px do iframe, qualidade 
 português do novo modelo; instabilidade de `App.test.tsx` herdada de develop;
 riscos S3 (type guards que mutam), S4 (fonte rejeitada só pelo cliente invalida a
 conversa), S5 (validade das URIs de redirecionamento do Google em 90 dias) e S6
-(uma unidade de cota local pode gerar duas requisições ao Google). O doc-sync
-identificou ainda que o pior caso do chat com busca (50 s) excede os 35 s de
-leitura do `nginx.conf` para `/api/ai/chat`, não exercitado pela QA. A branch remota
+(uma unidade de cota local pode gerar duas requisições ao Google). O primeiro
+doc-sync apontou que o pior caso do chat com busca (50 s) excedia os 35 s de
+leitura do `nginx.conf`; a correção `6599759` elevou chat/analyze para 60 s
+(`nginx -t` válido em `nginx:1.27-alpine`; backend falso de 45 s: 504 aos 35 s
+antes, 200 aos 45 s depois). Os dados simulados de teste passaram a
+`gemini-2.5-flash-lite` (`95b2a2d`; lint, Vitest 413/413 em 35 arquivos e build
+aprovados). O doc-sync foi repetido após essas mudanças. A branch remota
 contém só o commit inicial da spec; sem push dos demais commits, PR, CI, merge ou
 deploy nesta etapa. Ver [spec](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md),
 [verificação](../specs/0047-chat-pesquisa-precos-web-gemini/verification.md),
