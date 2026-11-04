@@ -13,7 +13,7 @@ async function api(page: Page, state: 'ready' | 'empty' | 'error' | 'disabled' |
     let body: unknown
     let status = 200
     if (path === '/api/auth/me') body = { id: 'u1', email: 'pessoa@example.com' }
-    else if (path === '/api/ai/capabilities') body = { enabled: state !== 'disabled', provider: 'google', model: 'gemini-3.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }
+    else if (path === '/api/ai/capabilities') body = { enabled: state !== 'disabled', provider: 'google', model: 'gemini-2.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }
     else if (path === '/api/research') {
       if (state === 'loading') return
       status = state === 'error' ? 503 : 200

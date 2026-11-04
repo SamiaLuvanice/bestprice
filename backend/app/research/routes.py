@@ -55,6 +55,7 @@ def capabilities(_user: ResearchUser) -> dict:
     return {
         "enabled": ai_settings().available, "provider": "google", "model": MODEL,
         "retention_days": 90, "max_message_chars": 2000, "user_daily_limit": 20,
+        "web_search": ai_settings().web_search_enabled,
     }
 
 

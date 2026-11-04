@@ -1,5 +1,50 @@
 # Progresso das specs
 
+## 0047 — Chat pesquisa preços na web com Gemini
+
+**04/11/2026: implementação entregue; aguarda revisão e abertura do PR para develop.**
+Spec `pronta`, [Issue #245](https://github.com/SamiaLuvanice/bestprice/issues/245),
+branch/worktree `feature/0047-issue-245-chat-pesquisa-precos-web`, base
+origin/develop `eb7d657`. O chat livre pode usar o grounding com Google Search do
+Gemini, opt-in por `AI_WEB_SEARCH_ENABLED=true` além de `AI_ENABLED` e chave; todo
+o Assistente passa a `gemini-2.5-flash-lite` e a comparação continua sem busca.
+`Message.grounding` (`null`/`searched`/`unavailable`) e `capabilities.web_search`
+entram no contrato; a migration `20261104grounding` cria
+`research_messages.grounding` JSONB nullable. Qualquer falha da busca gera uma
+nova tentativa sem busca, com orçamento total de 50 s e log seguro. A UI mostra
+"Não verificado", data, fontes e sugestões do Google em iframe com sandbox, além
+do aviso de retenção de 30 dias pelo Google quando a busca está ativa.
+
+Backend: Ruff aprovado e pytest completo com PostgreSQL 17 descartável
+**302 passed, 2 skipped** após a última correção (log do fallback); complexidade
+sem bloco ≥ D. Frontend: lint/build aprovados; Vitest 413/413 em 35 arquivos nas
+três execuções após as correções, mas a QA em `c336a1d` registrou falha em 3 de 5
+execuções completas por `App.test.tsx` (teste de dashboard fora do diff, idêntico
+a develop). Playwright `grounding.spec.ts` 2/2 e jornada SPA/API/PostgreSQL com
+transporte Gemini simulado 40/40 (busca ligada) e 12/12 (desligada). Revisão
+independente aprovou após corrigir I1–I4, S1, S2, o `null` JSONB e N1.
+Doc-sync-onboarding final executado: contexto do produto, README, arquitetura,
+banco e guias backend/frontend/infraestrutura sincronizados; AGENTS.md e
+CLAUDE.md conferidos sem edição.
+
+Pendências: chamada real com grounding no free tier da conta operadora, HTML real
+de `renderedContent` e adequação da altura fixa de 72 px do iframe, qualidade em
+português do novo modelo; instabilidade de `App.test.tsx` herdada de develop;
+riscos S3 (type guards que mutam), S4 (fonte rejeitada só pelo cliente invalida a
+conversa), S5 (validade das URIs de redirecionamento do Google em 90 dias) e S6
+(uma unidade de cota local pode gerar duas requisições ao Google). O primeiro
+doc-sync apontou que o pior caso do chat com busca (50 s) excedia os 35 s de
+leitura do `nginx.conf`; a correção `6599759` elevou chat/analyze para 60 s
+(`nginx -t` válido em `nginx:1.27-alpine`; backend falso de 45 s: 504 aos 35 s
+antes, 200 aos 45 s depois). Os dados simulados de teste passaram a
+`gemini-2.5-flash-lite` (`95b2a2d`; lint, Vitest 413/413 em 35 arquivos e build
+aprovados). O doc-sync foi repetido após essas mudanças. A branch remota
+contém só o commit inicial da spec; sem push dos demais commits, PR, CI, merge ou
+deploy nesta etapa. Ver [spec](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md),
+[verificação](../specs/0047-chat-pesquisa-precos-web-gemini/verification.md),
+[revisão](../specs/0047-chat-pesquisa-precos-web-gemini/review.md) e
+[doc-sync](../specs/0047-chat-pesquisa-precos-web-gemini/doc-sync.md).
+
 ## 0046 — Login de stage sem rodapé
 
 **04/11/2026: spec implementada; [PR #240](https://github.com/SamiaLuvanice/bestprice/pull/240) integrada em develop no commit `b331588`.**

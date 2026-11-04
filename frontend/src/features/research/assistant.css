@@ -41,6 +41,14 @@
 .assistant-author { display:flex; align-items:center; gap:16px; }
 .assistant-author img { width:48px; height:auto; object-fit:contain; }
 .assistant-stage .assistant-messages p { line-height:1.7; font-size:17px; }
+.message-grounding { display:flex; flex-direction:column; gap:12px; margin-top:16px; padding:16px 20px; border:1px solid var(--color-border-soft); border-radius:var(--radius-md); background:var(--color-surface-raised); min-width:0; }
+.assistant-stage .assistant-messages .message-grounding-meta, .assistant-stage .assistant-messages .message-grounding-unavailable { margin:0; font-size:13px; line-height:1.5; color:var(--color-text-muted); }
+.assistant-stage .assistant-messages .message-grounding-unavailable { margin-top:16px; padding:12px 16px; border-radius:var(--radius-md); background:var(--color-surface); color:var(--color-text); }
+.message-grounding-label { display:inline-block; margin-right:8px; padding:2px 10px; border:1px solid var(--color-border); border-radius:999px; color:var(--color-text); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+.message-grounding-sources { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.message-grounding-sources a { display:inline-flex; align-items:center; gap:6px; min-height:44px; max-width:100%; font-size:14px; font-weight:600; color:var(--color-brand); overflow-wrap:anywhere; text-underline-offset:4px; }
+.message-grounding-sources a svg { width:14px; height:14px; flex-shrink:0; }
+.message-grounding-suggestions { display:block; width:100%; max-width:100%; height:72px; border:0; border-radius:var(--radius-sm); background:var(--color-bg); }
 @media (max-width:959px) {
   .assistant-page { padding:16px; }
   .assistant-stage { min-height:0; padding:72px 0 16px; border-radius:0; gap:24px; }
@@ -57,4 +65,5 @@
   .assistant-page .assistant-conversation-heading h1 { font-size:26px; }
   .assistant-stage .assistant-messages .user-message { margin-left:16px; padding:16px; }
   .assistant-stage .assistant-messages p { font-size:16px; }
+  .message-grounding { padding:12px 14px; }
 }

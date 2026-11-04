@@ -1,0 +1,1 @@
+{"url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent", "tools": null, "has_key_header": true, "instruction_has_no_web": true, "instruction_web_search": false, "last_message_prefix": "Quanto custa o notebook X hoje?"}

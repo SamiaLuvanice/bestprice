@@ -30,7 +30,7 @@ graph LR
   Worker -->|quando autorizado| ML
 ```
 
-A SPA consome rotas de sessão, dashboard, monitoramentos, histórico, alertas e notificações por `frontend/src/api.ts`. FastAPI isola autenticação em `app/auth`, consulta externa em `app/marketplace`, regras e persistência em `app/products`, seleção periódica em `app/monitoring` e pesquisas privadas em `app/research`. O cliente tipado `features/research/api.ts` usa o mesmo cookie e helpers HTTP; respostas da IA são texto não verificado, sem execução de HTML ou busca externa. O produto é compartilhado pelo identificador da publicação; cada usuário tem seu vínculo e alerta. A migration Alembic prepara o esquema antes de iniciar a API no Compose.
+A SPA consome rotas de sessão, dashboard, monitoramentos, histórico, alertas e notificações por `frontend/src/api.ts`. FastAPI isola autenticação em `app/auth`, consulta externa em `app/marketplace`, regras e persistência em `app/products`, seleção periódica em `app/monitoring` e pesquisas privadas em `app/research`. O cliente tipado `features/research/api.ts` usa o mesmo cookie e helpers HTTP; respostas da IA são texto não verificado, sem execução de HTML. A única busca externa é o grounding do Gemini no chat (spec 0047), opt-in; o HTML de sugestões do Google é isolado em iframe com sandbox sem scripts. O produto é compartilhado pelo identificador da publicação; cada usuário tem seu vínculo e alerta. A migration Alembic prepara o esquema antes de iniciar a API no Compose.
 
 Na interface, `BrowserRouter` mantém `/` pública mesmo com sessão válida. `/app`
 redireciona para `/app/dashboard`; assistente, comparador e histórico ficam em
@@ -92,7 +92,8 @@ Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o 
 | `MONITOR_CHECK_INTERVAL_SECONDS`, `MONITOR_FRESHNESS_SECONDS` | Cadência após sucesso e janela de frescor, ambas com padrão de 3600 segundos e faixa de 60 a 86400 |
 | `MONITOR_BATCH_LIMIT`, `MONITOR_MAX_CONCURRENCY` | Publicações por ciclo (padrão 20, faixa 1 a 100) e tentativas paralelas (padrão 1, faixa 1 a 16) |
 | `MONITOR_POLL_INTERVAL_SECONDS` | Pausa entre ciclos (padrão 60 segundos, faixa 1 a 3600) |
-| `AI_ENABLED`, `GEMINI_API_KEY` | Opt-in e chave Google somente backend; padrões `false` e vazio, modelo fixo `gemini-3.5-flash-lite` |
+| `AI_ENABLED`, `GEMINI_API_KEY` | Opt-in e chave Google somente backend; padrões `false` e vazio, modelo fixo `gemini-2.5-flash-lite` (spec 0047) |
+| `AI_WEB_SEARCH_ENABLED` | Pesquisa na web (grounding Google Search) no chat livre; padrão `false`, só vale com a IA disponível |
 | `API_PROXY_TARGET` | Destino do proxy Vite em desenvolvimento; padrão `http://localhost:8000` |
 | `TEST_DATABASE_URL` | Banco isolado dos testes de integração |
 
@@ -106,9 +107,15 @@ versão antes de salvar. O lifespan da API agenda limpeza horária em thread, se
 bloquear startup/health; pesquisas vencidas já são negadas pelas consultas.
 Veja [banco](database.md) e [backend](apps/backend.md#assistência-e-pesquisas-privadas--spec-0034).
 
-O adapter usa host Google fixo, timeout de 25 s e nenhum redirect, retry automático
-ou ferramenta de busca. Nginx local permite leitura de 35 s somente em chat/analyze,
-conservando 5 s no restante. Sem opt-in e chave, geração retorna indisponibilidade;
+O adapter usa host Google fixo, timeout de 25 s e nenhum redirect. Pela spec 0047,
+o chat livre pode enviar a ferramenta nativa `google_search` do Gemini quando
+`AI_WEB_SEARCH_ENABLED=true`; o backend só valida e guarda título/URL das fontes e
+o HTML de sugestões, sem requisitar essas URLs, e qualquer falha da busca gera uma
+única nova tentativa sem a ferramenta, dentro de um orçamento de 50 s. A análise
+de comparação continua sem busca e sem retry automático. Nginx local permite
+leitura de 60 s somente em chat/analyze (35 s antes da 0047), acima do orçamento
+de 50 s do chat com busca e abaixo da janela de 90 s da tentativa, conservando 5 s
+no restante. Sem opt-in e chave, geração retorna indisponibilidade;
 comparações e pesquisas salvas continuam acessíveis. A configuração gratuita e a
 qualidade do modelo real permanecem pendentes; o app não audita billing Google.
 

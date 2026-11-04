@@ -2,6 +2,9 @@ import { useId, useLayoutEffect, useRef } from 'react'
 import { Button } from '../../components/ui/button'
 import { useModalFocus } from '../../lib/focus'
 
+/** Aviso adicional quando a pesquisa na web está ativa (spec 0047, AC08). */
+export const webSearchNotice = 'Sua pergunta pode ser pesquisada pelo Google, e o fornecedor guarda a pergunta e a resposta por 30 dias.'
+
 export function AIInformation() {
   return <aside className="research-disclosure" aria-label="Sobre o processamento por IA">
     <p>Suas mensagens são processadas pelo Google. Na cota gratuita, o conteúdo pode ser usado para melhorar os produtos do fornecedor. Não inclua dados pessoais ou confidenciais.</p>

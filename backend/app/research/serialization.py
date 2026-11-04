@@ -12,7 +12,10 @@ def summary(resource: Conversation | Comparison) -> dict:
 
 
 def message_output(message: Message) -> dict:
-    return {"id": message.id, "role": message.role, "content": message.content, "created_at": repository.utc(message.created_at)}
+    return {
+        "id": message.id, "role": message.role, "content": message.content,
+        "created_at": repository.utc(message.created_at), "grounding": message.grounding,
+    }
 
 
 def conversation_output(session, resource: Conversation) -> dict:

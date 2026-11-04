@@ -12,7 +12,7 @@ from app.main import app
 from app.products.models import User
 from app.research import models  # noqa: F401
 from app.research.models import AIRequest, AIUsage, Comparison, Conversation, Message
-from app.research.provider import get_provider
+from app.research.provider import Generation, get_provider
 from app.research.routes import research_user
 from app.research.service import get_clock
 
@@ -20,7 +20,9 @@ from app.research.service import get_clock
 class FakeProvider:
     def __init__(self):
         self.calls = []
+        self.chat_calls = 0
         self.action = None
+        self.grounding = None
 
     def ensure_available(self):
         pass
@@ -30,6 +32,10 @@ class FakeProvider:
         if self.action:
             self.action()
         return "Compare os dados fornecidos; preço e estoque não foram verificados."
+
+    def generate_chat(self, history):
+        self.chat_calls += 1
+        return Generation(self.generate(history), self.grounding)
 
 
 @pytest.fixture
@@ -104,11 +110,90 @@ def test_capabilities_are_authenticated_and_disabled_without_configuration(monke
     assert response.json() == {
         "enabled": False,
         "provider": "google",
-        "model": "gemini-3.5-flash-lite",
+        "model": "gemini-2.5-flash-lite",
         "retention_days": 90,
         "max_message_chars": 2000,
         "user_daily_limit": 20,
+        "web_search": False,
     }
+
+
+@pytest.mark.parametrize("enabled,web_search,expected", [
+    ("true", "true", True), ("true", "false", False), ("false", "true", False),
+])
+def test_capabilities_expose_web_search_only_when_explicitly_enabled(monkeypatch, enabled, web_search, expected) -> None:
+    monkeypatch.setenv("AI_ENABLED", enabled)
+    monkeypatch.setenv("GEMINI_API_KEY", "dummy-local-test-key")
+    monkeypatch.setenv("AI_WEB_SEARCH_ENABLED", web_search)
+    app.dependency_overrides[research_user] = lambda: User(
+        id=uuid4(), email="research@example.com", password_hash="unused",
+    )
+    try:
+        body = TestClient(app).get("/api/ai/capabilities").json()
+    finally:
+        app.dependency_overrides.clear()
+    assert body["web_search"] is expected
+    assert "dummy-local-test-key" not in str(body)
+
+
+SEARCHED = {
+    "status": "searched",
+    "sources": [{"title": "Loja X", "url": "https://loja.example/notebook"}],
+    "search_suggestions_html": "<style>.c{}</style><div class=\"c\">notebook</div>",
+}
+
+
+def test_chat_persists_grounding_with_clock_instant_and_replays_it(research_client, fake_provider, research_clock) -> None:
+    client, _, _ = research_client
+    fake_provider.grounding = dict(SEARCHED)
+    payload = chat_payload(message="Quanto custa o notebook X?")
+    first = client.post("/api/ai/chat", json=payload)
+    assert first.status_code == 200
+    body = first.json()
+    assert body["user_message"]["grounding"] is None
+    assert body["assistant_message"]["grounding"] == {**SEARCHED, "searched_at": "2026-10-26T12:00:00Z"}
+    research_clock[0] += timedelta(minutes=5)
+    assert client.post("/api/ai/chat", json=payload).json() == body
+    assert fake_provider.chat_calls == 1
+    detail = client.get(f"/api/ai/conversations/{body['conversation_id']}").json()
+    assert [entry["grounding"] for entry in detail["messages"]] == [None, body["assistant_message"]["grounding"]]
+
+
+def test_replay_of_result_saved_before_grounding_still_succeeds(research_client, fake_provider) -> None:
+    client, _, engine = research_client
+    payload = chat_payload(message="Pergunta antes do deploy")
+    first = client.post("/api/ai/chat", json=payload).json()
+    with Session(engine) as session:
+        attempt = session.scalar(select(AIRequest).where(AIRequest.request_id == UUID(payload["request_id"])))
+        legacy = {**attempt.result}
+        for key in ("user_message", "assistant_message"):
+            legacy[key] = {name: value for name, value in legacy[key].items() if name != "grounding"}
+        attempt.result = legacy
+        session.commit()
+    replay = client.post("/api/ai/chat", json=payload)
+    assert replay.status_code == 200
+    assert replay.json() == first
+    assert fake_provider.chat_calls == 1
+
+
+def test_chat_records_unavailable_search_and_plain_answers(research_client, fake_provider) -> None:
+    client, _, _ = research_client
+    fake_provider.grounding = {"status": "unavailable", "sources": [], "search_suggestions_html": None}
+    unavailable = client.post("/api/ai/chat", json=chat_payload(message="Preço atual?")).json()
+    assert unavailable["assistant_message"]["grounding"] == {
+        "status": "unavailable", "sources": [], "search_suggestions_html": None, "searched_at": "2026-10-26T12:00:00Z",
+    }
+    fake_provider.grounding = None
+    plain = client.post("/api/ai/chat", json=chat_payload(unavailable["conversation_id"], message="Obrigado")).json()
+    assert plain["assistant_message"]["grounding"] is None
+
+
+def test_comparison_analysis_never_uses_web_chat_generation(research_client, fake_provider) -> None:
+    client, _, _ = research_client
+    saved = client.post("/api/comparisons", json=comparison_payload()).json()
+    response = client.post(f"/api/comparisons/{saved['id']}/analyze", json={"request_id": str(uuid4()), "version": 1})
+    assert response.status_code == 200
+    assert fake_provider.chat_calls == 0
 
 
 def chat_payload(conversation_id=None, request_id=None, message="Um notebook para estudar"):

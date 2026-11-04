@@ -23,12 +23,14 @@ referências visuais e limites.
 
 Para usar a IA, a pessoa operadora precisa configurar `AI_ENABLED=true` e
 `GEMINI_API_KEY` somente no ambiente do backend; o modelo fixado no código é
-`gemini-3.5-flash-lite`. O padrão de `.env.example` é desativado/chave vazia.
+`gemini-2.5-flash-lite` (spec 0047). O padrão de `.env.example` é desativado/chave vazia.
+A pesquisa de preços na web no chat (grounding Google Search) exige também
+`AI_WEB_SEARCH_ENABLED=true`, desligada por padrão; a análise de comparação nunca pesquisa.
 O plano prevê configuração própria em cota gratuita e sem faturamento; o aplicativo
 não audita a cobrança da conta Google. Nenhuma chamada real ou avaliação da
 qualidade do modelo foi feita nesta entrega. Salvar, editar e recuperar comparações
-manuais funciona sem IA. Não há busca de ofertas, scraping ou leitura dos links
-informados. Veja limites locais, privacidade e operação no [guia backend](docs/apps/backend.md#assistência-e-pesquisas-privadas--spec-0034).
+manuais funciona sem IA. Não há scraping nem leitura dos links informados ou das
+fontes devolvidas pela pesquisa na web; a chamada real com grounding não foi validada. Veja limites locais, privacidade e operação no [guia backend](docs/apps/backend.md#assistência-e-pesquisas-privadas--spec-0034).
 
 As pesquisas expiram 90 dias após a criação, sem extensão por edição. A API as
 torna inacessíveis no vencimento e tenta removê-las fisicamente a cada hora enquanto

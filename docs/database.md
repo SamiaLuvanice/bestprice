@@ -26,7 +26,7 @@ ativas. Isso não demonstra aplicação dessa migration em Stage.
 | Tabela research | Conteúdo e relação principal |
 |---|---|
 | `research_conversations` | Conversa privada por usuário; título, criação, atualização e expiração |
-| `research_messages` | Mensagem textual user/assistant; FK com cascata e posição única por conversa |
+| `research_messages` | Mensagem textual user/assistant; FK com cascata e posição única por conversa; `grounding` JSONB nullable com a pesquisa na web da resposta (spec 0047) |
 | `research_comparisons` | Comparação privada, uso declarado, versão e análise JSON nullable |
 | `research_comparison_products` | Dados originais ordenados; PK `(comparison_id, position)`, posições 0–2, FK com cascata; preço `NUMERIC(18,2)` nullable e positivo quando informado |
 | `research_ai_requests` | Unicidade `(user_id, request_id)`, fingerprint, estado e snapshot/erro; target sem FK para conservar tombstone sem conteúdo após exclusão |
@@ -37,6 +37,17 @@ o valor com duas casas ou null. Preço ausente não vira zero. A análise e snap
 REST são JSON, sem substituir a coluna monetária original. Edição substitui os
 filhos na mesma transação, incrementa versão e invalida a análise, preservando a
 expiração. Os modelos não criam `Product`/`TrackedProduct` de monitoramento.
+
+A migration `20261104_message_grounding.py` (revisão `20261104grounding`, após
+`20261026research`) acrescenta `research_messages.grounding` JSONB, nullable e sem
+default; o head do código passa a `20261104grounding`. É aditiva, não reescreve a
+tabela e o downgrade remove a coluna. Mensagens de usuário, respostas sem busca e
+linhas anteriores ficam com SQL NULL (o modelo usa `none_as_null=True`). Respostas
+do chat com busca guardam `status` (`searched` ou `unavailable`), `searched_at` UTC
+com `Z`, até 10 fontes `{title,url}` e o HTML de sugestões do Google. Como o dado
+fica na própria linha, expira e é excluído em cascata com a conversa. O banco
+descartável da QA confirmou upgrade, downgrade e novo upgrade, com RLS preservado
+em `research_messages`; a revisão não foi aplicada em Stage.
 
 Conversas e comparações expiram após 90 dias desde a criação, sem renovação por
 edição. Leituras sempre exigem `expires_at > now`; exclusão manual remove filhos e

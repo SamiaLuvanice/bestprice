@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "assistant_grounding": {
+    "status": "searched",
+    "searched_at": "2026-11-04T19:09:17.681580Z",
+    "sources": [
+      {
+        "title": "Loja QA — Notebook X",
+        "url": "https://loja-qa.example/notebook-x"
+      },
+      {
+        "title": "outra-qa.example",
+        "url": "https://outra-qa.example/oferta"
+      }
+    ],
+    "search_suggestions_html": "<style>.c{font:14px sans-serif;display:flex;gap:8px}.c a{padding:6px 12px;border:1px solid #ccc;border-radius:16px;color:#1f1f1f;text-decoration:none}</style><div class=\"c\"><a href=\"https://www.google.com/search?q=notebook+preco\">notebook preço</a><a href=\"https://www.google.com/search?q=notebook+oferta\">notebook oferta</a></div><script>document.body.setAttribute('data-qa-script-ran','1')</script>"
+  },
+  "user_grounding": null
+}
