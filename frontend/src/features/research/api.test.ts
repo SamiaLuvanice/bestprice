@@ -5,7 +5,7 @@ import { researchApi } from './api'
 afterEach(() => vi.unstubAllGlobals())
 
 it('recusa capabilities inválida em vez de habilitar geração', async () => {
-  fakeApi(() => reply(200, { enabled: 'true', provider: 'google', model: 'gemini-3.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }))
+  fakeApi(() => reply(200, { enabled: 'true', provider: 'google', model: 'gemini-2.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }))
   await expect(researchApi.capabilities()).rejects.toMatchObject({ code: 'invalid_response' })
 })
 

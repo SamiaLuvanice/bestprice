@@ -5,7 +5,7 @@ import { App } from './App'
 import { apiError, fakeApi, reply } from './test/fakeApi'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
-const capabilities = { enabled: true, provider: 'google', model: 'gemini-3.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }
+const capabilities = { enabled: true, provider: 'google', model: 'gemini-2.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }
 const conversation = (id: string, title = id) => ({ id, title, kind: 'conversation', created_at: '2026-10-26T00:00:00Z', updated_at: '2026-10-30T12:00:00Z', expires_at: '2027-01-24T00:00:00Z' })
 function setup(extra: Parameters<typeof fakeApi>[0] = () => undefined, path = '/app/assistant') {
   const fetch = fakeApi((url, init) => {
