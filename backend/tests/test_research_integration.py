@@ -26,6 +26,7 @@ from app.research.models import (
     Conversation,
     Message,
 )
+from app.research.provider import Generation
 from app.research.schemas import (
     AnalysisInput,
     ChatInput,
@@ -73,9 +74,10 @@ def postgres_research(monkeypatch):
 
 
 class Provider:
-    def __init__(self, callback=None):
+    def __init__(self, callback=None, grounding=None):
         self.calls = 0
         self.callback = callback
+        self.grounding = grounding
 
     def ensure_available(self):
         pass
@@ -85,6 +87,9 @@ class Provider:
         if self.callback:
             self.callback()
         return "Dados fornecidos; preços não verificados."
+
+    def generate_chat(self, history):
+        return Generation(self.generate(history), self.grounding)
 
 
 def test_real_postgres_cookie_authentication_crud_and_rls(postgres_research) -> None:
@@ -327,3 +332,64 @@ def test_postgres_fk_cascades_comparison_product_deletion(postgres_research) -> 
         session.execute(delete(Comparison).where(Comparison.id == resource_id))
         session.commit()
         assert session.scalar(select(ComparisonProduct).where(ComparisonProduct.comparison_id == resource_id)) is None
+
+
+SEARCHED_GROUNDING = {
+    "status": "searched",
+    "sources": [{"title": "Loja X", "url": "https://loja.example/notebook"}],
+    "search_suggestions_html": "<style>.c{}</style><div class=\"c\">notebook</div>",
+}
+
+
+def test_grounding_migration_is_nullable_jsonb_and_keeps_old_messages_null(postgres_research) -> None:
+    engine, owner_id = postgres_research
+    config = Config("alembic.ini")
+    conversation_id, message_id = uuid4(), uuid4()
+    now = datetime(2026, 11, 4, 12, tzinfo=UTC)
+    command.downgrade(config, "20261026research")
+    try:
+        with engine.begin() as connection:
+            assert "grounding" not in {column["name"] for column in inspect(connection).get_columns("research_messages")}
+            connection.execute(text(
+                "INSERT INTO research_conversations (id, user_id, title, created_at, updated_at, expires_at) "
+                "VALUES (:id, :user_id, 'Antiga', :now, :now, :now + interval '90 days')"
+            ), {"id": conversation_id, "user_id": owner_id, "now": now})
+            connection.execute(text(
+                "INSERT INTO research_messages (id, conversation_id, role, content, position, created_at) "
+                "VALUES (:id, :conversation_id, 'assistant', 'Resposta antiga', 0, :now)"
+            ), {"id": message_id, "conversation_id": conversation_id, "now": now})
+    finally:
+        command.upgrade(config, "head")
+    with engine.connect() as connection:
+        column = connection.execute(text(
+            "SELECT data_type, is_nullable FROM information_schema.columns "
+            "WHERE table_name = 'research_messages' AND column_name = 'grounding'"
+        )).one()
+        assert tuple(column) == ("jsonb", "YES")
+        assert connection.scalar(text("SELECT grounding FROM research_messages WHERE id = :id"), {"id": message_id}) is None
+
+
+def test_grounding_persists_in_postgres_replays_and_is_purged_with_conversation(postgres_research) -> None:
+    engine, owner_id = postgres_research
+    now = datetime(2026, 11, 4, 12, tzinfo=UTC)
+    request = ChatInput(conversation_id=None, request_id=uuid4(), message="Quanto custa o notebook X?")
+    with Session(engine) as session:
+        result = send_chat(session, owner_id, request, Provider(grounding=dict(SEARCHED_GROUNDING)), lambda: now)
+    expected = {**SEARCHED_GROUNDING, "searched_at": "2026-11-04T12:00:00Z"}
+    assert result["assistant_message"]["grounding"] == expected
+    assert result["user_message"]["grounding"] is None
+    conversation_id = UUID(result["conversation_id"])
+    with Session(engine) as session:
+        stored = session.execute(text(
+            "SELECT role, grounding->>'status', grounding->'sources'->0->>'url' FROM research_messages "
+            "WHERE conversation_id = :id ORDER BY position"
+        ), {"id": conversation_id}).all()
+        assert stored == [("user", None, None), ("assistant", "searched", "https://loja.example/notebook")]
+        replay_provider = Provider()
+        assert send_chat(session, owner_id, request, replay_provider, lambda: now) == result
+        assert replay_provider.calls == 0
+        session.get(Conversation, conversation_id).expires_at = now
+        session.commit()
+        assert repo.purge_expired(session, now) >= 1
+        session.commit()
+        assert session.scalar(select(Message).where(Message.conversation_id == conversation_id)) is None

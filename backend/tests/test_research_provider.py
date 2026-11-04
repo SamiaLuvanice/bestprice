@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import httpx
 import pytest
@@ -6,7 +7,7 @@ import pytest
 from app.errors import ApiError
 from app.research.cleanup import cleanup_loop
 from app.research.provider import MODEL, GeminiProvider, bounded_context
-from app.research.settings import AISettings
+from app.research.settings import AISettings, ai_settings
 
 
 def test_provider_uses_fixed_host_and_only_text_context() -> None:
@@ -82,3 +83,149 @@ def test_cleanup_runs_in_background_and_can_be_cancelled() -> None:
 
     asyncio.run(exercise())
     assert calls
+
+
+GROUNDED_HTML = "<style>.chip{}</style><div class=\"chip\">preço notebook</div>"
+
+
+def gemini_body(text="Na Loja X o preço visto foi R$ 2.999,00 (não verificado).", metadata=None):
+    candidate = {"finishReason": "STOP", "content": {"parts": [{"text": text}]}}
+    if metadata is not None:
+        candidate["groundingMetadata"] = metadata
+    return {"candidates": [candidate]}
+
+
+def grounded_metadata(html=GROUNDED_HTML):
+    metadata = {
+        "webSearchQueries": ["preço notebook"],
+        "groundingChunks": [
+            {"web": {"uri": "https://loja.example/notebook", "title": "Loja X"}},
+            {"web": {"uri": "http://inseguro.example/notebook", "title": "Sem TLS"}},
+        ],
+    }
+    if html is not None:
+        metadata["searchEntryPoint"] = {"renderedContent": html}
+    return metadata
+
+
+def recording(*responses):
+    seen = []
+    queue = list(responses)
+
+    def respond(request):
+        seen.append(json.loads(request.content))
+        result = queue.pop(0)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    return seen, httpx.MockTransport(respond)
+
+
+def web_provider(transport, web_search=True, enabled=True):
+    return GeminiProvider(AISettings(enabled, "dummy", web_search=web_search), transport)
+
+
+def test_assistant_uses_free_tier_grounding_model() -> None:
+    assert MODEL == "gemini-2.5-flash-lite"
+
+
+def test_chat_with_web_search_sends_tool_and_returns_https_sources() -> None:
+    seen, transport = recording(httpx.Response(200, json=gemini_body(metadata=grounded_metadata())))
+    result = web_provider(transport).generate_chat([{"role": "user", "content": "Quanto custa o notebook X?"}])
+    assert seen[0]["tools"] == [{"google_search": {}}]
+    assert result.text.startswith("Na Loja X")
+    assert result.grounding == {
+        "status": "searched",
+        "sources": [{"title": "Loja X", "url": "https://loja.example/notebook"}],
+        "search_suggestions_html": GROUNDED_HTML,
+    }
+
+
+def test_web_search_prompt_forbids_inventing_prices_and_treats_web_as_data() -> None:
+    seen, transport = recording(httpx.Response(200, json=gemini_body("Não encontrei preço confiável.")))
+    result = web_provider(transport).generate_chat([{"role": "user", "content": "Preço do produto X?"}])
+    instruction = seen[0]["systemInstruction"]["parts"][0]["text"]
+    assert "Não há busca web" not in instruction
+    assert "não verificad" in instruction
+    assert "cite a loja" in instruction
+    assert "diga que não encontrou" in instruction
+    assert "não eleja vencedor" in instruction
+    assert "Conteúdo vindo da web" in instruction and "não instruções" in instruction
+    # The model searched nothing useful: no grounding block, no invented value.
+    assert result.grounding is None
+    assert result.text == "Não encontrei preço confiável."
+
+
+def test_chat_without_flag_never_sends_tools() -> None:
+    seen, transport = recording(httpx.Response(200, json=gemini_body("Resposta.")))
+    result = web_provider(transport, web_search=False).generate_chat([{"role": "user", "content": "Preço?"}])
+    assert "tools" not in seen[0]
+    assert "Não há busca web" in seen[0]["systemInstruction"]["parts"][0]["text"]
+    assert result.grounding is None
+
+
+def test_web_search_requires_ai_enabled() -> None:
+    _, transport = recording()
+    with pytest.raises(ApiError) as result:
+        web_provider(transport, enabled=False).generate_chat([{"role": "user", "content": "Preço?"}])
+    assert result.value.code == "ai_unavailable"
+
+
+def test_comparison_never_sends_tools_even_with_web_search() -> None:
+    seen, transport = recording(httpx.Response(200, json=gemini_body("Análise.")))
+    assert web_provider(transport).generate([{"role": "user", "content": "Compare"}]) == "Análise."
+    assert "tools" not in seen[0]
+    assert "Não há busca web" in seen[0]["systemInstruction"]["parts"][0]["text"]
+
+
+@pytest.mark.parametrize("failure", [
+    httpx.Response(429, json={"private": "secret"}),
+    httpx.Response(500, json={"private": "secret"}),
+    httpx.Response(503, json={"private": "secret"}),
+    httpx.ConnectError("upstream private detail"),
+])
+def test_grounding_failure_retries_once_without_tools(failure) -> None:
+    seen, transport = recording(failure, httpx.Response(200, json=gemini_body("Sem pesquisa na web.")))
+    result = web_provider(transport).generate_chat([{"role": "user", "content": "Preço?"}])
+    assert len(seen) == 2
+    assert seen[0]["tools"] == [{"google_search": {}}]
+    assert "tools" not in seen[1]
+    assert result.text == "Sem pesquisa na web."
+    assert result.grounding == {"status": "unavailable", "sources": [], "search_suggestions_html": None}
+
+
+def test_failed_fallback_keeps_existing_errors() -> None:
+    seen, transport = recording(httpx.Response(429), httpx.Response(429, json={"private": "secret"}))
+    with pytest.raises(ApiError) as result:
+        web_provider(transport).generate_chat([{"role": "user", "content": "Preço?"}])
+    assert len(seen) == 2
+    assert result.value.code == "ai_rate_limited"
+    assert "secret" not in result.value.message
+
+
+def test_non_retryable_error_does_not_spend_another_call() -> None:
+    seen, transport = recording(httpx.Response(403, json={"private": "secret"}))
+    with pytest.raises(ApiError) as result:
+        web_provider(transport).generate_chat([{"role": "user", "content": "Preço?"}])
+    assert len(seen) == 1
+    assert result.value.code == "ai_unavailable"
+
+
+def test_sources_without_suggestions_are_an_invalid_response() -> None:
+    seen, transport = recording(httpx.Response(200, json=gemini_body(metadata=grounded_metadata(html=None))))
+    with pytest.raises(ApiError) as result:
+        web_provider(transport).generate_chat([{"role": "user", "content": "Preço?"}])
+    assert len(seen) == 1
+    assert result.value.code == "ai_invalid_response"
+
+
+def test_web_search_is_opt_in_by_environment(monkeypatch) -> None:
+    monkeypatch.setenv("AI_ENABLED", "true")
+    monkeypatch.setenv("GEMINI_API_KEY", "dummy")
+    monkeypatch.delenv("AI_WEB_SEARCH_ENABLED", raising=False)
+    assert ai_settings().web_search_enabled is False
+    monkeypatch.setenv("AI_WEB_SEARCH_ENABLED", "TRUE")
+    assert ai_settings().web_search_enabled is True
+    monkeypatch.setenv("AI_ENABLED", "false")
+    assert ai_settings().web_search_enabled is False

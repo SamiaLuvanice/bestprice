@@ -93,11 +93,24 @@ class Summary(BaseModel):
     expires_at: datetime
 
 
+class GroundingSource(BaseModel):
+    title: str
+    url: str
+
+
+class GroundingOutput(BaseModel):
+    status: Literal["searched", "unavailable"]
+    searched_at: datetime
+    sources: list[GroundingSource]
+    search_suggestions_html: str | None
+
+
 class MessageOutput(BaseModel):
     id: UUID
     role: Literal["user", "assistant"]
     content: str
     created_at: datetime
+    grounding: GroundingOutput | None
 
 
 class ConversationOutput(Summary):
