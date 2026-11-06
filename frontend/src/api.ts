@@ -46,6 +46,10 @@ export type RecentUpdate = {
 export type HistoryEntry = { id: string; price: string; currency: string; captured_at: string }
 export type Notification = { id: string; tracked_product_id: string; product_title: string; observed_price: string; target_price: string; created_at: string; read_at: string | null }
 
+/** Erro por campo do envelope da API (`error.fields`), com `code` estável. */
+export type FieldError = { field: string; code: string; message: string }
+export type SignupStatus = { enabled: boolean }
+
 export class ApiFailure extends Error {
   constructor(
     readonly status: number,
@@ -53,6 +57,7 @@ export class ApiFailure extends Error {
     message: string,
     readonly trackedProductId: string | null = null,
     readonly retryAfterSeconds: number | null = null,
+    readonly fields: FieldError[] = [],
   ) { super(message) }
 }
 
@@ -68,6 +73,14 @@ function nullableDecimal(value: unknown): value is string | null { return value 
 
 function user(value: unknown): value is User {
   return record(value) && string(value.id) && string(value.email)
+}
+
+function fieldError(value: unknown): value is FieldError {
+  return record(value) && string(value.field) && string(value.code) && string(value.message)
+}
+
+function signupStatus(value: unknown): value is SignupStatus {
+  return record(value) && typeof value.enabled === 'boolean'
 }
 
 function product(value: unknown): value is Product {
@@ -126,12 +139,15 @@ const invalidResponseMessage = 'A API respondeu com dados inválidos.'
 function failureFrom(status: number, body: unknown): ApiFailure {
   const error = record(body) && record(body.error) ? body.error : null
   const retryAfter = error?.retry_after_seconds
+  // Lista malformada não é parcialmente aproveitada: sem campos confiáveis, a interface usa o alerta geral.
+  const fields = error && Array.isArray(error.fields) && error.fields.every(fieldError) ? error.fields : []
   return new ApiFailure(
     status,
     error && string(error.code) && string(error.message) ? error.code : 'api_error',
     error && string(error.code) && string(error.message) ? error.message : genericFailureMessage,
     error && string(error.tracked_product_id) ? error.tracked_product_id : null,
     typeof retryAfter === 'number' && Number.isInteger(retryAfter) && retryAfter >= 0 ? retryAfter : null,
+    fields,
   )
 }
 
@@ -169,6 +185,13 @@ async function track(url: string): Promise<{ tracked: TrackedProduct; outcome: T
   throw new ApiFailure(status, 'invalid_response', invalidResponseMessage)
 }
 
+// 0048: só 201 cria a conta e a sessão; outro 2xx não é sucesso conhecido do contrato.
+async function signup(email: string, password: string): Promise<User> {
+  const { status, body } = await requestWithStatus('/auth/signup', user, json('POST', { email, password }))
+  if (status !== 201) throw new ApiFailure(status, 'invalid_response', invalidResponseMessage)
+  return body
+}
+
 export async function requestVoid(path: string, init: RequestInit): Promise<void> {
   const response = await send(path, init)
   if (response.status === 204) return
@@ -183,6 +206,8 @@ export const api = {
   me: () => request('/auth/me', user),
   login: (email: string, password: string) => request('/auth/login', user, json('POST', { email, password })),
   logout: () => requestVoid('/auth/logout', { method: 'POST' }),
+  signupStatus: () => request('/auth/signup', signupStatus),
+  signup,
   dashboard: () => request('/dashboard', dashboard),
   tracked: (cursor?: string) => request(`/tracked-products${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, trackedPage),
   track,

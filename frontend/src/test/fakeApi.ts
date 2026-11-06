@@ -7,8 +7,10 @@ export function reply(status: number, body: unknown) {
   return { ok: status >= 200 && status < 300, status, json: async () => body }
 }
 
-export function apiError(code: string, message: string, extra: { tracked_product_id?: string; retry_after_seconds?: number } = {}) {
-  return { error: { code, message, fields: [], tracked_product_id: extra.tracked_product_id ?? null, retry_after_seconds: extra.retry_after_seconds ?? null } }
+export type FieldErrorFixture = { field: string; code: string; message: string }
+
+export function apiError(code: string, message: string, extra: { tracked_product_id?: string; retry_after_seconds?: number; fields?: FieldErrorFixture[] } = {}) {
+  return { error: { code, message, fields: extra.fields ?? [], tracked_product_id: extra.tracked_product_id ?? null, retry_after_seconds: extra.retry_after_seconds ?? null } }
 }
 
 export const productUrl = 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM'
