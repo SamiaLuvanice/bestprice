@@ -44,6 +44,9 @@ def signup_settings() -> SignupSettings:
         trusted_proxy_secret=_secret("TRUSTED_PROXY_SECRET"),
         source_hash_secret=_secret("SIGNUP_SOURCE_HASH_SECRET"),
     )
+    if settings.trusted_proxy_secret and settings.trusted_proxy_secret == settings.source_hash_secret:
+        # Quem conhece o segredo do proxy (Pages) não pode também reverter os HMACs da origem.
+        raise RuntimeError("TRUSTED_PROXY_SECRET e SIGNUP_SOURCE_HASH_SECRET devem ser diferentes")
     if settings.enabled and not settings.source_hash_secret:
         # Sem o segredo não há como gravar a origem sem guardá-la em claro.
         raise RuntimeError("SIGNUP_SOURCE_HASH_SECRET é obrigatório com SIGNUP_ENABLED=true")

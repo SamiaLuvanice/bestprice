@@ -105,3 +105,23 @@ def test_lifespan_starts_with_signup_off_and_no_secrets(monkeypatch: pytest.Monk
     monkeypatch.setenv("APP_ENV", "stage")
     with TestClient(app) as client:
         assert client.app is app
+
+
+@pytest.mark.parametrize("enabled", ["true", "false"])
+def test_proxy_and_hash_secrets_must_differ(monkeypatch: pytest.MonkeyPatch, enabled: str) -> None:
+    shared = "mesmo-segredo-" + "x" * 32
+    monkeypatch.setenv("SIGNUP_ENABLED", enabled)
+    monkeypatch.setenv("TRUSTED_PROXY_SECRET", shared)
+    monkeypatch.setenv("SIGNUP_SOURCE_HASH_SECRET", shared)
+    with pytest.raises(RuntimeError, match="TRUSTED_PROXY_SECRET") as raised:
+        signup_settings()
+    assert "SIGNUP_SOURCE_HASH_SECRET" in str(raised.value) and shared not in str(raised.value)
+    monkeypatch.setenv("SIGNUP_SOURCE_HASH_SECRET", "outro-segredo-" + "y" * 32)
+    assert signup_settings().trusted_proxy_secret == shared
+
+
+def test_lifespan_refuses_equal_proxy_and_hash_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TRUSTED_PROXY_SECRET", SECRET)
+    monkeypatch.setenv("SIGNUP_SOURCE_HASH_SECRET", SECRET)
+    with pytest.raises(RuntimeError, match="SIGNUP_SOURCE_HASH_SECRET"), TestClient(app):
+        pass
