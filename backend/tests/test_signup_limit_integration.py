@@ -83,8 +83,8 @@ def test_sixth_attempt_is_refused_until_the_oldest_leaves_the_window(engine) -> 
 
     assert attempt(engine, source, refused_at + timedelta(seconds=retry - 1), settings()) == 1
     assert attempt(engine, source, refused_at + timedelta(seconds=retry), settings()) is None
-    # A tentativa não apaga nada: a limpeza das vencidas fica só no purge horário.
-    assert len(stored(engine, source)) == 6
+    # A tentativa aceita apaga as vencidas da própria origem (o mais antigo saiu da janela).
+    assert len(stored(engine, source)) == 5
 
 
 def test_retry_after_is_rounded_up_to_whole_seconds(engine) -> None:
@@ -173,3 +173,91 @@ def test_request_path_does_not_delete_expired_rows_of_other_sources(engine) -> N
     assert attempt(engine, source, NOW, settings()) is None
     assert attempt(engine, source, NOW, settings(attempts=1)) == 3600
     assert stored(engine, other) == [NOW - timedelta(hours=3)]
+
+
+def test_attempt_purges_only_its_own_expired_rows(engine) -> None:
+    own, other = new_source(), new_source()
+    with Session(engine) as session:
+        session.add_all([
+            SignupAttempt(source_hash=own, attempted_at=NOW - timedelta(hours=3)),
+            SignupAttempt(source_hash=own, attempted_at=NOW - timedelta(minutes=60)),
+            SignupAttempt(source_hash=own, attempted_at=NOW - timedelta(minutes=59)),
+            SignupAttempt(source_hash=other, attempted_at=NOW - timedelta(hours=3)),
+        ])
+        session.commit()
+    assert attempt(engine, own, NOW, settings()) is None
+    assert stored(engine, own) == [NOW - timedelta(minutes=59), NOW]
+    assert stored(engine, other) == [NOW - timedelta(hours=3)]
+
+
+def test_refused_attempt_writes_nothing(engine) -> None:
+    source = new_source()
+    with Session(engine) as session:
+        session.add_all([
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(hours=3)),
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(minutes=1)),
+        ])
+        session.commit()
+    assert attempt(engine, source, NOW, settings(attempts=1)) == 59 * 60
+    assert stored(engine, source) == [NOW - timedelta(hours=3), NOW - timedelta(minutes=1)]
+
+
+def test_cleanup_loop_purges_on_startup_before_the_first_sleep(engine, monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    from app import db
+    from app.research import cleanup
+
+    source = new_source()
+    with Session(engine) as session:
+        session.add(SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(hours=2)))
+        session.commit()
+    monkeypatch.setenv("DATABASE_URL", os.environ["TEST_DATABASE_URL"])
+    monkeypatch.delenv("SIGNUP_RATE_LIMIT_WINDOW_MINUTES", raising=False)
+    monkeypatch.setattr(cleanup, "now_utc", lambda: NOW)
+    db.create_database_engine.cache_clear()
+
+    async def exercise() -> None:
+        task = asyncio.create_task(cleanup.cleanup_loop(interval=3600))
+        for _ in range(100):
+            if not stored(engine, source):
+                break
+            await asyncio.sleep(0.05)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    try:
+        asyncio.run(exercise())
+    finally:
+        db.create_database_engine().dispose()
+        db.create_database_engine.cache_clear()
+    assert stored(engine, source) == []
+
+
+def test_cleanup_loop_survives_a_failed_startup_purge() -> None:
+    import asyncio
+
+    from sqlalchemy.exc import OperationalError
+
+    from app.research.cleanup import cleanup_loop
+
+    calls: list[int] = []
+
+    def flaky_cleaner() -> None:
+        calls.append(1)
+        if len(calls) == 1:
+            raise OperationalError("SELECT 1", {}, Exception("banco indisponível"))
+
+    async def exercise() -> None:
+        task = asyncio.create_task(cleanup_loop(interval=0.01, cleaner=flaky_cleaner))
+        for _ in range(100):
+            if len(calls) >= 2:
+                break
+            await asyncio.sleep(0.01)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    asyncio.run(exercise())
+    assert len(calls) >= 2

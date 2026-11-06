@@ -76,8 +76,8 @@ def purge_signup_attempts(session: Session, now: datetime, window: timedelta) ->
 class PostgresSignupLimiter:
     """Janela deslizante por origem, persistida no PostgreSQL.
 
-    Recusas não são registradas: o Retry-After informado continua verdadeiro. A contagem
-    já filtra pela janela; as vencidas são apagadas só pelo purge horário (cleanup).
+    Recusas não são registradas: o Retry-After informado continua verdadeiro. Uma tentativa
+    aceita apaga as vencidas da própria origem; as das demais ficam com o purge do cleanup.
     """
 
     def check_and_record(self, session: Session, source_key: str, now: datetime, settings: SignupSettings) -> None:
@@ -86,6 +86,10 @@ class PostgresSignupLimiter:
             func.hashtextextended("signup:" + source_key, 0),
         )))
         window = settings.rate_limit_window
+        # Só a própria origem (sob o lock dela): nada de DELETE global por requisição.
+        session.execute(delete(SignupAttempt).where(
+            SignupAttempt.source_hash == source_key, SignupAttempt.attempted_at <= now - window,
+        ))
         recent = list(session.scalars(
             select(SignupAttempt.attempted_at)
             .where(SignupAttempt.source_hash == source_key, SignupAttempt.attempted_at > now - window)
