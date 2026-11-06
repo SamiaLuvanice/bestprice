@@ -86,3 +86,37 @@ it('recolhe o menu quando o foco sai do cabeçalho', async () => {
   within(screen.getByRole('region', { name: /Compre com.*mais clareza/i })).getByRole('link', { name: 'Começar com IA' }).focus()
   await waitFor(() => expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false'))
 })
+
+function visitWithSignup(path: string, signup: () => unknown) {
+  fakeApi((url, init) => {
+    if (url === '/api/auth/me') return reply(401, apiError('unauthenticated', 'Entre para continuar.'))
+    if (url === '/api/auth/signup' && (init?.method ?? 'GET') === 'GET') return signup()
+    return undefined
+  })
+  window.history.replaceState({}, '', path)
+  render(<App />)
+}
+
+// 0048/F4 (AC01/AC14): Criar conta acompanha Entrar só com o cadastro ligado.
+it('mostra Criar conta junto de Entrar quando o cadastro está ligado e leva ao cadastro', async () => {
+  visitWithSignup('/', () => reply(200, { enabled: true }))
+  const nav = screen.getByRole('navigation', { name: 'Navegação principal' })
+  const link = await within(nav).findByRole('link', { name: 'Criar conta' })
+  expect(link).toHaveAttribute('href', '/cadastro')
+  // Revisão R2: ordem do DOM = ordem visual do desktop (Criar conta antes de Entrar), também no Tab.
+  expect(within(nav).getByRole('link', { name: 'Entrar' }).compareDocumentPosition(link)).toBe(Node.DOCUMENT_POSITION_PRECEDING)
+})
+
+it.each([
+  ['desligado', () => reply(200, { enabled: false })],
+  ['com erro', () => reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))],
+  ['com falha de rede', () => Promise.reject(new TypeError('Failed to fetch'))],
+])('não mostra Criar conta com o cadastro %s', async (_case, signup) => {
+  const answered = deferred()
+  visitWithSignup('/', () => { answered.resolve(undefined); return signup() })
+  await answered.promise
+  // Dá tempo para a resposta virar estado antes de afirmar a ausência.
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  expect(screen.getByRole('link', { name: 'Entrar' })).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Criar conta' })).not.toBeInTheDocument()
+})

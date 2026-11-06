@@ -1,0 +1,6 @@
+repouso          : bg=rgb(57, 255, 20) opacity=1 color=rgb(0, 0, 0) hover=false transition=background-color, transform/0.15s, 0.15s
+hover            : bg=rgb(101, 255, 72) opacity=1 color=rgb(0, 0, 0) hover=true transition=background-color, transform/0.15s, 0.15s
+após 429, mouse em cima (imediato): bg=rgb(115, 252, 90) opacity=1 color=rgb(0, 0, 0) hover=false transition=background-color, transform/0.15s, 0.15s
+após 429, mouse em cima (+800ms): bg=rgb(57, 255, 20) opacity=1 color=rgb(0, 0, 0) hover=false transition=background-color, transform/0.15s, 0.15s
+após 429, mouse fora (+800ms)   : bg=rgb(57, 255, 20) opacity=1 color=rgb(0, 0, 0) hover=false transition=background-color, transform/0.15s, 0.15s
+alerta (15 min) = "Muitas tentativas de cadastro. Tente novamente em 15 minutos."

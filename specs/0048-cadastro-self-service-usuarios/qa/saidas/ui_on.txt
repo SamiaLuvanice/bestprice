@@ -1,0 +1,31 @@
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+AC01 landing: links Criar conta = 1
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+AC01 login: links Criar conta = 1
+AC01 clique no login -> /cadastro | título: Criar conta · BestPrice
+AC13 aviso de privacidade visível antes do envio = true
+AC05/AC06 local: erros = ["Informe um e-mail válido, como nome@exemplo.com.","A senha precisa ter pelo menos 12 caracteres.","As senhas não conferem."]
+  foco no 1º inválido = signup-email | aria-invalid e-mail = true | describedby = signup-email-error
+  valores preservados = a@b / 5 chars
+AC06 confirmação diferente: erros = ["As senhas não conferem."]
+POSTs até aqui (validação local não envia) = 0
+AC02 cadastro -> /app/dashboard
+AC02 /me no navegador = 200 {"id":"a19132dc-5dc9-42f3-8753-a1b397b38303","email":"maria@exemplo.com"}
+AC11 /dashboard = {"summary":{"tracked_count":0,"price_drop_count":0,"active_alert_count":0,"target_reached_count":0},"opportunities":[],"tracked_products":{"items":[],"next_cursor":null},"recent_updates":[]}
+AC01 /cadastro com sessão -> /app/dashboard
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+AC02 Começar com IA sem sessão -> /login?returnTo=%2Fapp%2Fassistant
+  link Criar conta no login = /cadastro?returnTo=%2Fapp%2Fassistant
+  cadastro aberto em /cadastro?returnTo=%2Fapp%2Fassistant
+AC02 cadastro com returnTo -> /app/assistant
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+  [console.error] Failed to load resource: the server responded with a status of 409 (Conflict)
+AC07 UI: erro e-mail = Já existe uma conta com este e-mail. Entrar
+  atalho Entrar -> /login?returnTo=%2Fapp%2Fassistant
+  e-mail preservado = ana@exemplo.com | senha = "" | confirmação = ""
+  URL continua /cadastro?returnTo=%2Fapp%2Fassistant
+POSTs desta execução = 3

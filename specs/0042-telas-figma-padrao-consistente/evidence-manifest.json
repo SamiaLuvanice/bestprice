@@ -1,0 +1,282 @@
+[
+  {
+    "phase": "before",
+    "file": "desktop-assistant.png",
+    "width": 1440,
+    "height": 960,
+    "sha256": "BBCAFFB3656EAACC15ECF791C60C004D974F2199A654054C73B0A7E07213AE1E"
+  },
+  {
+    "phase": "before",
+    "file": "desktop-comparator.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "95983ACEB8F03CFE98BBD98147F9A56355C5CAB3AA2E2D6137A19D7DBDFA8F7D"
+  },
+  {
+    "phase": "before",
+    "file": "desktop-conversation.png",
+    "width": 1440,
+    "height": 960,
+    "sha256": "F3F6EA5FAE6D28EE765A69113259F082BBABC6A0D9144E99AF5976498E2F0620"
+  },
+  {
+    "phase": "before",
+    "file": "desktop-history.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "5710BB7D9FF14BD00E24FF7FDF81BE7FF2636A717E6F2E09BD20E31F89047A7A"
+  },
+  {
+    "phase": "before",
+    "file": "desktop-landing.png",
+    "width": 1440,
+    "height": 2880,
+    "sha256": "369D7B5E70502D0EE499BB0BBF85460C20F34F00C878B85B4D4C77D64CE301A6"
+  },
+  {
+    "phase": "before",
+    "file": "desktop-login.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "085E3ABF9039FF090B68229FDB442C2BB6140EA8F5A73C369F43213EC9190908"
+  },
+  {
+    "phase": "before",
+    "file": "desktop-monitoring-empty.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "E0086D5B061C0EA36271772DCD0E4D76C777A5E700CB797E3DC0A528FA948675"
+  },
+  {
+    "phase": "before",
+    "file": "desktop-monitoring.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "F62076D0B53E1A0CCAC76EE33DEB0C5BCF530C85F253E599D353D9C65B1C890D"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-assistant.png",
+    "width": 390,
+    "height": 1190,
+    "sha256": "EFFF6EA7C4F94C4BE7A5D2AA707B9A40F5B77247D0E421DB63FE539356C2D03F"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-comparator.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "609B586EF7C9749FEB23EBC16D3AB3D9A726C48158AD04B232A88375B8196D26"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-conversation.png",
+    "width": 390,
+    "height": 1320,
+    "sha256": "6A00CBEAACB6EDDAE9DCD21A1726E41B7909FFAB3363531696A809DE26565A57"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-history.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "D8A5107DF6DD38E85599733915CC03BD8A702F8ECD40102411A86DA51F2C89C9"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-landing.png",
+    "width": 390,
+    "height": 2270,
+    "sha256": "77FBD9AB757EBEAB806D10BE17E9D2082F1BC4B851DB7B6627025A013E575C6C"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-login.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "229D22D91A6CF1DE3991D360752E57A23DEB789FBE6F173912AB206B4BE38406"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-monitoring-empty.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "15259A054F96EE035775498915A155296638E141A3BB71AE52C851F1EF4B61BC"
+  },
+  {
+    "phase": "before",
+    "file": "mobile-monitoring.png",
+    "width": 390,
+    "height": 1920,
+    "sha256": "126206AA487251370A13F828709B257AF08EA805B5ABDEF5CBC57DB43167C922"
+  },
+  {
+    "phase": "before",
+    "file": "system-assistant-states.png",
+    "width": 1440,
+    "height": 780,
+    "sha256": "BD94A2DB26999CC271959AE1EAD3E91BCB018E7CF1E371DC77C13832D0E9B7D1"
+  },
+  {
+    "phase": "before",
+    "file": "system-foundations.png",
+    "width": 1440,
+    "height": 1890,
+    "sha256": "EFF5FD4A5EB9B72FDB9C184349E78A3085D741353CD9C21C3D64E54E1133A020"
+  },
+  {
+    "phase": "before",
+    "file": "system-library.png",
+    "width": 1440,
+    "height": 1710,
+    "sha256": "6BD4259D6F865B448DA0A6B2CDEF11C6C0BA9BD23C3DA2498562C91FBF3C1B41"
+  },
+  {
+    "phase": "before",
+    "file": "system-monitoring-states.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "1605912B3E63E886462E5AD53C2B3AAB7FECEC88984FCFD31A39385E5D39004E"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-assistant.png",
+    "width": 1440,
+    "height": 960,
+    "sha256": "7561A9572361AED8CC3B31349E05988D53722E505C3DBDFD4501C04E713ABE3B"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-comparator.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "A9ACD2D2E37BEA793AA964F02A3EED7E9B8D28B26163C79E1A0074DF82CE5F10"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-conversation.png",
+    "width": 1440,
+    "height": 960,
+    "sha256": "003043144271FEB36864DAAC43B74E7D12D1F245EE78EFE1AB2AD4E0600A0304"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-history.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "ECACA1ACA493CB9DFB788B8B47764AC01219A0DB441ACE2CF8B0348CC8C5554E"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-landing.png",
+    "width": 1440,
+    "height": 2880,
+    "sha256": "A7ED9195ED26631CEC00E6FA5AE2CD2A8280359800EB46E70B8503659246A30A"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-login.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "B99DACF02C5BB5DA82B600B3D28E2AFA21B9FAE8CAB139571F431DEC2A6A3BE9"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-monitoring-empty.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "0636099D6D7EFFCAA4F88D7F0C5C05E7C0C5AFE458DA7F20C298A8E2FC19FABB"
+  },
+  {
+    "phase": "after",
+    "file": "desktop-monitoring.png",
+    "width": 1440,
+    "height": 1040,
+    "sha256": "B9B18DCEEABAADCF21C4EC344AB0D2B75C4C54A4A8AEBAA322E5DD9DFD3AB3BC"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-assistant.png",
+    "width": 390,
+    "height": 1190,
+    "sha256": "DD9758321777F6EBB4ED6BA03C3739F1CB6EDFCF6CBDD0F2D29EE9BC70F13C3E"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-comparator.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "86EDAE36761D2D847C09622D5EF319917EFF03930BB6B21B6D077A79AF44CF74"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-conversation.png",
+    "width": 390,
+    "height": 1320,
+    "sha256": "51E811C2CE897F03F4B2DB03FBA8E996C7B88EFAACA740E6AC8219E16A2E8DA1"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-history.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "5DC6355728B799B3382D3DE53F0F1D96DAD10F9D54BF8989BE0BD1348D337E52"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-landing.png",
+    "width": 390,
+    "height": 2270,
+    "sha256": "A384CF0563CBBC094C21ECF9B197A358036B0D122D7AA082C978E044CF1CCE64"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-login.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "C71D0AC97C214EC36D66BEAD8B389BCC272881325396CC55C9A0875E11FDB099"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-monitoring-empty.png",
+    "width": 390,
+    "height": 844,
+    "sha256": "4A6685AAD38B2B8E1A6F2B566B3B59C8F888DEA6B46E46EBE0A37905533FC9AF"
+  },
+  {
+    "phase": "after",
+    "file": "mobile-monitoring.png",
+    "width": 390,
+    "height": 1920,
+    "sha256": "AE2A3639B31CBFC1B597D6999C9AF7BC888ED62371B615FE52A29993B807C9F2"
+  },
+  {
+    "phase": "after",
+    "file": "system-assistant-states.png",
+    "width": 1440,
+    "height": 780,
+    "sha256": "06E6815C12E5FD6322CB941D8A609A90F967586DC11C553D58B5A05D152777C7"
+  },
+  {
+    "phase": "after",
+    "file": "system-foundations.png",
+    "width": 1440,
+    "height": 1890,
+    "sha256": "521C3A7D89068E783CEEF26B7AEC8AF82BD1D879FBEFBAE5B3835F96FCD7A034"
+  },
+  {
+    "phase": "after",
+    "file": "system-library.png",
+    "width": 1440,
+    "height": 1710,
+    "sha256": "67A12EC250B3D53510A7CF098AC46A3665C3C4B3BC1C2D808239A2FBAD7205F7"
+  },
+  {
+    "phase": "after",
+    "file": "system-monitoring-states.png",
+    "width": 1440,
+    "height": 900,
+    "sha256": "1605912B3E63E886462E5AD53C2B3AAB7FECEC88984FCFD31A39385E5D39004E"
+  }
+]

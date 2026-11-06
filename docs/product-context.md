@@ -20,8 +20,9 @@ produtos monitorados; os links são referências, sem leitura automática de pá
 A entrada por URL continua sendo a experiência de acompanhamento automático.
 
 A implementação local tem dashboard, assistente textual, comparador e histórico,
-com contas já provisionadas. Salvar e editar comparação independe da IA; analisar
-ou conversar exige configuração explícita. A IA fica desativada por padrão. O plano
+com contas provisionadas por comando ou criadas pelo cadastro self-service da spec
+0048, que fica desligado por padrão até a integração do Mercado Livre funcionar.
+Salvar e editar comparação independe da IA; analisar ou conversar exige configuração explícita. A IA fica desativada por padrão. O plano
 fixa cota gratuita, sem fallback pago e com limites locais; não comprova a
 configuração de cobrança da conta operadora. A 0034 escolheu `gemini-3.5-flash-lite`;
 a spec 0047 trocou o modelo de todo o Assistente (chat e comparação) para

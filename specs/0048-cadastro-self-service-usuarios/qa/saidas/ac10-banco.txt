@@ -1,0 +1,31 @@
+15:58:11
+ id |                           source_hash                            |         attempted_at
+----+------------------------------------------------------------------+-------------------------------
+  6 | 54198f8ae01850402d1e85a9ee66a4cd5ab52b81b2244be680f5af04f4b96c30 | 2026-11-06 12:57:30.874359-03
+  7 | 54198f8ae01850402d1e85a9ee66a4cd5ab52b81b2244be680f5af04f4b96c30 | 2026-11-06 12:57:46.483724-03
+  8 | 54198f8ae01850402d1e85a9ee66a4cd5ab52b81b2244be680f5af04f4b96c30 | 2026-11-06 12:57:46.611707-03
+  9 | 54198f8ae01850402d1e85a9ee66a4cd5ab52b81b2244be680f5af04f4b96c30 | 2026-11-06 12:57:46.727741-03
+ 10 | 54198f8ae01850402d1e85a9ee66a4cd5ab52b81b2244be680f5af04f4b96c30 | 2026-11-06 12:57:46.741956-03
+(5 rows)
+
+HMAC esperado (segredo de teste, '127.0.0.1') = 54198f8ae01850402d1e85a9ee66a4cd5ab52b81b2244be680f5af04f4b96c30
+SHA-256 sem segredo de '127.0.0.1'   = 12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0
+ hmac_ok | ip_ou_sha_puro | total
+---------+----------------+-------
+       5 |              0 |     5
+(1 row)
+
+ column_name  |        data_type
+--------------+--------------------------
+ id           | bigint
+ source_hash  | character
+ attempted_at | timestamp with time zone
+(3 rows)
+
+       email       | prefixo | tam | contem_senha
+-------------------+---------+-----+--------------
+ ops@exemplo.com   | scrypt$ | 168 | f
+ ana@exemplo.com   | scrypt$ | 168 | f
+ sexto@exemplo.com | scrypt$ | 168 | f
+ simul@exemplo.com | scrypt$ | 168 | f
+(4 rows)

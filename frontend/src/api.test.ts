@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { api, ApiFailure } from './api'
-import { notificationFixture, reply, trackedFixture } from './test/fakeApi'
+import { apiError, notificationFixture, reply, trackedFixture } from './test/fakeApi'
 
 afterEach(() => { vi.unstubAllGlobals() })
 
@@ -104,5 +104,88 @@ describe('notificações não lidas', () => {
     const page = await api.unreadNotifications()
     expect(page.items).toHaveLength(1)
     expect(mockFetch).toHaveBeenCalledWith('/api/notifications?unread_only=true&limit=100', expect.objectContaining({ credentials: 'same-origin' }))
+  })
+})
+
+describe('campos do erro (0048)', () => {
+  it('expõe os campos válidos do envelope de erro', async () => {
+    stubFetch(reply(422, apiError('validation_error', 'Confira os dados informados.', {
+      fields: [{ field: 'email', code: 'email_invalid', message: 'Informe um e-mail válido, como nome@exemplo.com.' }],
+    })))
+    const failure = await failureOf(api.signup('a@b', 'uma-senha-longa'))
+    expect(failure.fields).toEqual([{ field: 'email', code: 'email_invalid', message: 'Informe um e-mail válido, como nome@exemplo.com.' }])
+  })
+
+  it.each([
+    ['ausente', { error: { code: 'validation_error', message: 'Confira os dados informados.' } }],
+    ['fora de lista', { error: { code: 'validation_error', message: 'Confira os dados informados.', fields: 'email' } }],
+    ['com item malformado', { error: { code: 'validation_error', message: 'Confira os dados informados.', fields: [{ field: 'email', code: 1, message: 'x' }] } }],
+  ])('usa lista vazia quando fields está %s', async (_case, body) => {
+    stubFetch(reply(422, body))
+    const failure = await failureOf(api.signup('a@b', 'uma-senha-longa'))
+    expect(failure.code).toBe('validation_error')
+    expect(failure.fields).toEqual([])
+  })
+})
+
+describe('disponibilidade do cadastro (0048)', () => {
+  it.each([true, false])('aceita {enabled: %s} da rota pública', async (enabled) => {
+    const mockFetch = stubFetch(reply(200, { enabled }))
+    expect(await api.signupStatus()).toEqual({ enabled })
+    expect(mockFetch).toHaveBeenCalledWith('/api/auth/signup', expect.objectContaining({ credentials: 'same-origin' }))
+  })
+
+  it.each([[{}], [{ enabled: 'true' }], [null], [{ enabled: 1 }]])('rejeita corpo fora do contrato %j', async (body) => {
+    stubFetch(reply(200, body))
+    expect((await failureOf(api.signupStatus())).code).toBe('invalid_response')
+  })
+})
+
+describe('cadastro (0048)', () => {
+  it('envia e-mail e senha em JSON e aceita 201 com o usuário', async () => {
+    const mockFetch = stubFetch(reply(201, { id: 'user-9', email: 'ana@exemplo.com' }))
+    expect(await api.signup(' Ana@Exemplo.com ', 'uma-senha-longa')).toEqual({ id: 'user-9', email: 'ana@exemplo.com' })
+    expect(mockFetch).toHaveBeenCalledWith('/api/auth/signup', expect.objectContaining({
+      method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: ' Ana@Exemplo.com ', password: 'uma-senha-longa' }),
+    }))
+  })
+
+  it.each([
+    ['200 em vez de 201', reply(200, { id: 'user-9', email: 'ana@exemplo.com' })],
+    ['corpo sem e-mail', reply(201, { id: 'user-9' })],
+    ['corpo vazio', reply(201, null)],
+  ])('não considera sucesso: %s', async (_case, response) => {
+    stubFetch(response)
+    const failure = await failureOf(api.signup('ana@exemplo.com', 'uma-senha-longa'))
+    expect(failure.code).toBe('invalid_response')
+  })
+
+  it('preserva código, campos e mensagem do 409', async () => {
+    stubFetch(reply(409, apiError('email_already_registered', 'Já existe uma conta com este e-mail.', {
+      fields: [{ field: 'email', code: 'email_already_registered', message: 'Já existe uma conta com este e-mail.' }],
+    })))
+    const failure = await failureOf(api.signup('ana@exemplo.com', 'uma-senha-longa'))
+    expect(failure.status).toBe(409)
+    expect(failure.code).toBe('email_already_registered')
+    expect(failure.fields.map((item) => item.field)).toEqual(['email'])
+  })
+
+  it('preserva o tempo de espera do 429 e o código do 404', async () => {
+    stubFetch(reply(429, apiError('signup_rate_limited', 'Muitas tentativas de cadastro. Tente novamente mais tarde.', { retry_after_seconds: 1800 })))
+    const limited = await failureOf(api.signup('ana@exemplo.com', 'uma-senha-longa'))
+    expect(limited.status).toBe(429)
+    expect(limited.retryAfterSeconds).toBe(1800)
+    stubFetch(reply(404, apiError('signup_unavailable', 'Cadastro indisponível.')))
+    const unavailable = await failureOf(api.signup('ana@exemplo.com', 'uma-senha-longa'))
+    expect(unavailable.status).toBe(404)
+    expect(unavailable.code).toBe('signup_unavailable')
+  })
+
+  it('traduz falha de rede no cadastro', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))))
+    const failure = await failureOf(api.signup('ana@exemplo.com', 'uma-senha-longa'))
+    expect(failure.code).toBe('network_error')
+    expect(failure.fields).toEqual([])
   })
 })

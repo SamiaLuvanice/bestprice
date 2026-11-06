@@ -172,6 +172,27 @@ Stage a partir de uma feature branch ou presumir que um refresh OAuth é idempot
 spec [0032](../specs/0032-sonda-mercado-livre-github-actions/spec.md),
 `.github/workflows/validate-mercadolivre-stage.yml`.
 
+## 2026-10-23 — Distinguir anúncio selecionado do ID do catálogo
+
+**Contexto:** um link de produto do Mercado Livre identificava o catálogo no
+caminho `/p/MLB…` e repetia o ID da publicação selecionada em
+`pdp_filters=item_id:MLB…|item_id:MLB…`. O parser aceitava somente links diretos,
+embora o filtro identificasse sem ambiguidade um anúncio.
+
+**Princípio:** use o ID explícito da publicação selecionada, nunca o ID do
+catálogo por coincidência de prefixo. Aceite repetições iguais como uma seleção;
+recuse IDs conflitantes, dados malformados e uma seleção igual ao ID do catálogo
+antes de qualquer chamada externa.
+Continue analisando a URL localmente e consulte somente o host oficial fixo pelo
+ID validado.
+
+**Anti-pattern:** extrair o primeiro `MLB…` de uma URL de catálogo ou requisitar a
+URL recebida para descobrir qual anúncio ela representa.
+
+**Referências:** [Issue #180](https://github.com/SamiaLuvanice/bestprice/issues/180),
+[spec 0031](../specs/0031-link-catalogo-publicacao/spec.md) e
+`backend/app/marketplace/url.py`.
+
 ## 2026-10-22 — Conferir o ativo original antes de corrigir seu enquadramento
 
 **Contexto:** na revisão da spec 0030, o banner panorâmico de 1600 × 548 px

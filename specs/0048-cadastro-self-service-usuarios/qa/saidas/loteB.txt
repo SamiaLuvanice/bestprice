@@ -1,0 +1,36 @@
+15:57:46
+== AC05 e-mail com 321 caracteres
+HTTP/1.1 422 Unprocessable Content
+content-length: 241
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_too_long","message":"O e-mail pode ter no máximo 320 caracteres."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== Content-Type text/plain (CSRF por formulário)
+HTTP/1.1 422 Unprocessable Content
+content-length: 222
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"body","code":"json_required","message":"Valor inválido ou ausente."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== AC08 dois envios simultâneos: Simul@Exemplo.com e simul@exemplo.com
+Simul@Exemplo.com -> HTTP 201
+simul@exemplo.com -> HTTP 409
+Simul@Exemplo.com: {"error":{"code":"email_already_registered","message":"Já existe uma conta com este e-mail.","fields":[{"field":"email","code":"email_already_registered","message":"Já existe uma conta com este e-mail."}],"tracked_product_id":null,"retry_after_seconds":null}}
+  set-cookie: 1
+simul@exemplo.com: {"error":{"code":"email_already_registered","message":"Já existe uma conta com este e-mail.","fields":[{"field":"email","code":"email_already_registered","message":"Já existe uma conta com este e-mail."}],"tracked_product_id":null,"retry_after_seconds":null}}
+  set-cookie: 1
+       email       | count
+-------------------+-------
+ simul@exemplo.com |     1
+(1 row)
+
+ sessoes_da_conta_simul
+------------------------
+                      1
+(1 row)
+
+ users_com_321
+---------------
+             0
+(1 row)

@@ -1,0 +1,26 @@
+15:56:47
+== AC09 após Retry-After: cadastro válido
+HTTP/1.1 429 Too Many Requests
+retry-after: 42
+content-length: 174
+content-type: application/json
+
+{"error":{"code":"signup_rate_limited","message":"Muitas tentativas de cadastro. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":42}}
+
+ attempts_na_tabela
+--------------------
+                  5
+(1 row)
+
+15:57:30
+== AC09 após Retry-After (42 s): cadastro válido
+HTTP/1.1 201 Created
+content-length: 73
+content-type: application/json
+
+{"id":"43af8fa4-e1d5-4d9f-9e36-cb9b4775bb9e","email":"sexto@exemplo.com"}
+
+ attempts_na_tabela
+--------------------
+                  1
+(1 row)

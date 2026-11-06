@@ -25,6 +25,7 @@ PUBLIC_TABLES = {
     "research_comparison_products",
     "research_ai_requests",
     "research_ai_usage",
+    "signup_attempts",
 }
 
 

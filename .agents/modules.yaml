@@ -54,6 +54,7 @@ profiles:
       - ui-ux-pro-max
       - huashu-design
       - impeccable
+      - shadcn
 integrations:
   github:
     documentation: docs/github-workflow.md
