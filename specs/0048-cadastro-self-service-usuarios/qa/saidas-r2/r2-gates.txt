@@ -1,0 +1,26 @@
+HEAD e5efe96
+== ruff
+All checks passed!
+exit=0
+== pytest
+=========================== short test summary info ===========================
+SKIPPED [2] tests\test_stage_start.py:22: POSIX startup script runs in the Linux image
+446 passed, 2 skipped, 1 warning in 55.57s
+exit=0
+== npm run lint
+> eslint .
+
+exit=0
+== npm test
+ Test Files  38 passed (38)
+      Tests  530 passed (530)
+exit=0
+== npm run build
+✓ built in 1.17s
+exit=0
+== playwright signup.spec (base 5148)
+  ✓  71 [viewport-1280] › tests\visual\signup.spec.ts:152:3 › cadastro em todas as larguras › sem rolagem horizontal, alvos de 44 px, foco visível e axe sem violações (10.1s)
+
+  48 skipped
+  24 passed (50.1s)
+exit=0

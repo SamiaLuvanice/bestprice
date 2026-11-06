@@ -1,0 +1,7 @@
+16:01:54
+== AC10 campo extra + senha numérica (Pydantic) não ecoa valores
+HTTP/1.1 422 Unprocessable Content
+content-length: 307
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"password","code":"string_type","message":"Valor inválido ou ausente."},{"field":"extra","code":"extra_forbidden","message":"Valor inválido ou ausente."}],"tracked_product_id":null,"retry_after_seconds":null}}

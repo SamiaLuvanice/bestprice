@@ -1,0 +1,18 @@
+log uvicorn rodada 2 (debug): 99 linhas
+marcanul                   uvicorn=0 pg=0
+marcafs                    uvicorn=0 pg=0
+marcabom                   uvicorn=0 pg=0
+marcanbsp                  uvicorn=0 pg=0
+marcadot                   uvicorn=0 pg=0
+senha-marcador             uvicorn=0 pg=0
+senha-da-rita-original-1   uvicorn=0 pg=0
+senha-do-invasor-9999      uvicorn=0 pg=0
+senha-r2-sexto-123         uvicorn=0 pg=0
+senha-qualquer-envio       uvicorn=0 pg=0
+senha-qualquer-limite      uvicorn=0 pg=0
+senha-de-rede              uvicorn=0 pg=0
+qa-local-hash-secret-0048  uvicorn=0 pg=0
+qa-local-test-pw           uvicorn=0 pg=0
+RecursionError             uvicorn=0 pg=0
+Traceback                  uvicorn=0 pg=0
+status 5xx no access log: 0

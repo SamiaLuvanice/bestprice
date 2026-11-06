@@ -1,0 +1,12 @@
+envio 1: HTTP 409 retry-after=-
+envio 2: HTTP 409 retry-after=-
+envio 3: HTTP 429 retry-after=31
+AC09 UI alerta = Muitas tentativas de cadastro. Tente novamente em 1 minuto.
+  e-mail preservado = ana@exemplo.com
+REDE POST abortado: alerta = Não foi possível criar a conta agora. Tente novamente. | e-mail = rede@exemplo.com | senha = ""
+REDE GET: links Criar conta no login = 0
+REDE GET em /cadastro: alerta = Não foi possível verificar o cadastro agora. Tente novamente.
+  após Tentar novamente: formulário visível
+TECLADO ordem do Tab = signup-email > signup-password > Mostrar senha > signup-confirmation > Mostrar confirmação da senha > Criar conta > Entrar > Voltar para o início
+TECLADO Enter com campos vazios: foco = signup-email | erros = ["Informe seu e-mail.","A senha precisa ter pelo menos 12 caracteres."]
+A11Y erros de campo: role/aria-live = [{"id":"signup-email-error","role":null,"live":null},{"id":"signup-password-error","role":null,"live":null}]

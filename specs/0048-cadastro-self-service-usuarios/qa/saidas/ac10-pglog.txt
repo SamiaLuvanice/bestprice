@@ -1,0 +1,8 @@
+pg.log linhas: 60
+senhas, hashes ou IP 127.0.0.1 no log do PostgreSQL: 2
+2026-11-06 12:56:29.555 -03 [14952] ERROR:  duplicate key value violates unique constraint "users_email_key"
+2026-11-06 12:56:29.555 -03 [14952] DETAIL:  Key (email)=(ana@exemplo.com) already exists.
+2026-11-06 12:57:46.834 -03 [14952] ERROR:  duplicate key value violates unique constraint "users_email_key"
+2026-11-06 12:57:46.834 -03 [14952] DETAIL:  Key (email)=(simul@exemplo.com) already exists.
+2026-11-06 12:58:53.768 -03 [32052] ERROR:  duplicate key value violates unique constraint "users_email_key"
+2026-11-06 12:58:53.768 -03 [32052] DETAIL:  Key (email)=(ana@exemplo.com) already exists.

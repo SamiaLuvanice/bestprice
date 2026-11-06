@@ -1,0 +1,13 @@
+== SIGNUP_ENABLED=true, TRUSTED_PROXY_SECRET == SIGNUP_SOURCE_HASH_SECRET
+INFO:     Waiting for application startup.
+    raise RuntimeError("TRUSTED_PROXY_SECRET e SIGNUP_SOURCE_HASH_SECRET devem ser diferentes")
+RuntimeError: TRUSTED_PROXY_SECRET e SIGNUP_SOURCE_HASH_SECRET devem ser diferentes
+ERROR:    Application startup failed. Exiting.
+exit=3
+== SIGNUP_ENABLED=false, TRUSTED_PROXY_SECRET == SIGNUP_SOURCE_HASH_SECRET
+INFO:     Waiting for application startup.
+    raise RuntimeError("TRUSTED_PROXY_SECRET e SIGNUP_SOURCE_HASH_SECRET devem ser diferentes")
+RuntimeError: TRUSTED_PROXY_SECRET e SIGNUP_SOURCE_HASH_SECRET devem ser diferentes
+ERROR:    Application startup failed. Exiting.
+exit=3
+ocorrências do valor do segredo na saída bruta (traceback completo): 0

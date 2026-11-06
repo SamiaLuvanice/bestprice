@@ -1,0 +1,56 @@
+16:57:28
+== JSON aninhado 100 000 níveis no campo email
+HTTP/1.1 422 Unprocessable Content
+content-length: 222
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"body","code":"json_required","message":"Valor inválido ou ausente."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== JSON aninhado 1 000 000 níveis (corpo inteiro)
+HTTP/1.1 100 Continue
+
+HTTP/1.1 422 Unprocessable Content
+content-length: 222
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"body","code":"json_required","message":"Valor inválido ou ausente."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== AC02 regressão: cadastro ' Rita@Exemplo.com '
+HTTP/1.1 201 Created
+content-length: 72
+content-type: application/json
+set-cookie: bestprice_session=<redigido>; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+
+{"id":"0f6ce776-b6b2-4d00-b392-ec5204e6dac6","email":"rita@exemplo.com"}
+
+/me com o cookie do cadastro: {"id":"0f6ce776-b6b2-4d00-b392-ec5204e6dac6","email":"rita@exemplo.com"}
+== AC07 regressão: duplicado 'RITA@exemplo.com'
+HTTP/1.1 409 Conflict
+content-length: 261
+content-type: application/json
+
+{"error":{"code":"email_already_registered","message":"Já existe uma conta com este e-mail.","fields":[{"field":"email","code":"email_already_registered","message":"Já existe uma conta com este e-mail."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+cookies no jar do duplicado: 0
+hash da rita INALTERADO (prefixo scrypt$)
+login senha do duplicado: 401 | login senha original: 200
+== 5º envio (a@b)
+HTTP/1.1 422 Unprocessable Content
+content-length: 245
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_invalid","message":"Informe um e-mail válido, como nome@exemplo.com."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== AC09 6º envio válido -> 429
+HTTP/1.1 429 Too Many Requests
+retry-after: 55
+content-length: 174
+content-type: application/json
+
+{"error":{"code":"signup_rate_limited","message":"Muitas tentativas de cadastro. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":55}}
+
+tentativas na tabela: 10
+16:58:31
+== AC09 após Retry-After: cadastro válido
+HTTP/1.1 201 Created
+{"id":"928b122b-1ba7-4adf-8a16-4af1d4340e89","email":"r2-sexto@exemplo.com"}

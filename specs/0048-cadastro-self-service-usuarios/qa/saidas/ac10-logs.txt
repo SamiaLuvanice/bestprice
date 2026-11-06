@@ -1,0 +1,32 @@
+linhas no log: 721
+senha-da-ana-original-1      0
+senha-do-invasor-9999        0
+senha-valida-123456          0
+curta-11ch                   0
+senha-simultanea             0
+senha-concorrente-a-1        0
+senha-concorrente-b-2        0
+senha-da-maria-123           0
+senha-do-joao-12345          0
+outra-senha-qualquer-1       0
+tentativa-senha              0
+senha-de-rede-12345          0
+senha-sem-banco-123          0
+987654321098765              0
+senha-no-campo-extra-xyz     0
+aaaaaaaaaaaaaaaaaaaaaaaa     0
+qa-local-hash-secret-0048    0
+qa-local-test-pw             0
+54198f8ae0185                0
+ocorrências de 127.0.0.1 (peer no access log do uvicorn): 105
+linhas de log que não são access log nem traceback:
+Verificação do banco falhou (ConnectionTimeout)
+ERROR:    Exception in ASGI application
+During handling of the above exception, another exception occurred:
+psycopg.errors.ConnectionTimeout: connection timeout expired
+The above exception was the direct cause of the following exception:
+(Background on this error at: https://sqlalche.me/e/21/e3q8)
+ERROR:    Exception in ASGI application
+psycopg.errors.ConnectionTimeout: connection timeout expired
+The above exception was the direct cause of the following exception:
+(Background on this error at: https://sqlalche.me/e/21/e3q8)

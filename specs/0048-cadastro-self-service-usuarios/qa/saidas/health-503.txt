@@ -1,0 +1,33 @@
+== health com banco no ar
+HTTP/1.1 200 OK
+{"status":"ok","database":"ok"}
+waiting for server to shut down..... done
+server stopped
+== health com PostgreSQL parado
+HTTP/1.1 503 Service Unavailable
+content-length: 49
+content-type: application/json
+
+{"status":"unavailable","database":"unavailable"}
+
+== GET signup com banco parado
+HTTP/1.1 200 OK
+{"enabled":true}
+== POST signup com banco parado
+HTTP/1.1 500 Internal Server Error
+content-length: 21
+content-type: text/plain; charset=utf-8
+
+Internal Server Error
+
+== POST login com banco parado (comparação)
+HTTP/1.1 500 Internal Server Error
+content-type: text/plain; charset=utf-8
+Internal Server Error
+UI com banco parado: alerta = Não foi possível criar a conta agora. Tente novamente. | URL = http://127.0.0.1:5148/cadastro
+== health após religar PostgreSQL
+HTTP/1.1 200 OK
+{"status":"ok","database":"ok"}
+== POST signup após religar
+HTTP/1.1 201 Created
+{"id":"6370c6a8-9e20-4ac8-9aa0-e0f9c509a819","email":"semdb@exemplo.com"}
