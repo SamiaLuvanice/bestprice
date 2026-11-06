@@ -269,3 +269,85 @@ it.each([
   await new Promise((resolve) => setTimeout(resolve, 20))
   expect(screen.queryByRole('link', { name: 'Criar conta' })).not.toBeInTheDocument()
 })
+
+// 0048/F5: rota do cadastro.
+it('leva quem já tem sessão de /cadastro ao painel', async () => {
+  signupApi(() => reply(200, { enabled: true }), (url) => url === '/api/auth/me' ? reply(200, sessionUser) : undefined)
+  visit('/cadastro?returnTo=%2Fapp%2Fassistant')
+  await waitFor(() => expect(window.location.pathname).toBe('/app/dashboard'))
+  expect(screen.queryByRole('heading', { name: 'Criar sua conta' })).not.toBeInTheDocument()
+})
+
+it.each([
+  ['/cadastro', '/login', null],
+  ['/cadastro?returnTo=%2Fapp%2Fassistant', '/login', '/app/assistant'],
+  ['/cadastro?returnTo=%2F%2Fevil.example', '/login', null],
+])('com o cadastro desligado, %s leva ao login preservando o returnTo válido', async (path, pathname, returnTo) => {
+  signupApi(() => reply(200, { enabled: false }))
+  visit(path)
+  expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
+  expect(window.location.pathname).toBe(pathname)
+  expect(new URLSearchParams(window.location.search).get('returnTo')).toBe(returnTo)
+  expect(screen.queryByRole('heading', { name: 'Criar sua conta' })).not.toBeInTheDocument()
+})
+
+it('com o cadastro ligado mostra o formulário sem rodapé e com título próprio', async () => {
+  signupApi(() => reply(200, { enabled: true }))
+  visit('/cadastro')
+  expect(await screen.findByRole('heading', { name: 'Criar sua conta', level: 1 })).toBeInTheDocument()
+  await waitFor(() => expect(document.title).toBe('Criar conta · BestPrice'))
+  expect(window.location.pathname).toBe('/cadastro')
+  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+  expect(screen.queryByText('Este endereço saiu do radar.')).not.toBeInTheDocument()
+})
+
+it('mostra carregando enquanto consulta o cadastro e alerta com nova tentativa quando falha', async () => {
+  const first = deferred()
+  let attempt = 0
+  signupApi(() => ++attempt === 1 ? first.promise : reply(200, { enabled: true }))
+  visit('/cadastro')
+  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/^Carregando…$/))
+  first.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
+  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível verificar o cadastro agora.')
+  expect(window.location.pathname).toBe('/cadastro')
+  fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
+  expect(await screen.findByRole('heading', { name: 'Criar sua conta', level: 1 })).toBeInTheDocument()
+})
+
+// 0048/F6 (AC02): o cadastro inicia a sessão e segue ao destino, sem novo login.
+function fillSignup(email: string, password: string) {
+  fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: email } })
+  fireEvent.change(screen.getByLabelText('Senha'), { target: { value: password } })
+  fireEvent.change(screen.getByLabelText('Confirmar senha'), { target: { value: password } })
+}
+
+it.each([
+  ['/cadastro', '/app/dashboard'],
+  ['/cadastro?returnTo=%2Fapp%2Fassistant', '/app/assistant'],
+  ['/cadastro?returnTo=%2F%2Fevil.example', '/app/dashboard'],
+])('depois do cadastro em %s segue para %s sem chamar o login', async (path, destination) => {
+  let signedUp = false
+  const mockFetch = signupApi(() => reply(200, { enabled: true }), (url, init) => {
+    if (url === '/api/auth/signup' && init?.method === 'POST') { signedUp = true; return reply(201, { id: 'user-9', email: 'ana@exemplo.com' }) }
+    if (url === '/api/auth/me' && signedUp) return reply(200, { id: 'user-9', email: 'ana@exemplo.com' })
+    return undefined
+  })
+  visit(path)
+  await screen.findByRole('heading', { name: 'Criar sua conta', level: 1 })
+  fillSignup('ana@exemplo.com', 'uma-senha-longa')
+  fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
+  await waitFor(() => expect(window.location.pathname).toBe(destination))
+  expect(callsTo(mockFetch, '/api/auth/login', 'POST')).toHaveLength(0)
+  expect(callsTo(mockFetch, '/api/auth/signup', 'POST')).toHaveLength(1)
+})
+
+it('do login com returnTo, o atalho Criar conta leva ao cadastro e volta com Entrar preservando o destino', async () => {
+  signupApi(() => reply(200, { enabled: true }))
+  visit('/login?returnTo=%2Fapp%2Fassistant')
+  fireEvent.click(await screen.findByRole('link', { name: 'Criar conta' }))
+  expect(await screen.findByRole('heading', { name: 'Criar sua conta', level: 1 })).toBeInTheDocument()
+  expect(window.location.search).toBe('?returnTo=%2Fapp%2Fassistant')
+  fireEvent.click(screen.getByRole('link', { name: 'Entrar' }))
+  expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
+  expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/app/assistant')
+})

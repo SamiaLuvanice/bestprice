@@ -71,3 +71,51 @@ textos vêm do plano e do brief `design/figma-brief.md` (provisórios até o Fig
   PostgreSQL rodava na mesma máquina. Os mesmos arquivos isolados: `npx vitest run
   src/App.test.tsx src/dashboard/detail.test.tsx src/dashboard/refresh-row.test.tsx` →
   `Tests 69 passed (69)`. A suíte final é repetida nos gates.
+
+## F5 — rota `/cadastro`
+
+- Red (com um `SignupForm` mínimo que só mostra o título): `npx vitest run src/App.test.tsx -t
+  "cadastro"` → `Tests 6 failed | 7 passed | 23 skipped (36)`: `expected '/cadastro' to be
+  '/app/dashboard'`, `Unable to find role="heading" and name "Entrar na sua conta"` (desligado
+  não levava ao login), `Unable to find role="heading" and name "Criar sua conta"` (a rota caía
+  em "não encontrada"). A asserção de carregamento foi ajustada para não casar com o status da
+  sessão ("Carregando sua conta…").
+- Green: `npx vitest run src/App.test.tsx` → `Tests 36 passed (36)`.
+- Cobertura: com sessão → `/app/dashboard` (AC01); desligado → `/login` com `returnTo` válido
+  preservado e inválido descartado, sem formulário (AC14); ligado → formulário, título "Criar
+  conta · BestPrice", sem rodapé e sem a página "não encontrada"; `loading` → status
+  "Carregando…"; erro → alerta "Não foi possível verificar o cadastro agora. Tente novamente." e
+  "Tentar novamente" que consulta de novo e mostra o formulário.
+- `/cadastro` entra na lista de caminhos conhecidos e no efeito que preserva `postLoginTarget`.
+
+## F6 — formulário (`auth/SignupForm.tsx`)
+
+- Red: `npx vitest run src/auth/SignupForm.test.tsx` → `Tests 18 failed (18)`, 12 por `Unable to
+  find a label with the text of: E-mail` e o restante pela ausência dos controles (o componente
+  só tinha o título).
+- Primeiro Green: `Tests 10 failed | 8 passed (18)`, todos em `toHaveValue(' Ana@Exemplo.com ')`.
+  Causa no teste, não no componente: `input type="email"` sanitiza o valor e remove espaços das
+  pontas (jsdom segue a especificação HTML). O teste passou a digitar `Ana@Exemplo.com`.
+- Green: mesmo comando → `Tests 18 passed (18)`.
+- Cobertura: rótulos visíveis, `autocomplete` (`email`, `new-password` ×2), dica ligada por
+  `aria-describedby`, aviso de privacidade antes do botão, `novalidate`, "Já tem uma conta?
+  Entrar" e "Voltar para o início"; alternâncias de senha independentes; erros locais por
+  campo com `aria-invalid`/`aria-describedby`, foco no primeiro inválido, sem envio e sem apagar
+  nada; sucesso entrega o usuário do 201 ao App; 422 no campo certo (texto local pelo `code`,
+  mensagem do servidor para código desconhecido); 409 no e-mail com atalho "Entrar"; 429 com
+  30 min, 2 min (61 s), "1 minuto" (60 s e 1 s) e mensagem do servidor sem
+  `retry_after_seconds`; 404 `signup_unavailable`, rede, 500 e resposta inválida no alerta único;
+  e-mail preservado e senhas limpas após recusa do servidor; "Criando conta…" com `aria-busy` e
+  `aria-disabled`, um único POST com clique e submit repetidos; Tab percorre e-mail → senha →
+  mostrar senha → confirmação → mostrar confirmação → botão, e Enter envia.
+- Integração no App (AC02): `npx vitest run src/App.test.tsx -t "cadastro"` → `Tests 17 passed |
+  23 skipped (40)`: `/cadastro` → `/app/dashboard`, `returnTo=/app/assistant` → `/app/assistant`,
+  `returnTo` inválido → `/app/dashboard`, sem nenhum `POST /api/auth/login`; ida e volta login ↔
+  cadastro preservando `returnTo`. Esses testes passaram na primeira execução porque `signedUp`
+  entrou no Green de F5. Prova de que detectam o defeito: mutação temporária em `App.tsx`
+  (destino fixo `/app/dashboard`) → `npx vitest run src/App.test.tsx -t "depois do cadastro"` →
+  `1 failed | 2 passed`, `expected '/app/dashboard' to be '/app/assistant'`; mutação revertida.
+- `npx eslint .` sem problemas; `npx tsc -b` sem erros.
+- Observação de processo: o pre-commit de commits do agente backend guarda e restaura arquivos não
+  preparados da worktree compartilhada. Durante essa janela meus arquivos voltam à versão do
+  último commit; uma das rodadas da suíte de F4 (210 falhas) coincidiu com isso.
