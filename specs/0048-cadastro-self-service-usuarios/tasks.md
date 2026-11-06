@@ -151,7 +151,7 @@ comando e contagem, em `backend-evidence.md` ou `frontend-evidence.md`.
 - [x] Q1 — QA (`qa`) percorrendo AC01–AC14 com evidência; AC13 só depois de F9.
 - [ ] G1 — `quality-gates` completo (backend e frontend) na ponta final; `verification.md` e
       `docs/PROGRESS.md` atualizados com os resultados reais.
-- [ ] S1 — `doc-sync-onboarding` por último: `docs/apps/backend.md` (rotas e "não há cadastro
+- [x] S1 — `doc-sync-onboarding` por último: `docs/apps/backend.md` (rotas e "não há cadastro
       público"), `frontend.md`, `infraestrutura.md` (variáveis, segredo do proxy, não
       ativar `--proxy-headers`), `database.md`, `architecture.md`, `index.md`,
       `product-context.md`, `AGENTS.md`/`CLAUDE.md` conferidos.
