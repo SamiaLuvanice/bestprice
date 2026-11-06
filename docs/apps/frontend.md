@@ -92,7 +92,7 @@ criar ou alterar HTML/CSS também exige ler
 publica as regras automatizáveis obrigatórias (toque de 44 × 44 px, HTML semântico,
 contraste AA/AAA, tokens de cor, `prefers-reduced-motion` e ausência de rolagem
 horizontal) e os comandos das skills de design instaladas (`ui-ux-pro-max`,
-`huashu-design` e `impeccable`); suas sugestões respeitam a referência Figma
+`huashu-design`, `impeccable` e `shadcn`); suas sugestões respeitam a referência Figma
 aprovada, a identidade preservada e os requisitos funcionais/de acessibilidade.
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
