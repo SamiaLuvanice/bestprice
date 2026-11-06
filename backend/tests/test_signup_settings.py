@@ -20,6 +20,19 @@ def clean_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("APP_ENV", "development")
 
 
+@pytest.fixture(autouse=True)
+def startup_cleanups(monkeypatch: pytest.MonkeyPatch) -> list[float]:
+    """Dublê do cleanup_loop: a limpeza real da partida rodaria numa thread que sobrevive ao
+    teste e, no CI (DATABASE_URL = banco de teste), apagaria linhas de testes seguintes."""
+    started: list[float] = []
+
+    async def fake_cleanup_loop(interval: float = 3600) -> None:
+        started.append(interval)
+
+    monkeypatch.setattr("app.main.cleanup_loop", fake_cleanup_loop)
+    return started
+
+
 def test_defaults_keep_signup_off_with_five_attempts_per_hour() -> None:
     assert signup_settings() == SignupSettings(
         enabled=False, rate_limit_attempts=5, rate_limit_window=timedelta(minutes=60),
@@ -101,10 +114,13 @@ def test_lifespan_refuses_to_start_with_invalid_signup_configuration(monkeypatch
         pass
 
 
-def test_lifespan_starts_with_signup_off_and_no_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_lifespan_starts_with_signup_off_and_no_secrets(
+    monkeypatch: pytest.MonkeyPatch, startup_cleanups: list[float],
+) -> None:
     monkeypatch.setenv("APP_ENV", "stage")
     with TestClient(app) as client:
         assert client.app is app
+    assert startup_cleanups == [3600]  # o dublê rodou no lugar da limpeza real
 
 
 @pytest.mark.parametrize("enabled", ["true", "false"])

@@ -362,3 +362,20 @@ O tempo da suíte subiu de 37–54 s para 134 s. `--durations=8` (132,70 s) não
 teste de `lifespan` entre os lentos. O maior é o preexistente
 `test_worker_processes_integration` (31,71 s); os demais ficam abaixo de 2,1 s. Atribuo a
 diferença à carga da máquina com o frontend rodando em paralelo. Isso é inferência, não medição.
+
+## Ajuste final da revisão (R3) — limpeza da partida nos testes de `lifespan`
+
+O purge da partida (R2) rodaria de verdade nos testes que sobem o `lifespan` da aplicação.
+Isso acontece numa thread que sobrevive ao teste e, no CI (`DATABASE_URL` aponta para o banco de
+teste), poderia apagar linhas de testes seguintes.
+
+- Busca por `TestClient(app` com `lifespan`: só `tests/test_signup_settings.py` usa o `app` da
+  aplicação (linhas 100, 106 e 126). `test_marketplace_oauth_callback.py:295` usa um `FastAPI()`
+  local, sem o `lifespan` da aplicação, e não precisa de mudança.
+- Correção: fixture autouse `startup_cleanups` troca `app.main.cleanup_loop` por um dublê, que é
+  o nome que o `lifespan` usa. O teste de partida passa a afirmar `startup_cleanups == [3600]`,
+  ou seja, o dublê rodou no lugar da limpeza real.
+- `uv run pytest -q -p no:cacheprovider tests/test_signup_settings.py` → **23 passed**.
+- `uv run ruff check .` → All checks passed!
+- `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider -rs` → **456 passed, 2 skipped**
+  em 51,97 s (skips: `test_stage_start.py`, POSIX).
