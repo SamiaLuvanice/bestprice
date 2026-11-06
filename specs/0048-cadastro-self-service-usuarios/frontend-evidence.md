@@ -206,3 +206,11 @@ Rodados em `frontend/` sem `pytest` concorrente na máquina:
   a região fica vazia; os erros de campo não ganharam `role="alert"`.
 - Limite: um segundo envio com exatamente os mesmos campos inválidos não muda o texto da região,
   então ela não reanuncia; nesse caso o foco no primeiro campo inválido continua lendo o erro.
+
+### Gates depois das correções (ponta `f50aa44`)
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | saída 0, sem problemas |
+| `npm test -- --run` | `Test Files 38 passed (38)`, `Tests 523 passed (523)` (511 + 12 novos), saída 0; um `pytest` do backend rodava no início e não houve tempo esgotado |
+| `npm run build` | `✓ built in 1.77s`, saída 0 |
