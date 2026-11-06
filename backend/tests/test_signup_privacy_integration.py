@@ -134,3 +134,46 @@ def test_control_characters_in_email_are_refused_before_postgres(engine, client:
         refused = client.post("/api/auth/signup", json={"email": email, "password": "senha-controle-123"})
         assert refused.status_code == 422, refused.text
         assert refused.json()["error"]["fields"][0]["code"] == "email_invalid"
+
+
+def test_unexpected_database_error_does_not_log_password_ip_or_parameters(
+    monkeypatch: pytest.MonkeyPatch, engine, hash_secret: str, caplog,
+) -> None:
+    import traceback
+
+    from sqlalchemy.exc import DBAPIError
+
+    from app import db
+    from app.auth import accounts
+
+    # Usa a engine da aplicação (engine_kwargs), como em produção, sem sobrescrever get_session.
+    monkeypatch.setenv("DATABASE_URL", os.environ["TEST_DATABASE_URL"])
+    db.create_database_engine.cache_clear()
+    marker = "marcador-do-hash-" + secrets.token_hex(8)
+    # Erro inesperado no INSERT: o hash não cabe em VARCHAR(255).
+    monkeypatch.setattr(accounts, "hash_password", lambda _password: "scrypt$" + marker + "x" * 300)
+    config = SignupSettings(
+        enabled=True, rate_limit_attempts=5, rate_limit_window=timedelta(minutes=60),
+        trusted_proxy_secret=PROXY_SECRET, source_hash_secret=hash_secret,
+    )
+    app.dependency_overrides[signup_settings] = lambda: config
+    app.dependency_overrides[get_clock] = lambda: (lambda: NOW)
+    caplog.set_level(logging.DEBUG)
+    caplog.set_level(logging.DEBUG, logger="sqlalchemy.engine")
+    email = f"erro-{uuid.uuid4().hex}@exemplo.com"
+    password = "senha-erro-banco-" + secrets.token_hex(4)
+    try:
+        with pytest.raises(DBAPIError) as raised:
+            TestClient(app).post(
+                "/api/auth/signup", json={"email": email, "password": password}, headers=proxied(IPV4),
+            )
+    finally:
+        app.dependency_overrides.clear()
+        db.create_database_engine().dispose()
+        db.create_database_engine.cache_clear()
+
+    # O que o Uvicorn registraria: o traceback completo da exceção não tratada.
+    reported = "".join(traceback.format_exception(raised.value)) + "\n" + caplog.text
+    assert "INSERT INTO users" in reported
+    for value in (password, IPV4, email, marker):
+        assert value not in reported, f"{value!r} apareceu no log/traceback"
