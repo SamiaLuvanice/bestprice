@@ -3,7 +3,7 @@ numero: 0031
 titulo: Resolver link de catálogo para a publicação selecionada
 tipo: bug
 prioridade: P1
-status: pronta
+status: implementada
 toca: [backend]
 depende_de: [0013]
 ---
