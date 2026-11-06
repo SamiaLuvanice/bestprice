@@ -9,6 +9,7 @@ import { AccountArea } from './dashboard/AccountArea'
 import { safeReturnTo } from './navigation/returnTo'
 import { Brand } from './components/Brand'
 import { ResearchArea } from './features/research/ResearchArea'
+import { useSignupAvailability } from './auth/useSignupAvailability'
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
@@ -65,6 +66,11 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     return () => { active = false }
   }, [sessionAttempt])
 
+  // 0048: consultado uma vez por carregamento, depois da sessão (a ordem das chamadas é estável).
+  const signup = useSignupAvailability()
+  const requestedReturnTo = safeReturnTo(new URLSearchParams(location.search).get('returnTo'))
+  const returnToQuery = requestedReturnTo === '/' ? '' : `?returnTo=${encodeURIComponent(requestedReturnTo)}`
+
   useEffect(() => {
     function revalidate(event: PageTransitionEvent) {
       if (event.persisted) {
@@ -108,7 +114,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   }
 
   const footer = matchPath('/login', location.pathname) ? null : <footer>BestPrice · Acompanhe com clareza</footer>
-  if (location.pathname === '/') return <LandingPage />
+  if (location.pathname === '/') return <LandingPage signupAvailable={signup.availability === 'enabled'} />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
     <header className="masthead"><Brand /></header>
@@ -125,7 +131,8 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   </div>
 
   const loginPage = <div className="page"><main className="page-main">
-    <LoginForm busy={busy} error={guestMessage} onSubmit={login} onValidationFail={() => setGuestMessage(null)} />
+    <LoginForm busy={busy} error={guestMessage} onSubmit={login} onValidationFail={() => setGuestMessage(null)}
+      signupHref={signup.availability === 'enabled' ? `/cadastro${returnToQuery}` : null} />
   </main>{footer}</div>
   const notFound = <div className="page"><NotFoundPage authenticated={user !== null} />{footer}</div>
 

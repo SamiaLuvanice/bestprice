@@ -52,3 +52,22 @@ textos vêm do plano e do brief `design/figma-brief.md` (provisórios até o Fig
 - Green: mesmo comando → `Tests 6 passed (6)`.
 - Cobertura: `loading` → `enabled`; `disabled`; `error` com HTTP 503, falha de rede e corpo
   inválido, e `retry` volta a `loading` e consulta de novo; resposta após desmontar ignorada.
+
+## F4 — "Criar conta" no login e na landing
+
+- Red: `npx vitest run src/App.test.tsx src/LoginForm.test.tsx src/landing` → `Tests 12 failed |
+  57 passed (69)`. Positivos: `Unable to find role="link" and name "Criar conta"`. Negativos
+  (desligado/erro): `Test timed out in 15000ms`, porque o `App` ainda não consultava
+  `GET /api/auth/signup` (a resposta do dublê nunca era pedida).
+- Green: mesmo comando → `Test Files 3 passed (3)`, `Tests 69 passed (69)`.
+- Cobertura: link no login abaixo de Entrar só com `signupHref`; no `App`, `/login` →
+  `/cadastro`, `returnTo=/app/assistant` preservado, `//evil.example`, `https://evil.example` e
+  `/` descartados (validação `safeReturnTo` existente); landing com Criar conta logo após Entrar
+  (ligado) e sem o link desligado, com HTTP 503 e com falha de rede. O dublê `fakeApi` responde
+  `{enabled: false}` por padrão, como o servidor.
+- Suíte completa depois de F4 (`npx vitest run`, 3 execuções): `478` testes, com 1, 210 e 2
+  falhas variáveis, todas `Test timed out` / `findBy` esgotado em testes longos já existentes
+  (`refresh-row`, `App` detalhe, `detail`), enquanto um `pytest` do agente backend com
+  PostgreSQL rodava na mesma máquina. Os mesmos arquivos isolados: `npx vitest run
+  src/App.test.tsx src/dashboard/detail.test.tsx src/dashboard/refresh-row.test.tsx` →
+  `Tests 69 passed (69)`. A suíte final é repetida nos gates.

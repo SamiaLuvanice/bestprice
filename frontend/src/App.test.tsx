@@ -233,3 +233,39 @@ it('mostra falha de conexão no login e mantém os campos', async () => {
   expect(screen.getByLabelText('Senha')).toHaveValue('segredo')
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
 })
+
+function signupApi(signup: () => unknown, extra: (url: string, init?: RequestInit) => unknown = () => undefined) {
+  return fakeApi((url, init) => {
+    if (url === '/api/auth/signup' && (init?.method ?? 'GET') === 'GET') return signup()
+    const custom = extra(url, init)
+    if (custom !== undefined) return custom
+    if (url === '/api/auth/me') return reply(401, apiError('unauthenticated', 'Entre para continuar.'))
+    return undefined
+  })
+}
+
+// 0048/F4: o login oferece o cadastro só com o interruptor ligado, preservando o destino válido.
+it.each([
+  ['/login', '/cadastro'],
+  ['/login?returnTo=%2Fapp%2Fassistant', '/cadastro?returnTo=%2Fapp%2Fassistant'],
+  ['/login?returnTo=%2F%2Fevil.example', '/cadastro'],
+  ['/login?returnTo=https%3A%2F%2Fevil.example', '/cadastro'],
+  ['/login?returnTo=%2F', '/cadastro'],
+])('em %s o link Criar conta leva a %s', async (path, href) => {
+  signupApi(() => reply(200, { enabled: true }))
+  visit(path)
+  expect(await screen.findByRole('link', { name: 'Criar conta' })).toHaveAttribute('href', href)
+})
+
+it.each([
+  ['desligado', () => reply(200, { enabled: false })],
+  ['com erro', () => Promise.reject(new TypeError('Failed to fetch'))],
+])('não oferece Criar conta no login com o cadastro %s', async (_case, signup) => {
+  const answered = deferred()
+  signupApi(() => { answered.resolve(undefined); return signup() })
+  visit('/login')
+  await screen.findByRole('heading', { name: 'Entrar na sua conta' })
+  await answered.promise
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  expect(screen.queryByRole('link', { name: 'Criar conta' })).not.toBeInTheDocument()
+})

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { EyeIcon, EyeOffIcon } from './dashboard/Icons'
 import { Brand } from './components/Brand'
 import { EMAIL_PATTERN } from './auth/accountRules'
@@ -14,6 +15,8 @@ type Props = {
   onSubmit: (email: string, password: string) => void
   /** Chamado quando a validação local recusa o envio (o App remove o alerta do servidor anterior). */
   onValidationFail?: () => void
+  /** 0048: destino do cadastro (com o `returnTo` válido); ausente quando o cadastro está desligado. */
+  signupHref?: string | null
 }
 
 export type LoginErrors = { email?: string; password?: string }
@@ -40,7 +43,7 @@ function LoginVisual() {
 }
 
 /** Entrada da tela de visitante (spec 0017), com validação própria no envio (0020/AC07). */
-export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
+export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -115,6 +118,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail }: Props) {
           </div>
           <Button type="submit" className="primary-button btn-pill" aria-disabled={busy || undefined} aria-busy={busy || undefined}>{busy ? 'Entrando…' : 'Entrar'}</Button>
         </form>
+        {signupHref && <p className="login-note">Ainda não tem conta? <Link to={signupHref}>Criar conta</Link></p>}
         <p className="login-note">O monitoramento começa com um link do Mercado Livre.</p>
         <Button asChild variant="link" className="login-back"><a href="/">Voltar para o início</a></Button>
       </div>

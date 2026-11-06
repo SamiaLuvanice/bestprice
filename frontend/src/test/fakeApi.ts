@@ -97,7 +97,7 @@ export function takeUnexpectedCalls(): string[] {
 
 /**
  * Substitui `fetch` por um roteador. A rota do teste tem prioridade; quando devolve `undefined`,
- * valem os padrões de pessoa autenticada: `me`, painel informado e notificações (todas e não lidas) vazias.
+ * valem os padrões de pessoa autenticada: `me`, cadastro desligado, painel informado e notificações (todas e não lidas) vazias.
  * Rotas não previstas lançam erro com método e URL, para o teste não passar por acaso.
  */
 export function fakeApi(route: Route = () => undefined, dashboard: unknown = emptyDashboard) {
@@ -107,6 +107,8 @@ export function fakeApi(route: Route = () => undefined, dashboard: unknown = emp
     const method = init?.method ?? 'GET'
     if (method === 'GET') {
       if (url === '/api/auth/me') return Promise.resolve(reply(200, sessionUser))
+      // 0048: o cadastro começa desligado, como o padrão do servidor.
+      if (url === '/api/auth/signup') return Promise.resolve(reply(200, { enabled: false }))
       if (url.startsWith('/api/research?')) return Promise.resolve(reply(200, { items: [], next_offset: null }))
       if (url === '/api/ai/capabilities') return Promise.resolve(reply(200, { enabled: false, provider: 'google', model: 'gemini-2.5-flash-lite', retention_days: 90, max_message_chars: 2000, user_daily_limit: 20 }))
       if (url === '/api/dashboard') return Promise.resolve(reply(200, dashboard))
