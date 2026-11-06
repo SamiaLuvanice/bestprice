@@ -61,3 +61,9 @@ A suíte Playwright em `frontend/tests/visual/` captura snapshots nos viewports 
 fixo, spec 0016). Rode `npm run test:visual` em `frontend/` antes de entregar
 mudança visual; baselines só mudam por revisão explícita (escreva com
 `--update-snapshots` e mostre o diff).
+
+- **shadcn** (`shadcn`): boas práticas, regras de composição, tokens semânticos e
+  uso da CLI para componentes shadcn/ui baseados no `frontend/components.json`.
+  Consulte as regras em `.agents/skills/shadcn/rules/` e utilize a biblioteca
+  Figma de referência:
+  https://www.figma.com/design/W40ObsAIqKGXOAr42tYDCA/shadcn-ui-components-with-variables---Tailwind-classes---Updated-October-2026--Community-?node-id=2688-3905&p=f&t=cRINHbfsPC5SokFS-0
