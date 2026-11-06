@@ -90,3 +90,16 @@ atrás do Pages) continua pendente até o interruptor ser ligado em Stage (I3).
 - Refactor: o login usa `EMAIL_MAX_CHARS`, `PASSWORD_MAX_CHARS` e `normalize_email` e a
   emissão de sessão vira `issue_session(session, response, user, now)`, reaproveitada pelo
   cadastro. `ruff check` ok; 45 passed.
+
+## B4 — Configuração do cadastro (`tests/test_signup_settings.py`)
+
+- Red 1: `uv run pytest -q -p no:cacheprovider tests/test_signup_settings.py` →
+  `ModuleNotFoundError: No module named 'app.auth.settings'`. Motivo esperado.
+- Red 2 (após `settings.py`): **1 failed, 19 passed** — `test_lifespan_refuses_to_start_with_invalid_signup_configuration`
+  com `DID NOT RAISE RuntimeError`: o `lifespan` ainda não validava. Motivo esperado.
+- Green: `signup_settings()` chamado no início do `lifespan` → **20 passed**. Cobertos: padrões
+  `false`/5/60; só `true` liga; 2/10 min lidos do ambiente; 0, 1001, texto, janela 0 e 1441,
+  segredo curto → `RuntimeError` com o nome da variável e sem o valor; ligado sem
+  `SIGNUP_SOURCE_HASH_SECRET` falha em development/test/stage/production; ligado em
+  stage/production sem `TRUSTED_PROXY_SECRET` falha; local sem segredo do proxy inicia;
+  `lifespan` em stage com cadastro desligado e sem segredos inicia.

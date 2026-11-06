@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 
 from app.auth.routes import router as auth_router
+from app.auth.settings import signup_settings
 from app.errors import ApiError, api_error_handler, validation_error_handler
 from app.health import database_available
 from app.marketplace.oauth_routes import router as marketplace_oauth_router
@@ -22,6 +23,8 @@ class HealthResponse(BaseModel):
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # Falha rápida: configuração inválida do cadastro impede a API de subir.
+    signup_settings()
     cleanup_task = asyncio.create_task(cleanup_loop())
     try:
         yield
