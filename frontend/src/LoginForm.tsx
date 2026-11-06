@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { EyeIcon, EyeOffIcon } from './dashboard/Icons'
 import { Brand } from './components/Brand'
+import { EMAIL_PATTERN } from './auth/accountRules'
 
 type Props = {
   /** O App controla o envio em curso. */
@@ -20,8 +21,6 @@ export type LoginErrors = { email?: string; password?: string }
 const EMAIL_EMPTY = 'Informe seu e-mail.'
 const EMAIL_INVALID = 'Informe um e-mail válido, como nome@exemplo.com.'
 const PASSWORD_EMPTY = 'Informe sua senha.'
-// texto@domínio com um único @, sem espaço, domínio com ponto e sem rótulo vazio.
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/
 
 /** 0020/AC07: validação do envio. O e-mail ignora espaços nas pontas; a senha só não pode ser vazia. */
 // Função pura exportada para teste direto (plan 0020, decisão 3).

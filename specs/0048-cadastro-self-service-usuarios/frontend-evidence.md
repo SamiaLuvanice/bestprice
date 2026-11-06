@@ -22,3 +22,23 @@ textos vêm do plano e do brief `design/figma-brief.md` (provisórios até o Fig
   `signupStatus` aceita só `{enabled: boolean}`; `signup` aceita só `201` + `UserResponse`
   (200, corpo sem e-mail e corpo nulo → `invalid_response`); 409 com `fields`, 429 com
   `retry_after_seconds`, 404 `signup_unavailable` e falha de rede.
+
+## F2 — regra de conta (`auth/accountRules.ts`)
+
+- Primeira execução: `npx vitest run src/auth/accountRules.test.ts` → `Failed to resolve import
+  "./accountRules"` (sem testes). Não conta como Red de comportamento; criei um esqueleto que
+  exporta a expressão atual e funções sem regra.
+- Red: mesmo comando → `Tests 22 failed | 7 passed (29)`, todas as falhas por asserção
+  (`expected undefined to be 'A senha precisa ter pelo menos 12 car…'`, `expected null to be
+  'Informe seu e-mail.'`, `expected {} to deeply equal { …(3) }`). Os 7 que passaram são casos
+  de aceitação, verdadeiros também sem regra.
+- Green: mesmo comando → `Tests 29 passed (29)`.
+- Refactor: `LoginForm.tsx` importa `EMAIL_PATTERN` de `accountRules.ts` (constante local
+  removida). `npx vitest run src/LoginForm.test.tsx src/auth` → `Test Files 2 passed`, `Tests 55
+  passed (55)`; `LoginForm.test.tsx` não foi editado (`git diff` vazio).
+- Tabela comum com B1: 320/321 contando espaços das pontas, 321 só de espaços (limite antes de
+  vazio), code points com emoji no e-mail e na senha, 11/12 e 1024/1025, `a@b`, `a@b.`,
+  `a b@c.com`, `a@@b.com`, espaço Unicode (U+00A0, U+2003), domínio acentuado aceito,
+  confirmação diferente e mensagens pelos `code` estáveis do servidor.
+- Limite conhecido: `\s` e `trim()` do JavaScript e `\s`/`strip()` do Python divergem em
+  caracteres raros (U+001C–U+001F, U+FEFF). Fora da tabela comum; o servidor decide.
