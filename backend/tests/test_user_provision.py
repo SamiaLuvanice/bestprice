@@ -90,3 +90,16 @@ def test_cli_reports_rule_violation_in_portuguese(monkeypatch, engine, capsys, e
     assert exited.value.code == 2
     error = capsys.readouterr().err
     assert message in error and password not in error
+
+
+@pytest.mark.parametrize(("email", "password", "message"), [
+    ("a" + chr(0xD800) + "@b.com", "senha-validada-123", "O e-mail contém caracteres inválidos."),
+    ("nova@exemplo.com", "senha-validada-" + chr(0xD800), "A senha contém caracteres inválidos."),
+], ids=["email", "senha"])
+def test_cli_reports_unencodable_input_without_traceback(monkeypatch, engine, capsys, email, password, message) -> None:
+    with pytest.raises(SystemExit) as exited:
+        run_cli(monkeypatch, engine, email, [password, password])
+    assert exited.value.code == 2
+    assert message in capsys.readouterr().err
+    with Session(engine) as session:
+        assert session.scalar(select(User)) is None

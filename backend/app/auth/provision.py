@@ -3,7 +3,7 @@ import getpass
 
 from sqlalchemy.orm import Session
 
-from app.auth.accounts import add_account
+from app.auth.accounts import add_account, utf8_encodable
 from app.db import create_database_engine
 from app.products.models import User
 
@@ -23,6 +23,10 @@ def main() -> None:
     confirmation = getpass.getpass("Confirme a senha: ")
     if password != confirmation:
         parser.error("As senhas não conferem")
+    if not utf8_encodable(args.email):
+        parser.error("O e-mail contém caracteres inválidos.")
+    if not utf8_encodable(password):
+        parser.error("A senha contém caracteres inválidos.")
     with Session(create_database_engine()) as session:
         try:
             provision_user(session, args.email, password)

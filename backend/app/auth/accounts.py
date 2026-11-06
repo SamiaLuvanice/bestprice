@@ -80,6 +80,18 @@ def _password_violation(password: str) -> RuleViolation | None:
     return None
 
 
+def utf8_encodable(value: str) -> bool:
+    """Falso para surrogates isolados (JSON aceita o escape, mas o texto não existe em UTF-8).
+
+    Fica fora da classe proibida compartilhada: em JavaScript não há string equivalente.
+    """
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 def account_rule_violations(email: str, password: str) -> list[RuleViolation]:
     """Primeira regra violada de cada campo, e-mail antes da senha."""
     return [item for item in (_email_violation(email), _password_violation(password)) if item is not None]

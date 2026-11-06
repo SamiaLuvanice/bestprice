@@ -19,6 +19,7 @@ from app.auth.accounts import (
     EmailAlreadyRegistered,
     add_account,
     normalize_email,
+    utf8_encodable,
 )
 from app.auth.limiter import PostgresSignupLimiter, SignupRateLimited, signup_source_key
 from app.auth.security import verify_password
@@ -169,9 +170,13 @@ def parse_signup_body(content_type: str, body: bytes) -> SignupRequest:
         # RecursionError: aninhamento profundo ([[[[…]]]]) não pode virar 500.
         raise json_required from None
     try:
-        return SignupRequest.model_validate(data)
+        payload = SignupRequest.model_validate(data)
     except ValidationError as exc:
         raise _validation_error(validation_fields(exc.errors())) from None
+    if not (utf8_encodable(payload.email) and utf8_encodable(payload.password)):
+        # Surrogate isolado (\ud800): o JSON é válido, mas o texto não vira UTF-8 (hash e banco).
+        raise json_required
+    return payload
 
 
 EMAIL_TAKEN_MESSAGE = "Já existe uma conta com este e-mail."

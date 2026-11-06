@@ -378,3 +378,21 @@ def test_deeply_nested_json_is_refused_with_json_required(enabled: Harness, dept
     assert refused.status_code == 422
     assert error(refused)["fields"] == [{"field": "body", "code": "json_required", "message": GENERIC}]
     assert len(enabled.limiter.recorded) == 1
+
+
+LONE_SURROGATE = chr(0xD800)
+
+
+@pytest.mark.parametrize(("email", "password"), [
+    (LONE_SURROGATE + "a@b.com", PASSWORD),
+    ("ana@exemplo.com", "senha-valida-" + LONE_SURROGATE),
+], ids=["email", "senha"])
+def test_lone_surrogate_is_refused_with_json_required(enabled: Harness, email: str, password: str) -> None:
+    import json
+
+    content = json.dumps({"email": email, "password": password}).encode("ascii")  # escape \ud800
+    refused = enabled.client.post("/api/auth/signup", content=content, headers={"Content-Type": "application/json"})
+    assert refused.status_code == 422
+    assert error(refused)["fields"] == [{"field": "body", "code": "json_required", "message": GENERIC}]
+    assert enabled.users() == []
+    assert len(enabled.limiter.recorded) == 1

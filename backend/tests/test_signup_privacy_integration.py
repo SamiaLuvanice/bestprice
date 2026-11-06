@@ -177,3 +177,18 @@ def test_unexpected_database_error_does_not_log_password_ip_or_parameters(
     assert "INSERT INTO users" in reported
     for value in (password, IPV4, email, marker):
         assert value not in reported, f"{value!r} apareceu no log/traceback"
+
+
+@pytest.mark.parametrize("field", ["email", "password"])
+def test_lone_surrogate_is_refused_before_postgres(engine, client: TestClient, field: str) -> None:
+    import json
+
+    payload = {"email": f"surrogate-{uuid.uuid4().hex}@exemplo.com", "password": "senha-surrogate-123"}
+    payload[field] = chr(0xD800) + payload[field]
+    refused = client.post(
+        "/api/auth/signup", content=json.dumps(payload).encode("ascii"), headers={"Content-Type": "application/json"},
+    )
+    assert refused.status_code == 422, refused.text
+    assert refused.json()["error"]["fields"] == [
+        {"field": "body", "code": "json_required", "message": "Valor inválido ou ausente."},
+    ]
