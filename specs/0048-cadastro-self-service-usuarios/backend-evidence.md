@@ -193,3 +193,26 @@ tratamento de `IntegrityError` em `add_account` foi removido temporariamente.
   - HTTP com `threading.Barrier` e sessões PostgreSQL independentes, e-mails que diferem só na
     caixa → um `201` e um `409 email_already_registered` sem `Set-Cookie`, nunca 500; exatamente
     1 usuário e 1 sessão.
+
+## B10 — Sigilo (`tests/test_signup_privacy_integration.py`, AC10)
+
+PostgreSQL real, `PostgresSignupLimiter` real, cabeçalho confiável do proxy, relógio fixo,
+`caplog` em DEBUG para todos os loggers **e** `sqlalchemy.engine` em DEBUG (SQL e parâmetros).
+Cenário: IPv4 `203.0.113.45` → 201, 422, 409, 429; IPv6 `2001:db8:abcd:12:…` → 201; cinco
+senhas distintas. Verifica que nenhuma senha, IP, prefixo `/64` (com e sem sufixo) aparece em
+logs, cabeçalhos/corpos de resposta, `users` ou `signup_attempts` (tabelas inteiras como
+texto); que o SHA-256 sem segredo dos IPs não aparece em `signup_attempts`; hashes `scrypt$`;
+`source_hash` igual ao HMAC esperado com 3 linhas para o IPv4 (201/422/409; o 429 não conta) e
+1 para o IPv6; outro segredo gera outra chave.
+
+- Primeira execução: **1 failed** por defeito do teste (o log de SQL não estava ligado:
+  o SQLAlchemy fixa o logger `sqlalchemy` em WARN). Corrigido ligando `sqlalchemy.engine`.
+- Green: **1 passed**.
+- Red por mutação (o comportamento já existia):
+  - mutante 1, `signup_source_key` devolve a origem sem HMAC → **1 failed**,
+    `AssertionError: '203.0.113.45' apareceu em logs` (e no banco);
+  - mutante 2, `logger.debug('signup %s', payload)` na rota → **1 failed**,
+    `AssertionError: 'senha-sigilo-criada-…' apareceu em logs`.
+  - Código restaurado (`git status` limpo em `backend/app`). O mutante 1 deixou 4 linhas com IP
+    em claro no banco de teste descartável; removidas com
+    `DELETE FROM signup_attempts WHERE source_hash !~ '^[0-9a-f]{64}$'` (`DELETE 4`) → **1 passed**.
