@@ -36,7 +36,7 @@
 | Frontend | [apps/frontend.md](apps/frontend.md) | SPA React, assistência/comparação/histórico, monitoramento e verificação visual |
 | Infraestrutura | [apps/infraestrutura.md](apps/infraestrutura.md) | Compose com Alembic e worker, proxy, automações e estado da implantação de stage |
 
-Não há painel administrativo no código atual; o provisionamento de conta é feito por comando no backend.
+Não há painel administrativo no código atual. Contas são criadas pelo cadastro self-service (spec 0048, desligado por padrão até a integração do Mercado Livre funcionar) ou provisionadas por comando no backend.
 
 ## Convenções
 
