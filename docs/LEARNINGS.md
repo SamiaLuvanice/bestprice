@@ -181,7 +181,8 @@ embora o filtro identificasse sem ambiguidade um anúncio.
 
 **Princípio:** use o ID explícito da publicação selecionada, nunca o ID do
 catálogo por coincidência de prefixo. Aceite repetições iguais como uma seleção;
-recuse IDs conflitantes e dados malformados antes de qualquer chamada externa.
+recuse IDs conflitantes, dados malformados e uma seleção igual ao ID do catálogo
+antes de qualquer chamada externa.
 Continue analisando a URL localmente e consulte somente o host oficial fixo pelo
 ID validado.
 
