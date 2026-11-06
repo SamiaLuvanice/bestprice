@@ -16,7 +16,7 @@ type Props = {
 
 type Field = keyof SignupErrors
 
-// Estrutura provisória com as classes do login (spec 0048): o layout final depende do Figma (D1).
+// Mesma composição do login (quadros 02b aprovados em D1, spec 0048).
 const FIELD_ORDER: Field[] = ['email', 'password', 'confirmation']
 const GENERIC_FAILURE = 'Não foi possível criar a conta agora. Tente novamente.'
 const UNAVAILABLE = 'Cadastro indisponível no momento.'
@@ -89,7 +89,7 @@ function PasswordField({ id, label, toggleLabel, value, error, hint, inputRef, o
         {visible ? <EyeOffIcon /> : <EyeIcon />}
       </Button>
     </div>
-    {hint && <p id={`${id}-hint`} className="login-note">{hint}</p>}
+    {hint && <p id={`${id}-hint`} className="login-hint">{hint}</p>}
     {error && <p id={`${id}-error`} className="field-error">{error}</p>}
   </div>
 }
@@ -160,7 +160,7 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
     if (field === 'email') setRegistered(false)
   }
 
-  return <section className="login-shell" aria-labelledby="signup-title">
+  return <section className="login-shell signup-shell" aria-labelledby="signup-title">
     <div className="login-card">
       <div className="login-visual" aria-hidden="true" />
       <div className="login-form-side">
@@ -180,18 +180,18 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
             </p>}
           </div>
           <PasswordField id="signup-password" label="Senha" toggleLabel="Mostrar senha" value={password}
-            error={errors.password} hint="Use pelo menos 12 caracteres." inputRef={refs.password}
+            error={errors.password} hint={errors.password ? undefined : 'Use pelo menos 12 caracteres.'} inputRef={refs.password}
             onChange={(value) => change('password', value)} />
           <PasswordField id="signup-confirmation" label="Confirmar senha" toggleLabel="Mostrar confirmação da senha"
             value={confirmation} error={errors.confirmation} inputRef={refs.confirmation}
             onChange={(value) => change('confirmation', value)} />
-          <p className="login-note">Usamos seu e-mail só para identificar sua conta e permitir seu acesso. Não enviamos mensagens.</p>
+          <p className="login-hint">Usamos seu e-mail só para identificar sua conta e permitir seu acesso. Não enviamos mensagens.</p>
           {alert && <p role="alert" className="error-box login-error">{alert}</p>}
           <Button type="submit" className="primary-button btn-pill" aria-disabled={busy || undefined} aria-busy={busy || undefined}>
             {busy ? 'Criando conta…' : 'Criar conta'}
           </Button>
         </form>
-        <p className="login-note">Já tem uma conta? <Link to={loginHref}>Entrar</Link></p>
+        <p className="login-note login-switch">Já tem uma conta? <Link to={loginHref}>Entrar</Link></p>
         <Button asChild variant="link" className="login-back"><a href="/">Voltar para o início</a></Button>
       </div>
     </div>

@@ -118,7 +118,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref 
           </div>
           <Button type="submit" className="primary-button btn-pill" aria-disabled={busy || undefined} aria-busy={busy || undefined}>{busy ? 'Entrando…' : 'Entrar'}</Button>
         </form>
-        {signupHref && <p className="login-note">Ainda não tem conta? <Link to={signupHref}>Criar conta</Link></p>}
+        {signupHref && <p className="login-note login-switch">Ainda não tem conta? <Link to={signupHref}>Criar conta</Link></p>}
         <p className="login-note">O monitoramento começa com um link do Mercado Livre.</p>
         <Button asChild variant="link" className="login-back"><a href="/">Voltar para o início</a></Button>
       </div>

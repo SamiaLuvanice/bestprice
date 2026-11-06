@@ -94,6 +94,18 @@ it('mostra os erros locais por campo, foca o primeiro inválido e não envia', (
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 })
 
+// 0048/F8 (quadro 02b · Erros · Campos): o erro da senha substitui a dica, que volta ao editar.
+it('troca a dica da senha pelo erro do campo e a devolve quando a pessoa corrige', () => {
+  stubSignup(() => reply(201, createdUser))
+  renderForm()
+  fill('ana@exemplo.com', 'curta')
+  fireEvent.click(submitButton())
+  expect(passwordField()).toHaveAccessibleDescription('A senha precisa ter pelo menos 12 caracteres.')
+  expect(screen.queryByText('Use pelo menos 12 caracteres.')).not.toBeInTheDocument()
+  fireEvent.change(passwordField(), { target: { value: validPassword } })
+  expect(passwordField()).toHaveAccessibleDescription('Use pelo menos 12 caracteres.')
+})
+
 it('foca a confirmação quando só ela está errada', () => {
   stubSignup(() => reply(201, createdUser))
   renderForm()
