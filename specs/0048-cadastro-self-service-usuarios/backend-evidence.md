@@ -149,3 +149,29 @@ Pré-requisito B0 registrado acima antes deste Red.
 - Prova do lock: removendo temporariamente o `pg_advisory_xact_lock`, o teste simultâneo falhou
   3 de 3 vezes com `assert [None, None] == [None, 3600]` (os dois passavam). Lock restaurado →
   22 passed (limitador + origem).
+
+## B8 — Endpoint `/api/auth/signup` (`tests/test_signup_http.py`)
+
+SQLite + `FakeSignupLimiter` (mesma regra: recusa não conta) + relógio fixo injetado.
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_signup_http.py` →
+  `ImportError: cannot import name 'get_clock' from 'app.auth.routes'` (as dependências do
+  endpoint ainda não existiam). Motivo esperado: comportamento ausente.
+- Green: `errors.py` ganha `fields` em `ApiError` e `validation_fields` (reuso do formatador,
+  sem `input`); `routes.py` ganha `GET /signup` (`Cache-Control: no-store`, sem banco) e
+  `POST /signup` (rota síncrona, corpo por `raw_body`, ordem interruptor → limitador em
+  sessão própria com commit → JSON → regras → `add_account` + `issue_session`) → **25 passed**.
+  Cobertos: AC14 (GET `false`, POST 404 `signup_unavailable` sem usuário e sem tentativa, até
+  com JSON malformado); GET `true`; 201 com `{id,email}` normalizado, cookie `HttpOnly`,
+  `SameSite=Lax`, `Path=/api`, `Max-Age=86400`, `Secure` em stage e sem `Secure` em
+  development; `expires_at = now + 86400` pelo relógio injetado; `/me`, logout e novo login
+  (AC02/AC03/AC04); cookie anterior substituído; 422 por campo com códigos e mensagens do
+  contrato, os dois campos de uma vez (AC05/AC06); `text/plain`, sem Content-Type,
+  formulário, JSON malformado e bytes inválidos → `json_required`; `charset=utf-8` aceito;
+  `missing`, `string_type`, `extra_forbidden`, `model_type` sem ecoar a senha; 409 com
+  `fields[email]`, sem `Set-Cookie`, sem sessão e com o hash antigo (AC07); 422, 422, 201 e
+  409 contam e o 5º envio → 429 com `Retry-After: 1800` e `retry_after_seconds` (AC09);
+  OpenAPI documenta `SignupRequest` e 201/404/409/422/429.
+- Regressão: `uv run pytest -q -p no:cacheprovider tests/ -k "http or auth or provision or
+  account or signup or url_error or acceptance"` → **244 passed, 10 skipped** (skips: integrações
+  sem `TEST_DATABASE_URL` neste comando; a suíte completa com PostgreSQL fica em B13).
