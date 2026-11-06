@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { api, ApiFailure, type User } from '../api'
 import { Brand } from '../components/Brand'
@@ -106,10 +106,25 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
   const [announcement, setAnnouncement] = useState('')
   const [busy, setBusy] = useState(false)
   const sending = useRef(false)
+  const announceFrame = useRef<number | null>(null)
   const refs: Record<Field, React.RefObject<HTMLInputElement | null>> = {
     email: useRef<HTMLInputElement>(null),
     password: useRef<HTMLInputElement>(null),
     confirmation: useRef<HTMLInputElement>(null),
+  }
+
+  useEffect(() => () => { if (announceFrame.current !== null) cancelAnimationFrame(announceFrame.current) }, [])
+
+  /** Esvazia a região e escreve no quadro seguinte: o mesmo resumo em outro envio volta a ser lido. */
+  function announce(text: string) {
+    if (announceFrame.current !== null) cancelAnimationFrame(announceFrame.current)
+    announceFrame.current = null
+    setAnnouncement('')
+    if (!text) return
+    announceFrame.current = requestAnimationFrame(() => {
+      announceFrame.current = null
+      setAnnouncement(text)
+    })
   }
 
   function focusFirstInvalid(found: SignupErrors, fallback: Field | null) {
@@ -125,7 +140,7 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
     setAlert(null)
     setRegistered(false)
     setErrors(found)
-    setAnnouncement(fieldSummary(found))
+    announce(fieldSummary(found))
     if (Object.keys(found).length > 0) {
       focusFirstInvalid(found, null)
       return
@@ -142,7 +157,7 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
       setPassword('')
       setConfirmation('')
       setErrors(outcome.errors)
-      setAnnouncement(fieldSummary(outcome.errors))
+      announce(fieldSummary(outcome.errors))
       setAlert(outcome.alert)
       setRegistered(outcome.registered)
       focusFirstInvalid(outcome.errors, 'password')

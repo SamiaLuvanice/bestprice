@@ -249,13 +249,25 @@ describe('anúncio dos erros de campo', () => {
     expect(announcer()).toBeEmptyDOMElement()
   })
 
-  it('anuncia o resumo dos campos inválidos na validação local, sem alertas por campo', () => {
+  it('anuncia o resumo dos campos inválidos na validação local, sem alertas por campo', async () => {
     stubSignup(() => reply(201, createdUser))
     renderForm()
     fill('a@b', 'curta', 'outra')
     fireEvent.click(submitButton())
-    expect(announcer()).toHaveTextContent('3 campos precisam de correção: E-mail, Senha e Confirmar senha.')
+    await waitFor(() => expect(announcer()).toHaveTextContent('3 campos precisam de correção: E-mail, Senha e Confirmar senha.'))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  // Revisão R2 (0048): o mesmo resumo em outro envio precisa mudar o texto da região para ser lido de novo.
+  it('reanuncia o mesmo resumo em um novo envio: limpa a região e escreve no quadro seguinte', async () => {
+    stubSignup(() => reply(201, createdUser))
+    renderForm()
+    fill('a@b', 'curta', 'outra')
+    fireEvent.click(submitButton())
+    await waitFor(() => expect(announcer()).toHaveTextContent('3 campos precisam de correção: E-mail, Senha e Confirmar senha.'))
+    fireEvent.click(submitButton())
+    expect(announcer()).toBeEmptyDOMElement()
+    await waitFor(() => expect(announcer()).toHaveTextContent('3 campos precisam de correção: E-mail, Senha e Confirmar senha.'))
   })
 
   it('usa o singular para um único campo e anuncia o erro de campo vindo do servidor', async () => {
@@ -280,7 +292,7 @@ describe('anúncio dos erros de campo', () => {
     renderForm()
     fill('a@b', validPassword)
     fireEvent.click(submitButton())
-    expect(announcer()).toHaveTextContent('1 campo precisa de correção: E-mail.')
+    await waitFor(() => expect(announcer()).toHaveTextContent('1 campo precisa de correção: E-mail.'))
     await submitFilled()
     expect(await screen.findByRole('alert')).toHaveTextContent('Tente novamente em 1 minuto.')
     expect(announcer()).toBeEmptyDOMElement()
