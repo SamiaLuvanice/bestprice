@@ -54,6 +54,14 @@ para que o contêiner forneça essa identificação. Ver a decisão da
   & .agents/skills/impeccable/scripts/impeccable.cmd detect frontend/src --json
   ```
 
+- **shadcn** (`shadcn`): boas práticas, regras de composição, tokens semânticos e
+  CLI de componentes shadcn/ui baseados no `frontend/components.json`. Consulte as
+  regras em `.agents/skills/shadcn/rules/` e a seção local "Uso no BestPrice" do
+  `SKILL.md`, que restringe a CLI a comandos de leitura sem pedido explícito. A
+  [biblioteca shadcn/ui no Figma](https://www.figma.com/design/W40ObsAIqKGXOAr42tYDCA/shadcn-ui-components-with-variables---Tailwind-classes---Updated-October-2026--Community-?node-id=2688-3905)
+  é apenas consulta técnica de componentes; o Figma BestPrice IA, `frontend.md` e
+  `designsystem/` têm precedência.
+
 ## Regressão visual
 
 A suíte Playwright em `frontend/tests/visual/` captura snapshots nos viewports 320,
