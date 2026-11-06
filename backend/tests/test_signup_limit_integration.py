@@ -83,7 +83,8 @@ def test_sixth_attempt_is_refused_until_the_oldest_leaves_the_window(engine) -> 
 
     assert attempt(engine, source, refused_at + timedelta(seconds=retry - 1), settings()) == 1
     assert attempt(engine, source, refused_at + timedelta(seconds=retry), settings()) is None
-    assert len(stored(engine, source)) == 5  # o mais antigo venceu e foi apagado
+    # A tentativa não apaga nada: a limpeza das vencidas fica só no purge horário.
+    assert len(stored(engine, source)) == 6
 
 
 def test_retry_after_is_rounded_up_to_whole_seconds(engine) -> None:
@@ -162,3 +163,13 @@ def test_hourly_cleanup_also_purges_expired_signup_attempts(engine, monkeypatch:
     finally:
         db.create_database_engine.cache_clear()
     assert stored(engine, source) == [NOW - timedelta(minutes=10)]
+
+
+def test_request_path_does_not_delete_expired_rows_of_other_sources(engine) -> None:
+    other, source = new_source(), new_source()
+    with Session(engine) as session:
+        session.add(SignupAttempt(source_hash=other, attempted_at=NOW - timedelta(hours=3)))
+        session.commit()
+    assert attempt(engine, source, NOW, settings()) is None
+    assert attempt(engine, source, NOW, settings(attempts=1)) == 3600
+    assert stored(engine, other) == [NOW - timedelta(hours=3)]
