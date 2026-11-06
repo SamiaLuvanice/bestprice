@@ -25,6 +25,12 @@
       "skillPath": ".agents/skills/impeccable/SKILL.md",
       "computedHash": "aa4a5eef1405395b5a3282ee9a9be8695911c7f79dfe23330fb39b8e7ba83039"
     },
+    "shadcn": {
+      "source": "shadcn-ui/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "b864a958765563321f485a96f4d59c0bb6539f4286ab6d8b8b66895b7ebd302d"
+    },
     "tdd": {
       "source": "mattpocock/skills",
       "sourceType": "github",
