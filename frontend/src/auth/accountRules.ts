@@ -4,8 +4,22 @@
 export const EMAIL_MAX_CHARS = 320
 export const PASSWORD_MIN_CHARS = 12
 export const PASSWORD_MAX_CHARS = 1024
-// texto@domínio com um único @, sem espaço, domínio com ponto e sem rótulo vazio (nome@domínio.tld).
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/
+// Classe proibida idêntica a backend/app/auth/accounts.py: `@`, controles C0/C1, espaço e os
+// separadores Unicode. Não usa `\s` nem `trim()`, cujas definições diferem entre JS e Python.
+const FORBIDDEN = '@\u0000-\u0020\u007F-\u009F\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF'
+// nome@domínio.tld: partes sem caractere proibido, com pelo menos um ponto depois do @.
+export const EMAIL_PATTERN = new RegExp(`^[^${FORBIDDEN}]+@[^${FORBIDDEN}]+\\.[^${FORBIDDEN}]+$`)
+// Só espaço, tabulação, quebras de linha, form feed e tab vertical ASCII saem das pontas.
+const ASCII_EDGE_SPACE = /^[ \t\n\r\f\v]+|[ \t\n\r\f\v]+$/g
+
+function stripAsciiSpace(value: string): string {
+  return value.replace(ASCII_EDGE_SPACE, '')
+}
+
+/** E-mail como o servidor grava: sem espaços ASCII nas pontas e em minúsculas. */
+export function normalizeEmail(raw: string): string {
+  return stripAsciiSpace(raw).toLowerCase()
+}
 
 const MESSAGES: Record<string, string> = {
   email_required: 'Informe seu e-mail.',
@@ -32,9 +46,9 @@ function charCount(value: string): number {
 /** Primeira regra violada do e-mail, na ordem do contrato: tamanho bruto → vazio → formato. */
 function emailViolation(email: string): string | null {
   if (charCount(email) > EMAIL_MAX_CHARS) return 'email_too_long'
-  const trimmed = email.trim()
-  if (!trimmed) return 'email_required'
-  if (!EMAIL_PATTERN.test(trimmed)) return 'email_invalid'
+  const normalized = normalizeEmail(email)
+  if (!normalized) return 'email_required'
+  if (!EMAIL_PATTERN.test(normalized)) return 'email_invalid'
   return null
 }
 

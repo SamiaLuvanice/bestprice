@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { accountRuleMessage, EMAIL_PATTERN, validateSignup } from './accountRules'
+import { accountRuleMessage, EMAIL_PATTERN, normalizeEmail, validateSignup } from './accountRules'
 
 // Mesma tabela de casos do backend (B1): as duas versões da regra precisam concordar.
 const EMAIL_REQUIRED = 'Informe seu e-mail.'
@@ -60,6 +60,30 @@ describe('e-mail do cadastro', () => {
   it('expõe a mesma expressão usada pelo login', () => {
     expect(EMAIL_PATTERN.test('nome@exemplo.com')).toBe(true)
     expect(EMAIL_PATTERN.test('nome@exemplo')).toBe(false)
+  })
+})
+
+// Revisão da 0048: mesma classe proibida e mesma normalização do backend, sem \s nem trim().
+describe('regra idêntica ao backend', () => {
+  it.each([
+    ['nulo', 'a\u0000@b.com'],
+    ['separador U+001C', 'a\u001c@b.com'],
+    ['BOM no início', '\ufeffa@b.com'],
+    ['BOM no meio', 'a\ufeff@b.com'],
+    ['NEL U+0085', 'a\u0085@b.com'],
+    ['espaço antes do @', 'a @b.com'],
+  ])('recusa e-mail com %s', (_case, value) => {
+    expect(emailError(value)).toBe(EMAIL_INVALID)
+    expect(EMAIL_PATTERN.test(value.replace(/^[ \t\n\r\f\v]+|[ \t\n\r\f\v]+$/g, ''))).toBe(false)
+  })
+
+  it('remove só espaços ASCII das pontas e normaliza para minúsculas', () => {
+    expect(emailError('  ana@exemplo.com\t')).toBeUndefined()
+    expect(normalizeEmail('  ana@exemplo.com\t')).toBe('ana@exemplo.com')
+    expect(normalizeEmail(' \t\n\r\f\vAna@Exemplo.COM\v')).toBe('ana@exemplo.com')
+    expect(normalizeEmail('\u00a0ana@exemplo.com')).toBe('\u00a0ana@exemplo.com')
+    expect(emailError('\u00a0ana@exemplo.com')).toBe(EMAIL_INVALID)
+    expect(emailError('\ufeff')).toBe(EMAIL_INVALID)
   })
 })
 

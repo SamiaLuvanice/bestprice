@@ -165,3 +165,28 @@ Rodados em `frontend/` sem `pytest` concorrente na máquina:
 
 - F8–F10 (layout aprovado, CSS, Playwright 1440/390 e AC13) bloqueados por D1.
 - Integração ponta a ponta com a API real (I1/I2) e Stage (I3) não executadas aqui.
+
+## Correções da revisão independente e do QA
+
+### R-1 — regra de e-mail idêntica ao backend (`auth/accountRules.ts`)
+
+- Red: casos novos da tabela compartilhada em `accountRules.test.ts`; `npx vitest run
+  src/auth/accountRules.test.ts` → `Tests 5 failed | 31 passed (36)`: `a\u0000@b.com`,
+  `a\u001c@b.com`, `\ufeffa@b.com` e `a\u0085@b.com` aceitos (`expected undefined to be 'Informe
+  um e-mail válido…'`), e `TypeError: normalizeEmail is not a function`. `a\ufeff@b.com` e
+  `a @b.com` já eram recusados (o `\s` do JS inclui U+FEFF e espaço).
+- Primeiro Green com erro meu: o `\.` do template literal virou `.` (qualquer caractere) e o
+  lint acusou `no-useless-escape`; `nome@.com`, `nome@exemplo` e `nome@exemplo.` passaram a ser
+  aceitos e 7 testes falharam, inclusive 4 do `LoginForm.test.tsx`. Corrigido para `\.`.
+- Green: `npx vitest run src/auth/accountRules.test.ts src/LoginForm.test.tsx` → `Test Files 2
+  passed`, `Tests 64 passed (64)`; `LoginForm.test.tsx` sem edição e sem mudança de resultado.
+- Regra: classe proibida `@`, U+0000–U+0020, U+007F–U+009F, U+00A0, U+1680, U+2000–U+200A,
+  U+2028, U+2029, U+202F, U+205F, U+3000, U+FEFF; formato `^[^F]+@[^F]+\.[^F]+$`;
+  `normalizeEmail` remove só ` \t\n\r\f\v` das pontas e aplica `toLowerCase()`. Sem `\s` nem
+  `trim()` nas regras.
+- Efeito no login (que importa o padrão): fora dos casos testados, o formato ficou mais
+  permissivo no domínio, igual ao backend: `a@b..com` e `a@.b.com` agora passam na validação
+  local (antes recusados). O servidor do login não aplica formato, então nada muda no acesso.
+- O `SignupForm` passou a enviar o e-mail como digitado, sem `trim()`; o servidor normaliza e
+  conta o tamanho bruto como a regra local. O teste de envio não mudou (o valor digitado no
+  teste não tem espaços). `npx vitest run src/auth` → `Tests 60 passed (60)`.

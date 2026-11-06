@@ -120,7 +120,8 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
     sending.current = true
     setBusy(true)
     try {
-      const user = await api.signup(email.trim(), password)
+      // Enviado como digitado: o servidor aplica a mesma normalização e conta o tamanho bruto.
+      const user = await api.signup(email, password)
       onSignedUp(user)
     } catch (failure) {
       const outcome = describeFailure(failure)
