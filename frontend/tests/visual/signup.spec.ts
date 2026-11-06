@@ -25,11 +25,25 @@ async function mockApi(page: Page, post: SignupReply = (route) => route.abort('f
     : post(route))
 }
 
+/** Fontes e arte lateral (fundo CSS, só acima de 840 px) prontas antes da captura. */
+async function waitForArt(page: Page) {
+  await page.evaluate(async () => {
+    await document.fonts.ready
+    const visual = document.querySelector('.login-visual')
+    const url = visual ? /url\("?(.*?)"?\)/.exec(getComputedStyle(visual).backgroundImage)?.[1] : undefined
+    if (!url) return
+    const image = new Image()
+    image.src = url
+    await image.decode()
+  })
+}
+
 async function openSignup(page: Page, frame: Frame, post?: SignupReply) {
   await page.setViewportSize(FRAMES[frame])
   await mockApi(page, post)
   await page.goto('/cadastro')
   await expect(page.getByRole('heading', { name: 'Criar sua conta', level: 1 })).toBeVisible()
+  await waitForArt(page)
 }
 
 async function fill(page: Page, email: string, password: string, confirmation: string) {
@@ -115,6 +129,9 @@ test.describe('quadros do cadastro (1440 e 390 px)', () => {
       test(`${state.name} · ${frame}`, async ({ page }, info) => {
         onlyOnce(info.project.name)
         await state.run(page, frame)
+        // Quadros 220:871/220:965: a marca começa em y ≈ 130 no mobile, como no login.
+        if (frame === 'mobile') expect(Math.round((await page.locator('.login-brand').boundingBox())!.y)).toBeGreaterThanOrEqual(120)
+        if (frame === 'mobile') expect(Math.round((await page.locator('.login-brand').boundingBox())!.y)).toBeLessThanOrEqual(140)
         await expect(page).toHaveScreenshot(`signup-${state.name}-${frame}.png`, { fullPage: true })
       })
     }
@@ -127,6 +144,7 @@ test.describe('quadros do cadastro (1440 e 390 px)', () => {
       await mockApi(page)
       await page.goto('/login')
       await expect(page.getByRole('link', { name: 'Criar conta' })).toBeVisible()
+      await waitForArt(page)
       await expect(page).toHaveScreenshot(`login-signup-${frame}.png`, { fullPage: true })
     }
   })
