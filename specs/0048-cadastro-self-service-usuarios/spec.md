@@ -3,7 +3,7 @@ numero: 0048
 titulo: Cadastro self-service de usuários
 tipo: feature
 prioridade: P1
-status: pronta
+status: implementada
 toca: [backend, frontend, contrato]
 depende_de: []
 issue: https://github.com/SamiaLuvanice/bestprice/issues/252
