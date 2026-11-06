@@ -77,7 +77,7 @@ desconhecido…" falhou por tempo (Issue #247, fora do diff); a execução segui
 
 | Rodada | SHA | Veredito | Achados → correção |
 |---|---|---|---|
-| R1 | `e71cf29` | aprovar com ajustes | NUL no e-mail → 500 e log com hash; JSON profundo → 500; equivalência das regras Python×TS; DELETE global no caminho da requisição; segredos iguais; teste de sigilo. Corrigidos em `b228cdf`, `b86fc2d`, `e85d66e`, `a269dfb`, `f1a0b23`, `52319ac` (backend) e `e7dc0e2` + R-1/R-2 (frontend) |
+| R1 | `e71cf29` | aprovar com ajustes | NUL no e-mail → 500 e log com hash; JSON profundo → 500; equivalência das regras Python×TS; DELETE global no caminho da requisição; segredos iguais; teste de sigilo. Corrigidos em `b228cdf`, `b86fc2d`, `e85d66e`, `a269dfb`, `f1a0b23`, `52319ac` (backend) e `cb1ca7d` (R-1), `f50aa44` (R-2) e `e7dc0e2` (R-3) (frontend) |
 | R2 | `e5efe96` | aprovar com ajustes | Surrogate → 500; retenção do HMAC sem prazo com o Render hibernando; ordem de Tab da landing; reanúncio da região `status`; topo do cadastro no mobile; teste visual instável. Corrigidos em `e9a7dfd`, `a88db49`, `4babb6c`, `cd07d4b`, `96b05ca` |
 | R3 | `1a58be9` | **aprovar** | Sugestão: isolar a limpeza da partida nos testes de `lifespan`. Aplicada em `c95a5d2` (456 passed, 2 skipped com PostgreSQL real, 51,97 s) |
 
