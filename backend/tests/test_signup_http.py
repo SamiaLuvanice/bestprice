@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
@@ -14,7 +15,15 @@ from app.auth.security import hash_password, verify_password
 from app.auth.settings import SignupSettings, signup_settings
 from app.db import Base, get_session
 from app.main import app
-from app.products.models import User, UserSession
+from app.products.models import (
+    Notification,
+    PriceAlert,
+    Product,
+    TrackedProduct,
+    User,
+    UserSession,
+)
+from app.research.models import Conversation, Message
 
 PASSWORD = "senha-do-cadastro-1"
 GENERIC = "Valor inválido ou ausente."
@@ -284,3 +293,72 @@ def test_openapi_documents_the_signup_request_schema(enabled: Harness) -> None:
     schema = operation["requestBody"]["content"]["application/json"]["schema"]
     assert set(schema["properties"]) == {"email", "password"}
     assert set(operation["responses"]) >= {"201", "404", "409", "422", "429"}
+
+
+# AC11 — isolamento
+
+
+def seed_other_account(harness: Harness) -> dict[str, str]:
+    now = harness.now
+    with Session(harness.engine) as session:
+        other = User(email="outra@exemplo.com", password_hash=hash_password("senha-da-outra-1"))
+        product = Product(
+            external_id="MLB1234567890", title="Produto da outra conta",
+            canonical_url="https://produto.mercadolivre.com.br/MLB-1234567890-produto-_JM",
+            current_price=Decimal("99.90"), currency="BRL", price_context="mlb_marketplace_unit",
+            availability="available", lookup_status="ok", last_attempt_status="ok",
+        )
+        session.add_all([other, product])
+        session.flush()
+        tracked = TrackedProduct(user_id=other.id, product_id=product.id, active_since=now)
+        session.add(tracked)
+        session.flush()
+        alert = PriceAlert(tracked_product_id=tracked.id, target_price=Decimal("80.00"))
+        conversation = Conversation(
+            user_id=other.id, title="Conversa da outra conta",
+            created_at=now, updated_at=now, expires_at=now + timedelta(days=90),
+        )
+        session.add_all([alert, conversation])
+        session.flush()
+        session.add_all([
+            Notification(
+                user_id=other.id, tracked_product_id=tracked.id, alert_id=alert.id, revision=1, episode=1,
+                type="target_reached", product_title=product.title, observed_price=Decimal("79.90"),
+                target_price=Decimal("80.00"), currency="BRL", observed_at=now,
+            ),
+            Message(conversation_id=conversation.id, role="user", content="Pergunta da outra", position=0, created_at=now),
+        ])
+        session.commit()
+        return {"tracking": str(tracked.id), "conversation": str(conversation.id)}
+
+
+def own_data(client: TestClient) -> dict[str, object]:
+    dashboard = client.get("/api/dashboard").json()
+    return {
+        "tracked": client.get("/api/tracked-products").json()["items"],
+        "dashboard": dashboard["tracked_products"]["items"] + dashboard["opportunities"] + dashboard["recent_updates"],
+        "notifications": client.get("/api/notifications").json()["items"],
+        "research": client.get("/api/research").json()["items"],
+    }
+
+
+def test_new_account_sees_only_its_own_empty_data(enabled: Harness) -> None:
+    other_ids = seed_other_account(enabled)
+
+    other_client = TestClient(app, base_url="https://testserver")
+    assert other_client.post(
+        "/api/auth/login", json={"email": "outra@exemplo.com", "password": "senha-da-outra-1"},
+    ).status_code == 200
+    seen_by_other = own_data(other_client)
+    assert all(seen_by_other[name] for name in ("tracked", "notifications", "research"))
+
+    assert enabled.signup("nova@exemplo.com").status_code == 201
+    assert own_data(enabled.client) == {"tracked": [], "dashboard": [], "notifications": [], "research": []}
+    summary = enabled.client.get("/api/dashboard").json()["summary"]
+    assert all(value in (0, None) for value in summary.values())
+    for path in (
+        f"/api/tracked-products/{other_ids['tracking']}",
+        f"/api/tracked-products/{other_ids['tracking']}/alert",
+        f"/api/ai/conversations/{other_ids['conversation']}",
+    ):
+        assert enabled.client.get(path).status_code == 404, path

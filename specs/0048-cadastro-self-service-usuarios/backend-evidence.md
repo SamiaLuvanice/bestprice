@@ -216,3 +216,17 @@ texto); que o SHA-256 sem segredo dos IPs não aparece em `signup_attempts`; has
   - Código restaurado (`git status` limpo em `backend/app`). O mutante 1 deixou 4 linhas com IP
     em claro no banco de teste descartável; removidas com
     `DELETE FROM signup_attempts WHERE source_hash !~ '^[0-9a-f]{64}$'` (`DELETE 4`) → **1 passed**.
+
+## B11 — Isolamento (`tests/test_signup_http.py::test_new_account_sees_only_its_own_empty_data`, AC11)
+
+Outra conta com monitoramento, alerta, notificação e conversa (com mensagem). Antes, o teste
+confirma que a outra conta enxerga os próprios dados (o teste não é vazio). A conta criada
+pelo cadastro recebe listas vazias em `/api/tracked-products`, `/api/dashboard` (monitoramentos,
+oportunidades, atualizações e resumo zerado), `/api/notifications` e `/api/research`, e `404`
+no monitoramento, no alerta e na conversa da outra conta.
+
+- Primeira execução: **1 passed**. Esperado: as consultas já filtravam por `user_id`; o
+  plano trata AC11 como regressão.
+- Red por mutação: sem `TrackedProduct.user_id == user.id` em `list_tracking` → **1 failed**
+  (`AssertionError` com o monitoramento da outra conta em `tracked`). Restaurado (`git status`
+  limpo em `backend/app`) → `tests/test_signup_http.py` **26 passed**.
