@@ -204,7 +204,8 @@ preserva o login aprovado em stage e retira somente seu rodapé. A composição 
 rodapé em `App.tsx` usa `matchPath('/login', location.pathname)`, o mesmo padrão
 do roteador; isso inclui `/login/`, `/LOGIN` e a entrada com `returnTo`. A ausência
 vale também durante carga, HTTP 503, falha de rede e recuperação da sessão.
-Landing, páginas autenticadas e rota inexistente conservam seus rodapés.
+Landing, páginas autenticadas e rota inexistente conservam seus rodapés; desde a
+spec 0048, `matchPath('/cadastro', …)` também omite o rodapé do cadastro.
 A orientação sobre o link do Mercado Livre e “Voltar para o início” fazem parte
 do formulário e permanecem visíveis.
 
@@ -235,7 +236,9 @@ clareza.”, conversa por necessidade, comparação manual e continuidade por 90
 A landing é estática e não consulta ofertas ou métricas pessoais. “Começar com IA”
 aponta para `/app/assistant`, “Abrir comparador” para `/app/compare` e o acesso ao
 monitoramento para `/app/monitoring`; o guard encaminha visitantes ao login com
-retorno seguro. Não há cadastro público ou recuperação simulados.
+retorno seguro. Desde a spec 0048, o cabeçalho mostra “Criar conta” (para
+`/cadastro`) só quando o cadastro self-service está disponível; não há recuperação
+de senha.
 
 A marca usa `Brand` com complemento visual AI e um nome acessível completo no link.
 A imagem `assets/redesign/hero-person.webp` é ilustrativa. As prévias de preço/painel
@@ -251,6 +254,52 @@ atualizados, com confirmação posterior 8/8 sem update; login e 404 não tivera
 baselines alterados. A matriz ampliada de UI passou 38/38 em quatro larguras e
 oito rotas, com axe, overflow, alvo de toque e teclado. Não comprova dispositivo
 físico, leitor de tela ou disponibilidade do provider externo.
+
+## Cadastro self-service — spec 0048
+
+`useSignupAvailability` (`src/auth/`) consulta `GET /api/auth/signup` uma vez por
+carregamento do `App` e devolve `loading`, `enabled`, `disabled` ou `error`. O
+interruptor é decidido pela API, não por variável `VITE_*`, para ligar ou desligar
+sem novo build do Pages. Só `enabled` mostra os links: “Criar conta” no cabeçalho da
+landing (à esquerda de “Entrar” no desktop, abaixo dele no menu móvel) e “Ainda não
+tem conta? Criar conta” abaixo do botão do login, que leva o `returnTo` quando ele é
+um destino interno válido. Em `/cadastro`, `loading` mostra “Carregando…” e `error`
+mostra alerta com “Tentar novamente”; `disabled` redireciona a `/login` sem
+formulário. `/cadastro` não tem rodapé, como o login, e tem o título “Criar conta ·
+BestPrice”.
+
+`src/auth/accountRules.ts` espelha `backend/app/auth/accounts.py`: limites de 320
+caracteres no e-mail e 12–1024 na senha, contados em code points, a mesma classe de
+caracteres proibidos em `EMAIL_PATTERN` e a mesma ordem de mensagens. O
+`LoginForm` importa essa expressão e mantém o comportamento (senha só não vazia).
+`SignupForm` tem e-mail, senha e confirmação com mostrar/ocultar, dica de 12
+caracteres por `aria-describedby`, aviso de privacidade antes do botão e validação
+própria no envio (`noValidate`), com foco no primeiro campo inválido. A confirmação
+diferente é verificada só na interface. Respostas do servidor viram mensagens por
+campo (`422` pelo `code`; `409` no e-mail com link “Entrar”) ou alerta `role="alert"`
+(`429` com “Tente novamente em N minutos”, `404` de cadastro indisponível e falha de
+rede/5xx). Durante o envio, o botão mostra “Criando conta…” com `aria-busy`; uma
+região `role="status"` anuncia o resumo dos erros de campo, inclusive ao repetir
+o envio. O e-mail digitado é preservado; senha e
+confirmação são limpas após erro do servidor. No sucesso, o fluxo segue o login:
+destino de `returnTo` validado por `safeReturnTo` ou `/app/dashboard`. `api.ts`
+acrescenta `signupStatus()`, `signup()` e `fields` em `ApiFailure`.
+
+Referência Figma, no [arquivo BestPrice IA](https://www.figma.com/design/LZVtUEAycEzfbwL0H5YL3r/BestPrice-IA),
+aprovada pela responsável em 06/11/2026: cadastro desktop `220:347` (1440×1040),
+foco `220:382`, enviando `220:421`, erros de campos `220:459`, e-mail já cadastrado
+`220:505`, limite `220:546` e falha de rede `220:588`; mobile `220:871` (390×899),
+`220:900`, `220:933`, `220:965`, `220:1005`, `220:1040` e `220:1076`. Login ajustado
+em `59:44`/`59:602`, landing desktop `16:2` e menu móvel aberto `224:2`. A tabela
+completa e os PNGs estão em
+[figma-frames.md](../../specs/0048-cadastro-self-service-usuarios/design/figma-frames.md);
+as extensões visuais (dica, ícone de erro, atalho entre telas sublinhado por
+acessibilidade, botão contornado na landing) estão em `designsystem/README.md`. A
+[verificação da 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md)
+registra lint, 531 testes Vitest, build, `tests/visual/signup.spec.ts` com 24
+cenários aprovados e axe WCAG 2.2 AA sem violações, além das diferenças visuais
+aceitas e das 19 falhas visuais pré-existentes em outras suítes. Não houve teste
+com leitor de tela real nem verificação em Stage.
 
 ## Componentes e histórico visual — spec 0027
 
@@ -286,12 +335,14 @@ A SPA usa `react-router-dom`, o contrato de monitoramento existente e o novo
 cliente tipado `features/research/api.ts`. `App.tsx` consulta `GET /api/auth/me`
 ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha
 de sessão fora de `/` exibe erro e “Tentar novamente”; `/` permanece pública.
-A conta precisa ser provisionada no backend antes do login.
+A conta é criada pelo cadastro self-service, quando ligado (spec 0048), ou
+provisionada no backend antes do login.
 
 | URL | Conteúdo e acesso |
 |---|---|
 | `/` | Landing pública, inclusive com sessão válida |
 | `/login` | Entrada; sessão válida segue para `/app/dashboard` ou retorno conhecido |
+| `/cadastro` | Criar conta (0048); com sessão segue para `/app/dashboard`; com o cadastro desligado redireciona a `/login` preservando `returnTo` |
 | `/app` | Redireciona para `/app/dashboard` após autenticação |
 | `/app/dashboard` | Necessidade de compra, sugestões editáveis e seis pesquisas recentes |
 | `/app/assistant`, `/app/assistant/:id` | Nova conversa ou conversa própria salva |
@@ -529,7 +580,7 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | `frontend/src/assets/logo-bestprice.png` | Cópia da logo oficial usada na entrada e no cabeçalho autenticado, reduzida sem perda a 128 × 128 na 0028 (o original segue em `designsystem/`) |
 | `frontend/src/health.ts` | Cliente legado de `/api/health`, preservado para testes de saúde |
 
-O cliente consome `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/dashboard`, `/api/tracked-products`, seus subrecursos `history`, `refresh` e `alert`, além de `/api/notifications` (todas e `unread_only`). Usa `credentials: 'same-origin'`; Vite e Nginx encaminham `/api` ao FastAPI localmente. Em stage, `frontend/functions/api/[[path]].ts` encaminha `/api/*` à origem HTTPS indicada por `API_ORIGIN` no Cloudflare Pages. A Function preserva método, caminho, consulta, corpo, cookie e resposta da API, inclusive `Set-Cookie`; origem inválida ou falha de rede gera 502 genérico. `frontend/public/_routes.json` inclui só `/api/*`, portanto as páginas estáticas não invocam a Function. O build copia esse arquivo para `dist/`. O proxy foi testado localmente e o health público de stage foi verificado na spec 0018; a nova navegação da 0021 ainda não foi verificada em stage. Valores monetários chegam como strings decimais: `Intl.NumberFormat` os formata sem conversão para `number`, e a direção de um evento de preço vem de `compareDecimal`. Resposta fora do contrato vira “A API respondeu com dados inválidos.”; erro sem `code` e `message` vira a mensagem genérica, e falha de rede, “Não foi possível conectar ao BestPrice. Tente novamente.”.
+O cliente consome `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/auth/signup` (GET e POST, spec 0048), `/api/dashboard`, `/api/tracked-products`, seus subrecursos `history`, `refresh` e `alert`, além de `/api/notifications` (todas e `unread_only`). Usa `credentials: 'same-origin'`; Vite e Nginx encaminham `/api` ao FastAPI localmente. Em stage, `frontend/functions/api/[[path]].ts` encaminha `/api/*` à origem HTTPS indicada por `API_ORIGIN` no Cloudflare Pages. A Function preserva método, caminho, consulta, corpo, cookie e resposta da API, inclusive `Set-Cookie`; origem inválida ou falha de rede gera 502 genérico. Desde a spec 0048, a Function remove os cabeçalhos `x-bestprice-*` do pedido do cliente e da resposta da API; com `API_PROXY_SECRET` configurado no Pages, envia `x-bestprice-proxy-secret` e `x-bestprice-client-ip` (copiado de `cf-connecting-ip`) para a API identificar a origem do cadastro, sem devolver o segredo (`pagesProxy.test.ts`). `frontend/public/_routes.json` inclui só `/api/*`, portanto as páginas estáticas não invocam a Function. O build copia esse arquivo para `dist/`. O proxy foi testado localmente e o health público de stage foi verificado na spec 0018; a nova navegação da 0021 ainda não foi verificada em stage. Valores monetários chegam como strings decimais: `Intl.NumberFormat` os formata sem conversão para `number`, e a direção de um evento de preço vem de `compareDecimal`. Resposta fora do contrato vira “A API respondeu com dados inválidos.”; erro sem `code` e `message` vira a mensagem genérica, e falha de rede, “Não foi possível conectar ao BestPrice. Tente novamente.”.
 
 ## Notificações e contador
 

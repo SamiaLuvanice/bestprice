@@ -1,5 +1,36 @@
 # Progresso das specs
 
+## 0048 — Cadastro self-service de usuários
+
+**06/11/2026: implementação entregue; aguarda CI e merge do PR para develop.** Spec `pronta`
+(vira `implementada` só após o merge). Cadastro **desligado por padrão** (`SIGNUP_ENABLED=false`);
+validação em Stage pendente até a leitura do Mercado Livre funcionar.
+
+Registro da entrega: [Issue #252](https://github.com/SamiaLuvanice/bestprice/issues/252),
+branch/worktree `feature/0048-issue-252-cadastro-self-service`, base origin/develop `66fb0c5`,
+ponta `c95a5d2`. "Criar conta" no login e na landing leva a `/cadastro` (e-mail, senha e
+confirmação, com aviso de privacidade). A conta é criada com as mesmas regras do login e da CLI
+(e-mail `nome@domínio.tld` até 320 caracteres, senha de 12 a 1024), a sessão começa na hora e o
+`returnTo` é respeitado. `POST /api/auth/signup` responde 201/422/409/429; com o interruptor
+desligado, `GET` informa `enabled:false`, o `POST` dá 404 e `/cadastro` leva ao login. O limite
+padrão é 5 envios por origem a cada 60 min, em `signup_attempts` (migração `20261106signup`),
+com a origem só como HMAC (`SIGNUP_SOURCE_HASH_SECRET`) e aceita do proxy do Pages por segredo
+(`API_PROXY_SECRET`/`TRUSTED_PROXY_SECRET`). A CLI passa a aplicar as mesmas regras.
+
+Backend: Ruff aprovado e pytest com PostgreSQL 18 descartável **456 passed, 2 skipped**
+(baseline 302); complexidade sem bloco ≥ D. Frontend: lint e build aprovados, Vitest 531/531 em
+38 arquivos e Playwright `signup.spec.ts` 24 passed; a suíte visual inteira tem 19 falhas
+pré-existentes em develop. QA local (API, SPA e PostgreSQL reais, sem Compose) aprovou AC01–AC14;
+AC13 com diferenças visuais aceitas pela responsável em 06/11/2026, quadros Figma aprovados.
+Revisão independente em três rodadas: a última (`1a58be9`) aprovou, e o ajuste sugerido entrou em
+`c95a5d2`.
+
+Pendências: I3 em Stage (criar os segredos no Pages e no Render e ligar o interruptor); CI e merge
+do PR; doc-sync final; Issue para as 19 falhas visuais pré-existentes; Issue #247 apareceu em uma
+rodada. Limites: e-mail no log do PostgreSQL a cada 409 (O2), sem teste com leitor de tela real,
+AC09 em tempo real só com janela de 1 min. Ver [spec](../specs/0048-cadastro-self-service-usuarios/spec.md)
+e [verificação](../specs/0048-cadastro-self-service-usuarios/verification.md).
+
 ## 0047 — Chat pesquisa preços na web com Gemini
 
 **04/11/2026: spec implementada; [PR #246](https://github.com/SamiaLuvanice/bestprice/pull/246) integrada em develop no commit `c569bc6`.**

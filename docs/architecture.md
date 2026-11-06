@@ -89,6 +89,9 @@ Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o 
 | `MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID` | IDs MLB distintos e autorizados para a sonda manual somente de leitura; vazios por padrão |
 | `APP_ENV` | Cookie Secure quando igual a `stage` ou `production` |
 | `API_ORIGIN` | Origem HTTPS da API Render usada apenas pela Pages Function de stage; não é segredo nem entra na SPA |
+| `SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`, `SIGNUP_RATE_LIMIT_WINDOW_MINUTES` | Cadastro self-service (spec 0048); padrões `false`, 5 tentativas e 60 minutos por origem |
+| `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC da origem gravada em `signup_attempts`; obrigatória com o cadastro ligado |
+| `TRUSTED_PROXY_SECRET` (Render) e `API_PROXY_SECRET` (Pages) | Mesmo segredo, distinto do anterior, que autentica a origem do visitante enviada pela Pages Function; obrigatório com o cadastro ligado em stage/production |
 | `MONITOR_CHECK_INTERVAL_SECONDS`, `MONITOR_FRESHNESS_SECONDS` | Cadência após sucesso e janela de frescor, ambas com padrão de 3600 segundos e faixa de 60 a 86400 |
 | `MONITOR_BATCH_LIMIT`, `MONITOR_MAX_CONCURRENCY` | Publicações por ciclo (padrão 20, faixa 1 a 100) e tentativas paralelas (padrão 1, faixa 1 a 16) |
 | `MONITOR_POLL_INTERVAL_SECONDS` | Pausa entre ciclos (padrão 60 segundos, faixa 1 a 3600) |
@@ -118,5 +121,17 @@ de 50 s do chat com busca e abaixo da janela de 90 s da tentativa, conservando 5
 no restante. Sem opt-in e chave, geração retorna indisponibilidade;
 comparações e pesquisas salvas continuam acessíveis. A configuração gratuita e a
 qualidade do modelo real permanecem pendentes; o app não audita billing Google.
+
+A spec 0048 acrescenta o cadastro self-service em `app/auth`, desligado por padrão.
+A SPA consulta `GET /api/auth/signup` para mostrar “Criar conta” e a rota
+`/cadastro`; `POST /api/auth/signup` cria a conta e a sessão na mesma transação, com
+a regra única de `app/auth/accounts.py` (também usada pela CLI e espelhada em
+`frontend/src/auth/accountRules.ts`). Antes de validar, a API registra a tentativa
+em `signup_attempts`, num limite por origem persistido no PostgreSQL com trava
+advisory. Em stage, a origem é o `cf-connecting-ip` que a Pages Function assina com
+um segredo compartilhado; sem o segredo, a API usa o peer da conexão e nunca confia
+em `X-Forwarded-For`. Só o HMAC da origem é gravado, e a limpeza horária da API
+remove as tentativas vencidas. Detalhes em [backend](apps/backend.md#cadastro-self-service--spec-0048)
+e operação de Stage em [infraestrutura](apps/infraestrutura.md#cadastro-self-service-em-stage--spec-0048).
 
 O Compose inicia DB, executa Alembic no backend, aguarda seu health check e inicia worker e frontend. A spec 0018 configura outra topologia: navegador → Cloudflare Pages/Function em `/api/*` → API Render → PostgreSQL Supabase exclusivo de stage. O Blueprint chama um script que executa Alembic antes de Uvicorn e usa `/api/health` como health check. O proxy mantém as chamadas e o cookie na origem da interface. Após a promoção #69, API e proxy públicos responderam health 200 com banco `ok`; login via Pages emitiu cookie `Secure` e `HttpOnly`. A migration `20261014rls` protege as dez tabelas `public` do Supabase de stage sem políticas de acesso direto. Uma pausa controlada do banco fez a API retornar 503; Events do Render registrou health check 503, seguido de 502 na borda. O restore recuperou o serviço. O worker não integra essa topologia. GitHub Actions valida o código e publica imagens após o fluxo de release. Consulte os guias de [backend](apps/backend.md), [frontend](apps/frontend.md), [banco](database.md) e [infraestrutura](apps/infraestrutura.md).

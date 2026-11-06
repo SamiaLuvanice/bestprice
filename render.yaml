@@ -19,3 +19,10 @@ services:
         value: https://bestprice-stage-api.onrender.com/api/marketplace/oauth/callback
       - key: DATABASE_URL
         sync: false
+      # Cadastro self-service desligado até a leitura de anúncios funcionar (spec 0048).
+      - key: SIGNUP_ENABLED
+        value: "false"
+      - key: TRUSTED_PROXY_SECRET
+        sync: false
+      - key: SIGNUP_SOURCE_HASH_SECRET
+        sync: false

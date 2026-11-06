@@ -122,6 +122,48 @@ rede real. Não houve chave, custo, alteração de Stage ou promoção nesta tar
 As rotas `/app/*` e os aliases anteriores dependem do mesmo fallback SPA; os
 testes locais não comprovam abertura direta dessa revisão no deploy público.
 
+## Cadastro self-service em Stage — spec 0048
+
+O cadastro é desligado por padrão em todos os ambientes (`SIGNUP_ENABLED=false` em
+`.env.example`, Compose e `render.yaml`) e permanece assim por decisão do responsável
+até a leitura de anúncios do Mercado Livre funcionar. Compose repassa as cinco
+variáveis (`SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`,
+`SIGNUP_RATE_LIMIT_WINDOW_MINUTES`, `TRUSTED_PROXY_SECRET`,
+`SIGNUP_SOURCE_HASH_SECRET`) apenas ao serviço `backend`. O Blueprint declara
+`SIGNUP_ENABLED: "false"` e os dois segredos com `sync: false`, que precisam ser
+preenchidos no painel; a alteração do `render.yaml` exige a sincronização manual do
+Blueprint descrita abaixo. Regras e padrões estão no
+[guia backend](backend.md#cadastro-self-service--spec-0048).
+
+| Onde | Variável | Uso |
+|---|---|---|
+| Cloudflare Pages (produção) | `API_PROXY_SECRET` | Segredo que a Function envia em `x-bestprice-proxy-secret`, junto do `cf-connecting-ip` do visitante em `x-bestprice-client-ip` |
+| Render | `TRUSTED_PROXY_SECRET` | Mesmo valor de `API_PROXY_SECRET`; só com ele a API confia no IP enviado pela Function |
+| Render | `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC-SHA256 da origem; distinta de `TRUSTED_PROXY_SECRET` |
+
+Os dois segredos têm pelo menos 32 caracteres e devem ser diferentes; a API não
+inicia se forem iguais. Gere-os aleatoriamente e guarde-os fora do repositório.
+Trocar `SIGNUP_SOURCE_HASH_SECRET` só zera os limites da janela corrente.
+**Não ative `--proxy-headers` nem `FORWARDED_ALLOW_IPS` no Render**: a API é
+pública e acessível sem passar pelo Pages, então `X-Forwarded-For` e
+`CF-Connecting-IP` são forjáveis; acesso direto à API cai num único balde pelo peer
+da conexão. Localmente, Vite e Nginx não assinam a origem e o limite usa o peer.
+
+Roteiro para ligar em Stage, quando autorizado (pendência I3 da
+[verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md)):
+
+1. Criar `API_PROXY_SECRET` no Pages e `TRUSTED_PROXY_SECRET` (mesmo valor) e
+   `SIGNUP_SOURCE_HASH_SECRET` (outro valor) no Render, sem registrá-los em arquivos,
+   Issue, PR ou logs.
+2. Mudar `SIGNUP_ENABLED` para `true` no Render e conferir o health.
+3. Pelo Pages, enviar 6 cadastros de um mesmo IP (o 6º deve responder `429`) e 1 de
+   outro IP (aceito); depois, apagar as contas de teste.
+
+Com a API em `stage`/`production` e o cadastro ligado sem `TRUSTED_PROXY_SECRET`, a
+API não inicia. A migration `20261106signup` cria `signup_attempts` e é aplicada pelo
+`alembic upgrade head` do Compose e do `start-stage.sh`; ainda não foi aplicada em
+Stage. Nada disso foi exercitado em Stage nesta spec.
+
 ## Sonda oficial do Mercado Livre no GitHub Actions
 
 O Render Free não disponibiliza Shell nem One-off Jobs. Após o workflow ser

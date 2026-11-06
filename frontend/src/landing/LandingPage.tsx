@@ -6,7 +6,12 @@ import { Brand } from '../components/Brand'
 import heroArt from '../assets/redesign/hero-person.webp'
 import './LandingPage.css'
 
-export function LandingPage() {
+type Props = {
+  /** 0048: com o cadastro ligado, Criar conta acompanha Entrar. */
+  signupAvailable?: boolean
+}
+
+export function LandingPage({ signupAvailable = false }: Props) {
   const [open, setOpen] = useState(false)
   const toggle = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -21,7 +26,7 @@ export function LandingPage() {
     }}>
       <Link className="research-brand" to="/" aria-label="BestPrice AI — Início"><Brand decorative />{' '}<span className="research-ai">AI</span></Link>
       <Button ref={toggle} variant="ghost" size="icon" className="research-public-menu" aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="public-navigation" onClick={() => setOpen((value) => !value)}>{open ? <X /> : <Menu />}</Button>
-      <nav id="public-navigation" className={open ? 'is-open' : ''} aria-label="Navegação principal"><a href="#como-funciona" onClick={() => setOpen(false)}>Como funciona</a><a href="#comparar" onClick={() => setOpen(false)}>Comparador</a><Link to="/login">Entrar</Link><Button asChild><Link to="/app/assistant">Começar com IA</Link></Button></nav>
+      <nav id="public-navigation" className={open ? 'is-open' : ''} aria-label="Navegação principal"><a href="#como-funciona" onClick={() => setOpen(false)}>Como funciona</a><a href="#comparar" onClick={() => setOpen(false)}>Comparador</a>{signupAvailable && <Link className="research-signup" to="/cadastro">Criar conta</Link>}<Link to="/login">Entrar</Link><Button asChild><Link to="/app/assistant">Começar com IA</Link></Button></nav>
     </header>
     <main id="landing-content">
       <section className="research-public-hero" aria-labelledby="landing-title"><div><h1 id="landing-title">Compre com<br /> mais clareza.</h1><p>Da primeira dúvida à comparação final. Converse sobre o que você precisa e organize suas opções antes de escolher.</p><div className="research-actions"><Button asChild size="lg"><Link to="/app/assistant">Começar com IA <ArrowRight aria-hidden="true" /></Link></Button><Button asChild variant="outline" size="lg"><a href="#como-funciona">Entender como funciona</a></Button></div><p className="research-public-note">Sua necessidade primeiro. A decisão continua sendo sua.</p></div><div className="research-public-visual"><img src={heroArt} width="1120" height="682" alt="Pessoa consultando o celular durante uma pesquisa de compra." fetchPriority="high" /></div></section>

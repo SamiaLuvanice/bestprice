@@ -242,3 +242,17 @@ As luzes junto ao personagem usam os tokens existentes `--color-brand-soft` e
 `--color-down-soft`; fundos, texto e controles continuam usando tokens oficiais.
 Sugestões editáveis e avisos reais complementam o protótipo estático para manter
 as informações necessárias antes do envio. Não são acrescentados anexos ou voz.
+
+## Cadastro self-service — spec 0048
+
+Quadros aprovados em `specs/0048-cadastro-self-service-usuarios/design/figma-frames.md`.
+Sem token ou cor nova: o cadastro reaproveita a composição, os campos, o botão pílula e
+os tokens do login.
+
+| Extensão da spec 0048 | Motivo | Superfícies |
+|---|---|---|
+| Dica e aviso curtos (`.login-hint`, 14 px, `--color-text-muted`, sem margem própria); a dica da senha some quando o erro do campo aparece | Seguir o espaçamento dos quadros 02b e não repetir a mesma regra em dois textos | Cadastro |
+| Ícone circular "!" decorativo (`::before` com `--color-danger-text` e `--color-bg`, texto alternativo vazio) antes do erro de campo e do alerta | O erro não depende só da cor; o texto continua carregando o significado | Cadastro |
+| Atalho entre telas (`.login-switch`, 24 px abaixo do botão) com link em negrito `--color-brand`, **sublinhado** e área de toque de 44 px sem alterar a linha | O Figma mostra o link sem sublinhado; o axe (`link-in-text-block`) exige distinção além da cor dentro do texto | Login ("Criar conta") e cadastro ("Entrar") |
+| Envio com o botão do login (`aria-busy`, `--color-surface`) e valores dos campos em `--color-text-muted` | O quadro usa 45% de opacidade, que derruba o contraste do texto; mantém a regra AA do login (0020/AC10) | Cadastro |
+| "Criar conta" na landing contornado em `--color-brand` (1,5 px, 13 px negrito, mínimo 128 × 44); à esquerda de "Entrar" no desktop (por `order`) e abaixo dele no menu móvel | Seguir os quadros `16:2` e `224:2` sem alterar a ordem do DOM, que já corresponde ao menu móvel | Cabeçalho da landing |

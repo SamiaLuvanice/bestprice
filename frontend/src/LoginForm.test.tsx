@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { LoginForm, validateLogin } from './LoginForm'
 
 afterEach(cleanup)
@@ -225,4 +226,18 @@ it('mostra o aviso de sessão encerrada como alerta sem mover o foco', () => {
 it('não renderiza alerta quando não há erro', () => {
   renderForm()
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+})
+
+// 0048/F4: o link de cadastro só existe quando o App informa o destino (cadastro ligado).
+it('mostra Criar conta apontando para o destino recebido, abaixo do botão Entrar', () => {
+  render(<MemoryRouter><LoginForm busy={false} error={null} onSubmit={vi.fn()} signupHref="/cadastro?returnTo=%2Fapp%2Fassistant" /></MemoryRouter>)
+  const link = screen.getByRole('link', { name: 'Criar conta' })
+  expect(link).toHaveAttribute('href', '/cadastro?returnTo=%2Fapp%2Fassistant')
+  expect(screen.getByText(/Ainda não tem conta\?/)).toContainElement(link)
+  expect(screen.getByRole('button', { name: 'Entrar' }).compareDocumentPosition(link)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+})
+
+it('não mostra Criar conta sem destino de cadastro', () => {
+  render(<MemoryRouter><LoginForm busy={false} error={null} onSubmit={vi.fn()} signupHref={null} /></MemoryRouter>)
+  expect(screen.queryByRole('link', { name: 'Criar conta' })).not.toBeInTheDocument()
 })

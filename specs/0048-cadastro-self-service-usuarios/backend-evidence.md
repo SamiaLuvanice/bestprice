@@ -1,0 +1,381 @@
+# Evidência do backend — 0048
+
+Worktree `.worktrees/feature-0048-issue-252-cadastro-self-service`, branch
+`feature/0048-issue-252-cadastro-self-service`, base `d1acd81`.
+
+## Ambiente de teste
+
+Docker Desktop não estava em execução (`docker ps` → `failed to connect to the docker API at
+npipe:////./pipe/dockerDesktopLinuxEngine`). Para não depender dele nem tocar no serviço
+PostgreSQL já instalado na máquina, foi criado um cluster PostgreSQL 18 descartável,
+exclusivo desta tarefa, com os binários locais:
+
+- `initdb -D <scratchpad>/pg0048 -U bestprice -A scram-sha-256 -E UTF8 --locale=C`
+- `pg_ctl -D <scratchpad>/pg0048 -o "-p 55448 -c listen_addresses=127.0.0.1" start` → `server started`
+- `createdb -h 127.0.0.1 -p 55448 -U bestprice bestprice_test` → ok
+
+`TEST_DATABASE_URL=postgresql://bestprice:***@127.0.0.1:55448/bestprice_test` em todos os
+comandos abaixo que citam PostgreSQL. Nenhum container, volume ou banco preexistente foi alterado.
+
+Baseline antes de qualquer mudança (`backend/`):
+
+| Comando | Resultado |
+|---|---|
+| `uv sync --locked --extra dev` | ok |
+| `uv run ruff check .` | All checks passed! |
+| `uv run pytest -q -p no:cacheprovider -rs` (com `TEST_DATABASE_URL`) | **302 passed, 2 skipped** em 124,51 s. Skips: `test_stage_start.py` (script POSIX, só na imagem Linux). |
+
+## B0 — `CF-Connecting-IP` na Pages Function
+
+Fonte oficial: [Cloudflare HTTP headers](https://developers.cloudflare.com/fundamentals/reference/http-headers/)
+(consultada em 06/11/2026).
+
+Observado (citações da página):
+
+- `CF-Connecting-IP` "provides the client IP address connecting to Cloudflare to the origin web server".
+- Sobre Workers sem subrequest (caso da Pages Function, que recebe a requisição do
+  visitante): "`cf-connecting-ip` reflects the client's IP address" e "the `x-real-ip`
+  header is stripped".
+- Só em subrequests de Worker na mesma zona o valor passa a refletir `x-real-ip`, que o
+  script pode alterar; em subrequests entre zonas vira `2a06:98c0:3600::103`. A
+  Function lê o cabeçalho da requisição **recebida**, não de um subrequest, então esse caso
+  não se aplica à leitura; ele só reforça que a API não pode confiar no `CF-Connecting-IP`
+  que **ela** recebe do `fetch` da Function (daí o cabeçalho próprio assinado).
+- Com Pseudo IPv4 em "Overwrite Headers", o valor vira um IPv4 pseudo; não usamos essa opção.
+
+Apoio não oficial: um membro da equipe da Cloudflare no canal Cloudflare Developers
+([answeroverflow](https://www.answeroverflow.com/m/1215650658837991527)) afirma que o
+`cf-connecting-ip` é imutável por segurança, com exceção dos subrequests da mesma zona.
+Incidentes como [GHSA-73p3-rqpv-59wx](https://github.com/hestiacp/hestiacp/security/advisories/GHSA-73p3-rqpv-59wx)
+mostram o risco oposto: uma origem que aceita o cabeçalho de qualquer cliente. A decisão 3
+do plano já evita isso, porque a API só aceita a origem com o segredo do proxy.
+
+Inferência: a documentação oficial confirma que, na requisição que chega à Function, o
+cabeçalho traz o IP do visitante. Ela não diz explicitamente que um valor enviado pelo
+cliente é sobrescrito; isso vem da declaração da equipe da Cloudflare citada acima, não da
+documentação. A decisão 3 do plano se mantém. A prova real (6 envios de um IP e 1 de outro
+atrás do Pages) continua pendente até o interruptor ser ligado em Stage (I3).
+
+## B1 — Regras de conta (`tests/test_account_rules.py`)
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_account_rules.py` →
+  `ModuleNotFoundError: No module named 'app.auth.accounts'` (1 error na coleta). Motivo esperado.
+- Green: `app/auth/accounts.py` com `EMAIL_PATTERN`, `normalize_email` e
+  `account_rule_violations` → **30 passed**. Casos: `a@b`, `a@b.`, `a b@c.com`, `a@@b.com`,
+  `a@b..com`, `@b.com`, `a@.com`, NBSP e EM SPACE → `email_invalid`; `ana@exemplo.com.br` e
+  domínio acentuado aceitos; 320/321 contando espaços (321 → `email_too_long` antes do strip);
+  senha 11/12 e 1024/1025; 12 emojis aceitos (code points); os dois campos de uma vez.
+
+## B2 — `add_account`
+
+- Red: 4 testes novos → `ImportError: cannot import name 'add_account' / 'AccountRuleError' /
+  'EmailAlreadyRegistered'` (**4 failed, 30 passed**). Motivo esperado.
+- Green: `add_account` valida, gera hash `scrypt$`, faz `flush` sem commit; em
+  `IntegrityError` faz rollback, confirma por `SELECT` e levanta `EmailAlreadyRegistered`
+  (relança se o e-mail não existir) → **34 passed**. Refactor: imports subidos ao topo; 34 passed;
+  `ruff check` ok.
+
+## B3 — CLI e login alinhados
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_user_provision.py tests/test_auth_http.py`
+  → **9 failed, 2 passed**. Motivos: `DID NOT RAISE AccountRuleError` (321 por espaços, `a@b`,
+  senha 1025 aceitos pela CLI antiga), `ValueError: Senha muito curta` em vez de
+  `AccountRuleError`, mensagem de duplicado antiga (`Usuário já existe`), prompt
+  `Senha (mínimo 12 caracteres)` e `DID NOT RAISE SystemExit`. Os 2 que passaram são o login
+  existente e o teste de regressão "conta `a@b` gravada no banco ainda entra", que já passava
+  por desenho (o login não muda de comportamento).
+- Green: `provision_user` passa a chamar `add_account` + `commit`; `AccountRuleError` traz as
+  mensagens em português, que `main` repassa a `parser.error`; prompt "Senha (12 a 1024
+  caracteres)". → **45 passed** (regras, CLI e auth).
+- Refactor: o login usa `EMAIL_MAX_CHARS`, `PASSWORD_MAX_CHARS` e `normalize_email` e a
+  emissão de sessão vira `issue_session(session, response, user, now)`, reaproveitada pelo
+  cadastro. `ruff check` ok; 45 passed.
+
+## B4 — Configuração do cadastro (`tests/test_signup_settings.py`)
+
+- Red 1: `uv run pytest -q -p no:cacheprovider tests/test_signup_settings.py` →
+  `ModuleNotFoundError: No module named 'app.auth.settings'`. Motivo esperado.
+- Red 2 (após `settings.py`): **1 failed, 19 passed** — `test_lifespan_refuses_to_start_with_invalid_signup_configuration`
+  com `DID NOT RAISE RuntimeError`: o `lifespan` ainda não validava. Motivo esperado.
+- Green: `signup_settings()` chamado no início do `lifespan` → **20 passed**. Cobertos: padrões
+  `false`/5/60; só `true` liga; 2/10 min lidos do ambiente; 0, 1001, texto, janela 0 e 1441,
+  segredo curto → `RuntimeError` com o nome da variável e sem o valor; ligado sem
+  `SIGNUP_SOURCE_HASH_SECRET` falha em development/test/stage/production; ligado em
+  stage/production sem `TRUSTED_PROXY_SECRET` falha; local sem segredo do proxy inicia;
+  `lifespan` em stage com cadastro desligado e sem segredos inicia.
+
+## B5 — Origem do cadastro (`tests/test_signup_source.py`)
+
+Pré-requisito B0 registrado acima antes deste Red.
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_signup_source.py` →
+  `ModuleNotFoundError: No module named 'app.auth.limiter'`. Motivo esperado.
+- Green: `app/auth/limiter.py` com `normalize_source`, `source_hash` e `signup_source_key`
+  → **16 passed**. Cobertos: segredo correto + IP válido usa o cabeçalho; sem segredo,
+  segredo errado ou vazio, IP inválido, lista de IPs e `X-Forwarded-For`/`CF-Connecting-IP`
+  diretos caem no peer; sem `TRUSTED_PROXY_SECRET` o cabeçalho é ignorado; peer ausente →
+  balde `unknown`; IPv6 → `/64` (mesmo /64 compartilha balde, outro /64 não); IPv4 mapeado →
+  IPv4; chave = HMAC-SHA256 hexadecimal de 64 caracteres, determinística, muda com o segredo,
+  diferente do SHA-256 sem segredo e sem o IP. Comparação do segredo com `hmac.compare_digest`.
+
+## B6 — Migração `20261106signup`
+
+- Red: `signup_attempts` adicionada a `PUBLIC_TABLES`;
+  `uv run pytest -q -p no:cacheprovider tests/test_rls_migration_integration.py` (PostgreSQL)
+  → **2 failed**: o SQL offline não contém `ALTER TABLE public.signup_attempts ENABLE ROW LEVEL
+  SECURITY;` e o banco real não tem `{'signup_attempts': (True, False)}`. Motivo esperado.
+- Green: modelo `app/auth/models.py` (`SignupAttempt`), migração
+  `alembic/versions/20261106_signup_attempts.py` (`BIGINT GENERATED ALWAYS AS IDENTITY`,
+  `CHAR(64)`, `TIMESTAMPTZ`, índices `(source_hash, attempted_at)` e `(attempted_at)`, RLS) e
+  import em `alembic/env.py` → **2 passed**.
+- `DATABASE_URL=… uv run alembic check` → `No new upgrade operations detected.`
+- `alembic downgrade -1` → `to_regclass('public.signup_attempts')` vazio, versão
+  `20261104grounding`; `alembic upgrade head` → tabela de volta, versão `20261106signup`;
+  `\d signup_attempts`: `id bigint generated always as identity`, `source_hash character(64)`,
+  `attempted_at timestamp with time zone`, todos `not null`.
+
+## B7 — Limitador em PostgreSQL (`tests/test_signup_limit_integration.py`)
+
+- Red: `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider tests/test_signup_limit_integration.py`
+  → `ImportError: cannot import name 'PostgresSignupLimiter' from 'app.auth.limiter'`. Motivo esperado.
+- Green: `PostgresSignupLimiter.check_and_record` (advisory lock por origem, purge global das
+  vencidas, contagem na janela deslizante, `SignupRateLimited(retry)` sem inserir, senão
+  `INSERT` + commit) e `purge_signup_attempts` → **6 passed** em PostgreSQL 18 real, sem skip.
+  Cobertos (relógio fixo, sem `sleep`): 5 passam; o 6º (30 min depois) → `retry_after = 1800`;
+  a recusa não insere; em `retry − 1` s ainda recusa com 1 s; em `now + retry` volta a passar;
+  arredondamento para cima (`2`); configuração 2/10 min (`480`); origens independentes;
+  purge apaga só `attempted_at <= now − janela`; dois envios simultâneos com limite 1 → um
+  passa, outro `3600`, exatamente 1 linha.
+- Prova do lock: removendo temporariamente o `pg_advisory_xact_lock`, o teste simultâneo falhou
+  3 de 3 vezes com `assert [None, None] == [None, 3600]` (os dois passavam). Lock restaurado →
+  22 passed (limitador + origem).
+
+## B8 — Endpoint `/api/auth/signup` (`tests/test_signup_http.py`)
+
+SQLite + `FakeSignupLimiter` (mesma regra: recusa não conta) + relógio fixo injetado.
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_signup_http.py` →
+  `ImportError: cannot import name 'get_clock' from 'app.auth.routes'` (as dependências do
+  endpoint ainda não existiam). Motivo esperado: comportamento ausente.
+- Green: `errors.py` ganha `fields` em `ApiError` e `validation_fields` (reuso do formatador,
+  sem `input`); `routes.py` ganha `GET /signup` (`Cache-Control: no-store`, sem banco) e
+  `POST /signup` (rota síncrona, corpo por `raw_body`, ordem interruptor → limitador em
+  sessão própria com commit → JSON → regras → `add_account` + `issue_session`) → **25 passed**.
+  Cobertos: AC14 (GET `false`, POST 404 `signup_unavailable` sem usuário e sem tentativa, até
+  com JSON malformado); GET `true`; 201 com `{id,email}` normalizado, cookie `HttpOnly`,
+  `SameSite=Lax`, `Path=/api`, `Max-Age=86400`, `Secure` em stage e sem `Secure` em
+  development; `expires_at = now + 86400` pelo relógio injetado; `/me`, logout e novo login
+  (AC02/AC03/AC04); cookie anterior substituído; 422 por campo com códigos e mensagens do
+  contrato, os dois campos de uma vez (AC05/AC06); `text/plain`, sem Content-Type,
+  formulário, JSON malformado e bytes inválidos → `json_required`; `charset=utf-8` aceito;
+  `missing`, `string_type`, `extra_forbidden`, `model_type` sem ecoar a senha; 409 com
+  `fields[email]`, sem `Set-Cookie`, sem sessão e com o hash antigo (AC07); 422, 422, 201 e
+  409 contam e o 5º envio → 429 com `Retry-After: 1800` e `retry_after_seconds` (AC09);
+  OpenAPI documenta `SignupRequest` e 201/404/409/422/429.
+- Regressão: `uv run pytest -q -p no:cacheprovider tests/ -k "http or auth or provision or
+  account or signup or url_error or acceptance"` → **244 passed, 10 skipped** (skips: integrações
+  sem `TEST_DATABASE_URL` neste comando; a suíte completa com PostgreSQL fica em B13).
+
+## B9 — Cadastros simultâneos (`tests/test_signup_concurrency_integration.py`, AC08)
+
+O comportamento já existia desde B2/B8, então o Red foi demonstrado por **mutação**: o
+tratamento de `IntegrityError` em `add_account` foi removido temporariamente.
+
+- Red (mutante): `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider tests/test_signup_concurrency_integration.py`
+  → **2 failed**, ambos com `sqlalchemy.exc.IntegrityError: (psycopg.errors.UniqueViolation)
+  duplicate key value violates unique constraint "users_email_key"` (no HTTP isso seria um 500
+  genérico). Motivo esperado.
+- Green (código restaurado, `git diff` vazio em `accounts.py`): **2 passed**, repetido 3 vezes
+  (2 passed em cada). Testes:
+  - determinístico: a 1ª sessão faz `flush` sem confirmar; a 2ª insere o mesmo e-mail em
+    maiúsculas e fica bloqueada no índice único até a 1ª confirmar → `["created", "duplicate"]`,
+    1 linha em `users`;
+  - HTTP com `threading.Barrier` e sessões PostgreSQL independentes, e-mails que diferem só na
+    caixa → um `201` e um `409 email_already_registered` sem `Set-Cookie`, nunca 500; exatamente
+    1 usuário e 1 sessão.
+
+## B10 — Sigilo (`tests/test_signup_privacy_integration.py`, AC10)
+
+PostgreSQL real, `PostgresSignupLimiter` real, cabeçalho confiável do proxy, relógio fixo,
+`caplog` em DEBUG para todos os loggers **e** `sqlalchemy.engine` em DEBUG (SQL e parâmetros).
+Cenário: IPv4 `203.0.113.45` → 201, 422, 409, 429; IPv6 `2001:db8:abcd:12:…` → 201; cinco
+senhas distintas. Verifica que nenhuma senha, IP, prefixo `/64` (com e sem sufixo) aparece em
+logs, cabeçalhos/corpos de resposta, `users` ou `signup_attempts` (tabelas inteiras como
+texto); que o SHA-256 sem segredo dos IPs não aparece em `signup_attempts`; hashes `scrypt$`;
+`source_hash` igual ao HMAC esperado com 3 linhas para o IPv4 (201/422/409; o 429 não conta) e
+1 para o IPv6; outro segredo gera outra chave.
+
+- Primeira execução: **1 failed** por defeito do teste (o log de SQL não estava ligado:
+  o SQLAlchemy fixa o logger `sqlalchemy` em WARN). Corrigido ligando `sqlalchemy.engine`.
+- Green: **1 passed**.
+- Red por mutação (o comportamento já existia):
+  - mutante 1, `signup_source_key` devolve a origem sem HMAC → **1 failed**,
+    `AssertionError: '203.0.113.45' apareceu em logs` (e no banco);
+  - mutante 2, `logger.debug('signup %s', payload)` na rota → **1 failed**,
+    `AssertionError: 'senha-sigilo-criada-…' apareceu em logs`.
+  - Código restaurado (`git status` limpo em `backend/app`). O mutante 1 deixou 4 linhas com IP
+    em claro no banco de teste descartável; removidas com
+    `DELETE FROM signup_attempts WHERE source_hash !~ '^[0-9a-f]{64}$'` (`DELETE 4`) → **1 passed**.
+
+## B11 — Isolamento (`tests/test_signup_http.py::test_new_account_sees_only_its_own_empty_data`, AC11)
+
+Outra conta com monitoramento, alerta, notificação e conversa (com mensagem). Antes, o teste
+confirma que a outra conta enxerga os próprios dados (o teste não é vazio). A conta criada
+pelo cadastro recebe listas vazias em `/api/tracked-products`, `/api/dashboard` (monitoramentos,
+oportunidades, atualizações e resumo zerado), `/api/notifications` e `/api/research`, e `404`
+no monitoramento, no alerta e na conversa da outra conta.
+
+- Primeira execução: **1 passed**. Esperado: as consultas já filtravam por `user_id`; o
+  plano trata AC11 como regressão.
+- Red por mutação: sem `TrackedProduct.user_id == user.id` em `list_tracking` → **1 failed**
+  (`AssertionError` com o monitoramento da outra conta em `tracked`). Restaurado (`git status`
+  limpo em `backend/app`) → `tests/test_signup_http.py` **26 passed**.
+
+## B12 — Purge horário e configuração por ambiente
+
+- Red: `test_hourly_cleanup_also_purges_expired_signup_attempts` (PostgreSQL, `now_utc`
+  fixado, `DATABASE_URL` de teste com `cache_clear` do engine) → **1 failed**: a linha de
+  `NOW − 2 h` continuava após `cleanup.purge_database()`. Motivo esperado.
+- Green: `purge_database` chama `purge_signup_attempts(session, now, janela)` na mesma
+  transação do purge da pesquisa → `tests/test_signup_limit_integration.py tests/test_research_integration.py`
+  **18 passed**.
+- `.env.example`: as cinco variáveis comentadas, segredos vazios. `docker-compose.yml`: só o
+  serviço `backend`, com `${VAR:-padrão}`; `POSTGRES_PASSWORD=x docker compose config` mostra
+  `SIGNUP_ENABLED: "false"`, `5`, `60` e segredos vazios. `render.yaml`:
+  `SIGNUP_ENABLED: "false"`, `TRUSTED_PROXY_SECRET` e `SIGNUP_SOURCE_HASH_SECRET` com
+  `sync: false`; YAML válido (`yaml.safe_load`) e `test_stage_start.py` 1 passed (2 skips POSIX).
+  O Blueprint do Render precisa de sincronização manual depois dos checks
+  (`docs/apps/infraestrutura.md`).
+
+## B13 — Gates do backend (ponta `56f0385`)
+
+| Comando (`backend/`, salvo indicação) | Resultado |
+|---|---|
+| `uv sync --locked --extra dev` | ok (37 pacotes) |
+| `uv run ruff check .` | All checks passed! |
+| `TEST_DATABASE_URL=postgresql://bestprice:***@127.0.0.1:55448/bestprice_test uv run pytest -q -p no:cacheprovider -rs` | **417 passed, 2 skipped, 1 warning** em 54,00 s (baseline: 302 passed). Os 2 skips são `test_stage_start.py` (script POSIX, só na imagem Linux). Nenhuma integração nova foi pulada. |
+| `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
+| `python .agents/skills/cyclomatic-complexity/scripts/complexity_report.py backend/app --changed origin/develop` (raiz) | 152 blocos, média 2,74 (A); A 137 · B 12 · C 3. Nenhum bloco ≥ D. Os 3 blocos C são **testes** novos com várias asserções (`test_every_submission_past_the_switch_counts_and_the_limit_returns_429` 14, `test_passwords_and_source_ips_never_leak` 14, `test_signup_creates_account_and_starts_the_same_session_as_login` 11); a regra de complexidade mira funções de negócio em `backend/app`. |
+| `uv run radon cc -s -n B app/auth app/errors.py app/research/cleanup.py app/main.py` | Só B: `signup` 6, `signup_settings` 6, `current_user` 6 (preexistente). Demais funções novas em A (`add_account` 4, `parse_signup_body` 4, `PostgresSignupLimiter.check_and_record` 2…). |
+
+Testes novos por arquivo: `test_account_rules.py` 34, `test_user_provision.py` 9,
+`test_auth_http.py` +1, `test_signup_settings.py` 20, `test_signup_source.py` 16,
+`test_signup_limit_integration.py` 7 (PostgreSQL), `test_signup_http.py` 26,
+`test_signup_concurrency_integration.py` 2 (PostgreSQL), `test_signup_privacy_integration.py` 1
+(PostgreSQL), `test_rls_migration_integration.py` atualizado.
+
+Pendências que não são do backend: validação real da origem atrás do Pages em Stage (I3, só
+com o interruptor ligado), fluxo ponta a ponta no Compose (I1/I2), revisão independente (R1),
+QA (Q1) e `doc-sync-onboarding` (S1).
+
+## Correções da revisão independente (R1)
+
+PostgreSQL 18 descartável religado (127.0.0.1:55448). Cada item: Red pelo motivo esperado → Green.
+
+| Item | Red | Green | Commit |
+|---|---|---|---|
+| 1a — regra de e-mail sem a classe de espaços do regex e sem `str.strip()` padrão; classe proibida explícita (`@`, U+0000–U+0020, U+007F–U+009F, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000, U+FEFF); só espaços ASCII saem das pontas; estrutura de domínio do LoginForm `^[^F]+@[^F.]+([.][^F.]+)+$` | `tests/test_account_rules.py`: **8 failed, 39 passed** (NUL, BOM no início e no meio, DEL aceitos; NBSP e U+3000 nas pontas removidos pelo `strip()`). Depois da correção da coordenação ao formato: **3 failed, 49 passed** (`a@b..com`, `a@.b.com`, `a@b.com.` aceitos pela fórmula literal intermediária, que não chegou a ser comitada) | **52 passed**; regras, CLI, auth e signup **89 passed** | `b228cdf` |
+| 1c — e-mail com NUL → 422, não 500 | Contra `accounts.py` do HEAD: SQLite `assert 201 == 422`; PostgreSQL `psycopg.DataError: PostgreSQL text fields cannot contain NUL (0x00) bytes` (**2 failed**) | **2 passed** (NUL, U+001C, BOM → 422 `email_invalid` em PostgreSQL) | `b228cdf` |
+| 2 — `json.loads` com aninhamento profundo | `RecursionError: maximum recursion depth exceeded while decoding a JSON array` (**2 failed**, profundidade 100 000 e 1 000 000) | `except (ValueError, RecursionError)` → 422 `json_required`, tentativa contada; `test_signup_http.py` **29 passed** | `b86fc2d` |
+| 5 — sem DELETE global no caminho da requisição | `assert [] == [NOW − 3 h]` (linha vencida de outra origem apagada) e contagem 5 ≠ 6 (**2 failed**) | purge só no loop horário; recusa faz `rollback` (libera o lock sem gravar); limitador + sigilo + concorrência **12 passed** | `e85d66e` |
+| 6 — `TRUSTED_PROXY_SECRET` igual a `SIGNUP_SOURCE_HASH_SECRET` | `DID NOT RAISE RuntimeError` (**3 failed**, ligado/desligado e `lifespan`) | `RuntimeError` sem ecoar o valor, com o cadastro ligado ou desligado; **23 passed** | `a269dfb` |
+| 1b — `hide_parameters=True` em `engine_kwargs()` | `KeyError: 'hide_parameters'` e, contra o `db.py` do HEAD, o valor aparece em `[parameters: …]` do erro (**1 failed** em cada) | **11 passed** (engine, integração da engine, sigilo) | `f1a0b23` |
+| 7 — erro inesperado do banco (hash maior que `VARCHAR(255)`) pela engine da aplicação, com log de SQL em DEBUG e traceback completo | `AssertionError: 'erro-…@exemplo.com' apareceu no log/traceback` (**1 failed**) | com 1b: senha, IP, e-mail e o marcador do hash fora do traceback e do log (**1 passed**) | `52319ac` |
+
+Observações:
+
+- **Primeira versão do teste de 1b:** usei `CAST(:value AS integer)`. Ele continuou falhando com
+  `hide_parameters`, porque a **mensagem do próprio PostgreSQL** repete o valor
+  (`invalid input syntax for type integer: "…"`). `hide_parameters` oculta só a seção de
+  parâmetros do SQLAlchemy. Troquei por um estouro de `VARCHAR(5)`, cuja mensagem do servidor
+  não repete o valor.
+- **Limite conhecido (O2 do QA, sem mudança de código):** o PostgreSQL inclui o e-mail na
+  mensagem de violação de unicidade (`DETAIL: Key (email)=(…) already exists.`) e, conforme a
+  configuração do servidor, registra isso no log dele a cada 409. Isso vem do servidor, não da
+  API: `hide_parameters` não cobre, e a API trata o `IntegrityError` sem registrá-lo. Pela
+  mesma razão, outras mensagens do servidor que repetem valores (como erros de conversão de tipo)
+  não são cobertas por `hide_parameters`.
+- **Formato do e-mail:** a estrutura final `^[^F]+@[^F.]+([.][^F.]+)+$` recusa `a@b..com`,
+  `a@.b.com`, `a@b.com.` e `a@b` e aceita `ana@exemplo.com.br` e `a.b@c.co`. A classe é montada
+  a partir da tabela `FORBIDDEN_EMAIL_RANGES` de code points, sem escapes, para facilitar a
+  comparação com o frontend.
+
+### Gates após as correções (ponta `52319ac`)
+
+| Comando | Resultado |
+|---|---|
+| `uv run ruff check .` | All checks passed! |
+| `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider -rs` | **446 passed, 2 skipped** em 37,11 s (antes: 417). Skips: `test_stage_start.py` (POSIX). |
+| `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
+| `complexity_report.py backend/app --changed origin/develop` | 179 blocos, média 2,77 (A); A 163 · B 13 · C 3 (os mesmos três testes). Nenhum bloco ≥ D. `signup_settings` subiu para B (8). |
+
+## Correções da revisão — rodada 2 (R2)
+
+Base `e5efe96`. PostgreSQL 18 descartável (127.0.0.1:55448).
+
+### 1 — Surrogate isolado (`\ud800`) no e-mail ou na senha
+
+Os testes montam o corpo com `json.dumps(..., ensure_ascii)`, que envia o escape `\ud800`
+num JSON válido.
+
+- Red: **6 failed**.
+  - HTTP em SQLite, e-mail e senha: `UnicodeEncodeError: 'utf-8' codec can't encode character '\ud800'` (500).
+  - HTTP em PostgreSQL real, e-mail e senha: mesmo erro.
+  - CLI: `parser.error` com a mensagem técnica do codec em inglês, em vez de uma mensagem em português.
+- Green:
+  - `utf8_encodable` em `accounts.py`. Ela fica fora da classe proibida compartilhada, que
+    continua idêntica ao frontend.
+  - `parse_signup_body` recusa com 422 `json_required` (`field` "body") depois do `model_validate`.
+  - A CLI encerra com "O e-mail contém caracteres inválidos." ou "A senha contém caracteres
+    inválidos." (código 2, sem traceback e sem conta criada).
+  - Resultado: **99 passed** (signup HTTP, sigilo/PostgreSQL, CLI e regras). Commit `e9a7dfd`.
+
+### 2 — Retenção da origem
+
+- Red: **3 failed**.
+  - A tentativa não apagava as vencidas da própria origem (contagem 6 ≠ 5;
+    `[NOW−3h, NOW−60min, NOW−59min, NOW]` ≠ `[NOW−59min, NOW]`).
+  - O `cleanup_loop(interval=3600)` não fazia o purge na partida: a linha de `NOW−2h`
+    continuava após 5 s.
+- Regressões que já passavam e foram mantidas:
+  - recusa (429) não grava nada, nem o purge da própria origem, por causa do `rollback`;
+  - a tentativa não apaga vencidas de outra origem;
+  - o loop sobrevive a uma falha no purge da partida (`OperationalError`) e tenta de novo.
+- Green:
+  - `check_and_record`, sob o advisory lock, faz
+    `DELETE … WHERE source_hash = :key AND attempted_at <= now − janela`.
+  - `cleanup_loop` executa o `cleaner` uma vez antes do primeiro `sleep`, em threadpool, numa
+    tarefa de fundo que não bloqueia a partida, e tolera falha (`_run_cleaner`).
+  - O comentário de retenção em `cleanup.py` foi atualizado: o purge na partida cobre a hibernação.
+  - Resultado: **79 passed** (limitador, cleanup, settings, concorrência, sigilo). Commit `a88db49`.
+
+### Gates (ponta `a88db49`)
+
+| Comando | Resultado |
+|---|---|
+| `uv run ruff check .` | All checks passed! |
+| `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider -rs` | **456 passed, 2 skipped** em 134,03 s (antes: 446). Skips: `test_stage_start.py` (POSIX). |
+| `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
+| `complexity_report.py backend/app --changed origin/develop` | 191 blocos, média 2,79 (A); A 174 · B 14 · C 3 (os mesmos três testes). Nenhum bloco ≥ D. `parse_signup_body` B (6); `cleanup_loop` e `_run_cleaner` A (2). |
+
+O tempo da suíte subiu de 37–54 s para 134 s. `--durations=8` (132,70 s) não mostra nenhum
+teste de `lifespan` entre os lentos. O maior é o preexistente
+`test_worker_processes_integration` (31,71 s); os demais ficam abaixo de 2,1 s. Atribuo a
+diferença à carga da máquina com o frontend rodando em paralelo. Isso é inferência, não medição.
+
+## Ajuste final da revisão (R3) — limpeza da partida nos testes de `lifespan`
+
+O purge da partida (R2) rodaria de verdade nos testes que sobem o `lifespan` da aplicação.
+Isso acontece numa thread que sobrevive ao teste e, no CI (`DATABASE_URL` aponta para o banco de
+teste), poderia apagar linhas de testes seguintes.
+
+- Busca por `TestClient(app` com `lifespan`: só `tests/test_signup_settings.py` usa o `app` da
+  aplicação (linhas 100, 106 e 126). `test_marketplace_oauth_callback.py:295` usa um `FastAPI()`
+  local, sem o `lifespan` da aplicação, e não precisa de mudança.
+- Correção: fixture autouse `startup_cleanups` troca `app.main.cleanup_loop` por um dublê, que é
+  o nome que o `lifespan` usa. O teste de partida passa a afirmar `startup_cleanups == [3600]`,
+  ou seja, o dublê rodou no lugar da limpeza real.
+- `uv run pytest -q -p no:cacheprovider tests/test_signup_settings.py` → **23 passed**.
+- `uv run ruff check .` → All checks passed!
+- `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider -rs` → **456 passed, 2 skipped**
+  em 51,97 s (skips: `test_stage_start.py`, POSIX).

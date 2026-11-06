@@ -1,0 +1,20 @@
+== CLI com interruptor desligado
+Conta criada
+== GET
+HTTP/1.1 200 OK
+cache-control: no-store
+{"enabled":false}
+== POST válido
+HTTP/1.1 404 Not Found
+{"error":{"code":"signup_unavailable","message":"Cadastro indisponível.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+== POST com NUL
+HTTP/1.1 404 Not Found
+{"error":{"code":"signup_unavailable","message":"Cadastro indisponível.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+tentativas antes/depois dos POSTs: 21/21 | usuários antes/depois: 3/3
+== UI desligado
+landing: links "Criar conta" = 0
+login: links "Criar conta" = 0
+/cadastro?returnTo=/app/assistant -> /login?returnTo=%2Fapp%2Fassistant
+formulario de cadastro presente = 0
+login (off) -> /app/assistant
+POSTs /api/auth/signup feitos pela UI = 0
