@@ -87,6 +87,16 @@ describe('regra idêntica ao backend', () => {
   })
 })
 
+describe('estrutura do domínio igual à do login', () => {
+  it.each(['a@b..com', 'a@.b.com', 'a@b.com.', 'a@b'])('recusa %j', (value) => {
+    expect(emailError(value)).toBe(EMAIL_INVALID)
+  })
+
+  it.each(['ana@exemplo.com.br', 'a.b@c.co'])('aceita %j', (value) => {
+    expect(emailError(value)).toBeUndefined()
+  })
+})
+
 describe('senha do cadastro', () => {
   it('recusa 11 e aceita 12 caracteres', () => {
     expect(passwordError('a'.repeat(11))).toBe(PASSWORD_TOO_SHORT)

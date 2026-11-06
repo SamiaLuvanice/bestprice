@@ -214,3 +214,19 @@ Rodados em `frontend/` sem `pytest` concorrente na máquina:
 | `npm run lint` | saída 0, sem problemas |
 | `npm test -- --run` | `Test Files 38 passed (38)`, `Tests 523 passed (523)` (511 + 12 novos), saída 0; um `pytest` do backend rodava no início e não houve tempo esgotado |
 | `npm run build` | `✓ built in 1.77s`, saída 0 |
+
+### R-3 — estrutura do domínio igual à original do login (correção da coordenação)
+
+- Red: casos `a@b..com`, `a@.b.com`, `a@b.com.`, `a@b` (recusar) e `ana@exemplo.com.br`, `a.b@c.co`
+  (aceitar) na tabela compartilhada; `npx vitest run src/auth/accountRules.test.ts` → `Tests 3
+  failed | 39 passed (42)`: `a@b..com`, `a@.b.com` e `a@b.com.` aceitos (`expected undefined to
+  be 'Informe um e-mail válido…'`).
+- Green: formato `^[^F]+@[^F.]+(\.[^F.]+)+$` (classe proibida explícita, rótulos do domínio sem
+  ponto). `npx vitest run src/auth src/LoginForm.test.tsx` → `Test Files 4 passed`, `Tests 99
+  passed (99)`. O login volta ao comportamento anterior para o domínio; o efeito descrito em R-1
+  (`a@b..com`/`a@.b.com` aceitos no login) deixa de existir.
+- Gates: `npm run lint` saída 0; `npm run build` saída 0 (`✓ built in 1.58s`);
+  `npm test -- --run` 1ª execução `1 failed | 528 passed (529)`, a falha intermitente já
+  conhecida (`App.test.tsx` "preserva preço desconhecido…", `Unable to find role="heading" and
+  name "Fone sem fio"` por tempo); 2ª execução, sem `pytest` na máquina: `Test Files 38 passed
+  (38)`, `Tests 529 passed (529)`.

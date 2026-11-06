@@ -7,8 +7,8 @@ export const PASSWORD_MAX_CHARS = 1024
 // Classe proibida idêntica a backend/app/auth/accounts.py: `@`, controles C0/C1, espaço e os
 // separadores Unicode. Não usa `\s` nem `trim()`, cujas definições diferem entre JS e Python.
 const FORBIDDEN = '@\u0000-\u0020\u007F-\u009F\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF'
-// nome@domínio.tld: partes sem caractere proibido, com pelo menos um ponto depois do @.
-export const EMAIL_PATTERN = new RegExp(`^[^${FORBIDDEN}]+@[^${FORBIDDEN}]+\\.[^${FORBIDDEN}]+$`)
+// nome@domínio.tld com a estrutura original do login: rótulos do domínio sem ponto nem vazios.
+export const EMAIL_PATTERN = new RegExp(`^[^${FORBIDDEN}]+@[^${FORBIDDEN}.]+(\\.[^${FORBIDDEN}.]+)+$`)
 // Só espaço, tabulação, quebras de linha, form feed e tab vertical ASCII saem das pontas.
 const ASCII_EDGE_SPACE = /^[ \t\n\r\f\v]+|[ \t\n\r\f\v]+$/g
 
