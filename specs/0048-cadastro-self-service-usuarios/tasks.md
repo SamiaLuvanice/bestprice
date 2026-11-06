@@ -155,8 +155,9 @@ comando e contagem, em `backend-evidence.md` ou `frontend-evidence.md`.
       público"), `frontend.md`, `infraestrutura.md` (variáveis, segredo do proxy, não
       ativar `--proxy-headers`), `database.md`, `architecture.md`, `index.md`,
       `product-context.md`, `AGENTS.md`/`CLAUDE.md` conferidos.
-- [ ] PR para `develop` com `Closes #252`; CI verde; spec `implementada` só depois da revisão,
+- [x] PR para `develop` com `Closes #252`; CI verde; spec `implementada` só depois da revisão,
       do AC13 e da integração.
+      PR #253 integrada em `develop` (`fa31fc9`) em 06/11/2026, CI verde; spec `implementada`.
 
 ## Paralelismo
 

@@ -2,8 +2,8 @@
 
 ## 0048 — Cadastro self-service de usuários
 
-**06/11/2026: implementação entregue; aguarda CI e merge do PR para develop.** Spec `pronta`
-(vira `implementada` só após o merge). Cadastro **desligado por padrão** (`SIGNUP_ENABLED=false`);
+**06/11/2026: implementada.** [PR #253](https://github.com/SamiaLuvanice/bestprice/pull/253)
+integrada em develop (`fa31fc9`) com CI verde; spec `implementada`. Cadastro **desligado por padrão** (`SIGNUP_ENABLED=false`);
 validação em Stage pendente até a leitura do Mercado Livre funcionar.
 
 Registro da entrega: [Issue #252](https://github.com/SamiaLuvanice/bestprice/issues/252),
