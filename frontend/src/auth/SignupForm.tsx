@@ -21,6 +21,16 @@ const FIELD_ORDER: Field[] = ['email', 'password', 'confirmation']
 const GENERIC_FAILURE = 'Não foi possível criar a conta agora. Tente novamente.'
 const UNAVAILABLE = 'Cadastro indisponível no momento.'
 
+const FIELD_LABELS: Record<Field, string> = { email: 'E-mail', password: 'Senha', confirmation: 'Confirmar senha' }
+
+/** Resumo anunciado na região polida; o texto de cada erro é lido pelo foco via aria-describedby. */
+function fieldSummary(found: SignupErrors): string {
+  const labels = FIELD_ORDER.filter((field) => found[field]).map((field) => FIELD_LABELS[field])
+  if (labels.length === 0) return ''
+  const list = labels.length === 1 ? labels[0] : `${labels.slice(0, -1).join(', ')} e ${labels[labels.length - 1]}`
+  return labels.length === 1 ? `1 campo precisa de correção: ${list}.` : `${labels.length} campos precisam de correção: ${list}.`
+}
+
 function waitText(seconds: number): string {
   const minutes = Math.max(1, Math.ceil(seconds / 60))
   return `Muitas tentativas de cadastro. Tente novamente em ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
@@ -92,6 +102,8 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
   const [errors, setErrors] = useState<SignupErrors>({})
   const [alert, setAlert] = useState<string | null>(null)
   const [registered, setRegistered] = useState(false)
+  // Só muda no resultado de um envio, para não anunciar a cada tecla.
+  const [announcement, setAnnouncement] = useState('')
   const [busy, setBusy] = useState(false)
   const sending = useRef(false)
   const refs: Record<Field, React.RefObject<HTMLInputElement | null>> = {
@@ -113,6 +125,7 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
     setAlert(null)
     setRegistered(false)
     setErrors(found)
+    setAnnouncement(fieldSummary(found))
     if (Object.keys(found).length > 0) {
       focusFirstInvalid(found, null)
       return
@@ -129,6 +142,7 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
       setPassword('')
       setConfirmation('')
       setErrors(outcome.errors)
+      setAnnouncement(fieldSummary(outcome.errors))
       setAlert(outcome.alert)
       setRegistered(outcome.registered)
       focusFirstInvalid(outcome.errors, 'password')
@@ -154,6 +168,7 @@ export function SignupForm({ loginHref, onSignedUp }: Props) {
         <h1 id="signup-title" tabIndex={-1}>Criar sua conta</h1>
         <p className="login-subtitle">Comece a acompanhar preços do Mercado Livre em poucos segundos.</p>
         <form onSubmit={submit} className="login-fields" noValidate>
+          <p role="status" aria-live="polite" className="sr-only">{announcement}</p>
           <div className="login-field">
             <label htmlFor="signup-email">E-mail</label>
             <Input id="signup-email" ref={refs.email} className="login-input" type="email" value={email}

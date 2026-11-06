@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { afterEach, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { apiError, deferred, reply } from '../test/fakeApi'
 import { SignupForm } from './SignupForm'
 
@@ -225,4 +225,52 @@ it('percorre os controles com Tab na ordem do formulário e envia com Enter', as
   await user.keyboard('{Enter}')
   await waitFor(() => expect(onSignedUp).toHaveBeenCalledWith(createdUser))
   expect(mockFetch).toHaveBeenCalledOnce()
+})
+
+// QA O3 (AC13): erros de campo anunciados por uma única região polida, sem duplicar alertas.
+describe('anúncio dos erros de campo', () => {
+  const announcer = () => screen.getByRole('status')
+
+  it('a região existe vazia antes do envio, para o leitor de tela já a conhecer', () => {
+    renderForm()
+    expect(announcer()).toHaveAttribute('aria-live', 'polite')
+    expect(announcer()).toBeEmptyDOMElement()
+  })
+
+  it('anuncia o resumo dos campos inválidos na validação local, sem alertas por campo', () => {
+    stubSignup(() => reply(201, createdUser))
+    renderForm()
+    fill('a@b', 'curta', 'outra')
+    fireEvent.click(submitButton())
+    expect(announcer()).toHaveTextContent('3 campos precisam de correção: E-mail, Senha e Confirmar senha.')
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('usa o singular para um único campo e anuncia o erro de campo vindo do servidor', async () => {
+    stubSignup(() => reply(422, apiError('validation_error', 'Confira os dados informados.', {
+      fields: [{ field: 'password', code: 'password_too_long', message: 'A senha pode ter no máximo 1024 caracteres.' }],
+    })))
+    renderForm()
+    await submitFilled()
+    await waitFor(() => expect(announcer()).toHaveTextContent('1 campo precisa de correção: Senha.'))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('anuncia o e-mail já cadastrado como erro de campo', async () => {
+    stubSignup(() => reply(409, apiError('email_already_registered', 'Já existe uma conta com este e-mail.')))
+    renderForm()
+    await submitFilled()
+    await waitFor(() => expect(announcer()).toHaveTextContent('1 campo precisa de correção: E-mail.'))
+  })
+
+  it('não repete na região o que já sai no alerta geral e limpa o resumo anterior', async () => {
+    stubSignup(() => reply(429, apiError('signup_rate_limited', 'Muitas tentativas de cadastro. Tente novamente mais tarde.', { retry_after_seconds: 60 })))
+    renderForm()
+    fill('a@b', validPassword)
+    fireEvent.click(submitButton())
+    expect(announcer()).toHaveTextContent('1 campo precisa de correção: E-mail.')
+    await submitFilled()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Tente novamente em 1 minuto.')
+    expect(announcer()).toBeEmptyDOMElement()
+  })
 })

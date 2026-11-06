@@ -190,3 +190,19 @@ Rodados em `frontend/` sem `pytest` concorrente na máquina:
 - O `SignupForm` passou a enviar o e-mail como digitado, sem `trim()`; o servidor normaliza e
   conta o tamanho bruto como a regra local. O teste de envio não mudou (o valor digitado no
   teste não tem espaços). `npx vitest run src/auth` → `Tests 60 passed (60)`.
+
+### R-2 — anúncio dos erros de campo (QA O3, AC13)
+
+- Red: 5 testes novos em `SignupForm.test.tsx`; `npx vitest run src/auth/SignupForm.test.tsx` →
+  5 falhas, todas `Unable to find an accessible element with the role "status"`.
+- Green: `npx vitest run src/auth/SignupForm.test.tsx src/App.test.tsx` → `Test Files 2 passed`,
+  `Tests 63 passed (63)`.
+- Solução: uma região `<p role="status" aria-live="polite" className="sr-only">` sempre presente
+  no formulário (classe `sr-only` já usada no painel; sem CSS novo). Ela recebe, só no resultado
+  de um envio, o resumo dos campos inválidos: "3 campos precisam de correção: E-mail, Senha e
+  Confirmar senha." / "1 campo precisa de correção: Senha.". Vale para a validação local, o 422 e
+  o 409. O texto de cada erro continua sendo lido pelo foco via `aria-describedby`, então o
+  resumo não repete as mensagens. Com erro só no alerta geral (`role="alert"`: 429, 404, rede),
+  a região fica vazia; os erros de campo não ganharam `role="alert"`.
+- Limite: um segundo envio com exatamente os mesmos campos inválidos não muda o texto da região,
+  então ela não reanuncia; nesse caso o foco no primeiro campo inválido continua lendo o erro.
