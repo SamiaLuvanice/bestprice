@@ -175,3 +175,21 @@ SQLite + `FakeSignupLimiter` (mesma regra: recusa não conta) + relógio fixo in
 - Regressão: `uv run pytest -q -p no:cacheprovider tests/ -k "http or auth or provision or
   account or signup or url_error or acceptance"` → **244 passed, 10 skipped** (skips: integrações
   sem `TEST_DATABASE_URL` neste comando; a suíte completa com PostgreSQL fica em B13).
+
+## B9 — Cadastros simultâneos (`tests/test_signup_concurrency_integration.py`, AC08)
+
+O comportamento já existia desde B2/B8, então o Red foi demonstrado por **mutação**: o
+tratamento de `IntegrityError` em `add_account` foi removido temporariamente.
+
+- Red (mutante): `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider tests/test_signup_concurrency_integration.py`
+  → **2 failed**, ambos com `sqlalchemy.exc.IntegrityError: (psycopg.errors.UniqueViolation)
+  duplicate key value violates unique constraint "users_email_key"` (no HTTP isso seria um 500
+  genérico). Motivo esperado.
+- Green (código restaurado, `git diff` vazio em `accounts.py`): **2 passed**, repetido 3 vezes
+  (2 passed em cada). Testes:
+  - determinístico: a 1ª sessão faz `flush` sem confirmar; a 2ª insere o mesmo e-mail em
+    maiúsculas e fica bloqueada no índice único até a 1ª confirmar → `["created", "duplicate"]`,
+    1 linha em `users`;
+  - HTTP com `threading.Barrier` e sessões PostgreSQL independentes, e-mails que diferem só na
+    caixa → um `201` e um `409 email_already_registered` sem `Set-Cookie`, nunca 500; exatamente
+    1 usuário e 1 sessão.
