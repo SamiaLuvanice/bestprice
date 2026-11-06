@@ -267,3 +267,44 @@ Testes novos por arquivo: `test_account_rules.py` 34, `test_user_provision.py` 9
 Pendências que não são do backend: validação real da origem atrás do Pages em Stage (I3, só
 com o interruptor ligado), fluxo ponta a ponta no Compose (I1/I2), revisão independente (R1),
 QA (Q1) e `doc-sync-onboarding` (S1).
+
+## Correções da revisão independente (R1)
+
+PostgreSQL 18 descartável religado (127.0.0.1:55448). Cada item: Red pelo motivo esperado → Green.
+
+| Item | Red | Green | Commit |
+|---|---|---|---|
+| 1a — regra de e-mail sem a classe de espaços do regex e sem `str.strip()` padrão; classe proibida explícita (`@`, U+0000–U+0020, U+007F–U+009F, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F, U+3000, U+FEFF); só espaços ASCII saem das pontas; estrutura de domínio do LoginForm `^[^F]+@[^F.]+([.][^F.]+)+$` | `tests/test_account_rules.py`: **8 failed, 39 passed** (NUL, BOM no início e no meio, DEL aceitos; NBSP e U+3000 nas pontas removidos pelo `strip()`). Depois da correção da coordenação ao formato: **3 failed, 49 passed** (`a@b..com`, `a@.b.com`, `a@b.com.` aceitos pela fórmula literal intermediária, que não chegou a ser comitada) | **52 passed**; regras, CLI, auth e signup **89 passed** | `b228cdf` |
+| 1c — e-mail com NUL → 422, não 500 | Contra `accounts.py` do HEAD: SQLite `assert 201 == 422`; PostgreSQL `psycopg.DataError: PostgreSQL text fields cannot contain NUL (0x00) bytes` (**2 failed**) | **2 passed** (NUL, U+001C, BOM → 422 `email_invalid` em PostgreSQL) | `b228cdf` |
+| 2 — `json.loads` com aninhamento profundo | `RecursionError: maximum recursion depth exceeded while decoding a JSON array` (**2 failed**, profundidade 100 000 e 1 000 000) | `except (ValueError, RecursionError)` → 422 `json_required`, tentativa contada; `test_signup_http.py` **29 passed** | `b86fc2d` |
+| 5 — sem DELETE global no caminho da requisição | `assert [] == [NOW − 3 h]` (linha vencida de outra origem apagada) e contagem 5 ≠ 6 (**2 failed**) | purge só no loop horário; recusa faz `rollback` (libera o lock sem gravar); limitador + sigilo + concorrência **12 passed** | `e85d66e` |
+| 6 — `TRUSTED_PROXY_SECRET` igual a `SIGNUP_SOURCE_HASH_SECRET` | `DID NOT RAISE RuntimeError` (**3 failed**, ligado/desligado e `lifespan`) | `RuntimeError` sem ecoar o valor, com o cadastro ligado ou desligado; **23 passed** | `a269dfb` |
+| 1b — `hide_parameters=True` em `engine_kwargs()` | `KeyError: 'hide_parameters'` e, contra o `db.py` do HEAD, o valor aparece em `[parameters: …]` do erro (**1 failed** em cada) | **11 passed** (engine, integração da engine, sigilo) | `f1a0b23` |
+| 7 — erro inesperado do banco (hash maior que `VARCHAR(255)`) pela engine da aplicação, com log de SQL em DEBUG e traceback completo | `AssertionError: 'erro-…@exemplo.com' apareceu no log/traceback` (**1 failed**) | com 1b: senha, IP, e-mail e o marcador do hash fora do traceback e do log (**1 passed**) | `52319ac` |
+
+Observações:
+
+- **Primeira versão do teste de 1b:** usei `CAST(:value AS integer)`. Ele continuou falhando com
+  `hide_parameters`, porque a **mensagem do próprio PostgreSQL** repete o valor
+  (`invalid input syntax for type integer: "…"`). `hide_parameters` oculta só a seção de
+  parâmetros do SQLAlchemy. Troquei por um estouro de `VARCHAR(5)`, cuja mensagem do servidor
+  não repete o valor.
+- **Limite conhecido (O2 do QA, sem mudança de código):** o PostgreSQL inclui o e-mail na
+  mensagem de violação de unicidade (`DETAIL: Key (email)=(…) already exists.`) e, conforme a
+  configuração do servidor, registra isso no log dele a cada 409. Isso vem do servidor, não da
+  API: `hide_parameters` não cobre, e a API trata o `IntegrityError` sem registrá-lo. Pela
+  mesma razão, outras mensagens do servidor que repetem valores (como erros de conversão de tipo)
+  não são cobertas por `hide_parameters`.
+- **Formato do e-mail:** a estrutura final `^[^F]+@[^F.]+([.][^F.]+)+$` recusa `a@b..com`,
+  `a@.b.com`, `a@b.com.` e `a@b` e aceita `ana@exemplo.com.br` e `a.b@c.co`. A classe é montada
+  a partir da tabela `FORBIDDEN_EMAIL_RANGES` de code points, sem escapes, para facilitar a
+  comparação com o frontend.
+
+### Gates após as correções (ponta `52319ac`)
+
+| Comando | Resultado |
+|---|---|
+| `uv run ruff check .` | All checks passed! |
+| `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider -rs` | **446 passed, 2 skipped** em 37,11 s (antes: 417). Skips: `test_stage_start.py` (POSIX). |
+| `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
+| `complexity_report.py backend/app --changed origin/develop` | 179 blocos, média 2,77 (A); A 163 · B 13 · C 3 (os mesmos três testes). Nenhum bloco ≥ D. `signup_settings` subiu para B (8). |
