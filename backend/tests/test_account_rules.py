@@ -40,12 +40,42 @@ def test_valid_email_has_no_violation(email: str) -> None:
     assert codes(email, VALID_PASSWORD) == []
 
 
+NUL, FS, DEL, NEL, NBSP = chr(0x00), chr(0x1C), chr(0x7F), chr(0x85), chr(0xA0)
+EM_SPACE, LINE_SEPARATOR, IDEOGRAPHIC_SPACE, BOM = chr(0x2003), chr(0x2028), chr(0x3000), chr(0xFEFF)
+
+
 @pytest.mark.parametrize("email", [
-    "a@b", "a@b.", "a b@c.com", "a@@b.com", "a@b..com", "@b.com", "a@.com",
-    "ana@exem plo.com", "ana @exemplo.com",
+    "a@b", "a@b.", "a b@c.com", "a@@b.com", "@b.com", "a@.com", "nome@.com",
+    f"ana@exem{NBSP}plo.com", f"ana{EM_SPACE}@exemplo.com",
+    # Tabela compartilhada com frontend/src/auth/accountRules.test.ts (revisão da 0048).
+    f"a{NUL}@b.com", f"a{FS}@b.com", f"{BOM}a@b.com", f"a{BOM}@b.com", f"a{NEL}@b.com", "a @b.com",
+    f"{NBSP}ana@exemplo.com", f"ana@exemplo.com{IDEOGRAPHIC_SPACE}", f"a{DEL}@b.com", f"a@b{LINE_SEPARATOR}.com",
 ])
 def test_email_outside_name_domain_tld_is_invalid(email: str) -> None:
     assert codes(email, VALID_PASSWORD) == [("email", "email_invalid")]
+
+
+def test_normalize_email_strips_only_ascii_whitespace() -> None:
+    assert normalize_email(" \t\n\r\f\vAna@Exemplo.COM\v") == "ana@exemplo.com"
+    assert normalize_email(f"{NBSP}ana@exemplo.com") == f"{NBSP}ana@exemplo.com"
+    assert normalize_email(f"{BOM}ana@exemplo.com{IDEOGRAPHIC_SPACE}") == f"{BOM}ana@exemplo.com{IDEOGRAPHIC_SPACE}"
+
+
+def test_ascii_edge_whitespace_is_accepted() -> None:
+    assert codes("  ana@exemplo.com\t", VALID_PASSWORD) == []
+
+
+@pytest.mark.parametrize(("email", "expected"), [
+    # Estrutura do LoginForm: ^[^F]+@[^F.]+([.][^F.]+)+$ — o domínio não tem ponto vazio.
+    ("a@b..com", [("email", "email_invalid")]),
+    ("a@.b.com", [("email", "email_invalid")]),
+    ("a@b.com.", [("email", "email_invalid")]),
+    ("a@b", [("email", "email_invalid")]),
+    ("ana@exemplo.com.br", []),
+    ("a.b@c.co", []),
+])
+def test_domain_keeps_the_login_form_structure(email: str, expected: list[tuple[str, str]]) -> None:
+    assert codes(email, VALID_PASSWORD) == expected
 
 
 @pytest.mark.parametrize("email", ["", "   ", "\t\n"])

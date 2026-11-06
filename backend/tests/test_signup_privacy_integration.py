@@ -126,3 +126,11 @@ def test_passwords_and_source_ips_never_leak(engine, client: TestClient, hash_se
     # 201, 422 e 409 contam; o 429 não.
     assert counts == {expected_ipv4: 3, expected_ipv6: 1}
     assert source_hash(IPV4, secrets.token_hex(32)) != expected_ipv4
+
+
+def test_control_characters_in_email_are_refused_before_postgres(engine, client: TestClient) -> None:
+    for control in (chr(0), chr(0x1C), chr(0xFEFF)):
+        email = f"ctrl{control}-{uuid.uuid4().hex}@exemplo.com"
+        refused = client.post("/api/auth/signup", json={"email": email, "password": "senha-controle-123"})
+        assert refused.status_code == 422, refused.text
+        assert refused.json()["error"]["fields"][0]["code"] == "email_invalid"

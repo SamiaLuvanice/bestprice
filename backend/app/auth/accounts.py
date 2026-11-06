@@ -1,7 +1,11 @@
 """Regras de conta compartilhadas por cadastro, login e linha de comando.
 
-A expressão de e-mail é a tradução literal da usada pelo frontend
-(`/^[^\\s@]+@[^\\s@.]+(\\.[^\\s@.]+)+$/`), para que as duas pontas concordem.
+A regra de e-mail é idêntica à de `frontend/src/auth/accountRules.ts`. Ela não usa a classe de
+espaços do regex nem `str.strip()` padrão, cujas definições de espaço diferem entre Python e JavaScript:
+
+- normalização: tira só os espaços ASCII das pontas (EMAIL_EDGE_WHITESPACE) e passa a minúsculas;
+- formato `^[^F]+@[^F.]+([.][^F.]+)+$` (estrutura do LoginForm), em que F é FORBIDDEN_EMAIL_RANGES.
+
 Os comprimentos são contados em code points (`len` de `str`).
 """
 
@@ -18,7 +22,20 @@ from app.products.models import User
 EMAIL_MAX_CHARS = 320
 PASSWORD_MIN_CHARS = 12
 PASSWORD_MAX_CHARS = 1024
-EMAIL_PATTERN = re.compile(r"[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+")
+EMAIL_EDGE_WHITESPACE = "".join(map(chr, (0x20, 0x09, 0x0A, 0x0D, 0x0C, 0x0B)))  # espaço, TAB, LF, CR, FF, VT
+# `@`, controles C0 e espaço, DEL e controles C1, NBSP e os separadores/espaços Unicode, BOM.
+FORBIDDEN_EMAIL_RANGES = (
+    (0x40, 0x40), (0x00, 0x20), (0x7F, 0x9F), (0xA0, 0xA0), (0x1680, 0x1680), (0x2000, 0x200A),
+    (0x2028, 0x2029), (0x202F, 0x202F), (0x205F, 0x205F), (0x3000, 0x3000), (0xFEFF, 0xFEFF),
+)
+_FORBIDDEN = "".join(
+    re.escape(chr(first)) if first == last else f"{re.escape(chr(first))}-{re.escape(chr(last))}"
+    for first, last in FORBIDDEN_EMAIL_RANGES
+)
+_LOCAL = f"[^{_FORBIDDEN}]+"
+_LABEL = f"[^{_FORBIDDEN}.]+"
+# Estrutura do LoginForm: ^[^F]+@[^F.]+([.][^F.]+)+$ (domínio sem ponto vazio).
+EMAIL_PATTERN = re.compile(f"{_LOCAL}@{_LABEL}(?:[.]{_LABEL})+")
 
 
 @dataclass(frozen=True)
@@ -40,14 +57,14 @@ PASSWORD_TOO_LONG = RuleViolation(
 
 
 def normalize_email(raw: str) -> str:
-    return raw.strip().lower()
+    return raw.strip(EMAIL_EDGE_WHITESPACE).lower()
 
 
 def _email_violation(raw: str) -> RuleViolation | None:
     # O limite vale para o valor como digitado, antes de tirar os espaços das pontas.
     if len(raw) > EMAIL_MAX_CHARS:
         return EMAIL_TOO_LONG
-    stripped = raw.strip()
+    stripped = raw.strip(EMAIL_EDGE_WHITESPACE)
     if not stripped:
         return EMAIL_REQUIRED
     if EMAIL_PATTERN.fullmatch(stripped) is None:

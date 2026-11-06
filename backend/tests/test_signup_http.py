@@ -362,3 +362,10 @@ def test_new_account_sees_only_its_own_empty_data(enabled: Harness) -> None:
         f"/api/ai/conversations/{other_ids['conversation']}",
     ):
         assert enabled.client.get(path).status_code == 404, path
+
+
+def test_email_with_nul_is_refused_as_invalid_not_server_error(enabled: Harness) -> None:
+    refused = enabled.signup("ana" + chr(0) + "@exemplo.com")
+    assert refused.status_code == 422
+    assert [(f["field"], f["code"]) for f in error(refused)["fields"]] == [("email", "email_invalid")]
+    assert enabled.users() == []
