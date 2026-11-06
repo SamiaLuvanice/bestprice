@@ -42,3 +42,13 @@ textos vêm do plano e do brief `design/figma-brief.md` (provisórios até o Fig
   confirmação diferente e mensagens pelos `code` estáveis do servidor.
 - Limite conhecido: `\s` e `trim()` do JavaScript e `\s`/`strip()` do Python divergem em
   caracteres raros (U+001C–U+001F, U+FEFF). Fora da tabela comum; o servidor decide.
+
+## F3 — disponibilidade (`auth/useSignupAvailability.ts`)
+
+- Red (esqueleto que sempre devolve `loading`): `npx vitest run
+  src/auth/useSignupAvailability.test.ts` → `Tests 5 failed | 1 passed (6)`, todas por
+  `AssertionError: expected 'loading' to be 'enabled' | 'disabled' | 'error'`. O que passou é o
+  de desmontagem (continua `loading`, verdadeiro também sem implementação).
+- Green: mesmo comando → `Tests 6 passed (6)`.
+- Cobertura: `loading` → `enabled`; `disabled`; `error` com HTTP 503, falha de rede e corpo
+  inválido, e `retry` volta a `loading` e consulta de novo; resposta após desmontar ignorada.
