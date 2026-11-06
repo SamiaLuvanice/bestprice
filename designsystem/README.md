@@ -20,6 +20,27 @@ evolução gradual das telas. Consulte o
 para frames, desktop/mobile, reutilização e exportações quando o MCP não estiver
 disponível. Os assets e protótipos locais abaixo permanecem preservados.
 
+## Harmonização do Figma em revisão — spec 0042
+
+Em 29/10/2026, a pessoa responsável solicitou alinhar todas as telas do Figma às
+propostas recentes de Assistente 0040 e Monitoramento 0041. Na proposta Figma,
+ações principais equivalentes passam a usar rosa `#c7005e` com texto branco;
+verde `#39ff14` permanece na marca/ilustração e situações favoráveis têm tinta
+verde escura legível. Isso resolve a concorrência entre CTAs verdes antigos e
+rosas recentes. Não altera os tokens executáveis da SPA nesta etapa.
+
+A composição em revisão usa header interno de 80 px, sidebar de 240 px, margem
+desktop de 32 px e margem mobile de 16–20 px. Títulos internos têm 30 px no
+desktop e 24 px no mobile; controles têm altura mínima de 44 px, raio 12 px e
+superfícies de seção com raio 16–20 px. IA permanece menor e elevada, junto do
+nome BestPrice, com a logo original preservada. A navegação mobile mostra
+Assistente, Comparar, Histórico e Monitorar, com ícone e rótulo.
+
+As superfícies afetadas são landing, entrada, páginas internas, estados e
+referências de componentes do mesmo arquivo Figma. A implementação e a aprovação
+visual continuam independentes desta harmonização; ver
+[spec 0042](../specs/0042-telas-figma-padrao-consistente/spec.md).
+
 ## Extensão BestPrice AI em preparação — spec 0034
 
 A direção A, “Conversa em primeiro plano”, foi escolhida em 26/10/2026. Reutiliza
