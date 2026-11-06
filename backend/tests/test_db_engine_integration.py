@@ -97,3 +97,23 @@ def test_opening_a_connection_is_bounded(monkeypatch: pytest.MonkeyPatch) -> Non
 
     assert elapsed < 10
     assert "secret" not in str(failure.value)
+
+
+def test_database_error_does_not_expose_bound_parameters() -> None:
+    from sqlalchemy.exc import DBAPIError
+
+    test_url = os.environ.get("TEST_DATABASE_URL")
+    if not test_url:
+        pytest.skip("TEST_DATABASE_URL não configurada para integração PostgreSQL")
+    engine = create_engine(test_url.replace("postgresql://", "postgresql+psycopg://", 1), **db.engine_kwargs())
+    secret = "valor-sensivel-" + os.urandom(4).hex()
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("CREATE TEMP TABLE hidden_parameters_probe (value VARCHAR(5))"))
+            # "value too long": a mensagem do servidor não repete o valor; só os parâmetros o trariam.
+            with pytest.raises(DBAPIError) as raised:
+                connection.execute(text("INSERT INTO hidden_parameters_probe VALUES (:value)"), {"value": secret})
+    finally:
+        engine.dispose()
+    assert secret not in str(raised.value)
+    assert "hidden" in str(raised.value)
