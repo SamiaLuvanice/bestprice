@@ -73,6 +73,8 @@ def test_catalog_page_resolves_repeated_selected_listing_id(separator: str) -> N
     [
         "https://www.mercadolivre.com.br/notebook/p/MLB70040749",
         "https://www.mercadolivre.com.br/notebook/p/MLB70040749?pdp_filters=item_id:invalid",
+        "https://www.mercadolivre.com.br/notebook/p/MLB70040749?pdp_filters=item_id:MLB70040749",
+        "https://www.mercadolivre.com.br/notebook/p/mlb70040749?pdp_filters=item_id:MLB70040749",
     ],
 )
 def test_catalog_page_rejects_missing_or_malformed_listing_id(url: str) -> None:
@@ -151,6 +153,15 @@ def test_catalog_registration_uses_selected_publication_id() -> None:
         ("https://www.mercadolivre.com.br/produto/p/MLB1234567890", "unsupported_url_format", "anúncio"),
         ("https://produto.mercadolivre.com.br/MLB-1234567890-titulo-MLB-9999999999-_JM", "ambiguous_item_id", "identificador"),
         ("https://example.com/item", "invalid_url", "Insira um link válido"),
+        ("https://www.mercadolivre.com.br/notebook/p/MLB70040749?pdp_filters=item_id:invalid", "unsupported_url_format", "anúncio"),
+        (
+            (
+                "https://www.mercadolivre.com.br/notebook/p/MLB70040749?"
+                "pdp_filters=item_id:MLB6972021044|item_id:MLB6972021045"
+            ),
+            "ambiguous_item_id",
+            "identificador",
+        ),
     ],
 )
 def test_registration_returns_specific_url_error_without_calling_source(url: str, code: str, hint: str) -> None:

@@ -7,7 +7,7 @@ ALLOWED_HOSTS = frozenset({"produto.mercadolivre.com.br", "www.mercadolivre.com.
 LIST_HOSTS = frozenset({"lista.mercadolivre.com.br"})
 SHORT_LINK_HOSTS = frozenset({"meli.la"})
 LISTING_PATH = re.compile(r"/MLB-([0-9]+)-([A-Za-z0-9][A-Za-z0-9._-]*)-_JM/?", re.IGNORECASE)
-CATALOG_PATH = re.compile(r"/[A-Za-z0-9][A-Za-z0-9._-]*/p/MLB[0-9]+/?", re.IGNORECASE)
+CATALOG_PATH = re.compile(r"/[A-Za-z0-9][A-Za-z0-9._-]*/p/(MLB[0-9]+)/?", re.IGNORECASE)
 FILTERED_LISTING_ID = re.compile(r"item_id:(MLB[0-9]+)\Z", re.IGNORECASE)
 EMBEDDED_ID = re.compile(r"MLB-?[0-9]+", re.IGNORECASE)
 
@@ -82,13 +82,14 @@ def _extract_listing_id(path: str, query: str) -> ParsedProductUrl:
             raise InvalidProductUrl("ambiguous_item_id", AMBIGUOUS_ID_MESSAGE)
         return ParsedProductUrl(external_id=f"MLB{match.group(1)}")
 
-    if CATALOG_PATH.fullmatch(path):
-        return _extract_selected_listing_id(query)
+    catalog = CATALOG_PATH.fullmatch(path)
+    if catalog is not None:
+        return _extract_selected_listing_id(query, catalog_id=catalog.group(1).upper())
 
     raise InvalidProductUrl("unsupported_url_format", UNSUPPORTED_FORMAT_MESSAGE)
 
 
-def _extract_selected_listing_id(query: str) -> ParsedProductUrl:
+def _extract_selected_listing_id(query: str, catalog_id: str) -> ParsedProductUrl:
     filter_values = parse_qs(query, keep_blank_values=True).get("pdp_filters", [])
     if not filter_values:
         raise InvalidProductUrl("unsupported_url_format", UNSUPPORTED_FORMAT_MESSAGE)
@@ -101,4 +102,8 @@ def _extract_selected_listing_id(query: str) -> ParsedProductUrl:
             listing_ids.add(selection.group(1).upper())
     if len(listing_ids) != 1:
         raise InvalidProductUrl("ambiguous_item_id", AMBIGUOUS_ID_MESSAGE)
-    return ParsedProductUrl(external_id=listing_ids.pop())
+    listing_id = listing_ids.pop()
+    # A catalog ID never becomes a listing ID, even when repeated in the filter.
+    if listing_id == catalog_id:
+        raise InvalidProductUrl("unsupported_url_format", UNSUPPORTED_FORMAT_MESSAGE)
+    return ParsedProductUrl(external_id=listing_id)

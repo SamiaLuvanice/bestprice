@@ -75,3 +75,31 @@ Gates na worktree após o merge (Windows, sem PostgreSQL de teste):
 - `complexity_report.py`: nenhum bloco com rank >= D.
 
 A integração PostgreSQL real fica a cargo do CI da PR.
+
+## Revisão independente e ajuste — 06/11/2026
+
+Revisão independente (arch-reviewer) sobre `d1c695a`: **aprovar com ressalvas**, sem
+bloqueio. Sondas de borda do parser (codificação `%7C`/`%3A`, caixa, múltiplos
+`pdp_filters`, hosts, porta, userinfo, fragmento) confirmaram o comportamento; sem
+SSRF, contrato de erros inalterado e CI verde. Ajustes incorporados:
+
+- **P2:** `/slug/p/MLB70040749?pdp_filters=item_id:MLB70040749` era aceito e usava o
+  ID do catálogo como publicação, contrariando o AC01. Agora retorna
+  `unsupported_url_format`, inclusive com o caminho em minúsculas.
+- **AC03 na rota:** filtro malformado e IDs distintos entraram na tabela HTTP com
+  `ForbiddenSource`, provando 400 sem consulta à fonte.
+
+TDD: com os testes novos e o parser anterior, `uv run pytest -q
+tests/test_url_error_codes.py` deu **2 failed, 30 passed** (`DID NOT RAISE
+InvalidProductUrl` nos dois casos da P2; os casos HTTP já passavam). Após a
+correção: **32 passed**; `uv run ruff check .`: All checks passed; `uv run pytest -q`:
+**407 passed, 61 skipped** (mesmos motivos); `complexity_report.py --baseline
+.complexity-baseline.json`: nenhum bloco novo com rank >= D (`parse_product_url`
+segue C/19, `_extract_selected_listing_id` B/7; a violação `get_dashboard` D/24 é
+anterior e está na baseline).
+
+Ressalvas mantidas como limite conhecido, fora deste PR: `pdp_filters` com outras
+chaves (`deal:…|item_id:…`) é recusado; `re.IGNORECASE` aceita variantes Unicode de
+`i` na chave `item_id` sem efeito no ID capturado; o número de dígitos do ID não é
+limitado (comportamento anterior, também em `LISTING_PATH`; `external_id` é
+`String(32)`).
