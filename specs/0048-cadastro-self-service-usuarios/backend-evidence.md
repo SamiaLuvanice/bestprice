@@ -308,3 +308,57 @@ Observações:
 | `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider -rs` | **446 passed, 2 skipped** em 37,11 s (antes: 417). Skips: `test_stage_start.py` (POSIX). |
 | `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
 | `complexity_report.py backend/app --changed origin/develop` | 179 blocos, média 2,77 (A); A 163 · B 13 · C 3 (os mesmos três testes). Nenhum bloco ≥ D. `signup_settings` subiu para B (8). |
+
+## Correções da revisão — rodada 2 (R2)
+
+Base `e5efe96`. PostgreSQL 18 descartável (127.0.0.1:55448).
+
+### 1 — Surrogate isolado (`\ud800`) no e-mail ou na senha
+
+Os testes montam o corpo com `json.dumps(..., ensure_ascii)`, que envia o escape `\ud800`
+num JSON válido.
+
+- Red: **6 failed**.
+  - HTTP em SQLite, e-mail e senha: `UnicodeEncodeError: 'utf-8' codec can't encode character '\ud800'` (500).
+  - HTTP em PostgreSQL real, e-mail e senha: mesmo erro.
+  - CLI: `parser.error` com a mensagem técnica do codec em inglês, em vez de uma mensagem em português.
+- Green:
+  - `utf8_encodable` em `accounts.py`. Ela fica fora da classe proibida compartilhada, que
+    continua idêntica ao frontend.
+  - `parse_signup_body` recusa com 422 `json_required` (`field` "body") depois do `model_validate`.
+  - A CLI encerra com "O e-mail contém caracteres inválidos." ou "A senha contém caracteres
+    inválidos." (código 2, sem traceback e sem conta criada).
+  - Resultado: **99 passed** (signup HTTP, sigilo/PostgreSQL, CLI e regras). Commit `e9a7dfd`.
+
+### 2 — Retenção da origem
+
+- Red: **3 failed**.
+  - A tentativa não apagava as vencidas da própria origem (contagem 6 ≠ 5;
+    `[NOW−3h, NOW−60min, NOW−59min, NOW]` ≠ `[NOW−59min, NOW]`).
+  - O `cleanup_loop(interval=3600)` não fazia o purge na partida: a linha de `NOW−2h`
+    continuava após 5 s.
+- Regressões que já passavam e foram mantidas:
+  - recusa (429) não grava nada, nem o purge da própria origem, por causa do `rollback`;
+  - a tentativa não apaga vencidas de outra origem;
+  - o loop sobrevive a uma falha no purge da partida (`OperationalError`) e tenta de novo.
+- Green:
+  - `check_and_record`, sob o advisory lock, faz
+    `DELETE … WHERE source_hash = :key AND attempted_at <= now − janela`.
+  - `cleanup_loop` executa o `cleaner` uma vez antes do primeiro `sleep`, em threadpool, numa
+    tarefa de fundo que não bloqueia a partida, e tolera falha (`_run_cleaner`).
+  - O comentário de retenção em `cleanup.py` foi atualizado: o purge na partida cobre a hibernação.
+  - Resultado: **79 passed** (limitador, cleanup, settings, concorrência, sigilo). Commit `a88db49`.
+
+### Gates (ponta `a88db49`)
+
+| Comando | Resultado |
+|---|---|
+| `uv run ruff check .` | All checks passed! |
+| `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider -rs` | **456 passed, 2 skipped** em 134,03 s (antes: 446). Skips: `test_stage_start.py` (POSIX). |
+| `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
+| `complexity_report.py backend/app --changed origin/develop` | 191 blocos, média 2,79 (A); A 174 · B 14 · C 3 (os mesmos três testes). Nenhum bloco ≥ D. `parse_signup_body` B (6); `cleanup_loop` e `_run_cleaner` A (2). |
+
+O tempo da suíte subiu de 37–54 s para 134 s. `--durations=8` (132,70 s) não mostra nenhum
+teste de `lifespan` entre os lentos. O maior é o preexistente
+`test_worker_processes_integration` (31,71 s); os demais ficam abaixo de 2,1 s. Atribuo a
+diferença à carga da máquina com o frontend rodando em paralelo. Isso é inferência, não medição.
