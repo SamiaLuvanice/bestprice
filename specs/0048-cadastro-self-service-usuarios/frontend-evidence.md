@@ -330,3 +330,84 @@ escopo de F8–F10); as baselines existentes não foram regeneradas.
 - Contraste medido pelo axe no DOM; o ícone "!" é pseudo-elemento decorativo e não entra na
   medição.
 - Não houve verificação com leitor de tela real nem com a API real (I1/I2).
+
+## R2 — rodada 2 da revisão (frontend)
+
+Base `e5efe96`; os commits do backend da mesma rodada (`e9a7dfd`, `a88db49`, `cd5774f`) entraram
+em paralelo na mesma branch.
+
+### 1. Ordem do cabeçalho da landing
+
+- O DOM passa a ter a ordem do desktop: "Criar conta" e depois "Entrar". Com isso a ordem de Tab
+  é igual à ordem visual. Saíram de `research.css` os `order` e os seletores `:has` que
+  invertiam a posição; o espaço de 12 px usa `a.research-signup + a`.
+- Teste de F4 em `LandingPage.test.tsx` ajustado para a nova ordem (`DOCUMENT_POSITION_PRECEDING`).
+  Red antes da troca: `npx vitest run src/landing/LandingPage.test.tsx` → `expected 4 to be 2`.
+  Green depois.
+- **Desvio consciente do quadro `224:2`:** no menu móvel, "Criar conta" agora fica **acima** de
+  "Entrar" (o quadro mostra "Entrar" primeiro). A mesma ordem nas duas larguras evita a diferença
+  entre a leitura visual e o Tab.
+- Baselines regeneradas: só `landing-menu-mobile.png`. `landing-header-desktop.png` passou sem
+  mudança, porque a posição visual no desktop é a mesma.
+
+### 2. Topo do cadastro no mobile
+
+- Até 700 px, `.signup-shell .login-form-side` alinha ao topo (`justify-content: flex-start`)
+  com `padding-top: min(130px, 15svh)`. Antes o conteúdo era centralizado e, como o cadastro é
+  mais alto que o login, a marca subia (cerca de 95 px no padrão e 55 px com erros). O desktop
+  não muda.
+- Nos quadros mobile, `signup.spec.ts` agora confere que a marca fica entre y = 120 e 140. Na
+  captura, a marca fica em y ≈ 130 em todos os estados, como em `220:871`/`220:965`. A página
+  cresce além de 899 px quando há erro ou alerta, como os quadros (947 a 973 px).
+- Baselines regeneradas: só as 7 `signup-*-mobile.png`.
+- Comparação com `0048-figma-cadastro-erros-campos-mobile.png`: a marca e o título estão na
+  mesma altura. O resto do conteúdo fica um pouco mais baixo por causa da fonte do sistema e do
+  erro de e-mail mais longo, que ocupa duas linhas.
+
+### 3. Reanúncio da região `status`
+
+- `SignupForm.tsx`: a função `announce(text)` esvazia a região e escreve o resumo no quadro
+  seguinte (`requestAnimationFrame`). O quadro pendente é cancelado num novo envio ou ao
+  desmontar. Assim, o mesmo resumo em outro envio muda o texto da região e volta a ser lido.
+- Red: o teste novo "reanuncia o mesmo resumo em um novo envio…" →
+  `expect(element).toBeEmptyDOMElement()` falhou, porque a região mantinha o texto. Green:
+  `npx vitest run src/auth/SignupForm.test.tsx src/landing/LandingPage.test.tsx` →
+  `Tests 36 passed (36)`.
+- Dois testes de R-2 que liam a região logo após o clique passaram a usar `waitFor`. O texto
+  esperado é o mesmo; só o momento mudou, para o quadro seguinte.
+
+### 4. Estabilidade do `signup.spec.ts`
+
+- Antes de cada captura do cadastro e do login: `document.fonts.ready` e decodificação da arte
+  lateral. A arte é um fundo CSS: a URL é lida de `getComputedStyle(...).backgroundImage` e
+  decodificada com `Image.decode()`. No mobile não há arte.
+- `npx playwright test tests/visual/signup.spec.ts --project=viewport-1280 --repeat-each=3`:
+  - 1ª execução: `2 failed | 52 passed`. As falhas foram "padrao · desktop" e "foco · desktop"
+    em `0ms`. O erro não ficou registrado.
+  - 2ª execução: `54 passed`.
+  - 3ª execução: `3 failed | 51 passed`. Em "padrao/foco/enviando · mobile" a marca estava em
+    y = 74. Causa: um commit do backend às 14:19:02. O pre-commit dele guarda e restaura os
+    arquivos não preparados da worktree compartilhada; `styles.css` foi reescrito às 14:19:18,
+    e o Vite serviu por alguns segundos a versão sem a regra nova.
+  - 4ª execução, sem commit concorrente: `54 passed`.
+  - Conclusão: as falhas observadas coincidem com commits concorrentes na mesma worktree, não
+    com a captura. Também é inferência que as de `0ms` tenham vindo dos commits de 14:11 e 14:13.
+
+### Limites conhecidos (registrados a pedido da revisão)
+
+- **V1:** depois de 409, 429 ou falha de rede, o foco vai para o campo (senha ou e-mail). O anel
+  de foco rosa (`:focus-visible`, declarado depois de `[aria-invalid]` com a mesma especificidade)
+  substitui a borda vermelha de inválido mostrada no quadro enquanto o campo está
+  focado. A borda volta ao sair do campo; a mensagem de erro e o `aria-invalid` permanecem.
+- **NBSP no fim do e-mail:** o cadastro recusa (`email_invalid`), porque a regra local é idêntica
+  à do backend: só ` \t\n\r\f\v` são removidos das pontas. O login aceita, porque usa `trim()`,
+  que remove U+00A0. Mantido para preservar a regra idêntica ao backend.
+
+### Gates (em `frontend/`)
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | saída 0 |
+| `npm test -- --run` | `Test Files 38 passed (38)`, `Tests 531 passed (531)` (530 + 1 novo); sem o timeout da Issue #247 |
+| `npm run build` | `✓ built in 1.29s`, saída 0 |
+| `npx playwright test tests/visual/signup.spec.ts` | `24 passed`, `48 skipped` |
