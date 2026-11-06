@@ -134,3 +134,34 @@ textos vêm do plano e do brief `design/figma-brief.md` (provisórios até o Fig
 - `npx tsc -b` e `npx eslint functions src/pagesProxy.test.ts` sem erros.
 - Pendente (fora do frontend): confirmar na documentação da Cloudflare que `cf-connecting-ip`
   não é forjável pelo cliente (B0) e validar em Stage com o interruptor ligado (I3).
+
+## Gates do frontend (F1–F7, ponta `25f0d5f`)
+
+Rodados em `frontend/` sem `pytest` concorrente na máquina:
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | `eslint .` sem problemas, saída 0 |
+| `npm test -- --run` | `Test Files 38 passed (38)`, `Tests 511 passed (511)` (base 413 + 98 novos), saída 0 |
+| `npm run build` | `tsc -b && vite build` → `✓ built in 2.33s`, saída 0 |
+
+## Decisões e desvios
+
+- O e-mail é enviado sem espaços nas pontas (`email.trim()`), como no login; o servidor normaliza
+  de qualquer forma. Na interface, `type="email"` já remove os espaços das pontas, então o limite
+  de 320 "antes do strip" é garantido de verdade só pelo servidor; a regra local continua igual.
+- Erros do `422` só com `field: "body"` (ou sem `fields` válidos) vão para o alerta geral com a
+  mensagem do servidor.
+- Depois de uma recusa do servidor sem erro de campo, o foco vai para a senha (limpa), como no
+  login; com erro de campo, para o primeiro campo inválido.
+- O alerta de falha ao consultar a disponibilidade em `/cadastro` usa o texto "Não foi possível
+  verificar o cadastro agora. Tente novamente." (o plano não fixava o texto).
+- O link "Criar conta" da landing fica logo depois de "Entrar" na navegação, sem CSS novo; a
+  posição final depende de D1/F8.
+- O proxy também remove `x-bestprice-*` da resposta, recriando-a com status e cabeçalhos
+  (incluindo vários `Set-Cookie`).
+
+## Pendências
+
+- F8–F10 (layout aprovado, CSS, Playwright 1440/390 e AC13) bloqueados por D1.
+- Integração ponta a ponta com a API real (I1/I2) e Stage (I3) não executadas aqui.
