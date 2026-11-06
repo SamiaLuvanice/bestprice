@@ -103,7 +103,8 @@ it('mostra Criar conta junto de Entrar quando o cadastro está ligado e leva ao 
   const nav = screen.getByRole('navigation', { name: 'Navegação principal' })
   const link = await within(nav).findByRole('link', { name: 'Criar conta' })
   expect(link).toHaveAttribute('href', '/cadastro')
-  expect(within(nav).getByRole('link', { name: 'Entrar' }).compareDocumentPosition(link)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  // Revisão R2: ordem do DOM = ordem visual do desktop (Criar conta antes de Entrar), também no Tab.
+  expect(within(nav).getByRole('link', { name: 'Entrar' }).compareDocumentPosition(link)).toBe(Node.DOCUMENT_POSITION_PRECEDING)
 })
 
 it.each([
