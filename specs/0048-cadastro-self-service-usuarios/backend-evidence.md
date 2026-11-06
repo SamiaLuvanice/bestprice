@@ -246,3 +246,24 @@ no monitoramento, no alerta e na conversa da outra conta.
   `sync: false`; YAML válido (`yaml.safe_load`) e `test_stage_start.py` 1 passed (2 skips POSIX).
   O Blueprint do Render precisa de sincronização manual depois dos checks
   (`docs/apps/infraestrutura.md`).
+
+## B13 — Gates do backend (ponta `56f0385`)
+
+| Comando (`backend/`, salvo indicação) | Resultado |
+|---|---|
+| `uv sync --locked --extra dev` | ok (37 pacotes) |
+| `uv run ruff check .` | All checks passed! |
+| `TEST_DATABASE_URL=postgresql://bestprice:***@127.0.0.1:55448/bestprice_test uv run pytest -q -p no:cacheprovider -rs` | **417 passed, 2 skipped, 1 warning** em 54,00 s (baseline: 302 passed). Os 2 skips são `test_stage_start.py` (script POSIX, só na imagem Linux). Nenhuma integração nova foi pulada. |
+| `DATABASE_URL=… uv run alembic check` | No new upgrade operations detected. |
+| `python .agents/skills/cyclomatic-complexity/scripts/complexity_report.py backend/app --changed origin/develop` (raiz) | 152 blocos, média 2,74 (A); A 137 · B 12 · C 3. Nenhum bloco ≥ D. Os 3 blocos C são **testes** novos com várias asserções (`test_every_submission_past_the_switch_counts_and_the_limit_returns_429` 14, `test_passwords_and_source_ips_never_leak` 14, `test_signup_creates_account_and_starts_the_same_session_as_login` 11); a regra de complexidade mira funções de negócio em `backend/app`. |
+| `uv run radon cc -s -n B app/auth app/errors.py app/research/cleanup.py app/main.py` | Só B: `signup` 6, `signup_settings` 6, `current_user` 6 (preexistente). Demais funções novas em A (`add_account` 4, `parse_signup_body` 4, `PostgresSignupLimiter.check_and_record` 2…). |
+
+Testes novos por arquivo: `test_account_rules.py` 34, `test_user_provision.py` 9,
+`test_auth_http.py` +1, `test_signup_settings.py` 20, `test_signup_source.py` 16,
+`test_signup_limit_integration.py` 7 (PostgreSQL), `test_signup_http.py` 26,
+`test_signup_concurrency_integration.py` 2 (PostgreSQL), `test_signup_privacy_integration.py` 1
+(PostgreSQL), `test_rls_migration_integration.py` atualizado.
+
+Pendências que não são do backend: validação real da origem atrás do Pages em Stage (I3, só
+com o interruptor ligado), fluxo ponta a ponta no Compose (I1/I2), revisão independente (R1),
+QA (Q1) e `doc-sync-onboarding` (S1).
