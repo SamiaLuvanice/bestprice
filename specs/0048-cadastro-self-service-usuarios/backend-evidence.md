@@ -103,3 +103,17 @@ atrás do Pages) continua pendente até o interruptor ser ligado em Stage (I3).
   `SIGNUP_SOURCE_HASH_SECRET` falha em development/test/stage/production; ligado em
   stage/production sem `TRUSTED_PROXY_SECRET` falha; local sem segredo do proxy inicia;
   `lifespan` em stage com cadastro desligado e sem segredos inicia.
+
+## B5 — Origem do cadastro (`tests/test_signup_source.py`)
+
+Pré-requisito B0 registrado acima antes deste Red.
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_signup_source.py` →
+  `ModuleNotFoundError: No module named 'app.auth.limiter'`. Motivo esperado.
+- Green: `app/auth/limiter.py` com `normalize_source`, `source_hash` e `signup_source_key`
+  → **16 passed**. Cobertos: segredo correto + IP válido usa o cabeçalho; sem segredo,
+  segredo errado ou vazio, IP inválido, lista de IPs e `X-Forwarded-For`/`CF-Connecting-IP`
+  diretos caem no peer; sem `TRUSTED_PROXY_SECRET` o cabeçalho é ignorado; peer ausente →
+  balde `unknown`; IPv6 → `/64` (mesmo /64 compartilha balde, outro /64 não); IPv4 mapeado →
+  IPv4; chave = HMAC-SHA256 hexadecimal de 64 caracteres, determinística, muda com o segredo,
+  diferente do SHA-256 sem segredo e sem o IP. Comparação do segredo com `hmac.compare_digest`.
