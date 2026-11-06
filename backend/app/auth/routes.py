@@ -165,7 +165,8 @@ def parse_signup_body(content_type: str, body: bytes) -> SignupRequest:
         raise json_required
     try:
         data: Any = json.loads(body)
-    except ValueError:
+    except (ValueError, RecursionError):
+        # RecursionError: aninhamento profundo ([[[[…]]]]) não pode virar 500.
         raise json_required from None
     try:
         return SignupRequest.model_validate(data)

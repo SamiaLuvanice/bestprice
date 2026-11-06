@@ -369,3 +369,12 @@ def test_email_with_nul_is_refused_as_invalid_not_server_error(enabled: Harness)
     assert refused.status_code == 422
     assert [(f["field"], f["code"]) for f in error(refused)["fields"]] == [("email", "email_invalid")]
     assert enabled.users() == []
+
+
+@pytest.mark.parametrize("depth", [100_000, 1_000_000])
+def test_deeply_nested_json_is_refused_with_json_required(enabled: Harness, depth: int) -> None:
+    content = b"[" * depth + b"]" * depth
+    refused = enabled.client.post("/api/auth/signup", content=content, headers={"Content-Type": "application/json"})
+    assert refused.status_code == 422
+    assert error(refused)["fields"] == [{"field": "body", "code": "json_required", "message": GENERIC}]
+    assert len(enabled.limiter.recorded) == 1
