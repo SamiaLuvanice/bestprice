@@ -26,3 +26,7 @@ def test_create_database_engine_applies_pool_options(monkeypatch: pytest.MonkeyP
     finally:
         engine.dispose()
         db.create_database_engine.cache_clear()
+
+
+def test_engine_hides_sql_parameters_in_errors_and_logs() -> None:
+    assert db.engine_kwargs()["hide_parameters"] is True

@@ -1,0 +1,27 @@
+--- controle: a conta ops enxerga os próprios dados
+ops2   /api/tracked-products                                   {"items":[{"id":"22222222-2222-2222-2222-222222222222","active":true,"active_since":"2026-11-06T15:59:47.253919Z","product":{"id":"11111111-1111-1111-1111-111111111111","external_id":"MLB999000111","title":"Produto da co
+
+ops2   /api/notifications                                      {"items":[{"id":"44444444-4444-4444-4444-444444444444","tracked_product_id":"22222222-2222-2222-2222-222222222222","type":"target_reached","product_title":"Produto da conta ops","observed_price":"89.90","target_price":"9
+
+ops2   /api/research                                           {"items":[{"id":"55555555-5555-5555-5555-555555555555","title":"Conversa da conta ops","created_at":"2026-11-06T15:59:47.253919Z","updated_at":"2026-11-06T15:59:47.253919Z","expires_at":"2026-12-06T15:59:47.253919Z","kin
+
+ops2   /api/ai/conversations/55555555-5555-5555-5555-555555555555 {"id":"55555555-5555-5555-5555-555555555555","title":"Conversa da conta ops","created_at":"2026-11-06T15:59:47.253919Z","updated_at":"2026-11-06T15:59:47.253919Z","expires_at":"2026-12-06T15:59:47.253919Z","messages":[{"
+
+--- AC11: conta maria (criada pelo cadastro na UI)
+maria  /api/dashboard                                          {"summary":{"tracked_count":0,"price_drop_count":0,"active_alert_count":0,"target_reached_count":0},"opportunities":[],"tracked_products":{"items":[],"next_cursor":null},"recent_updates":[]} [HTTP 200]
+
+maria  /api/tracked-products                                   {"items":[],"next_cursor":null} [HTTP 200]
+
+maria  /api/notifications                                      {"items":[],"next_cursor":null} [HTTP 200]
+
+maria  /api/research                                           {"items":[],"next_offset":null} [HTTP 200]
+
+maria  /api/tracked-products/22222222-2222-2222-2222-222222222222 {"error":{"code":"resource_not_found","message":"Monitoramento não encontrado.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} [HTTP 404]
+
+maria  /api/tracked-products/22222222-2222-2222-2222-222222222222/alert {"error":{"code":"resource_not_found","message":"Monitoramento não encontrado.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} [HTTP 404]
+
+maria  /api/tracked-products/22222222-2222-2222-2222-222222222222/history {"error":{"code":"resource_not_found","message":"Monitoramento não encontrado.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} [HTTP 404]
+
+maria  /api/ai/conversations/55555555-5555-5555-5555-555555555555 {"error":{"code":"research_not_found","message":"Pesquisa não encontrada.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} [HTTP 404]
+
+maria  PATCH /api/notifications/4444…                        {"error":{"code":"resource_not_found","message":"Notificação não encontrada.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} [HTTP 404]

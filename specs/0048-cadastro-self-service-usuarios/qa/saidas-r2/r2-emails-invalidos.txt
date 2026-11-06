@@ -1,0 +1,67 @@
+16:56:24
+{"enabled":true}
+== NUL no local
+corpo enviado (bytes ASCII): {"email":"marcanul\u0000x@exemplo.com","password":"senha-marcador-nul-1"}
+HTTP/1.1 422 Unprocessable Content
+content-length: 245
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_invalid","message":"Informe um e-mail válido, como nome@exemplo.com."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== U+001C no local
+corpo enviado (bytes ASCII): {"email":"marcafs\u001cx@exemplo.com","password":"senha-marcador-fs-1"}
+HTTP/1.1 422 Unprocessable Content
+content-length: 245
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_invalid","message":"Informe um e-mail válido, como nome@exemplo.com."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== BOM no início
+corpo enviado (bytes ASCII): {"email":"\ufeffmarcabom@exemplo.com","password":"senha-marcador-bom-1"}
+HTTP/1.1 422 Unprocessable Content
+content-length: 245
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_invalid","message":"Informe um e-mail válido, como nome@exemplo.com."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== NBSP no início
+corpo enviado (bytes ASCII): {"email":"\u00a0marcanbsp@exemplo.com","password":"senha-marcador-nbsp-1"}
+HTTP/1.1 422 Unprocessable Content
+content-length: 245
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_invalid","message":"Informe um e-mail válido, como nome@exemplo.com."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== a@b..com
+corpo enviado (bytes ASCII): {"email":"marcadot@b..com","password":"senha-marcador-dot-1"}
+HTTP/1.1 422 Unprocessable Content
+content-length: 245
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_invalid","message":"Informe um e-mail válido, como nome@exemplo.com."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== 6º envio (válido) -> 429
+corpo enviado (bytes ASCII): {"email":"r2-sexto@exemplo.com","password":"senha-r2-sexto-123"}
+HTTP/1.1 429 Too Many Requests
+retry-after: 60
+content-length: 174
+content-type: application/json
+
+{"error":{"code":"signup_rate_limited","message":"Muitas tentativas de cadastro. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":60}}
+
+ usuarios
+----------
+        0
+(1 row)
+
+ tentativas
+------------
+          5
+(1 row)
+
+marcanul no log uvicorn: 0 | no log pg: 0
+marcafs no log uvicorn: 0 | no log pg: 0
+marcabom no log uvicorn: 0 | no log pg: 0
+marcanbsp no log uvicorn: 0 | no log pg: 0
+marcadot no log uvicorn: 0 | no log pg: 0
+senha-marcador no log uvicorn: 0 | no log pg: 0

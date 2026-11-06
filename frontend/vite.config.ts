@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
     },
   },
   test: {

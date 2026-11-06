@@ -27,7 +27,7 @@ describe('carregamento do painel', () => {
   it('mostra esqueletos anunciados como carregando, sem números nem textos de vazio, até a resposta chegar', async () => {
     const response = deferred()
     fakeApi((url) => url === '/api/dashboard' ? response.promise : undefined)
-    at('/')
+    at('/app/monitoring/overview')
     render(<App clock={clock} />)
     const loadingStatus = (await screen.findByText('Carregando seu painel…')).closest('[role="status"]')
     expect(loadingStatus).not.toBeNull()
@@ -57,7 +57,7 @@ describe('estado vazio', () => {
   it('prioriza o hero, mostra os textos de vazio e oculta oportunidades, produtos e atualizações', async () => {
     fakeApi(() => undefined, emptyDashboard)
     const user = userEvent.setup()
-    at('/')
+    at('/app/monitoring/overview')
     render(<App clock={clock} />)
     expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
     expect(screen.getByText('Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.')).toBeInTheDocument()
@@ -94,7 +94,7 @@ describe('respostas concorrentes do painel', () => {
       return undefined
     })
     const user = userEvent.setup()
-    at('/')
+    at('/app/monitoring/overview')
     render(<App clock={clock} />)
     const summary = () => within(screen.getByRole('region', { name: 'Resumo do monitoramento' }))
     await waitFor(() => expect(summary().getByText('1')).toBeInTheDocument())
@@ -128,7 +128,7 @@ describe('falhas por região', () => {
       return undefined
     })
     const user = userEvent.setup()
-    at('/')
+    at('/app/monitoring/overview')
     render(<App clock={clock} />)
     const summary = within(await screen.findByRole('region', { name: 'Resumo do monitoramento' }))
     expect(await summary.findByRole('alert')).toHaveTextContent(message)
@@ -150,7 +150,7 @@ describe('falhas por região', () => {
       return undefined
     })
     const user = userEvent.setup()
-    at('/')
+    at('/app/monitoring/overview')
     render(<App clock={clock} />)
     const summary = () => within(screen.getByRole('region', { name: 'Resumo do monitoramento' }))
     await waitFor(() => expect(summary().getByText('1')).toBeInTheDocument())
@@ -179,7 +179,7 @@ describe('falhas por região', () => {
 
   it.each([['/api/dashboard'], ['/api/notifications'], [unreadUrl]])('volta à entrada com 401 em %s', async (target) => {
     fakeApi((url) => url === target ? reply(401, apiError('unauthenticated', 'Sua sessão expirou. Entre novamente.')) : undefined, dashboardFixture({ items: [trackedFixture()] }))
-    at(target === '/api/dashboard' ? '/' : '/alertas')
+    at(target === '/api/dashboard' ? '/app/monitoring/overview' : '/alertas')
     render(<App clock={clock} />)
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')

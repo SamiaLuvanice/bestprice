@@ -1,5 +1,65 @@
 # Módulo frontend
 
+## Fluxo oficial de design — Figma
+
+O Figma é a ferramenta oficial de UI/UX e a referência visual principal do
+BestPrice IA para interfaces web/mobile, componentes reutilizáveis, tokens,
+protótipos, layouts responsivos e evolução da experiência. O fluxo é
+**Figma → Codex → Implementação → Validação visual**. O redesign avança tela por
+tela, preservando arquitetura, funcionalidades e identidade visual existentes.
+
+A referência já registrada é o [arquivo Figma BestPrice](https://www.figma.com/design/LZVtUEAycEzfbwL0H5YL3r/BestPrice).
+A [exportação de 21/10/2026](../../designsystem/prototypes/2026-10-21-bestprice-figma/README.md)
+registra as páginas **00 · Design system**, **01 · Telas desktop** e
+**02 · Telas mobile**. Preserve essa organização como convenção e agrupe telas por
+fluxo, com estados e variantes identificados. A exportação é histórica e não
+comprova a estrutura nem o conteúdo atual do arquivo remoto; esta padronização
+não criou ou reorganizou frames no Figma.
+
+1. **Referenciar.** Em cada tarefa, registre o link do arquivo e frame com
+   `node-id`, nome da tela, rota existente, estado e viewport/dimensões. Relacione
+   as versões desktop/mobile da mesma tela e indique os estados necessários
+   (carga, vazio, erro, sucesso, foco e sobreposições, quando existirem).
+2. **Consultar.** Priorize o MCP oficial do Figma quando disponível e autorizado.
+   Consulte frame e screenshot, hierarquia, auto layout, dimensões, constraints,
+   propriedades, variantes de componentes, variáveis e estilos/tokens. Verifique
+   acesso ao arquivo na tarefa; a disponibilidade do conector não comprova
+   autenticação, leitura ou fidelidade atual. A configuração do servidor e a
+   autorização por cliente estão no [setup do harness](../harness-setup.md).
+3. **Mapear e implementar.** Antes de criar componentes, confira os equivalentes
+   em `frontend/src/components/`, `components/ui/`, `dashboard/` e
+   `features/research/`, incluindo `Brand`, `Button`, campos, cards e gráficos.
+   Reutilize composição e variantes existentes, adaptando a referência à stack
+   React/TypeScript atual. Mapeie os tokens Figma aos tokens semânticos de
+   `frontend/src/styles.css`; registre extensões em `designsystem/README.md`.
+   Preserve contratos, estados reais, acessibilidade e logo oficial. Divergências
+   de identidade ou de comportamento devem ser registradas e resolvidas antes
+   de uma alteração visual; não autorizam reconstrução ou redesign implícito.
+4. **Validar visualmente.** Compare a implementação com o frame/export aprovado
+   no mesmo viewport e estado: tipografia, cor, espaçamento, alinhamento,
+   componentes, conteúdo e assets. Confira desktop/mobile e larguras
+   intermediárias, inclusive 320, 390, 768 e 1280 px, overflow, toque, teclado,
+   contraste e movimento reduzido. Use os testes visuais existentes da aplicação
+   e registre diferenças e limites; novas baselines exigem revisão da referência.
+
+**MCP indisponível, sem autorização ou com limite:** use referências exportadas do
+Figma (PNG/SVG/PDF e informações de tokens/componentes quando necessárias).
+Registre arquivo de origem, link/node-id quando conhecido, data da exportação,
+estado, dimensões/escala e detalhes não verificáveis. Identifique capturas antigas
+como tal. Se faltar informação essencial, solicite a referência exportada ou o
+detalhe antes de implementar a parte dependente; não invente variantes, valores
+ou comportamento. Bridges e automações alternativas, inclusive Playwright para
+manipular ferramentas de design, exigem autorização específica do usuário.
+
+O HTML em `designsystem/` e os assets locais são referências preservadas da
+identidade existente e apoio ao fallback. O Figma é a referência visual
+principal; sugestões genéricas de skills não a substituem. A Paper Bridge
+foi descontinuada pela spec 0039; o MCP oficial do Paper permanece configurado
+para uso eventual quando necessário. Ele não substitui a referência Figma nem
+reativa a Bridge ou constitui fallback automático para limites do Figma.
+O Playwright existente do frontend permanece
+restrito à verificação da aplicação.
+
 ## Identidade visual atual — specs 0015, 0027, 0028, 0029 e 0030
 
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
@@ -20,7 +80,8 @@ links “BestPrice — Início”, o componente inteiro é decorativo e o link f
 nome. Desde a correção de revisão da 0030, o login mostra uma única marca
 acessível na coluna do formulário, em todas as larguras. O ícone tem fundo CSS
 transparente, preservando o alpha do PNG original; a fotografia é decorativa.
-`designsystem/index.html` orienta os tokens. A spec 0027 aplica a composição
+`designsystem/index.html` preserva a referência local anterior de tokens; a
+precedência atual é definida no fluxo Figma acima. A spec 0027 aplica a composição
 aprovada no Figma às telas públicas e autenticadas, usando os quadros editáveis em
 `designsystem/prototypes/2026-10-21-bestprice-figma/`. A referência local foi usada
 porque o conector Figma repetiu autenticação; alterações posteriores no serviço
@@ -31,14 +92,15 @@ criar ou alterar HTML/CSS também exige ler
 publica as regras automatizáveis obrigatórias (toque de 44 × 44 px, HTML semântico,
 contraste AA/AAA, tokens de cor, `prefers-reduced-motion` e ausência de rolagem
 horizontal) e os comandos das skills de design instaladas (`ui-ux-pro-max`,
-`huashu-design` e `impeccable`); a identidade de `index.html` continua prevalecendo
-sobre sugestões dessas ferramentas.
+`huashu-design`, `impeccable` e `shadcn`); suas sugestões respeitam a referência Figma
+aprovada, a identidade preservada e os requisitos funcionais/de acessibilidade.
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
 operacional (`prefers-color-scheme`); a SPA não oferece seletor nem grava uma
-preferência de tema. A ação principal usa verde com texto preto; o rosa marca
-links e destaques. Desde a 0028, os nomes não se repetem com significados
+preferência de tema. A ação principal padrão usa verde com texto preto; o rosa marca
+links e destaques e, na tela do Assistente da 0040, também o envio aprovado no Figma.
+Desde a 0028, os nomes não se repetem com significados
 diferentes: no tema shadcn, `--primary` é o rosa da marca (`bg-primary`,
 `text-primary`) e `--action` é o verde das ações (`bg-action`, variante `default`
 do `Button`); no CSS próprio, `--color-brand` deriva de `--primary`; `text-muted`
@@ -79,8 +141,8 @@ registra 350 testes Vitest e a rodada anterior de 128 casos Playwright em 320,
 sem atualizar baselines na confirmação. Os testes usam API simulada e não comprovam integração Mercado Livre real,
 dispositivo físico, leitor de tela manual ou outros motores de navegador.
 
-O catálogo e as ilustrações públicas contêm dados demonstrativos identificados
-como exemplo. Produtos, preços e métricas da conta continuam vindo apenas da API.
+As prévias históricas de monitoramento contêm dados demonstrativos identificados
+como exemplo; a landing atual da 0034 não apresenta catálogo de ofertas. Produtos, preços e métricas da conta continuam vindo apenas da API.
 A composição da 0027 usa conteúdo de até 1248 px, oportunidades em linhas e
 navegação inferior da conta até 700 px. Os quatro indicadores existentes foram
 preservados; desde a 0028 o Início sem produtos mostra só o convite do campo de
@@ -91,15 +153,17 @@ e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
 [`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
 
-## Tela de entrada — specs 0017, 0020, 0023 e 0027
+## Tela de entrada — specs 0017, 0020, 0023, 0027 e 0046
 
 Na rota `/login`, sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) direto,
-sem o cabeçalho (masthead) nem o hero com o campo de link (spec 0020, que revoga o
-trecho da 0017 que os mantinha acima do login); só o rodapé acompanha. A composição
+sem o cabeçalho (masthead), o hero com o campo de link (spec 0020) ou o rodapé
+(spec 0046). A composição
 em duas metades da 0023 foi atualizada pela 0027 com a arte e a marca do redesign,
 mantendo os controles e a autenticação existentes:
 
-- **Composição:** `.login-shell` e `.login-card` ocupam a largura disponível. Acima
+- **Composição:** `.login-shell` e `.login-card` ocupam a largura disponível. A
+  superfície tem altura mínima `100svh`, sem reservar os antigos 72 px do rodapé;
+  o conteúdo pode crescer e rolar verticalmente quando necessário. Acima
   de 840 px, o card divide a tela em duas metades, com arte à esquerda e formulário
   sobre branco à direita. Na correção de revisão da 0030, a marca oficial e o
   texto BestPrice passaram para a coluna do formulário, acima do título,
@@ -135,6 +199,24 @@ mantendo os controles e a autenticação existentes:
 - **Movimento:** com `prefers-reduced-motion: reduce`, o botão não encolhe ao ser
   pressionado.
 
+A implementação local da [spec 0046](../../specs/0046-login-stage-sem-rodape/spec.md)
+preserva o login aprovado em stage e retira somente seu rodapé. A composição do
+rodapé em `App.tsx` usa `matchPath('/login', location.pathname)`, o mesmo padrão
+do roteador; isso inclui `/login/`, `/LOGIN` e a entrada com `returnTo`. A ausência
+vale também durante carga, HTTP 503, falha de rede e recuperação da sessão.
+Landing, páginas autenticadas e rota inexistente conservam seus rodapés; desde a
+spec 0048, `matchPath('/cadastro', …)` também omite o rodapé do cadastro.
+A orientação sobre o link do Mercado Livre e “Voltar para o início” fazem parte
+do formulário e permanecem visíveis.
+
+Os quadros Figma de login desktop `59:44` (1440×1040) e mobile `59:602` (390×844)
+foram atualizados pelo Chrome, com autorização expressa, e exportados em
+04/11/2026. A implementação mantém as fontes do sistema da SPA; Arimo é apenas
+a equivalência disponível no desenho e não foi importada no código. Referências,
+QA com API controlada, revisão dos oito snapshots de login e limites estão na
+[verificação da 0046](../../specs/0046-login-stage-sem-rodape/verification.md).
+Essa validação local não comprova integração nem publicação em stage.
+
 A verificação (QA em Chrome headless com axe, larguras de 320, 768 e 1280 px, com
 desfoque e em modo sólido simulado) e os limites estão em
 [`verification.md` da 0017](../../specs/0017-redesign-pagina-login/verification.md); a 0020 está em
@@ -146,44 +228,78 @@ A composição atual e seus estados em 320, 768 e 1280 px estão na
 A consistência da marca em 320, 390, 768 e 1280 px está na
 [verificação da 0029](../../specs/0029-identidade-bestprice-consistente/verification.md).
 
-## Landing pública — specs 0024 e 0027
+## Landing pública — spec 0034
 
-Em `/`, enquanto a sessão está pendente, depois de um 401 ou se a consulta de
-sessão falhar, `App.tsx` mostra `LandingPage`. Com sessão válida, a mesma URL mostra
-o painel. A landing é estática: não busca anúncios, preços, categorias ou métricas
-na API. A 0027 substitui a composição da 0024 pelo redesign aprovado: hero “O preço
-muda. Você fica sabendo.”, três passos, prévia ilustrativa do acompanhamento,
-seção de alertas, banner final e rodapé. Todos os CTAs de entrada levam a `/login`;
-nenhum deles promete cadastro público. Os sete cartões de categoria e o aviso
-local de cadastro pertencem à composição anterior.
+`/` apresenta `LandingPage` em qualquer estado de sessão, inclusive autenticada.
+A composição atual comunica assistência de compras: hero “Compre com mais
+clareza.”, conversa por necessidade, comparação manual e continuidade por 90 dias.
+A landing é estática e não consulta ofertas ou métricas pessoais. “Começar com IA”
+aponta para `/app/assistant`, “Abrir comparador” para `/app/compare` e o acesso ao
+monitoramento para `/app/monitoring`; o guard encaminha visitantes ao login com
+retorno seguro. Desde a spec 0048, o cabeçalho mostra “Criar conta” (para
+`/cadastro`) só quando o cadastro self-service está disponível; não há recuperação
+de senha.
 
-As artes fornecidas e as prévias ficam em `frontend/src/assets/redesign/`, todas em
-WebP desde a 0028: `hero-person.webp`, `footer-phone.webp`, `login-left.webp`,
-`price-preview.webp` e `dashboard-preview.webp` (as prévias eram SVG e foram
-rasterizadas para deixar as capturas determinísticas). Nenhuma passa de 300 KB; o
-hero tem `fetchPriority="high"` e dimensões declaradas (1120 × 682). A pasta
-`assets/landing/` e `assets/imagem-lateral.png`, sem uso, foram removidas. As prévias de preço e painel são identificadas como
-exemplos, sem representar ofertas reais ou dados da pessoa. Textos, links e
-controles da página são elementos React; as prévias são apenas ilustrações.
-Na hero, a arte da pessoa usa cantos de 18 px, em harmonia com o banner e as
-outras superfícies arredondadas da landing; a prévia de preço sobreposta mantém
-seu próprio raio.
+A marca usa `Brand` com complemento visual AI e um nome acessível completo no link.
+A imagem `assets/redesign/hero-person.webp` é ilustrativa. As prévias de preço/painel
+e o banner da composição 0027 não são respostas de IA nem fazem parte da landing
+atual. O cabeçalho tem âncoras `#como-funciona` e `#comparar`, botão móvel com
+`aria-expanded`, fechamento por Escape e saída de foco. O link para pular ao
+conteúdo, foco visível e redução de movimento permanecem.
 
-Na correção de revisão da 0030, o banner final preserva a proporção natural da
-arte de 1600 × 548 px, com altura automática e sem `cover` ou recorte adicional.
-O limite inferior já presente no arquivo original permanece. No desktop, o texto
-ocupa a área livre à esquerda; até 959 px, texto e arte se empilham. O rodapé
-ocupa toda a largura com `--color-footer-bg: #000`, texto branco e link verde,
-mantendo o conteúdo alinhado ao contêiner comum.
+A [verificação 0034](../../specs/0034-assistencia-compras-bestprice-ai/verification.md)
+separa a rodada visual ampla anterior (129/132) dos oito casos afetados aprovados
+após correção da marca. Somente oito baselines landing foram revisados e
+atualizados, com confirmação posterior 8/8 sem update; login e 404 não tiveram
+baselines alterados. A matriz ampliada de UI passou 38/38 em quatro larguras e
+oito rotas, com axe, overflow, alvo de toque e teclado. Não comprova dispositivo
+físico, leitor de tela ou disponibilidade do provider externo.
 
-O cabeçalho leva às âncoras `#inicio`, `#como-funciona`, `#funcionalidades` e
-`#alertas`. O menu estreito usa botão com `aria-expanded`; a página mantém link
-para pular ao conteúdo, foco nos controles e movimento reduzido. Desde a 0030,
-Escape fecha o menu aberto e devolve o foco ao gatilho; sair com o foco da região
-do cabeçalho também o recolhe, preservando a continuidade da navegação. A ação principal
-usa verde com texto preto. A [verificação da 0024](../../specs/0024-landing-page-publica/verification.md)
-conserva a evidência histórica; os baselines atuais estão na
-[verificação da 0030](../../specs/0030-experiencia-visual-consistente/verification.md).
+## Cadastro self-service — spec 0048
+
+`useSignupAvailability` (`src/auth/`) consulta `GET /api/auth/signup` uma vez por
+carregamento do `App` e devolve `loading`, `enabled`, `disabled` ou `error`. O
+interruptor é decidido pela API, não por variável `VITE_*`, para ligar ou desligar
+sem novo build do Pages. Só `enabled` mostra os links: “Criar conta” no cabeçalho da
+landing (à esquerda de “Entrar” no desktop, abaixo dele no menu móvel) e “Ainda não
+tem conta? Criar conta” abaixo do botão do login, que leva o `returnTo` quando ele é
+um destino interno válido. Em `/cadastro`, `loading` mostra “Carregando…” e `error`
+mostra alerta com “Tentar novamente”; `disabled` redireciona a `/login` sem
+formulário. `/cadastro` não tem rodapé, como o login, e tem o título “Criar conta ·
+BestPrice”.
+
+`src/auth/accountRules.ts` espelha `backend/app/auth/accounts.py`: limites de 320
+caracteres no e-mail e 12–1024 na senha, contados em code points, a mesma classe de
+caracteres proibidos em `EMAIL_PATTERN` e a mesma ordem de mensagens. O
+`LoginForm` importa essa expressão e mantém o comportamento (senha só não vazia).
+`SignupForm` tem e-mail, senha e confirmação com mostrar/ocultar, dica de 12
+caracteres por `aria-describedby`, aviso de privacidade antes do botão e validação
+própria no envio (`noValidate`), com foco no primeiro campo inválido. A confirmação
+diferente é verificada só na interface. Respostas do servidor viram mensagens por
+campo (`422` pelo `code`; `409` no e-mail com link “Entrar”) ou alerta `role="alert"`
+(`429` com “Tente novamente em N minutos”, `404` de cadastro indisponível e falha de
+rede/5xx). Durante o envio, o botão mostra “Criando conta…” com `aria-busy`; uma
+região `role="status"` anuncia o resumo dos erros de campo, inclusive ao repetir
+o envio. O e-mail digitado é preservado; senha e
+confirmação são limpas após erro do servidor. No sucesso, o fluxo segue o login:
+destino de `returnTo` validado por `safeReturnTo` ou `/app/dashboard`. `api.ts`
+acrescenta `signupStatus()`, `signup()` e `fields` em `ApiFailure`.
+
+Referência Figma, no [arquivo BestPrice IA](https://www.figma.com/design/LZVtUEAycEzfbwL0H5YL3r/BestPrice-IA),
+aprovada pela responsável em 06/11/2026: cadastro desktop `220:347` (1440×1040),
+foco `220:382`, enviando `220:421`, erros de campos `220:459`, e-mail já cadastrado
+`220:505`, limite `220:546` e falha de rede `220:588`; mobile `220:871` (390×899),
+`220:900`, `220:933`, `220:965`, `220:1005`, `220:1040` e `220:1076`. Login ajustado
+em `59:44`/`59:602`, landing desktop `16:2` e menu móvel aberto `224:2`. A tabela
+completa e os PNGs estão em
+[figma-frames.md](../../specs/0048-cadastro-self-service-usuarios/design/figma-frames.md);
+as extensões visuais (dica, ícone de erro, atalho entre telas sublinhado por
+acessibilidade, botão contornado na landing) estão em `designsystem/README.md`. A
+[verificação da 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md)
+registra lint, 531 testes Vitest, build, `tests/visual/signup.spec.ts` com 24
+cenários aprovados e axe WCAG 2.2 AA sem violações, além das diferenças visuais
+aceitas e das 19 falhas visuais pré-existentes em outras suítes. Não houve teste
+com leitor de tela real nem verificação em Stage.
 
 ## Componentes e histórico visual — spec 0027
 
@@ -213,21 +329,219 @@ A Table mantém overflow visível para os menus de linha; em telas estreitas a
 lista é empilhada por CSS. E-mail oculto visualmente no botão da conta continua
 na árvore acessível. Menus e confirmação mantêm os controles de foco existentes.
 
-## Rotas e fluxo atual — specs 0021, 0024 e 0027
+## Rotas e fluxo atual — spec 0034
 
-A SPA usa `react-router-dom` e mantém o contrato REST da spec 0013. `App.tsx` consulta `GET /api/auth/me` ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha de rede ou indisponibilidade mostra a landing em `/`; nas demais rotas, preserva o estado de erro com “Tentar novamente”, sem encerrar a sessão. A conta precisa ser provisionada no backend antes do login; não há cadastro público.
+A SPA usa `react-router-dom`, o contrato de monitoramento existente e o novo
+cliente tipado `features/research/api.ts`. `App.tsx` consulta `GET /api/auth/me`
+ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha
+de sessão fora de `/` exibe erro e “Tentar novamente”; `/` permanece pública.
+A conta é criada pelo cadastro self-service, quando ligado (spec 0048), ou
+provisionada no backend antes do login.
 
 | URL | Conteúdo e acesso |
 |---|---|
-| `/login` | Entrada pública; uma sessão válida segue para Início. |
-| `/` | Landing pública para visitante, inclusive durante carga/falha da sessão; com sessão válida, Início autenticado com formulário por link, resumo, oportunidades e atualizações recentes. |
-| `/produtos` | Lista autenticada de monitoramentos sob o título único “Seus produtos”, paginação e ação “Adicionar anúncio” que expande o formulário por link (aberto quando não há produtos). |
-| `/produtos/:id` | Página autenticada do monitoramento próprio, com histórico, alerta e ações. |
-| `/alertas` | Alertas configurados e notificações recebidas, em grupos distintos. |
+| `/` | Landing pública, inclusive com sessão válida |
+| `/login` | Entrada; sessão válida segue para `/app/dashboard` ou retorno conhecido |
+| `/cadastro` | Criar conta (0048); com sessão segue para `/app/dashboard`; com o cadastro desligado redireciona a `/login` preservando `returnTo` |
+| `/app` | Redireciona para `/app/dashboard` após autenticação |
+| `/app/dashboard` | Necessidade de compra, sugestões editáveis e seis pesquisas recentes |
+| `/app/assistant`, `/app/assistant/:id` | Nova conversa ou conversa própria salva |
+| `/app/compare`, `/app/compare/:id` | Nova comparação manual ou comparação própria salva |
+| `/app/history` | Conversas salvas, busca por título, paginação, Continuar e exclusão confirmada (0045) |
+| `/app/monitoring` | Lista de monitoramentos e formulário “Adicionar anúncio” |
+| `/app/monitoring/overview` | Painel completo de acompanhamento anterior |
+| `/app/monitoring/:id` | Detalhe do vínculo próprio, histórico, alerta e ações |
+| `/app/monitoring/alerts` | Alertas configurados e notificações |
+| `/produtos`, `/produtos/:id`, `/alertas` | Destinos anteriores preservados de lista, detalhe e alertas |
 
-O visitante que abre uma rota protegida vai a `/login?returnTo=...`; depois de entrar, retorna à rota interna solicitada. O destino fica na URL durante uma recarga do login e `safeReturnTo` aceita somente `/`, `/produtos`, `/alertas` e um caminho de detalhe de produto, sem consulta ou fragmento. Entrada direta em `/login` leva ao Início. Logout leva a `/login`; o navegador revalida a sessão ao restaurar uma página pelo histórico. Caminho não reconhecido mostra `NotFoundPage`, com marca, título “Este endereço saiu do radar.”, curva decorativa e CTA verde: “Ir para Início” com sessão ou “Entrar” para visitante. “Voltar uma página” usa o histórico do navegador. Cada tela atualiza o título da aba e foca seu título principal; a navegação marca a seção ativa, incluindo Produtos no detalhe.
+Visitante segue para `/login?returnTo=...` e retorna ao caminho protegido após
+entrar. `safeReturnTo` aceita somente caminhos internos conhecidos, incluindo os
+novos destinos, sem query/fragmento ou escapes. Entrada direta no login leva ao
+dashboard. Logout vai a `/login`; restauração por bfcache revalida a sessão.
+`ResearchArea` e `AccountArea` são isoladas pela chave `user.id`; respostas obsoletas
+são ignoradas após desmontagem. Caminhos desconhecidos mostram estado de página
+não encontrada. A navegação atualiza título e foco, e marca a seção ativa.
 
-O cabeçalho autenticado oferece links Início/Produtos/Alertas, sino e menu da conta. Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
+## Assistente, comparação e histórico — spec 0034
+
+`features/research/ResearchArea.tsx` organiza dashboard, navegação lateral e
+atalhos móveis. O dashboard transporta rascunho por token em estado de navegação;
+o texto fica no Map da montagem autenticada, sem persistir conteúdo no histórico
+do browser. Categorias apenas preenchem texto editável. A chamada de IA exige
+outra ação explícita na tela do assistente, após a informação sobre Google,
+possível uso do conteúdo gratuito e dados pessoais/confidenciais. A retenção local
+de 90 dias permanece na política e no histórico. A interface consulta capabilities e
+mantém envio/análise indisponíveis quando a configuração falta, sem impedir
+leitura das pesquisas e salvamento manual.
+
+`AssistantPage` carrega mensagens próprias, mostra carga, vazio, erro recuperável
+e envio ocupado com trava contra duplicação. Texto de IA é renderizado como texto,
+identificado como não verificado, sem executar HTML/Markdown (o HTML de sugestões
+da spec 0047 fica isolado em iframe com sandbox, descrito adiante). Mensagem tem até
+2.000 caracteres; conversas longas usam contexto recente limitado. IDs são
+`crypto.randomUUID()`: falha de rede reaproveita o request ID dentro de 24 h para
+consultar o resultado; falha conhecida permite nova tentativa explícita.
+
+`ComparisonPage` aceita 2–3 produtos com nome, detalhes, preço BRL e link opcional.
+Preço ausente continua null; valores pt-BR são normalizados em string, sem float.
+Os dados são manuais e não verificados, e os links não são consultados. Salvar é
+ação própria sem IA; análise só ocorre após salvar os dados atuais. Edição invalida
+a análise anterior. Conflito de versão exige recarga; erro de GET inicial não
+permite edição insegura. A tabela usa somente dados fornecidos pela pessoa; a
+análise textual não transforma informações ausentes em fatos verificados.
+
+O histórico misto original foi substituído pela apresentação de conversas da
+spec 0045, descrita abaixo. A API de pesquisas e as comparações salvas continuam
+disponíveis; a retenção de 90 dias desde a criação não se renova por edição.
+
+Gates locais registrados: 366/366 testes da suíte completa e 18/18 afetados finais,
+lint e build aprovados (2.658 módulos). Jornadas SPA/API/PostgreSQL reais passaram
+4/4 e cenários de erro 6/6 no schema final, com fixture somente na geração externa.
+AC10/AC15/AC19 ainda dependem de avaliação operacional do modelo real e de sua
+configuração gratuita; a spec continua `pronta`. Ver [evidências](../../specs/0034-assistencia-compras-bestprice-ai/verification.md).
+
+## Histórico de conversas — spec 0045
+
+`HistoryPage` apresenta “Suas conversas” e consulta o cliente tipado existente por
+`GET /api/research?kind=conversation&q=<título>&offset=<n>&limit=20`. Não há filtro
+de tipo. Buscar com Enter ou pelo botão de ícone aplica o título sem espaços nas
+extremidades e volta à primeira página; a paginação preserva o termo. Limpar o
+campo e enviar recupera todas as conversas. Respostas de consultas anteriores
+são descartadas. O contrato REST e a persistência não mudaram.
+
+Cards mostram título, data real de atualização no fuso local e “Continuar” para
+`/app/assistant/:id`. Desktop organiza ações ao lado do conteúdo; mobile as coloca
+abaixo, mantendo Excluir acessível. A composição usa `history.css`, `Button`,
+`Input`, `Brand` e tokens existentes, com estados de carregamento, primeiro uso,
+busca sem resultados e erro com nova tentativa. O prazo de 90 dias da criação
+continua visível. A API fornece os dados; exemplos do Figma não preenchem contas.
+
+Excluir abre `DeleteResearchDialog`, compartilhado com as demais pesquisas. O foco
+inicial vai a Cancelar; fechar devolve o foco ao acionador conectado, ou ao título
+estável da página quando o acionador desaparece. A confirmação envia
+`DELETE /api/ai/conversations/:id`; somente sucesso fecha o diálogo e recarrega a
+primeira página da mesma busca. Falha conserva o diálogo e permite tentar de novo;
+401 usa o tratamento existente de sessão expirada. O conteúdo e o contrato de
+exclusão das outras pesquisas foram preservados.
+
+Referência visual: Figma BestPrice IA, frames 59:204 (1440×1040) e 59:716
+(390×844), exportações identificadas da spec 0043 de 31/10/2026. O MCP retornou
+limite do plano Starter; não foi comprovada paridade com alterações remotas
+posteriores. Datas reais, exclusão mobile e aviso de retenção substituem elementos
+ilustrativos; bordas de controles preservam o token acessível. A comparação e os
+limites estão na [verificação da 0045](../../specs/0045-historico-conversas-conforme-figma/verification.md).
+Lint/build aprovados, 390 testes Vitest completos e 9 focados finais, 20 cenários
+Playwright com teclado, axe e overflow em quatro viewports; não houve validação
+com backend/banco reais, teclado virtual, leitor de tela ou deploy nesta revisão.
+
+## Assistente e navegação compartilhada — specs 0040 e 0044
+
+O Assistente inicial usa o robô original de
+`src/assets/research/assistant-robot.png`, com transparência e proporções
+preservadas, pergunta “O que você quer comprar?” e campo de mensagem em destaque.
+A simplificação da 0044 aplica os cortes editoriais aprovados no desktop também
+ao mobile: ajuda opcional curta e um exemplo de orçamento no campo, sem atalhos
+de sugestões ou acesso separado Sobre a IA na tela principal. Ao iniciar ou retomar uma
+conversa, as mensagens ocupam o espaço principal e o robô aparece apenas como
+avatar discreto das respostas. O botão de envio usa a variante `brand` do `Button`,
+com `--primary` e `--primary-foreground`; o padrão das outras ações não muda.
+
+`RecentConversations` consulta o contrato existente por
+`GET /api/research?kind=conversation&q=&offset=0&limit=4`. A API mantém autorização,
+expiração e ordem por atividade. A seção mostra título, data no fuso local e link
+para retomar, sem pictogramas ou conteúdo ilustrativo. Nova conversa fica junto
+da seção; Ver todas abre o histórico. O primeiro envio e os envios seguintes
+recarregam a lista. Carga, vazio e erro com nova tentativa são independentes do
+chat; uma falha na lista não apaga nem impede editar o rascunho. Respostas de
+requisições desmontadas são descartadas, inclusive ao trocar de conta. O acesso
+começa recolhido em desktop e mobile, usando `useDisclosure`: Escape fecha e
+devolve foco ao acionador, clique fora ou saída do foco fecha o painel. Abrir e
+fechar não navega, não remonta a conversa, não apaga o rascunho e não envia mensagem.
+
+O shell de `/app/*` acompanha os três destinos da referência Figma atual:
+Assistente IA, Histórico e Monitoramento. Desktop usa sidebar de 240 px e header
+de 80 px; mobile usa menu, marca com IA elevada, conta e três atalhos inferiores.
+Dashboard e comparador mantêm páginas, rotas, dados e APIs, embora seus atalhos
+tenham saído dessa navegação. A landing e a entrada preservam a composição pública.
+
+Em `/app/monitoring`, `AccountArea` e `AppHeader` recebem `embedded`: o shell
+fornece marca e conta uma única vez, enquanto a subnavegação Início/Produtos/Alertas
+e o sino permanecem no fluxo, sem disputar o rodapé móvel. Os links dessa
+subnavegação usam os caminhos internos de monitoramento. O modo anterior e seus
+links `/produtos` e `/alertas` permanecem disponíveis. O foco de título agendado
+não toma o foco quando a pessoa já interagiu com outro controle; a saída por Tab
+para o botão do menu aplica-se somente ao menu móvel aberto.
+
+`assistant.css` organiza uma coluna de tarefa e um painel de recentes sobreposto,
+com altura limitada e rolagem própria. O aviso essencial sobre Google, uso gratuito
+e dados pessoais fica dentro do formulário antes do envio. `aria-describedby`
+contém só o limite de 2.000 caracteres e, quando restam 200 ou menos, o contador.
+A resposta identifica BestPrice IA; dados não verificados ficam no nome acessível
+do artigo e no título contextual do autor, sem repetir o rodapé visual removido.
+Retenção, cota e contratos não mudam; `AIInformation` compartilhado continua intacto
+para comparação. A implementação não ativa o fornecedor de IA.
+
+A [verificação 0040](../../specs/0040-assistente-ia-com-robo/verification.md)
+registra 375 testes da suíte completa antes dos ajustes finais, 47 testes afetados
+após os ajustes, 32 cenários Playwright e quatro verificações finais de navegação,
+lint/build e revisão independente. `tests/visual/assistant.spec.ts` verifica
+320/390/768/1280 px, axe nos estados inicial/conversa, geometria do robô,
+toque, overflow e navegação. Capturas aprovadas estão na pasta `evidence/` da
+spec. As APIs são controladas: teclado virtual em aparelho real, backend/banco
+reais e disponibilidade operacional da IA continuam pendentes.
+
+A [verificação 0044](../../specs/0044-assistente-com-menos-sobrecarga/verification.md)
+registra a simplificação local: lint/build aprovados, 381 testes Vitest em 34
+arquivos com `--maxWorkers=2`, 32 cenários Playwright nos quatro viewports e captura
+adicional 390 × 844. Nesse tamanho, aviso e envio aparecem antes da navegação fixa,
+sem teclado virtual. Testes cobrem recentes recolhidos, foco, rascunho sem POST,
+contador contextual, estados e texto longo. Revisão independente e QA locais
+aceitas; publicação, CI remoto e integração em develop ainda pendentes.
+
+## Pesquisa na web no Assistente — spec 0047
+
+`features/research/api.ts` acrescenta `Message.grounding` (`null`, `searched` ou
+`unavailable`) e `Capabilities.web_search`. O validador exige, em `searched`,
+`searched_at` instantâneo, pelo menos uma fonte com URL `https` (`safeHttpsUrl`) e
+HTML de sugestões em string; em `unavailable`, `sources: []`, HTML `null` e
+`searched_at` opcional. Mensagens anteriores sem o campo viram `null`, e capabilities
+sem `web_search` viram `false`; essa normalização ocorre dentro do type guard, que
+muta o objeto recebido (achado S3 da revisão, aceito nesta entrega). Uma fonte que o
+backend aceita e `new URL()` rejeita invalida a resposta inteira (S4, risco baixo).
+
+`MessageGrounding.tsx` aparece abaixo de cada resposta do assistente:
+
+| `grounding` | Interface |
+|---|---|
+| `null` | Nada |
+| `unavailable` | Nota "A pesquisa na web está indisponível agora; esta resposta não usou a web." |
+| `searched` | Região "Fontes da pesquisa na web" com rótulo **Não verificado**, "Pesquisado em" (`<time>` e `Intl` pt-BR no fuso local), lista de fontes e sugestões do Google |
+
+As fontes abrem com `target="_blank"` e `rel="noopener noreferrer"`, sem handler de
+clique, e têm nome acessível "… (abre em nova aba)" e altura mínima de 44 px. Os
+termos do Google proíbem alterar as sugestões, então o HTML vai intacto num iframe
+`srcDoc` com `sandbox="allow-popups allow-popups-to-escape-sandbox"` (sem scripts,
+mesma origem ou formulários), `referrerPolicy="no-referrer"` e `title`. O `srcDoc`
+recebe um prefixo fixo `<base target="_blank"><meta name="referrer" content="no-referrer">`
+para que os chips abram em nova página sem `Referer`. O iframe tem altura fixa de
+72 px. Com `capabilities.web_search`, o aviso essencial do composer acrescenta
+`webSearchNotice` (`common.tsx`): a pergunta pode ser pesquisada pelo Google, que
+guarda pergunta e resposta por 30 dias. `AIInformation` da comparação não muda.
+O estilo em `assistant.css` usa somente tokens existentes; não há frame Figma para o
+bloco.
+
+`src/assistant.test.tsx`, `features/research/api.test.ts` e
+`tests/visual/grounding.spec.ts` cobrem contrato, estados, prefixo do `srcDoc`,
+popup sem `Referer`, foco, teclado, axe (iframe excluído) e overflow em
+320/390/768/1280/1440 px, com API simulada. O HTML real de `renderedContent` e a
+adequação dos 72 px seguem sem validação; tema escuro não se aplica (tema claro
+fixo). A suíte completa registrou intermitência preexistente em `App.test.tsx`,
+fora do diff. Ver [evidência frontend](../../specs/0047-chat-pesquisa-precos-web-gemini/frontend-evidence.md)
+e [verificação](../../specs/0047-chat-pesquisa-precos-web-gemini/verification.md).
+
+## Monitoramento preservado
+
+O monitoramento oferece links Início/Produtos/Alertas e sino; o acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040). Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
 
 O preço-alvo aceita o formato brasileiro (spec 0028): `src/lib/targetPrice.ts` normaliza `99,90`, `99.90`, `1.899,90`, `1899,9` e o prefixo `R$` para o decimal do contrato (`"99.90"`), só com texto, sem `number`. Valor inválido, zero, acima de 16 dígitos inteiros ou com milhar iniciado por zero (`0.500`) não chama a API: o campo recebe `aria-invalid` e a mensagem “Informe um valor em reais, como 99,90.” em `role="alert"`. O campo de edição mostra o alvo atual com vírgula. O contrato REST `target_price` e o backend não mudaram. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 
@@ -266,7 +580,7 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | `frontend/src/assets/logo-bestprice.png` | Cópia da logo oficial usada na entrada e no cabeçalho autenticado, reduzida sem perda a 128 × 128 na 0028 (o original segue em `designsystem/`) |
 | `frontend/src/health.ts` | Cliente legado de `/api/health`, preservado para testes de saúde |
 
-O cliente consome `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/dashboard`, `/api/tracked-products`, seus subrecursos `history`, `refresh` e `alert`, além de `/api/notifications` (todas e `unread_only`). Usa `credentials: 'same-origin'`; Vite e Nginx encaminham `/api` ao FastAPI localmente. Em stage, `frontend/functions/api/[[path]].ts` encaminha `/api/*` à origem HTTPS indicada por `API_ORIGIN` no Cloudflare Pages. A Function preserva método, caminho, consulta, corpo, cookie e resposta da API, inclusive `Set-Cookie`; origem inválida ou falha de rede gera 502 genérico. `frontend/public/_routes.json` inclui só `/api/*`, portanto as páginas estáticas não invocam a Function. O build copia esse arquivo para `dist/`. O proxy foi testado localmente e o health público de stage foi verificado na spec 0018; a nova navegação da 0021 ainda não foi verificada em stage. Valores monetários chegam como strings decimais: `Intl.NumberFormat` os formata sem conversão para `number`, e a direção de um evento de preço vem de `compareDecimal`. Resposta fora do contrato vira “A API respondeu com dados inválidos.”; erro sem `code` e `message` vira a mensagem genérica, e falha de rede, “Não foi possível conectar ao BestPrice. Tente novamente.”.
+O cliente consome `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/auth/signup` (GET e POST, spec 0048), `/api/dashboard`, `/api/tracked-products`, seus subrecursos `history`, `refresh` e `alert`, além de `/api/notifications` (todas e `unread_only`). Usa `credentials: 'same-origin'`; Vite e Nginx encaminham `/api` ao FastAPI localmente. Em stage, `frontend/functions/api/[[path]].ts` encaminha `/api/*` à origem HTTPS indicada por `API_ORIGIN` no Cloudflare Pages. A Function preserva método, caminho, consulta, corpo, cookie e resposta da API, inclusive `Set-Cookie`; origem inválida ou falha de rede gera 502 genérico. Desde a spec 0048, a Function remove os cabeçalhos `x-bestprice-*` do pedido do cliente e da resposta da API; com `API_PROXY_SECRET` configurado no Pages, envia `x-bestprice-proxy-secret` e `x-bestprice-client-ip` (copiado de `cf-connecting-ip`) para a API identificar a origem do cadastro, sem devolver o segredo (`pagesProxy.test.ts`). `frontend/public/_routes.json` inclui só `/api/*`, portanto as páginas estáticas não invocam a Function. O build copia esse arquivo para `dist/`. O proxy foi testado localmente e o health público de stage foi verificado na spec 0018; a nova navegação da 0021 ainda não foi verificada em stage. Valores monetários chegam como strings decimais: `Intl.NumberFormat` os formata sem conversão para `number`, e a direção de um evento de preço vem de `compareDecimal`. Resposta fora do contrato vira “A API respondeu com dados inválidos.”; erro sem `code` e `message` vira a mensagem genérica, e falha de rede, “Não foi possível conectar ao BestPrice. Tente novamente.”.
 
 ## Notificações e contador
 

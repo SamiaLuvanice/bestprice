@@ -1,0 +1,6 @@
+landing: links "Criar conta" = 0
+login: links "Criar conta" = 0
+/cadastro?returnTo=/app/assistant -> /login?returnTo=%2Fapp%2Fassistant
+formulario de cadastro presente = 0
+login (off) -> /app/assistant
+POSTs /api/auth/signup feitos pela UI = 0

@@ -5,7 +5,7 @@ project:
 tools:
   claude: true
   codex: true
-  opencode: false
+  opencode: true
   cursor: false
 profile:
   name: fastapi-react-postgresql

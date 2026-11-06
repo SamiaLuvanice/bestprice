@@ -1,6 +1,6 @@
 # BestPrice — contexto e direção do produto
 
-Este documento registra a visão fornecida pelo responsável pelo produto em 07/10/2026, atualizada pela decisão da [spec 0013](../specs/0013-monitoramento-mercado-livre-brasil/spec.md). É a referência de produto para futuras specs; descreve requisitos pretendidos, não funcionalidades já entregues. O estado executável está em [arquitetura](architecture.md) e nos guias dos módulos.
+Este documento registra a visão fornecida pelo responsável pelo produto em 07/10/2026, atualizada pelas decisões das specs [0013](../specs/0013-monitoramento-mercado-livre-brasil/spec.md), [0034](../specs/0034-assistencia-compras-bestprice-ai/spec.md) e [0047](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md). É a referência de produto para futuras specs; distingue requisitos pretendidos da implementação local identificada abaixo. O estado executável está em [arquitetura](architecture.md) e nos guias dos módulos.
 
 > **Mudança de marketplace.** A versão original deste contexto tinha a Amazon como fonte, com ASIN e uma abstração conceitual `AmazonProvider`; nenhuma integração Amazon chegou a ser implementada. A spec 0013 tornou o **Mercado Livre Brasil (MLB)** o marketplace exclusivo desta fase, consultado somente pela API oficial com autorização da conta operadora do BestPrice. As referências à Amazon abaixo foram substituídas; a premissa anterior permanece rastreável na spec 0013 e no histórico Git.
 
@@ -10,7 +10,88 @@ Este documento registra a visão fornecida pelo responsável pelo produto em 07/
 
 BestPrice é uma aplicação web destinada a usuários reais e a operação em produção. Simplicidade, segurança, confiabilidade e manutenção orientam sua evolução. O usuário não precisa preencher nome, imagem, preço, ID da publicação (`MLB…`) ou outros dados que a integração deve obter automaticamente.
 
-## Experiência principal
+## Assistência de compras — decisão da spec 0034
+
+A evolução aprovada acrescenta uma entrada por necessidade: a pessoa conversa
+sobre uso, prioridades e orçamento, compara manualmente 2–3 produtos e retoma
+pesquisas privadas por até 90 dias desde a criação. A assistência complementa o
+monitoramento. Os dados manuais de comparação não são ofertas verificadas nem
+produtos monitorados; os links são referências, sem leitura automática de páginas.
+A entrada por URL continua sendo a experiência de acompanhamento automático.
+
+A implementação local tem dashboard, assistente textual, comparador e histórico,
+com contas provisionadas por comando ou criadas pelo cadastro self-service da spec
+0048, que fica desligado por padrão até a integração do Mercado Livre funcionar.
+Salvar e editar comparação independe da IA; analisar ou conversar exige configuração explícita. A IA fica desativada por padrão. O plano
+fixa cota gratuita, sem fallback pago e com limites locais; não comprova a
+configuração de cobrança da conta operadora. A 0034 escolheu `gemini-3.5-flash-lite`;
+a spec 0047 trocou o modelo de todo o Assistente (chat e comparação) para
+`gemini-2.5-flash-lite`, descrito abaixo. Não há scraping, leitura automática de
+páginas, comparação automática de lojas ou nova fonte de marketplace.
+
+### Pesquisa de preços na web no chat — spec 0047
+
+A [spec 0047](../specs/0047-chat-pesquisa-precos-web-gemini/spec.md) reverte
+parcialmente a exclusão de "pesquisa web autônoma" da 0034, apenas no chat livre.
+Quando a pergunta pede preços ou ofertas atuais, o modelo pode usar o grounding
+com Google Search do próprio Gemini e responder citando as fontes. O modelo decide
+quando pesquisar; resposta sem busca continua válida. A resposta com busca mostra
+fontes, sugestões de pesquisa do Google, momento da consulta e o rótulo
+**não verificado**. Preços da web são referência: não criam monitoramento, produto
+monitorado ou alerta, e o chat não elege vencedor sem evidência. A análise de
+comparação continua sem busca.
+
+A escolha de `gemini-2.5-flash-lite` segue a documentação oficial consultada em
+04/11/2026: o grounding não tem free tier no `gemini-3.5-flash-lite`, enquanto o
+2.5 Flash-Lite oferece cota gratuita compartilhada com o Flash. A busca só funciona
+com `AI_ENABLED=true`, chave configurada e `AI_WEB_SEARCH_ENABLED=true` explícito;
+sem cota ou com falha da busca, o chat tenta uma vez sem busca e avisa que a
+pesquisa na web está indisponível, sem fallback pago. Com a busca ativa, o aviso
+antes do envio acrescenta que a pergunta pode ser pesquisada pelo Google e que o
+fornecedor guarda pergunta e resposta por 30 dias. Fontes e sugestões ficam com a
+mensagem e seguem a retenção de 90 dias da conversa.
+
+A implementação local foi validada com o Gemini simulado na fronteira HTTP. A
+chamada real com grounding no free tier da conta operadora, o HTML real das
+sugestões e a qualidade em português do novo modelo continuam pendentes; a spec
+permanece `pronta`, sem integração, CI ou deploy presumidos.
+
+Na implementação local da [spec 0040](../specs/0040-assistente-ia-com-robo/spec.md),
+o Assistente passa a apresentar o robô original e até quatro conversas recentes
+obtidas da API existente. O shell interno acompanha o Figma atual com Assistente,
+Histórico e Monitoramento; a saída de dashboard e comparador dessa navegação não
+remove suas páginas, dados ou APIs. Chat, retenção, privacidade e disponibilidade
+da IA conservam as regras acima. Essa entrega de frontend tem validação local
+controlada e ainda não comprova integração ou publicação em ambiente externo.
+
+A [spec 0044](../specs/0044-assistente-com-menos-sobrecarga/spec.md) simplifica a
+apresentação local do Assistente conforme os cortes aprovados no Figma, aplicados
+ao desktop e ao mobile: pergunta direta, um exemplo no campo, robô compacto e
+recentes recolhidos. O aviso essencial permanece junto ao envio e o contador de
+caracteres aparece perto do limite. Isso reduz o texto inicial sem alterar chat,
+política de dados, limites ou disponibilidade. A validação é local e controlada;
+a spec permanece pronta, com publicação e integração pendentes.
+
+A implementação local da [spec 0045](../specs/0045-historico-conversas-conforme-figma/spec.md)
+concentra o histórico nas conversas: busca por título, cards para continuar,
+paginação e exclusão confirmada também no mobile. Datas vêm dos dados reais e o
+prazo de 90 dias continua informado. Comparações já salvas, suas rotas e APIs não
+foram removidas. A validação desta revisão usa API controlada e exportações Figma
+identificadas de 31/10/2026; não comprova edições remotas posteriores nem deploy.
+
+Respostas da IA devem ser identificadas como não verificadas, reconhecer lacunas
+e preservar a decisão da pessoa. Antes do envio, a interface informa processamento
+pelo Google, possível uso do conteúdo na modalidade gratuita e orienta não inserir
+dados pessoais ou confidenciais. Exclusão manual remove conteúdo do banco ativo;
+a expiração nega acesso ao completar 90 dias e a limpeza física roda a cada hora
+com a API em execução. Editar não renova o prazo. Essa política não promete apagar
+backups ou registros do fornecedor.
+
+A revisão e a QA locais da 0034 usam geração controlada na fronteira externa.
+Configuração gratuita real e avaliação do modelo em português (AC10/AC15/AC19) continuam pendentes;
+a spec permanece `pronta`, sem inferência de integração, CI ou deploy.
+
+## Experiência principal de monitoramento
 
 1. O usuário copia o link do anúncio no Mercado Livre, cola no BestPrice e clica em **Monitorar preço**.
 2. O backend valida a URL localmente, sem requisitá-la, e extrai o ID da publicação MLB.

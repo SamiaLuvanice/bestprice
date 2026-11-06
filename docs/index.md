@@ -14,7 +14,7 @@
 | Documento | Conteúdo |
 |---|---|
 | [README](../README.md) | Setup rápido, execução local e Compose |
-| [Contexto do produto](product-context.md) | Visão de produção, monitoramento por URL, requisitos e decisões pendentes |
+| [Contexto do produto](product-context.md) | Assistência de compras, comparação manual, monitoramento por URL e decisões pendentes |
 | [Arquitetura](architecture.md) | Componentes, dependências, requisição, configuração e operação |
 | [Banco de dados](database.md) | Conexão, migrations, tabelas de domínio e proteção RLS de stage |
 | [Fluxo GitHub](github-workflow.md) | Processo de contribuição, CI, sincronização opcional e entrega |
@@ -26,16 +26,17 @@
 | [Atualização do harness](harness-upgrade.md) | Processo de atualização |
 | [Setup do harness](harness-setup.md) | Instalação e configuração do harness |
 | [Reivindicações de agentes](agent-claims.md) | Registro operacional de agentes |
+| [Fluxo oficial de design — Figma](apps/frontend.md#fluxo-oficial-de-design--figma) | Referência visual, MCP oficial, desktop/mobile, reutilização e validação; exportações como alternativa |
 
 ## Documentação por módulo/app
 
 | Módulo | Documento | Responsabilidade |
 |---|---|---|
-| Backend | [apps/backend.md](apps/backend.md) | API FastAPI, sessão, monitoramento MLB e worker |
-| Frontend | [apps/frontend.md](apps/frontend.md) | SPA React, redesign shadcn/ui, gráfico Recharts, alertas e verificação visual |
+| Backend | [apps/backend.md](apps/backend.md) | API FastAPI, sessão, pesquisas/IA, monitoramento MLB e worker |
+| Frontend | [apps/frontend.md](apps/frontend.md) | SPA React, assistência/comparação/histórico, monitoramento e verificação visual |
 | Infraestrutura | [apps/infraestrutura.md](apps/infraestrutura.md) | Compose com Alembic e worker, proxy, automações e estado da implantação de stage |
 
-Não há painel administrativo no código atual; o provisionamento de conta é feito por comando no backend.
+Não há painel administrativo no código atual. Contas são criadas pelo cadastro self-service (spec 0048, desligado por padrão até a integração do Mercado Livre funcionar) ou provisionadas por comando no backend.
 
 ## Convenções
 

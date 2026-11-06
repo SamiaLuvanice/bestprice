@@ -34,7 +34,7 @@ describe('Atualizações recentes', () => {
       event('e4', 'price_changed', 'abc', '80.00'),
       event('e5', 'availability_changed', 'unavailable', 'available'),
       event('e6', 'availability_changed', 'available', 'unavailable', { observed_at: '2026-10-10T20:00:00Z' }),
-    ] }), undefined, '/')
+    ] }), undefined, '/app/monitoring/overview')
     const items = timeline().getAllByRole('listitem')
     const texts = items.map((item) => plain(item.querySelector('p') as HTMLElement))
     expect(texts).toEqual([
@@ -65,7 +65,7 @@ describe('Atualizações recentes', () => {
       if (url === '/api/tracked-products/tracking-9') return reply(200, other)
       if (url === '/api/tracked-products/tracking-9/history') return reply(200, { items: [], next_cursor: null })
       return undefined
-    }, '/')
+    }, '/app/monitoring/overview')
     const [item] = timeline().getAllByRole('listitem')
     expect(plain(item.querySelector('p') as HTMLElement)).toBe('Um produto monitorado caiu de R$ 100,00 para R$ 90,00.')
     await user.click(within(item).getByRole('link', { name: 'Ver produto' }))
@@ -74,7 +74,7 @@ describe('Atualizações recentes', () => {
   })
 
   it('mostra o texto de vazio sem entradas fictícias', async () => {
-    await renderArea(dashboardFixture({ items: [loaded], recentUpdates: [] }), undefined, '/')
+    await renderArea(dashboardFixture({ items: [loaded], recentUpdates: [] }), undefined, '/app/monitoring/overview')
     expect(timeline().getByText('As mudanças confirmadas de preço e disponibilidade aparecerão aqui.')).toBeInTheDocument()
     expect(timeline().queryAllByRole('listitem')).toHaveLength(0)
   })

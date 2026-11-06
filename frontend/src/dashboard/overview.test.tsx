@@ -23,7 +23,7 @@ const withoutImage = trackedFixture({
 }, { id: 'tracking-2' })
 
 async function renderOverview(dashboard: unknown) {
-  window.history.replaceState(null, '', '/')
+  window.history.replaceState(null, '', '/app/monitoring/overview')
   fakeApi((url) => {
     if (url === '/api/tracked-products/tracking-2') return reply(200, withoutImage)
     if (url === '/api/tracked-products/tracking-2/history') return reply(200, { items: [], next_cursor: null })

@@ -26,4 +26,4 @@ Leia .agents/skills/<nome>/SKILL.md quando a descrição combinar com a tarefa; 
 
 Este arquivo é lido por Codex, Cursor e OpenCode; Claude importa via CLAUDE.md. Pastas .claude/, .opencode/ e .cursor/ são projeções. Edite .agents/ e execute .agents/sync.ps1 no Windows ou bash .agents/sync.sh em sistemas Unix.
 
-MCP: a fonte é .agents/mcp.json (formato agnóstico mcpServers). O sync gera .mcp.json na raiz e o bloco mcp de opencode.json — não edite os gerados.
+MCP: a fonte é .agents/mcp.json (formato agnóstico mcpServers). O sync gera .mcp.json na raiz (com `type: http` nas entradas remotas) e o bloco mcp de opencode.json — não edite os gerados. Use o Context7 para documentação de bibliotecas quando a versão importar.

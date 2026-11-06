@@ -53,6 +53,8 @@ def engine_kwargs() -> dict[str, object]:
         "pool_use_lifo": True,
         "pool_timeout": POOL_TIMEOUT_SECONDS,
         "connect_args": {"connect_timeout": CONNECT_TIMEOUT_SECONDS},
+        # Erros e logs de SQL não trazem os valores (e-mail, hash, tokens): defesa em profundidade.
+        "hide_parameters": True,
     }
 
 

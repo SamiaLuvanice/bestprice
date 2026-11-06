@@ -1,0 +1,66 @@
+{
+  "mode": "off",
+  "conversationUrl": "http://127.0.0.1:55473/app/assistant/b6d04c75-5728-4200-921d-3bebf71832be",
+  "results": [
+    {
+      "name": "login sintético",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "capabilities.web_search",
+      "ok": true,
+      "detail": "{\"enabled\":true,\"model\":\"gemini-2.5-flash-lite\",\"web_search\":false}"
+    },
+    {
+      "name": "capabilities.model 2.5-flash-lite",
+      "ok": true,
+      "detail": "gemini-2.5-flash-lite"
+    },
+    {
+      "name": "capabilities sem chave",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "aviso de privacidade extra ausente antes do envio",
+      "ok": true,
+      "detail": "O Google processa suas mensagens. Na modalidade gratuita, o conteúdo pode ser usado para melhorar seus produtos. Não envie dados pessoais ou confidenciais."
+    },
+    {
+      "name": "POST /api/ai/chat 200",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "contrato: grounding null com busca desligada",
+      "ok": true,
+      "detail": "null"
+    },
+    {
+      "name": "UI: sem bloco de fontes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "URL da conversa",
+      "ok": true,
+      "detail": "http://127.0.0.1:55473/app/assistant/b6d04c75-5728-4200-921d-3bebf71832be"
+    },
+    {
+      "name": "recarga: sem bloco de fontes com busca desligada",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nenhuma requisição do navegador fora de 127.0.0.1",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "console sem outros erros (fora a falha de rede injetada e o bloqueio do sandbox)",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

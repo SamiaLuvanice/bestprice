@@ -570,7 +570,7 @@ h1, h2 { text-wrap: balance; }
 }
 
 /* Entrada (0023/0027): a arte fornecida ocupa a metade esquerda, sem sobreposições. */
-.login-shell { display: grid; width: 100%; min-height: calc(100svh - 72px); margin: 0 auto; }
+.login-shell { display: grid; width: 100%; min-height: 100svh; margin: 0 auto; }
 .login-card { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; min-height: inherit; margin: 0 auto; background: var(--color-bg); }
 .login-visual { display: none; }
 .login-brand { font-size: 26px; align-self: flex-start; margin: 0 0 40px; }
@@ -613,6 +613,20 @@ h1, h2 { text-wrap: balance; }
 }
 @media (prefers-reduced-motion: reduce) {
   .btn-pill:active:not(:disabled) { transform: none; }
+}
+
+/* Cadastro e atalho entre login e cadastro (0048, quadros 02/02b aprovados em D1). */
+.login-hint { margin: 0; font-size: 14px; line-height: 1.4; color: var(--color-text-muted); }
+.login-switch { margin-top: var(--space-6); }
+.login-switch a, .signup-shell .field-error a { font-weight: 700; color: var(--color-brand); text-decoration: underline; text-underline-offset: 3px; display: inline-block; padding-block: 12px; margin-block: -12px; } /* alvo de 44px sem mudar a linha; sublinhado: link no texto não depende só da cor (axe link-in-text-block) */
+.signup-shell .login-error { margin: 0; position: relative; padding-left: 44px; }
+.signup-shell .field-error { position: relative; padding-left: 24px; }
+.signup-shell .field-error::before, .signup-shell .login-error::before { content: "!" / ""; position: absolute; left: 0; top: .15em; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--color-danger-text); color: var(--color-bg); font-size: 11px; font-weight: 700; line-height: 1; } /* ícone decorativo; o texto carrega o significado */
+.signup-shell .login-error::before { left: 16px; top: 15px; }
+.signup-shell .login-fields:has(.btn-pill[aria-busy="true"]) .login-input { color: var(--color-text-muted); }
+@media (max-width: 700px) {
+  /* Quadros 220:871/220:965: topo fixo (marca em y ≈ 130) em vez de centralizar; o cadastro é mais alto que o login e subiria. */
+  .signup-shell .login-form-side { justify-content: flex-start; padding-top: min(130px, 15svh); }
 }
 
 /* Recuperação de rota conforme quadros 07b/14. */

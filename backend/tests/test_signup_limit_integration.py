@@ -1,0 +1,263 @@
+import os
+import threading
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
+
+import pytest
+from alembic.config import Config
+from sqlalchemy import create_engine, func, select
+from sqlalchemy.orm import Session
+
+from alembic import command
+from app.auth.limiter import (
+    PostgresSignupLimiter,
+    SignupRateLimited,
+    purge_signup_attempts,
+)
+from app.auth.models import SignupAttempt
+from app.auth.settings import SignupSettings
+
+NOW = datetime(2026, 11, 6, 12, 0, tzinfo=UTC)
+
+
+def settings(attempts: int = 5, minutes: int = 60) -> SignupSettings:
+    return SignupSettings(
+        enabled=True, rate_limit_attempts=attempts, rate_limit_window=timedelta(minutes=minutes),
+        trusted_proxy_secret="", source_hash_secret="h" * 32,
+    )
+
+
+@pytest.fixture(scope="module")
+def engine(request: pytest.FixtureRequest):
+    test_url = os.environ.get("TEST_DATABASE_URL")
+    if not test_url:
+        pytest.skip("TEST_DATABASE_URL não configurada para integração PostgreSQL")
+    previous = os.environ.get("DATABASE_URL")
+    os.environ["DATABASE_URL"] = test_url
+    try:
+        command.upgrade(Config("alembic.ini"), "head")
+    finally:
+        if previous is None:
+            os.environ.pop("DATABASE_URL", None)
+        else:
+            os.environ["DATABASE_URL"] = previous
+    engine = create_engine(test_url.replace("postgresql://", "postgresql+psycopg://", 1))
+    yield engine
+    engine.dispose()
+
+
+def new_source() -> str:
+    return uuid.uuid4().hex + uuid.uuid4().hex
+
+
+def attempt(engine, source: str, now: datetime, config: SignupSettings) -> int | None:
+    """Devolve None quando a tentativa passou ou o retry_after quando foi recusada."""
+    with Session(engine) as session:
+        try:
+            PostgresSignupLimiter().check_and_record(session, source, now, config)
+        except SignupRateLimited as limited:
+            return limited.retry_after_seconds
+    return None
+
+
+def stored(engine, source: str) -> list[datetime]:
+    with Session(engine) as session:
+        return list(session.scalars(
+            select(SignupAttempt.attempted_at).where(SignupAttempt.source_hash == source)
+            .order_by(SignupAttempt.attempted_at),
+        ))
+
+
+def test_sixth_attempt_is_refused_until_the_oldest_leaves_the_window(engine) -> None:
+    source = new_source()
+    instants = [NOW + timedelta(minutes=minute) for minute in (0, 5, 10, 15, 20)]
+    for instant in instants:
+        assert attempt(engine, source, instant, settings()) is None
+
+    refused_at = NOW + timedelta(minutes=30)
+    retry = attempt(engine, source, refused_at, settings())
+    # O mais antigo (NOW) sai da janela em NOW + 60 min: faltam 30 min.
+    assert retry == 30 * 60
+    assert stored(engine, source) == instants  # a recusa não registra
+
+    assert attempt(engine, source, refused_at + timedelta(seconds=retry - 1), settings()) == 1
+    assert attempt(engine, source, refused_at + timedelta(seconds=retry), settings()) is None
+    # A tentativa aceita apaga as vencidas da própria origem (o mais antigo saiu da janela).
+    assert len(stored(engine, source)) == 5
+
+
+def test_retry_after_is_rounded_up_to_whole_seconds(engine) -> None:
+    source = new_source()
+    first = NOW + timedelta(microseconds=1)
+    assert attempt(engine, source, first, settings(attempts=1)) is None
+    assert attempt(engine, source, NOW + timedelta(minutes=59, seconds=59), settings(attempts=1)) == 2
+
+
+def test_custom_limit_of_two_in_ten_minutes(engine) -> None:
+    source = new_source()
+    config = settings(attempts=2, minutes=10)
+    assert attempt(engine, source, NOW, config) is None
+    assert attempt(engine, source, NOW + timedelta(minutes=1), config) is None
+    assert attempt(engine, source, NOW + timedelta(minutes=2), config) == 8 * 60
+    assert attempt(engine, source, NOW + timedelta(minutes=10), config) is None
+
+
+def test_sources_have_independent_buckets(engine) -> None:
+    first, second = new_source(), new_source()
+    assert attempt(engine, first, NOW, settings(attempts=1)) is None
+    assert attempt(engine, first, NOW, settings(attempts=1)) == 3600
+    assert attempt(engine, second, NOW, settings(attempts=1)) is None
+
+
+def test_purge_removes_only_expired_rows(engine) -> None:
+    source = new_source()
+    with Session(engine) as session:
+        session.add_all([
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(minutes=61)),
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(minutes=60)),
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(minutes=59)),
+        ])
+        session.commit()
+        removed = purge_signup_attempts(session, NOW, timedelta(minutes=60))
+        session.commit()
+    assert removed >= 2
+    assert stored(engine, source) == [NOW - timedelta(minutes=59)]
+
+
+def test_simultaneous_attempts_from_the_same_source_respect_the_limit(engine) -> None:
+    source = new_source()
+    barrier = threading.Barrier(2)
+
+    def concurrent_attempt(_: int) -> int | None:
+        barrier.wait(timeout=5)
+        return attempt(engine, source, NOW, settings(attempts=1))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(concurrent_attempt, range(2)))
+    assert sorted(results, key=lambda value: value is not None) == [None, 3600]
+    with Session(engine) as session:
+        count = session.scalar(
+            select(func.count()).select_from(SignupAttempt).where(SignupAttempt.source_hash == source),
+        )
+    assert count == 1
+
+
+def test_hourly_cleanup_also_purges_expired_signup_attempts(engine, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app import db
+    from app.research import cleanup
+
+    source = new_source()
+    with Session(engine) as session:
+        session.add_all([
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(hours=2)),
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(minutes=10)),
+        ])
+        session.commit()
+    monkeypatch.setenv("DATABASE_URL", os.environ["TEST_DATABASE_URL"])
+    monkeypatch.delenv("SIGNUP_RATE_LIMIT_WINDOW_MINUTES", raising=False)
+    monkeypatch.setattr(cleanup, "now_utc", lambda: NOW)
+    db.create_database_engine.cache_clear()
+    try:
+        cleanup.purge_database()
+    finally:
+        db.create_database_engine.cache_clear()
+    assert stored(engine, source) == [NOW - timedelta(minutes=10)]
+
+
+def test_request_path_does_not_delete_expired_rows_of_other_sources(engine) -> None:
+    other, source = new_source(), new_source()
+    with Session(engine) as session:
+        session.add(SignupAttempt(source_hash=other, attempted_at=NOW - timedelta(hours=3)))
+        session.commit()
+    assert attempt(engine, source, NOW, settings()) is None
+    assert attempt(engine, source, NOW, settings(attempts=1)) == 3600
+    assert stored(engine, other) == [NOW - timedelta(hours=3)]
+
+
+def test_attempt_purges_only_its_own_expired_rows(engine) -> None:
+    own, other = new_source(), new_source()
+    with Session(engine) as session:
+        session.add_all([
+            SignupAttempt(source_hash=own, attempted_at=NOW - timedelta(hours=3)),
+            SignupAttempt(source_hash=own, attempted_at=NOW - timedelta(minutes=60)),
+            SignupAttempt(source_hash=own, attempted_at=NOW - timedelta(minutes=59)),
+            SignupAttempt(source_hash=other, attempted_at=NOW - timedelta(hours=3)),
+        ])
+        session.commit()
+    assert attempt(engine, own, NOW, settings()) is None
+    assert stored(engine, own) == [NOW - timedelta(minutes=59), NOW]
+    assert stored(engine, other) == [NOW - timedelta(hours=3)]
+
+
+def test_refused_attempt_writes_nothing(engine) -> None:
+    source = new_source()
+    with Session(engine) as session:
+        session.add_all([
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(hours=3)),
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(minutes=1)),
+        ])
+        session.commit()
+    assert attempt(engine, source, NOW, settings(attempts=1)) == 59 * 60
+    assert stored(engine, source) == [NOW - timedelta(hours=3), NOW - timedelta(minutes=1)]
+
+
+def test_cleanup_loop_purges_on_startup_before_the_first_sleep(engine, monkeypatch: pytest.MonkeyPatch) -> None:
+    import asyncio
+
+    from app import db
+    from app.research import cleanup
+
+    source = new_source()
+    with Session(engine) as session:
+        session.add(SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(hours=2)))
+        session.commit()
+    monkeypatch.setenv("DATABASE_URL", os.environ["TEST_DATABASE_URL"])
+    monkeypatch.delenv("SIGNUP_RATE_LIMIT_WINDOW_MINUTES", raising=False)
+    monkeypatch.setattr(cleanup, "now_utc", lambda: NOW)
+    db.create_database_engine.cache_clear()
+
+    async def exercise() -> None:
+        task = asyncio.create_task(cleanup.cleanup_loop(interval=3600))
+        for _ in range(100):
+            if not stored(engine, source):
+                break
+            await asyncio.sleep(0.05)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    try:
+        asyncio.run(exercise())
+    finally:
+        db.create_database_engine().dispose()
+        db.create_database_engine.cache_clear()
+    assert stored(engine, source) == []
+
+
+def test_cleanup_loop_survives_a_failed_startup_purge() -> None:
+    import asyncio
+
+    from sqlalchemy.exc import OperationalError
+
+    from app.research.cleanup import cleanup_loop
+
+    calls: list[int] = []
+
+    def flaky_cleaner() -> None:
+        calls.append(1)
+        if len(calls) == 1:
+            raise OperationalError("SELECT 1", {}, Exception("banco indisponível"))
+
+    async def exercise() -> None:
+        task = asyncio.create_task(cleanup_loop(interval=0.01, cleaner=flaky_cleaner))
+        for _ in range(100):
+            if len(calls) >= 2:
+                break
+            await asyncio.sleep(0.01)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    asyncio.run(exercise())
+    assert len(calls) >= 2

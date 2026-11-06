@@ -1,0 +1,23 @@
+=== mobile 390x899
+  rolagem horizontal = false
+  axe padrão (claro): 0 violações
+  foco após 3 Tab = signup-confirmation
+  paradas do Tab = signup-email[outline solid 2px; 48px] > signup-password[outline solid 2px; 48px] > Mostrar senha[outline solid 3px; 44px] > signup-confirmation[outline solid 2px; 48px] > Mostrar confirmação da senha[outline solid 3px; 44px] > Criar conta[outline solid 3px; 50px] > Entrar[outline solid 3px; 46px] > Voltar para o início[outline solid 3px; 44px]
+  erros = ["Informe um e-mail válido, como nome@exemplo.com.","A senha precisa ter pelo menos 12 caracteres.","As senhas não conferem."]
+  role=status = "3 campos precisam de correção: E-mail, Senha e Confirmar senha." | foco = signup-email
+  aria-describedby senha = signup-password-error | dica presente = 0
+  axe erros de campo (claro): 0 violações
+  axe padrão (escuro): 0 violações
+  axe erros de campo (escuro): 0 violações
+  enviando: botão = "Criando conta…" aria-busy = true aria-disabled = true
+  409: erro = "Já existe uma conta com este e-mail. Entrar" | status = "1 campo precisa de correção: E-mail." | foco = signup-email
+  axe 409 (claro): 0 violações
+  429 após 5 envio(s): alerta = "Muitas tentativas de cadastro. Tente novamente em 1 minuto." | status = ""
+  axe limite (claro): 0 violações
+  rede: alerta = "Não foi possível criar a conta agora. Tente novamente."
+  login: Criar conta = 1 alvo 79x46 decoração = underline
+  axe login (claro): 0 violações
+=== landing 1440: links (ordem do DOM, x) = Como funciona@x725 101x44 | Comparador@x854 83x44 | Entrar@x1106 44x44 | Criar conta@x966 128x44 | Começar com IA@x1178 150x44
+  axe landing desktop (claro): 0 violações
+=== landing 390 menu aberto = Como funciona@y88 350x44 | Comparador@y140 350x44 | Entrar@y192 350x44 | Criar conta@y244 350x44 | Começar com IA@y296 350x44
+  axe landing menu aberto (claro): 0 violações

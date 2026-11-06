@@ -1,0 +1,63 @@
+15:56:28
+== 1) AC02/AC04 cadastro ' Ana@Exemplo.com '
+HTTP/1.1 201 Created
+content-length: 71
+content-type: application/json
+set-cookie: bestprice_session=<redigido>; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+
+{"id":"37b36cc2-65bb-49fb-bfb3-16a0a092376d","email":"ana@exemplo.com"}
+
+      email      | hash_prefix | length
+-----------------+-------------+--------
+ ana@exemplo.com | scrypt$     |    168
+(1 row)
+
+== 2) AC04/AC07 duplicado 'ANA@exemplo.com' com outra senha
+HTTP/1.1 409 Conflict
+content-length: 261
+content-type: application/json
+
+{"error":{"code":"email_already_registered","message":"Já existe uma conta com este e-mail.","fields":[{"field":"email","code":"email_already_registered","message":"Já existe uma conta com este e-mail."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+cookies no jar do duplicado:
+0
+hash da ana INALTERADO
+== 3) AC05 a@b
+HTTP/1.1 422 Unprocessable Content
+content-length: 245
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_invalid","message":"Informe um e-mail válido, como nome@exemplo.com."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== 4) AC05/AC06 e-mail vazio + senha curta (dois campos)
+HTTP/1.1 422 Unprocessable Content
+content-length: 323
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"email","code":"email_required","message":"Informe seu e-mail."},{"field":"password","code":"password_too_short","message":"A senha precisa ter pelo menos 12 caracteres."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== 5) AC06 senha 1025
+HTTP/1.1 422 Unprocessable Content
+content-length: 247
+content-type: application/json
+
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"password","code":"password_too_long","message":"A senha pode ter no máximo 1024 caracteres."}],"tracked_product_id":null,"retry_after_seconds":null}}
+
+== 6) AC09 6o envio (valido) -> 429
+HTTP/1.1 429 Too Many Requests
+retry-after: 59
+content-length: 174
+content-type: application/json
+
+{"error":{"code":"signup_rate_limited","message":"Muitas tentativas de cadastro. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":59}}
+
+      email
+-----------------
+ ops@exemplo.com
+ ana@exemplo.com
+(2 rows)
+
+ attempts |             min              |              max
+----------+------------------------------+-------------------------------
+        5 | 2026-11-06 12:56:28.83467-03 | 2026-11-06 12:56:30.468935-03
+(1 row)

@@ -1,34 +1,82 @@
 # Arquitetura
 
+## Referência de design e implementação
+
+O Figma é a referência visual principal de UI/UX. O Codex interpreta os designs e
+implementa na stack existente, reutilizando componentes e tokens, seguido de
+validação visual. O [guia frontend](apps/frontend.md#fluxo-oficial-de-design--figma)
+concentra o procedimento e o fallback por exportações. Essa consulta não é uma
+dependência de runtime da SPA, API, worker ou banco.
+
+Paper Bridge foi descontinuada na spec 0039. O pacote e seus gates
+exclusivos foram retirados; a arquitetura da aplicação permanece preservada.
+O MCP oficial do Paper permanece configurado para uso eventual quando
+necessário, sem reativar a Bridge ou substituir o Figma como referência principal.
+As specs 0035–0037 mantêm as evidências históricas, e o
+[código anterior à retirada](https://github.com/SamiaLuvanice/bestprice/tree/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge)
+pode ser consultado no Git. Esses registros não orientam novas automações.
+
 ## Estado desta branch
 
-A aplicação combina SPA React, API FastAPI, PostgreSQL 17 e um processo worker. O fluxo de negócio implementado nesta branch usa publicações do Mercado Livre Brasil (MLB). A [visão do produto](product-context.md) adota o Mercado Livre Brasil como marketplace exclusivo desta fase, substituindo a premissa Amazon anterior; o acesso real a anúncios de terceiros do Mercado Livre ainda depende de validação externa.
+A aplicação combina SPA React, API FastAPI, PostgreSQL 17 e um processo worker. A spec 0034 acrescenta assistência de compras por conversa, comparação manual de 2–3 produtos e histórico privado por 90 dias. O monitoramento usa publicações do Mercado Livre Brasil (MLB) e mantém seu gate externo desligado. A [visão do produto](product-context.md) adota o Mercado Livre Brasil como marketplace exclusivo desta fase, substituindo a premissa Amazon anterior; o acesso real a anúncios de terceiros do Mercado Livre ainda depende de validação externa.
 
 ```mermaid
 graph LR
   Browser[Navegador React] -->|/api e cookie de sessão| API[FastAPI]
   API --> DB[(PostgreSQL)]
+  API -->|IA opt-in| Google[Gemini generateContent]
   Worker[Worker periódico] --> DB
   API -->|quando autorizado| ML[API oficial Mercado Livre]
   Worker -->|quando autorizado| ML
 ```
 
-A SPA consome rotas de sessão, dashboard, monitoramentos, histórico, alertas e notificações por `frontend/src/api.ts`. FastAPI isola autenticação em `app/auth`, consulta externa em `app/marketplace`, regras e persistência em `app/products`, e seleção periódica em `app/monitoring`. O produto é compartilhado pelo identificador da publicação; cada usuário tem seu vínculo e alerta. A migration Alembic prepara o esquema antes de iniciar a API no Compose.
+A SPA consome rotas de sessão, dashboard, monitoramentos, histórico, alertas e notificações por `frontend/src/api.ts`. FastAPI isola autenticação em `app/auth`, consulta externa em `app/marketplace`, regras e persistência em `app/products`, seleção periódica em `app/monitoring` e pesquisas privadas em `app/research`. O cliente tipado `features/research/api.ts` usa o mesmo cookie e helpers HTTP; respostas da IA são texto não verificado, sem execução de HTML. A única busca externa é o grounding do Gemini no chat (spec 0047), opt-in; o HTML de sugestões do Google é isolado em iframe com sandbox sem scripts. O produto é compartilhado pelo identificador da publicação; cada usuário tem seu vínculo e alerta. A migration Alembic prepara o esquema antes de iniciar a API no Compose.
 
-Na interface, `BrowserRouter` apresenta `/login`, `/`, `/produtos`, `/produtos/:id` e `/alertas`. Na spec 0024, `/` apresenta a landing estática a visitantes, inclusive enquanto `GET /api/auth/me` está pendente ou indisponível, e o painel quando há sessão válida. `App.tsx` consulta a sessão antes de renderizar conteúdo protegido; `/produtos`, o detalhe e `/alertas` continuam exigindo autenticação. A URL do detalhe identifica o vínculo do usuário e a API continua autorizando sua leitura. O retorno após login aceita somente rotas internas conhecidas. Os links de produto preservam histórico e novas abas do navegador, enquanto o Nginx local resolve caminhos da SPA por `index.html` e reserva `/api/*` para a API. A 0024 não mudou contrato HTTP ou esquema; sua landing não consulta produtos públicos. O comportamento dessa mudança em `stage` ainda não foi verificado.
+Na interface, `BrowserRouter` mantém `/` pública mesmo com sessão válida. `/app`
+redireciona para `/app/dashboard`; assistente, comparador e histórico ficam em
+`/app/assistant`, `/app/compare` e `/app/history`, com IDs nas URLs dos recursos
+salvos. `App.tsx` valida a sessão antes da área protegida. `/app/monitoring` abre a
+lista, `/app/monitoring/overview` preserva o painel e `/app/monitoring/alerts` os
+alertas; `/produtos`, `/produtos/:id` e `/alertas` continuam funcionais. A API valida
+propriedade e expiração em cada operação. O retorno do login aceita apenas caminhos
+internos conhecidos; o estado da área é isolado por usuário e desmontado no logout
+ou 401, com revalidação ao restaurar uma página pelo histórico. Nginx resolve
+caminhos da SPA por `index.html` e reserva `/api/*` ao proxy. A revisão 0034 foi
+verificada localmente, sem deploy.
+
+A spec 0040 atualiza a apresentação do Assistente e o shell de `/app/*`.
+`RecentConversations` reutiliza `/api/research` com `kind=conversation` e limite
+de quatro, com carga e recuperação independentes do chat; a lista revalida após
+envio e descarta respostas após desmontagem. O robô é um asset local original.
+Na simplificação local da spec 0044, o acesso aos recentes começa recolhido nos
+dois tamanhos e reutiliza `useDisclosure`, com foco e rascunho preservados. A
+composição e os textos mudam somente no frontend; contrato e dependências ficam
+na fronteira existente. Ver [guia frontend](apps/frontend.md#assistente-e-navegação-compartilhada--specs-0040-e-0044).
+Sidebar/header e atalhos móveis oferecem Assistente, Histórico e Monitoramento;
+dashboard e comparador permanecem acessíveis por suas rotas. Na revisão local
+0045, `HistoryPage` lista apenas conversas por `/api/research` com
+`kind=conversation`, busca por título e páginas de 20 registros. Cards retomam a
+conversa por ID e a exclusão usa a rota existente de conversas; a API e as
+comparações salvas permanecem preservadas. O diálogo compartilhado de exclusão
+gere foco inicial em Cancelar e retorno ao acionador ou título da página.
+No monitoramento interno, `AccountArea`/`AppHeader` em modo `embedded`
+compartilham marca e conta do shell e conservam subnavegação/sino no fluxo.
+Não há mudança de contrato, persistência, dependências ou configuração de IA.
+Os testes desta revisão usam a fronteira HTTP controlada; não comprovam teclado
+virtual real, backend/banco reais, disponibilidade do fornecedor ou deploy.
 
 A spec 0027 aplica o redesign aprovado às telas públicas e autenticadas usando
 Tailwind CSS v4 e componentes shadcn/ui locais em `frontend/src/components/ui/`.
 `components.json`, o alias `@/` e `src/lib/utils.ts` mantêm a geração e combinação
-das classes; os tokens continuam sendo da identidade BestPrice. A landing usa
-artes locais identificadas como ilustração e CTAs para login. O detalhe carrega
+das classes; os tokens continuam sendo da identidade BestPrice. A landing atual da 0034 comunica assistência e comparação sem prometer ofertas;
+a arte local é ilustrativa e os CTAs protegidos passam pelo login quando necessário. O detalhe carrega
 Recharts e Chart do shadcn sob demanda, desenha apenas histórico já carregado e
-oferece tooltip decimal exato e tabela textual. Nenhuma regra monetária, rota HTTP
-ou persistência foi alterada. A [verificação da 0027](../specs/0027-redesign-figma-shadcn/verification.md)
+oferece tooltip decimal exato e tabela textual. Na 0027, nenhuma regra monetária,
+rota HTTP ou persistência foi alterada. A [verificação da 0027](../specs/0027-redesign-figma-shadcn/verification.md)
 registra os gates locais e a referência SVG usada quando o conector Figma falhou;
 implantação dessa mudança ainda não foi verificada.
 
-Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o cliente externo. URL inválida ou de formato não suportado, duplicação, retomada, `Retry-After` vigente, backoff, intervalo mínimo e `not_found` recente são decididos localmente, tanto no cadastro quanto na atualização; só uma consulta necessária à publicação exige a integração. Cada consulta é serializada por publicação com trava advisory PostgreSQL em conexão própria, e a transação de leitura é confirmada antes da chamada HTTP externa. O cliente real requer `MERCADOLIVRE_THIRD_PARTY_VALIDATED=true`, variáveis OAuth configuradas e a conta operadora provisionada no banco. A configuração padrão mantém consultas externas inativas. O fluxo `authorize_operator` cria uma URL oficial com `state` assinado e prazo curto; o callback valida o estado e o redirect URI exato, troca o código e grava tokens cifrados. Em Stage, o callback público pertence à API Render e grava no banco Stage; sua rota só fica disponível após promoção/deploy, e o DevCenter deve registrar o mesmo HTTPS. Access e refresh tokens são cifrados com a chave do ambiente; API e worker usam o mesmo registro e serializam a renovação por trava PostgreSQL. Resposta ambígua de refresh bloqueia nova tentativa até reprovisionamento, e 429 adia nova tentativa conforme `Retry-After`. Nenhum fluxo oficial com credenciais reais ou acesso a anúncios de terceiros foi comprovado. O cliente aceita apenas um preço comparável entre usuários: preço restrito a comprador, variações com preços divergentes ou preço de variação diferente do `amount`/`regular_amount` resultam em `unsupported_price_context` sem gravar preço (regras em [backend.md](apps/backend.md)). Falhas de consulta, inclusive na obtenção do token OAuth, registram a tentativa sem apagar o preço anterior. O worker verifica a configuração ao iniciar cada ciclo e consulta apenas produtos com vínculo ativo e horário vencido; pula a publicação já em consulta e isola exceções inesperadas de cada publicação, registrando a falha sem interromper o ciclo nem sobrescrever um sucesso mais recente. O lote e a concorrência têm limites configuráveis; publicações diferentes em paralelo usam sessões de banco independentes. Sucesso agenda nova consulta pela cadência configurada; erro temporário preserva a última observação e agenda backoff exponencial com jitter de 20%, respeitando `Retry-After`. Após `not_found`, uma falha transitória mantém esse estado e o intervalo mínimo de 24 horas; uma nova confirmação de `not_found` zera os contadores de falha. A janela configurada de frescor determina reuso do preço, o campo `stale` e a elegibilidade do preço para alertas; preço vencido deixa a condição `unknown` e não gera notificação.
+Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o cliente externo. URL inválida ou de formato não suportado, duplicação, retomada, `Retry-After` vigente, backoff, intervalo mínimo e `not_found` recente são decididos localmente, tanto no cadastro quanto na atualização; só uma consulta necessária à publicação exige a integração. Cada consulta é serializada por publicação com trava advisory PostgreSQL em conexão própria, e a transação de leitura é confirmada antes da chamada HTTP externa. O cliente real requer `MERCADOLIVRE_THIRD_PARTY_VALIDATED=true`, variáveis OAuth configuradas e a conta operadora provisionada no banco. A configuração padrão mantém consultas externas inativas. O fluxo `authorize_operator` cria uma URL oficial com `state` assinado e prazo curto; o callback valida o estado e o redirect URI exato, troca o código e grava tokens cifrados. Em Stage, o callback público pertence à API Render e grava no banco Stage; sua rota só fica disponível após promoção/deploy, e o DevCenter deve registrar o mesmo HTTPS. Access e refresh tokens são cifrados com a chave do ambiente; API e worker usam o mesmo registro e serializam a renovação por trava PostgreSQL. Resposta ambígua de refresh bloqueia nova tentativa até reprovisionamento, e 429 adia nova tentativa conforme `Retry-After`. A autorização inicial e a persistência cifrada foram comprovadas na evidência Stage; renovação real e acesso a anúncios de terceiros continuam pendentes. O cliente aceita apenas um preço comparável entre usuários: preço restrito a comprador, variações com preços divergentes ou preço de variação diferente do `amount`/`regular_amount` resultam em `unsupported_price_context` sem gravar preço (regras em [backend.md](apps/backend.md)). Falhas de consulta, inclusive na obtenção do token OAuth, registram a tentativa sem apagar o preço anterior. O worker verifica a configuração ao iniciar cada ciclo e consulta apenas produtos com vínculo ativo e horário vencido; pula a publicação já em consulta e isola exceções inesperadas de cada publicação, registrando a falha sem interromper o ciclo nem sobrescrever um sucesso mais recente. O lote e a concorrência têm limites configuráveis; publicações diferentes em paralelo usam sessões de banco independentes. Sucesso agenda nova consulta pela cadência configurada; erro temporário preserva a última observação e agenda backoff exponencial com jitter de 20%, respeitando `Retry-After`. Após `not_found`, uma falha transitória mantém esse estado e o intervalo mínimo de 24 horas; uma nova confirmação de `not_found` zera os contadores de falha. A janela configurada de frescor determina reuso do preço, o campo `stale` e a elegibilidade do preço para alertas; preço vencido deixa a condição `unknown` e não gera notificação.
 
 | Configuração | Uso |
 |---|---|
@@ -41,9 +89,49 @@ Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o 
 | `MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID` | IDs MLB distintos e autorizados para a sonda manual somente de leitura; vazios por padrão |
 | `APP_ENV` | Cookie Secure quando igual a `stage` ou `production` |
 | `API_ORIGIN` | Origem HTTPS da API Render usada apenas pela Pages Function de stage; não é segredo nem entra na SPA |
+| `SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`, `SIGNUP_RATE_LIMIT_WINDOW_MINUTES` | Cadastro self-service (spec 0048); padrões `false`, 5 tentativas e 60 minutos por origem |
+| `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC da origem gravada em `signup_attempts`; obrigatória com o cadastro ligado |
+| `TRUSTED_PROXY_SECRET` (Render) e `API_PROXY_SECRET` (Pages) | Mesmo segredo, distinto do anterior, que autentica a origem do visitante enviada pela Pages Function; obrigatório com o cadastro ligado em stage/production |
 | `MONITOR_CHECK_INTERVAL_SECONDS`, `MONITOR_FRESHNESS_SECONDS` | Cadência após sucesso e janela de frescor, ambas com padrão de 3600 segundos e faixa de 60 a 86400 |
 | `MONITOR_BATCH_LIMIT`, `MONITOR_MAX_CONCURRENCY` | Publicações por ciclo (padrão 20, faixa 1 a 100) e tentativas paralelas (padrão 1, faixa 1 a 16) |
 | `MONITOR_POLL_INTERVAL_SECONDS` | Pausa entre ciclos (padrão 60 segundos, faixa 1 a 3600) |
+| `AI_ENABLED`, `GEMINI_API_KEY` | Opt-in e chave Google somente backend; padrões `false` e vazio, modelo fixo `gemini-2.5-flash-lite` (spec 0047) |
+| `AI_WEB_SEARCH_ENABLED` | Pesquisa na web (grounding Google Search) no chat livre; padrão `false`, só vale com a IA disponível |
+| `API_PROXY_TARGET` | Destino do proxy Vite em desenvolvimento; padrão `http://localhost:8000` |
 | `TEST_DATABASE_URL` | Banco isolado dos testes de integração |
+
+O módulo `app/research` separa rotas, schemas, serviço, repositório, serialização,
+configuração e adapter Google. As seis tabelas novas são privadas e não compartilham
+produtos com o monitoramento. Dinheiro original da comparação fica em tabela filha,
+`NUMERIC(18,2)` nullable/`Decimal`; JSON guarda apenas análise e snapshots REST.
+Reserva de idempotência e cotas usa transação curta PostgreSQL, liberada antes do
+HTTP. O contexto é capturado sob trava; conclusão revalida expiração, exclusão e
+versão antes de salvar. O lifespan da API agenda limpeza horária em thread, sem
+bloquear startup/health; pesquisas vencidas já são negadas pelas consultas.
+Veja [banco](database.md) e [backend](apps/backend.md#assistência-e-pesquisas-privadas--spec-0034).
+
+O adapter usa host Google fixo, timeout de 25 s e nenhum redirect. Pela spec 0047,
+o chat livre pode enviar a ferramenta nativa `google_search` do Gemini quando
+`AI_WEB_SEARCH_ENABLED=true`; o backend só valida e guarda título/URL das fontes e
+o HTML de sugestões, sem requisitar essas URLs, e qualquer falha da busca gera uma
+única nova tentativa sem a ferramenta, dentro de um orçamento de 50 s. A análise
+de comparação continua sem busca e sem retry automático. Nginx local permite
+leitura de 60 s somente em chat/analyze (35 s antes da 0047), acima do orçamento
+de 50 s do chat com busca e abaixo da janela de 90 s da tentativa, conservando 5 s
+no restante. Sem opt-in e chave, geração retorna indisponibilidade;
+comparações e pesquisas salvas continuam acessíveis. A configuração gratuita e a
+qualidade do modelo real permanecem pendentes; o app não audita billing Google.
+
+A spec 0048 acrescenta o cadastro self-service em `app/auth`, desligado por padrão.
+A SPA consulta `GET /api/auth/signup` para mostrar “Criar conta” e a rota
+`/cadastro`; `POST /api/auth/signup` cria a conta e a sessão na mesma transação, com
+a regra única de `app/auth/accounts.py` (também usada pela CLI e espelhada em
+`frontend/src/auth/accountRules.ts`). Antes de validar, a API registra a tentativa
+em `signup_attempts`, num limite por origem persistido no PostgreSQL com trava
+advisory. Em stage, a origem é o `cf-connecting-ip` que a Pages Function assina com
+um segredo compartilhado; sem o segredo, a API usa o peer da conexão e nunca confia
+em `X-Forwarded-For`. Só o HMAC da origem é gravado, e a limpeza horária da API
+remove as tentativas vencidas. Detalhes em [backend](apps/backend.md#cadastro-self-service--spec-0048)
+e operação de Stage em [infraestrutura](apps/infraestrutura.md#cadastro-self-service-em-stage--spec-0048).
 
 O Compose inicia DB, executa Alembic no backend, aguarda seu health check e inicia worker e frontend. A spec 0018 configura outra topologia: navegador → Cloudflare Pages/Function em `/api/*` → API Render → PostgreSQL Supabase exclusivo de stage. O Blueprint chama um script que executa Alembic antes de Uvicorn e usa `/api/health` como health check. O proxy mantém as chamadas e o cookie na origem da interface. Após a promoção #69, API e proxy públicos responderam health 200 com banco `ok`; login via Pages emitiu cookie `Secure` e `HttpOnly`. A migration `20261014rls` protege as dez tabelas `public` do Supabase de stage sem políticas de acesso direto. Uma pausa controlada do banco fez a API retornar 503; Events do Render registrou health check 503, seguido de 502 na borda. O restore recuperou o serviço. O worker não integra essa topologia. GitHub Actions valida o código e publica imagens após o fluxo de release. Consulte os guias de [backend](apps/backend.md), [frontend](apps/frontend.md), [banco](database.md) e [infraestrutura](apps/infraestrutura.md).

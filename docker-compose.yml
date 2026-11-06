@@ -40,6 +40,14 @@ services:
     environment:
       <<: *backend-env
       APP_ENV: ${APP_ENV:-development}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      AI_WEB_SEARCH_ENABLED: ${AI_WEB_SEARCH_ENABLED:-false}
+      SIGNUP_ENABLED: ${SIGNUP_ENABLED:-false}
+      SIGNUP_RATE_LIMIT_ATTEMPTS: ${SIGNUP_RATE_LIMIT_ATTEMPTS:-5}
+      SIGNUP_RATE_LIMIT_WINDOW_MINUTES: ${SIGNUP_RATE_LIMIT_WINDOW_MINUTES:-60}
+      TRUSTED_PROXY_SECRET: ${TRUSTED_PROXY_SECRET:-}
+      SIGNUP_SOURCE_HASH_SECRET: ${SIGNUP_SOURCE_HASH_SECRET:-}
     depends_on:
       db:
         condition: service_healthy

@@ -4,11 +4,17 @@
       "command": "npx",
       "args": ["-y", "chrome-devtools-mcp@latest"]
     },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp/oauth"
+    },
+    "figma": {
+      "url": "https://mcp.figma.com/mcp"
+    },
     "mercadolibre-mcp-server": {
-      "url": "https://mcp.mercadolibre.com/mcp",
-      "headers": {
-        "Authorization": "Bearer ${MERCADOLIBRE_ACCESS_TOKEN}"
-      }
+      "url": "https://mcp.mercadolibre.com/devsite/v1/mcp"
+    },
+    "paper": {
+      "url": "http://127.0.0.1:29979/mcp"
     }
   }
 }

@@ -17,6 +17,75 @@ Require-File '.agents/AGENTS.md'
 Require-File '.agents/sources.md'
 Require-File '.agents/modules.yaml'
 
+function Test-McpProjections {
+    $canonicalPath = Join-Path $Root '.agents/mcp.json'
+    if (-not (Test-Path -LiteralPath $canonicalPath -PathType Leaf)) { return }
+
+    try { $canonical = Get-Content -LiteralPath $canonicalPath -Raw | ConvertFrom-Json }
+    catch {
+        $failures.Add('.agents/mcp.json não é JSON válido')
+        return
+    }
+    $canonicalNames = @($canonical.mcpServers.PSObject.Properties.Name)
+    foreach ($prop in $canonical.mcpServers.PSObject.Properties) {
+        $hasUrl = -not [string]::IsNullOrWhiteSpace([string]$prop.Value.url)
+        $hasCommand = -not [string]::IsNullOrWhiteSpace([string]$prop.Value.command)
+        if ($hasUrl -eq $hasCommand) {
+            $failures.Add("MCP '$($prop.Name)' deve ter exatamente um entre url e command")
+        }
+    }
+
+    $claudePath = Join-Path $Root '.mcp.json'
+    if (-not (Test-Path -LiteralPath $claudePath -PathType Leaf)) {
+        $failures.Add('arquivo ausente: .mcp.json (rode o sync)')
+    } else {
+        try { $claude = Get-Content -LiteralPath $claudePath -Raw | ConvertFrom-Json }
+        catch { $failures.Add('.mcp.json não é JSON válido'); $claude = $null }
+        if ($claude) {
+            $claudeNames = @($claude.mcpServers.PSObject.Properties.Name)
+            if (Compare-Object -ReferenceObject $canonicalNames -DifferenceObject $claudeNames) {
+                $failures.Add('.mcp.json não tem os mesmos servidores de .agents/mcp.json (rode o sync)')
+            }
+            foreach ($prop in $claude.mcpServers.PSObject.Properties) {
+                if (-not $prop.Value.url) { continue }
+                if (-not $prop.Value.type) {
+                    $failures.Add(".mcp.json: MCP '$($prop.Name)' tem url sem type (Claude exige http/sse/ws)")
+                } elseif ($prop.Value.type -notin @('http', 'sse', 'ws')) {
+                    $failures.Add(".mcp.json: MCP '$($prop.Name)' tem type inválido '$($prop.Value.type)'")
+                }
+            }
+        }
+    }
+
+    $cursorPath = Join-Path $Root '.cursor/mcp.json'
+    if (Test-Path -LiteralPath $cursorPath -PathType Leaf) {
+        try { $cursor = Get-Content -LiteralPath $cursorPath -Raw | ConvertFrom-Json }
+        catch { $failures.Add('.cursor/mcp.json não é JSON válido'); $cursor = $null }
+        if ($cursor) {
+            $cursorNames = @($cursor.mcpServers.PSObject.Properties.Name)
+            if (Compare-Object -ReferenceObject $canonicalNames -DifferenceObject $cursorNames) {
+                $failures.Add('.cursor/mcp.json não tem os mesmos servidores de .agents/mcp.json (rode o sync)')
+            }
+        }
+    }
+
+    $opencodePath = Join-Path $Root 'opencode.json'
+    if (-not (Test-Path -LiteralPath $opencodePath -PathType Leaf)) {
+        $failures.Add('arquivo ausente: opencode.json (rode o sync)')
+    } else {
+        try { $opencode = Get-Content -LiteralPath $opencodePath -Raw | ConvertFrom-Json }
+        catch { $failures.Add('opencode.json não é JSON válido'); $opencode = $null }
+        if ($opencode) {
+            $opencodeNames = @($opencode.mcp.PSObject.Properties.Name)
+            if (Compare-Object -ReferenceObject $canonicalNames -DifferenceObject $opencodeNames) {
+                $failures.Add('opencode.json não tem os mesmos servidores de .agents/mcp.json (rode o sync)')
+            }
+        }
+    }
+}
+
+Test-McpProjections
+
 $forbidden = @(
     '90171508118',
     '901716466319',

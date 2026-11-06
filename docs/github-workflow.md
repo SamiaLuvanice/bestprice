@@ -102,6 +102,7 @@ precisar ser congelada, crie uma decisão explícita de produto antes de prosseg
 | Quality | Chamado por CI e Release | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/build; testes Node e actionlint |
 | Project sync | Issue aberta/reaberta/fechada/atribuída/desatribuída; ciclo de draft/revisão/fechamento de PR; push em `feature/**` que altera `specs/*/spec.md` | Adiciona item e atualiza Status, com PROJECT_TOKEN |
 | Release | Push de tag `v*`; execução manual em `stage` para tag existente | Valida tag, SHA de stage, health, Quality; publica as imagens e cria release |
+| Validate Mercado Livre Stage | Execução manual em `develop` (`workflow_dispatch`) | Usa environment `stage-validation` e secrets para executar a sonda OAuth/API existente contra o banco Stage; somente leitura para anúncios e não altera o gate |
 
 O check obrigatório chama-se **CI**. Ele falha se qualquer gate falhar ou for
 cancelado. Não usamos filtros de caminhos que deixariam checks obrigatórios
@@ -115,6 +116,20 @@ O fechamento é nativo do GitHub: `Closes #123` só fecha ao integrar na branch
 padrão. Alterar a padrão para outra branch adia esse fechamento e a ativação dos eventos
 de Issues até que os workflows cheguem à branch padrão. Fechar a Issue não significa que
 a feature já foi implantada: significa que foi integrada na linha diária.
+
+**Validação operacional do Mercado Livre:** após integrar o workflow
+`validate-mercadolivre-stage.yml` em `develop`, crie o environment GitHub
+`stage-validation`, restrinja-o a deployments do branch `develop` e cadastre como
+secrets `STAGE_DATABASE_URL`, `STAGE_MERCADOLIVRE_OAUTH_KEY`,
+`STAGE_MERCADOLIVRE_CLIENT_ID` e `STAGE_MERCADOLIVRE_CLIENT_SECRET`. Copie os
+valores correspondentes do serviço API no Render; nunca os coloque em workflow,
+Issue, PR, `.env` versionado ou artefato. O workflow recebe os IDs MLB de teste
+como inputs, fixa `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false` e só injeta secrets
+no passo que executa a sonda. A sonda pode renovar e persistir o refresh token no
+PostgreSQL do Stage (refresh tokens são de uso único); não cria nem altera
+produtos. Consulte [a operação da integração](apps/infraestrutura.md#sonda-oficial-do-mercado-livre-no-github-actions)
+para escolher IDs permitidos, conferir o relatório e limpar os secrets quando a
+validação terminar. O workflow nunca ativa o gate.
 
 ## Proteções e ativação inicial
 

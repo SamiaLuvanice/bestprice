@@ -21,12 +21,35 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `frontend/public/_routes.json` | Invoca a Pages Function somente para `/api/*` |
 | `scripts/compose-worktree.ps1` | Isola nome Compose, volume e portas por worktree no Windows |
 | `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
-| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, Node tests e actionlint |
+| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, testes Node gerais e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
+| `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
 
-### Regras das automações GitHub
+## Integração de design
+
+A spec 0039 descontinua Paper Bridge e retira do job Automation a instalação
+do pacote, a instalação do Chromium e os testes exclusivos da Bridge. Permanecem
+os testes Node gerais e actionlint, além dos gates de backend e frontend. O
+Playwright de regressão visual da aplicação é preservado e continua separado do
+CI, conforme o [guia frontend](frontend.md#testes-e-verificação).
+
+O Figma é consultado pelo MCP oficial autorizado no cliente, sem serviço de
+bridge, porta CDP ou container adicional. As convenções e o fallback estão no
+[fluxo oficial de design](frontend.md#fluxo-oficial-de-design--figma).
+A configuração canônica e suas projeções são descritas no
+[setup do harness](../harness-setup.md).
+O MCP oficial do Paper permanece configurado para uso eventual, sem reativar
+a Bridge ou adicionar automação/porta CDP ao fluxo principal Figma.
+
+Os resultados antigos das specs 0035–0037 são históricos. Para consultar a
+implementação removida, use o
+[snapshot anterior à retirada](https://github.com/SamiaLuvanice/bestprice/tree/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge).
+Capturas, assets, relatórios e worktrees locais de trabalhos anteriores são
+preservados; a retirada não inclui limpeza global nem desinstalação do Paper.
+
+## Regras das automações GitHub
 
 | Código | Responsabilidade observada |
 |---|---|
@@ -58,6 +81,133 @@ Para as rotas da spec 0021, `frontend/nginx.conf` aplica `try_files $uri $uri/ /
 As variáveis da aplicação estão tabeladas em [architecture.md](../architecture.md#estado-desta-branch). `.env.example` inclui `MERCADOLIVRE_THIRD_PARTY_VALIDATED=false`, variáveis OAuth/chave Fernet e URI de callback, três IDs MLB para a sonda, `APP_ENV=development` e cinco parâmetros `MONITOR_*`. Compose repassa OAuth, callback, IDs de validação e `MONITOR_*` a backend e worker. A configuração Render define o callback HTTPS Stage, mas não configura segredos. Para iniciar a autorização, `python -m app.marketplace.authorize_operator` imprime uma URL oficial; a aplicação precisa estar criada no DevCenter, e a mesma chave Fernet deve estar segura no ambiente que inicia o fluxo e em Stage. A versão com diagnóstico por categorias seguras foi promovida pela PR #139; o serviço Render está Live com health 200. Após três tentativas malsucedidas, a quarta autorização foi concluída e a persistência cifrada confirmada por contagem e validade, sem ler tokens. A autorização inicial foi demonstrada, mas a renovação e a consulta de anúncios ainda não. O último valor conhecido da flag Stage era `false`; a sincronização pela PR #144 não alterou variáveis de ambiente, mas o valor não foi relido após a integração. A ferramenta `python -m app.marketplace.validate_live --confirm-live-requests`, em `backend/`, usa os IDs de cenário e o banco local, consulta até três anúncios em modo de leitura (até dois GETs por anúncio) e só confirma sucesso após observar uma rotação real do token e os três resultados esperados. Os IDs não são segredos, mas precisam ser anúncios de terceiros permitidos à conta operadora. Mantenha o flag desligado até validar renovação, anúncios permitidos e limites operacionais; não provoque 429 e use dublês para validar falhas e recuperação. Os valores de monitoramento devem ser escolhidos conforme os limites oficiais validados; os padrões atuais permitem testar a operação local. O script de worktree também lê `BACKEND_PORT`, `FRONTEND_PORT` e `DB_PORT` do ambiente do PowerShell como overrides. Na ausência delas, deriva valores estáveis de branch e caminho, em faixas distintas; valida o intervalo `1..65535`; então restaura os valores de ambiente anteriores ao terminar.
 
 O isolamento de projeto cria nomes e volumes distintos por worktree. As portas ainda podem conflitar com outro processo. O script não cria senhas próprias: Compose continua exigindo `POSTGRES_PASSWORD` em `.env` ou no ambiente.
+
+## Operação local da assistência — spec 0034
+
+Compose repassa `AI_ENABLED` (padrão `false`), `GEMINI_API_KEY` (padrão vazio) e,
+desde a spec 0047, `AI_WEB_SEARCH_ENABLED` (padrão `false`, também em `.env.example`)
+apenas ao backend. A chave não vai para o bundle da SPA. A configuração opt-in
+não provisiona conta, faturamento ou segredo remoto, nem ativa monitoramento MLB.
+O modelo e as cotas locais estão no [guia backend](backend.md#assistência-e-pesquisas-privadas--spec-0034).
+A gratuidade depende da configuração Google da pessoa operadora; o app não audita
+billing e a validação externa permanece pendente.
+
+`frontend/nginx.conf` permite `proxy_read_timeout 60s` somente para
+`/api/ai/chat` e `/api/comparisons/{id}/analyze`. A spec 0047 elevou o valor de
+35 s para 60 s porque, com `AI_WEB_SEARCH_ENABLED=true`, o chat pode somar a chamada
+com busca e o fallback em até 50 s no backend; 60 s fica abaixo da janela de 90 s da
+tentativa. Evidência registrada na correção (commit `6599759`, não reexecutada no
+doc-sync): `nginx -t` em `nginx:1.27-alpine` válido; com um backend falso que demora
+45 s, a configuração anterior devolveu 504 aos 35 s e a nova devolveu 200 aos 45 s.
+O proxy do Cloudflare Pages de stage não foi verificado.
+O restante de `/api/` mantém 5 s de leitura; conexão usa 2 s e envio 5 s em ambos.
+O proxy de desenvolvimento Vite aceita `API_PROXY_TARGET`, com padrão
+`http://localhost:8000`, para uma API isolada da worktree. Essa variável não
+configura a Pages Function nem representa verificação do proxy Stage.
+
+A migration local passa a `20261026research` e deve ser aplicada antes de servir
+a revisão 0034; a spec 0047 acrescenta `20261104grounding` (coluna
+`research_messages.grounding`), aplicada pelo mesmo `alembic upgrade head` do Compose.
+As seis tabelas research recebem RLS; o head conhecido de Stage
+na evidência histórica abaixo continua separado da nova revisão. O lifespan da
+API agenda limpeza física horária de pesquisas; não é tarefa do worker de MLB.
+Com a API parada, não há limpeza periódica, mas leituras negam registros vencidos
+assim que o serviço retorna. Para executar manualmente:
+`docker compose run --rm backend python -m app.research.cleanup` ou, em
+`backend/` com o banco configurado, `uv run python -m app.research.cleanup`.
+
+SPA, API e PostgreSQL foram exercitados localmente com o schema final; apenas a
+fronteira de geração externa usou fixture e o adapter Google foi bloqueado para
+rede real. Não houve chave, custo, alteração de Stage ou promoção nesta tarefa.
+As rotas `/app/*` e os aliases anteriores dependem do mesmo fallback SPA; os
+testes locais não comprovam abertura direta dessa revisão no deploy público.
+
+## Cadastro self-service em Stage — spec 0048
+
+O cadastro é desligado por padrão em todos os ambientes (`SIGNUP_ENABLED=false` em
+`.env.example`, Compose e `render.yaml`) e permanece assim por decisão do responsável
+até a leitura de anúncios do Mercado Livre funcionar. Compose repassa as cinco
+variáveis (`SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`,
+`SIGNUP_RATE_LIMIT_WINDOW_MINUTES`, `TRUSTED_PROXY_SECRET`,
+`SIGNUP_SOURCE_HASH_SECRET`) apenas ao serviço `backend`. O Blueprint declara
+`SIGNUP_ENABLED: "false"` e os dois segredos com `sync: false`, que precisam ser
+preenchidos no painel; a alteração do `render.yaml` exige a sincronização manual do
+Blueprint descrita abaixo. Regras e padrões estão no
+[guia backend](backend.md#cadastro-self-service--spec-0048).
+
+| Onde | Variável | Uso |
+|---|---|---|
+| Cloudflare Pages (produção) | `API_PROXY_SECRET` | Segredo que a Function envia em `x-bestprice-proxy-secret`, junto do `cf-connecting-ip` do visitante em `x-bestprice-client-ip` |
+| Render | `TRUSTED_PROXY_SECRET` | Mesmo valor de `API_PROXY_SECRET`; só com ele a API confia no IP enviado pela Function |
+| Render | `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC-SHA256 da origem; distinta de `TRUSTED_PROXY_SECRET` |
+
+Os dois segredos têm pelo menos 32 caracteres e devem ser diferentes; a API não
+inicia se forem iguais. Gere-os aleatoriamente e guarde-os fora do repositório.
+Trocar `SIGNUP_SOURCE_HASH_SECRET` só zera os limites da janela corrente.
+**Não ative `--proxy-headers` nem `FORWARDED_ALLOW_IPS` no Render**: a API é
+pública e acessível sem passar pelo Pages, então `X-Forwarded-For` e
+`CF-Connecting-IP` são forjáveis; acesso direto à API cai num único balde pelo peer
+da conexão. Localmente, Vite e Nginx não assinam a origem e o limite usa o peer.
+
+Roteiro para ligar em Stage, quando autorizado (pendência I3 da
+[verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md)):
+
+1. Criar `API_PROXY_SECRET` no Pages e `TRUSTED_PROXY_SECRET` (mesmo valor) e
+   `SIGNUP_SOURCE_HASH_SECRET` (outro valor) no Render, sem registrá-los em arquivos,
+   Issue, PR ou logs.
+2. Mudar `SIGNUP_ENABLED` para `true` no Render e conferir o health.
+3. Pelo Pages, enviar 6 cadastros de um mesmo IP (o 6º deve responder `429`) e 1 de
+   outro IP (aceito); depois, apagar as contas de teste.
+
+Com a API em `stage`/`production` e o cadastro ligado sem `TRUSTED_PROXY_SECRET`, a
+API não inicia. A migration `20261106signup` cria `signup_attempts` e é aplicada pelo
+`alembic upgrade head` do Compose e do `start-stage.sh`; ainda não foi aplicada em
+Stage. Nada disso foi exercitado em Stage nesta spec.
+
+## Sonda oficial do Mercado Livre no GitHub Actions
+
+O Render Free não disponibiliza Shell nem One-off Jobs. Após o workflow ser
+integrado em `develop`, a sonda existente em `backend/app/marketplace/validate_live.py`
+pode ser executada sem custo no runner hospedado pelo GitHub. Ela consulta
+anúncios permitidos pela conta operadora e pode renovar/persistir o refresh token
+OAuth no banco Stage; não escreve produtos e não altera
+`MERCADOLIVRE_THIRD_PARTY_VALIDATED`.
+
+Na configuração do repositório, crie o GitHub Environment `stage-validation` e
+restrinja os deployments ao branch `develop`. Cadastre nele, como secrets, os
+valores copiados dos respectivos campos do Render Stage:
+
+| Secret no GitHub | Variável de origem no Render |
+|---|---|
+| `STAGE_DATABASE_URL` | `DATABASE_URL` |
+| `STAGE_MERCADOLIVRE_OAUTH_KEY` | `MERCADOLIVRE_OAUTH_KEY` |
+| `STAGE_MERCADOLIVRE_CLIENT_ID` | `MERCADOLIVRE_CLIENT_ID` |
+| `STAGE_MERCADOLIVRE_CLIENT_SECRET` | `MERCADOLIVRE_CLIENT_SECRET` |
+
+Não registre os valores em arquivos, Issue, PR, console ou artefatos. Quem tem
+permissão de escrita no repositório pode alterar workflows; mantenha a proteção
+de `develop` e revise os diffs de Actions antes de integrar.
+
+No GitHub, abra **Actions → Validate Mercado Livre Stage → Run workflow**,
+selecione `develop` e informe IDs MLB distintos para preço, sem preço e
+indisponível. A sonda valida formato e unicidade antes de qualquer chamada e
+imprime somente o relatório sanitizado com status, códigos, IDs e dados mínimos
+de preço/disponibilidade. A ausência de anúncio naturalmente sem preço é uma
+ação manual a registrar, não uma razão para substituir preço ausente por zero.
+Não repita uma tentativa OAuth de resultado incerto: o refresh token anterior é
+de uso único e o token rotacionado fica persistido no Stage.
+
+Uma execução `passed` é evidência para a decisão operacional 0026, não uma
+ativação automática. Depois da validação, remova os secrets do environment caso
+não seja necessário repetir a sonda; o workflow pode ser reutilizado após
+recadastrar os secrets. Ative o gate no Render somente após revisar a evidência
+e confirmar os limites oficiais aplicáveis.
+
+No relatório, um HTTP 403 mantém `error_code: integration_access_denied` e
+acrescenta `blocked_resource: item` ou `blocked_resource: sale_price`, conforme
+a leitura negada. Essa informação curta ajuda a direcionar a revisão do
+DevCenter sem registrar o caminho com ID, resposta bruta, cabeçalhos ou dados do
+anúncio. Ela não indica, por si só, qual permissão ou política precisa mudar.
 
 ## CI e entrega
 

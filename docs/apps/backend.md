@@ -2,22 +2,25 @@
 
 ## Implementação atual nesta branch
 
-O FastAPI mantém `GET /api/health` e acrescenta sessão BestPrice, monitoramentos MLB, histórico, dashboard, alertas e notificações. `backend/app/main.py` registra os roteadores e um formato de erro com `error.code` e `error.message`. SQLAlchemy acessa PostgreSQL pelo `backend/app/db.py`; Alembic mantém o esquema em `backend/alembic/`.
+O FastAPI mantém `GET /api/health` e acrescenta sessão BestPrice, monitoramentos MLB, histórico, dashboard, alertas, notificações e pesquisas privadas de assistência de compras. `backend/app/main.py` registra os roteadores e um formato de erro com `error.code` e `error.message`. SQLAlchemy acessa PostgreSQL pelo `backend/app/db.py`; Alembic mantém o esquema em `backend/alembic/`.
 
 O engine de domínio (`create_database_engine`, cacheado) reaproveita conexões e as mantém utilizáveis sem intervenção: revalida a conexão ao retirá-la (`pool_pre_ping`), descarta a que passou de `pool_recycle=300 s` desde a abertura, reutiliza primeiro as mais recentes (`pool_use_lifo`), limita a espera por uma conexão do conjunto em `pool_timeout=10 s` e a abertura de conexão nova em `connect_timeout=5 s`. Os valores ficam como constantes em `backend/app/db.py`. O health e o Alembic usam conexões próprias (não o conjunto de domínio) e não seguem esses limites. Detalhes e limites em [verification da spec 0022](../../specs/0022-conexao-resiliente-ao-banco/verification.md).
 
 | Área | Rotas |
 |---|---|
 | Sessão | `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout` |
+| Cadastro (público, spec 0048) | `GET /api/auth/signup` (disponibilidade), `POST /api/auth/signup` |
 | Monitoramentos | `POST/GET /api/tracked-products`, `GET/DELETE /api/tracked-products/{id}`, `POST /api/tracked-products/{id}/refresh` |
 | Dados e alerta | `GET /api/tracked-products/{id}/history`, `POST/GET/PATCH/DELETE /api/tracked-products/{id}/alert` |
 | Visão geral | `GET /api/dashboard`, `GET /api/notifications`, `PATCH /api/notifications/{id}` |
 | Saúde | `GET /api/health` |
 | OAuth Mercado Livre | `GET /api/marketplace/oauth/callback`, `GET /api/marketplace/oauth/complete` (redirect de integração; omitido do OpenAPI) |
 
-As rotas de domínio exigem sessão. O login cria um token aleatório, guarda apenas seu hash em `user_sessions` e envia cookie HttpOnly `bestprice_session` com caminho `/api`, SameSite Lax e duração de 24 horas. `APP_ENV=stage` ou `production` ativa a marca Secure; em `development`, ela não é enviada. O logout revoga a sessão. Não há cadastro público: `python -m app.auth.provision EMAIL`, executado em `backend/` com banco configurado, solicita a senha no terminal e cria uma conta.
+As rotas de domínio exigem sessão. O login cria um token aleatório, guarda apenas seu hash em `user_sessions` e envia cookie HttpOnly `bestprice_session` com caminho `/api`, SameSite Lax e duração de 24 horas. `APP_ENV=stage` ou `production` ativa a marca Secure; em `development`, ela não é enviada. O logout revoga a sessão. A conta pode ser criada pelo cadastro self-service (seção abaixo, desligado por padrão) ou por `python -m app.auth.provision EMAIL`, executado em `backend/` com banco configurado, que solicita a senha no terminal (12 a 1024 caracteres, com confirmação) e cria uma conta. A CLI não depende do interruptor do cadastro.
 
-Para validação manual e somente de leitura da API oficial, configure os três IDs MLB distintos e autorizados (`MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID`) em `.env` e execute `docker compose run --rm backend python -m app.marketplace.validate_live --confirm-live-requests` com o banco local saudável e migrado e tokens da conta operadora provisionados. A ferramenta recusa execução sem confirmação explícita ou quando `MERCADOLIVRE_THIRD_PARTY_VALIDATED=true`, consulta cada item uma vez (até dois GETs por anúncio, mais um POST OAuth se houver rotação) e não altera dados de produto. O JSON sanitizado não inclui tokens, títulos nem URLs; seu estado geral é `passed` apenas quando os três cenários correspondem e a rotação do token foi observada, `requires_manual_action` para IDs inválidos, credenciais OAuth ausentes, anúncios que não correspondam aos cenários ou rotação ainda não observada, e `failed` quando uma consulta falha. Em resultados mistos, falhas reais têm precedência no estado geral. Execute quando o token estiver a até cinco minutos do vencimento; caso contrário, o token manager não renova e o relatório registra a ação manual para agendar a validação da rotação. Não gere tráfego para forçar 429. Mesmo com sucesso, isso não demonstra o ciclo de cadastro/worker; siga a [verificação 0026](../../specs/0026-validacao-operacional-mercado-livre/verification.md) e mantenha o flag desligado até concluir a validação operacional.
+O engine de domínio usa `hide_parameters=True` (spec 0048): mensagens de erro e logs de SQL do SQLAlchemy não trazem os valores dos parâmetros (e-mail, hash, tokens). Isso não cobre mensagens do próprio PostgreSQL, como o `DETAIL` de violação de unicidade, que registra o e-mail no log do servidor a cada 409 do cadastro (limite O2 da [verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md)).
+
+Para validação manual e somente de leitura da API oficial, configure os três IDs MLB distintos e autorizados (`MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID`) em `.env` e execute `docker compose run --rm backend python -m app.marketplace.validate_live --confirm-live-requests` com o banco local saudável e migrado e tokens da conta operadora provisionados. A ferramenta recusa execução sem confirmação explícita ou quando `MERCADOLIVRE_THIRD_PARTY_VALIDATED=true`, consulta cada item uma vez (até dois GETs por anúncio, mais um POST OAuth se houver rotação) e não altera dados de produto. O JSON sanitizado não inclui tokens, títulos nem URLs; seu estado geral é `passed` apenas quando os três cenários correspondem e a rotação do token foi observada, `requires_manual_action` para IDs inválidos, credenciais OAuth ausentes, anúncios que não correspondam aos cenários ou rotação ainda não observada, e `failed` quando uma consulta falha. Para HTTP 403, o item também informa `blocked_resource` como `item` ou `sale_price`; o código continua `integration_access_denied` e nenhum corpo ou detalhe arbitrário da API é exibido. Em resultados mistos, falhas reais têm precedência no estado geral. Execute quando o token estiver a até cinco minutos do vencimento; caso contrário, o token manager não renova e o relatório registra a ação manual para agendar a validação da rotação. Não gere tráfego para forçar 429. Mesmo com sucesso, isso não demonstra o ciclo de cadastro/worker; siga a [verificação 0026](../../specs/0026-validacao-operacional-mercado-livre/verification.md) e mantenha o flag desligado até concluir a validação operacional.
 
 O início do fluxo authorization-code usa `docker compose run --rm backend python -m app.marketplace.authorize_operator`, com `MERCADOLIVRE_CLIENT_ID`, `MERCADOLIVRE_OAUTH_KEY` e `MERCADOLIVRE_REDIRECT_URI` no ambiente; o comando imprime apenas a URL oficial com `state` assinado e expirável. O callback valida esse estado e o redirect exato antes de trocar o código, grava access/refresh tokens cifrados usando a chave Fernet do Stage e redireciona para uma resposta genérica sem credenciais. O access log remove a query da URL de callback; o log da aplicação registra apenas categorias fixas/allowlist para falhas, sem mensagem da exceção ou traceback. O app foi criado no DevCenter; o redirect HTTPS e as permissões persistidas foram conferidos, e a chave Fernet coincide entre quem gerou a URL e Stage. A revisão atual está em Stage e o serviço está Live com health 200. Após três tentativas malsucedidas, a quarta autorização foi concluída e a existência e validade da credencial foram confirmadas por consulta limitada de metadados, sem ler tokens. A autorização inicial e a persistência foram demonstradas; renovação real e consulta de anúncios ainda não.
 
@@ -42,6 +45,163 @@ Listagens de monitoramentos, histórico e notificações devolvem `{items, next_
 `MONITOR_CHECK_INTERVAL_SECONDS` determina a próxima consulta após sucesso (padrão 3600); `MONITOR_FRESHNESS_SECONDS` define por quanto tempo um preço pode ser reutilizado, quando a resposta marca `stale` e se um alerta pode avaliar o preço (padrão 3600). Um preço fora dessa janela deixa a condição do alerta como `unknown` e não gera notificação até uma observação válida. `MONITOR_BATCH_LIMIT` limita publicações por ciclo (padrão 20), `MONITOR_MAX_CONCURRENCY` limita tentativas paralelas (padrão 1) e `MONITOR_POLL_INTERVAL_SECONDS` controla a pausa (padrão 60). Os valores são inteiros validados; ajuste-os depois de confirmar os limites reais da integração autorizada.
 
 Ao avaliar um preço válido, o backend trava e recarrega as linhas de `price_alerts` em ordem de chave primária antes de verificar se aquele episódio já foi notificado; as rotas de alerta avaliam apenas o alerta que já travaram, evitando deadlock com a atualização compartilhada. A edição do alvo também trava a linha antes de ler a revisão e incrementá-la. Criação, edição e exclusão de alerta, além da interrupção do monitoramento, travam e recarregam o vínculo antes da decisão local. Se a edição habilitar o alerta primeiro, a interrupção seguinte desabilita o alerta junto com o vínculo. Se a interrupção obtiver a trava primeiro, a tentativa posterior de habilitar o alerta retorna `tracking_inactive`. Avaliações simultâneas do mesmo alerta produzem uma notificação por episódio, edições simultâneas preservam as revisões sucessivas e cadastros simultâneos do mesmo alerta deixam um registro e uma notificação; a segunda tentativa retorna `alert_already_exists`. A unicidade de `(alert_id, revision, episode)` em `notifications` continua como proteção no banco. Quatro testes com duas sessões PostgreSQL cobrem essas corridas; demais transições concorrentes e processos distintos ainda precisam de verificação.
+
+## Cadastro self-service — spec 0048
+
+`backend/app/auth/accounts.py` é a regra única de criação de conta, usada pelo cadastro e pela CLI: e-mail com até 320 caracteres (contados antes do `strip`), no formato `nome@domínio.tld` (`EMAIL_PATTERN`, a mesma expressão do frontend em `accountRules.ts`) e normalizado com `strip().lower()`; senha de 12 a 1024 caracteres (code points). `add_account` valida, gera o hash `scrypt`, faz `flush` sem commit e, sem pré-consulta, converte a violação da restrição única `users.email` em `EmailAlreadyRegistered`. O login só reaproveita os limites de tamanho e a normalização; não aplica o formato, para que contas antigas continuem entrando, e responde `401 invalid_credentials` a qualquer violação. A CLI (`provision.py`) chama `add_account` e passa a recusar o que o cadastro recusa, inclusive e-mail já criado pelo cadastro.
+
+| Rota | Comportamento |
+|---|---|
+| `GET /api/auth/signup` | `200 {"enabled": bool}` com `Cache-Control: no-store`; pública, não consulta o banco nem conta tentativa |
+| `POST /api/auth/signup` | Corpo `{"email","password"}` em `application/json` (`extra="forbid"`; a confirmação de senha fica só na interface). `201` com `{id,email}` e o mesmo cookie de sessão do login (`issue_session`) |
+
+A ordem de avaliação do POST faz parte do contrato: interruptor desligado → `404 signup_unavailable`, sem registrar tentativa; limite da origem excedido → `429 signup_rate_limited` com `retry_after_seconds` e `Retry-After`, sem registrar; senão a tentativa é registrada e confirmada **antes** de qualquer validação; Content-Type diferente de JSON, JSON malformado ou texto não codificável em UTF-8 → `422` com `fields[body].code=json_required` (impede login CSRF por formulário `text/plain`); formato ou regras de conta → `422 validation_error` com todos os campos (`email_required`, `email_too_long`, `email_invalid`, `password_too_short`, `password_too_long`); e-mail existente → `409 email_already_registered` com `fields[email]`, sem sessão e sem alterar a conta existente. `fields` nunca ecoa o valor enviado. `ApiError` ganhou `fields` opcional e o formatador de validação é reutilizado. Uma sessão já existente é ignorada; o cadastro emite cookie novo. Contrato completo em [plan.md da 0048](../../specs/0048-cadastro-self-service-usuarios/plan.md#contrato-rest).
+
+O limitador (`backend/app/auth/limiter.py`) é uma janela deslizante por origem persistida em `signup_attempts` no PostgreSQL, não em memória (o Render Free hiberna e reinicia). `pg_advisory_xact_lock` serializa envios simultâneos da mesma origem; a contagem roda numa sessão própria com commit, então falha na criação não desfaz a tentativa. Sucessos, duplicados e erros de validação contam; recusas por 429 não, para que o `Retry-After` informado continue verdadeiro. A origem vem de `x-bestprice-client-ip` apenas quando `x-bestprice-proxy-secret` confere com `TRUSTED_PROXY_SECRET` (`hmac.compare_digest`) e o valor é um IP válido; nos demais casos usa o peer da conexão. IPv6 é reduzido ao `/64` e IPv4 mapeado vira IPv4. Só o HMAC-SHA256 da origem normalizada, com `SIGNUP_SOURCE_HASH_SECRET`, é gravado (64 hexadecimais); o IP não é gravado nem logado. Cada verificação apaga as tentativas vencidas da própria origem, e `purge_database` (`app/research/cleanup.py`) chama `purge_signup_attempts` na partida da API e a cada hora, mantendo a retenção em cerca de janela + 1 h.
+
+| Variável | Padrão | Regra |
+|---|---|---|
+| `SIGNUP_ENABLED` | `false` | Só `true` liga |
+| `SIGNUP_RATE_LIMIT_ATTEMPTS` | `5` | Inteiro de 1 a 1000 |
+| `SIGNUP_RATE_LIMIT_WINDOW_MINUTES` | `60` | Inteiro de 1 a 1440 |
+| `TRUSTED_PROXY_SECRET` | vazio | Se preenchido, ≥ 32 caracteres; obrigatório com o cadastro ligado em `stage`/`production` |
+| `SIGNUP_SOURCE_HASH_SECRET` | vazio | ≥ 32 caracteres; obrigatório com o cadastro ligado em qualquer ambiente |
+
+`signup_settings()` roda no `lifespan`: valor inválido, segredo curto, segredo obrigatório ausente ou `TRUSTED_PROXY_SECRET` igual a `SIGNUP_SOURCE_HASH_SECRET` impedem a API de iniciar, e a mensagem nunca repete o valor. Desligado, nenhum dos segredos é exigido. O cadastro permanece desligado por decisão do responsável até a leitura de anúncios do Mercado Livre funcionar; a operação em Stage está em [infraestrutura](infraestrutura.md#cadastro-self-service-em-stage--spec-0048). A [verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md) registra 456 testes backend aprovados e 2 skips com PostgreSQL real, concorrência (AC08), limite com relógio fixo (AC09) e sigilo (AC10); a origem real atrás do Pages não foi verificada em Stage.
+
+## Assistência e pesquisas privadas — spec 0034
+
+`backend/app/research/` reúne rotas, schemas, serviço, repositório, serialização,
+modelos, configuração, adapter Google e limpeza. Todas as rotas abaixo exigem a
+sessão existente, usam UUID e datas UTC e nunca aceitam `user_id` do cliente.
+Recurso alheio, excluído ou expirado retorna 404 `research_not_found`.
+
+| Método e rota | Comportamento |
+|---|---|
+| `GET /api/ai/capabilities` | Disponibilidade, provider/modelo, limites públicos e `web_search` (spec 0047); sem chave |
+| `POST /api/ai/chat` | `{conversation_id,request_id,message}`; devolve o par user/assistant, cada mensagem com `grounding`, e cria conversa somente no primeiro sucesso |
+| `GET/DELETE /api/ai/conversations/{id}` | Recuperar conversa própria ou excluir com mensagens e conteúdo dos snapshots |
+| `POST /api/comparisons` | Salvar título, uso e 2–3 produtos manuais; 201, sem depender da IA |
+| `GET/PUT/DELETE /api/comparisons/{id}` | Ler, editar com `version` ou excluir; edição incrementa versão e limpa análise |
+| `POST /api/comparisons/{id}/analyze` | `{request_id,version}`; análise identificada como IA para a versão salva |
+| `GET /api/research` | `kind=all\|conversation\|comparison`, `q` até 100 caracteres, `offset>=0`, `limit` 1–50 (20); `{items,next_offset}` |
+
+Pesquisa aplica filtro por título sem diferenciar caixa antes da paginação e ordena
+por atualização decrescente, tipo e ID. Dashboard solicita seis registros;
+histórico usa 20. Paginação por offset não garante snapshot entre alterações.
+Produtos manuais têm nome, detalhes, preço decimal string ou null, moeda BRL e URL
+opcional; URLs são apenas referência, nunca requisitadas. Preço original é
+`NUMERIC(18,2)`/`Decimal` em tabela filha. Veja [banco](../database.md).
+
+`AI_ENABLED=false` e `GEMINI_API_KEY` vazia são os padrões. Só `AI_ENABLED=true`
+com chave não vazia libera geração; ambas pertencem ao backend. O modelo fixo é
+`gemini-2.5-flash-lite` desde a spec 0047 (antes `gemini-3.5-flash-lite`), para chat
+e comparação, via `generateContent` no host Google fixo, sem redirect. A comparação
+não tem retry automático; o chat com pesquisa na web tem o único fallback descrito
+abaixo. O plano prevê cota gratuita sem faturamento e sem fallback pago;
+a aplicação não verifica billing da conta operadora. Nenhuma chave ou chamada
+real foi usada na QA; disponibilidade e qualidade do modelo em português seguem
+pendentes, incluindo AC10/AC15/AC19 da spec.
+
+| Limite local inicial | Valor |
+|---|---|
+| Mensagem / título | 2.000 / 100 caracteres |
+| Contexto recente / resposta | 16.000 caracteres / 1.024 tokens e 8.000 caracteres |
+| Por pessoa | 20 tentativas por dia UTC e 3 por minuto |
+| Por aplicação | 60 tentativas por dia UTC e 5 por minuto |
+| Timeout HTTP Google | 25 segundos por fase do httpx; chat com busca: orçamento de 50 s para a chamada e o fallback |
+| Idempotência / tentativa pendente | Replay por até 24 horas / prazo de 90 segundos |
+
+Contadores são persistidos e independentes da pesquisa. Tentativas reservadas
+contam inclusive em falha do provider; exclusão/expiração não restitui consumo.
+Trava advisory transacional curta serializa reserva e cotas no PostgreSQL. O
+contexto é capturado sob trava do recurso antes de liberar a transação; nenhuma
+transação permanece aberta na geração HTTP. Conclusão revalida propriedade,
+expiração, exclusão e versão para não gravar resultado obsoleto.
+
+`(user_id,request_id)` e fingerprint tornam reenvio do mesmo payload idempotente:
+resultado concluído é repetido sem geração/cota extra; payload diferente causa
+409 `research_conflict`, tentativa ativa causa 409 `request_in_progress`. Replay
+sempre revalida o recurso antes do snapshot. A tentativa sem conclusão após 90 s
+vira falha recuperável, sem regeneração automática; não há garantia de exatamente
+uma chamada Google diante de timeout ambíguo. Primeira geração com falha não
+persiste conversa vazia; numa conversa existente, o par só é salvo atomicamente no
+sucesso. Falha conhecida usa um novo request ID na nova tentativa explícita.
+
+Erros mantêm o envelope `ApiError`: 422 `validation_error`, 503
+`research_unavailable` para persistência, 503 `ai_unavailable`, 504 `ai_timeout`,
+502 `ai_invalid_response` e 429 `ai_rate_limited` com `Retry-After`. Não expõem SQL,
+credenciais ou resposta bruta do provider. O adapter só aceita texto não vazio,
+limitado e com conclusão STOP. O prompt orienta reconhecer lacunas, sem inventar
+preço, estoque, especificações ou ofertas; isso não comprova qualidade factual.
+
+### Pesquisa na web no chat — spec 0047
+
+`AI_WEB_SEARCH_ENABLED` (padrão `false`) só vale com a IA disponível:
+`web_search_enabled` exige `AI_ENABLED=true`, `GEMINI_API_KEY` não vazia e o valor
+`true` explícito. Com ela ligada, `generate_chat` envia
+`tools: [{"google_search": {}}]` e um prompt próprio: preços da web são referências
+não verificadas, citadas por loja; sem preço confiável, o modelo diz que não
+encontrou e não elege vencedor; conteúdo da web é dado. A análise de comparação
+(`generate`) nunca envia `tools` e mantém o prompt "Não há busca web".
+
+`app/research/grounding.py` extrai `groundingMetadata` sem requisitar as URLs:
+
+| Situação do candidato | Resultado |
+|---|---|
+| Sem metadata ou sem chunks, queries e `searchEntryPoint` | `grounding` `null` (o modelo não pesquisou) |
+| Fontes `https` válidas e `searchEntryPoint.renderedContent` | `searched`: até 10 fontes únicas por URL, título até 200 caracteres (ou o host), URL até 2.048, HTML intacto até 32.000 |
+| Sinal de busca sem fonte `https` válida, HTML ausente ou grande demais | Grounding inválido, tratado como falha da busca |
+
+Qualquer falha da chamada com busca (429, outro 4xx, 5xx, transporte, timeout ou
+grounding inválido) gera **uma** nova tentativa sem `tools` e com o prompt sem busca;
+a resposta sai com `grounding.status=unavailable`. Se essa tentativa falhar, valem
+os erros existentes. Chamada e fallback dividem um orçamento monotônico de 50 s: o
+fallback recebe `min(25, restante)` e, com menos de 5 s, retorna 504 `ai_timeout`.
+O httpx aplica o limite por fase, então um servidor muito lento ainda pode passar
+de 50 s; a janela de 90 s da tentativa continua protegendo a consistência. O
+fallback registra `logger.warning` apenas com status HTTP e código/classe do erro,
+sem corpo, prompt ou chave. Uma unidade da cota local pode gerar duas requisições
+ao Google; o teto do corpo da resposta passou de 128.000 para 160.000 bytes.
+
+O service carimba `searched_at` com o relógio injetado, em UTC com `Z`, e grava o
+grounding em `research_messages.grounding` junto da mensagem do assistente;
+mensagens sem busca ficam com SQL NULL. Replay idempotente devolve o mesmo
+grounding sem nova chamada, e resultados salvos antes da 0047 continuam válidos
+com `grounding` ausente tratado como `null`.
+
+```json
+"grounding": {
+  "status": "searched",
+  "searched_at": "2026-11-04T19:09:17.681580Z",
+  "sources": [{"title": "Loja", "url": "https://..."}],
+  "search_suggestions_html": "<style>…</style><div>…</div>"
+}
+```
+
+`unavailable` tem `sources: []` e `search_suggestions_html: null`. A validação usou
+somente transporte Gemini simulado; o formato real de `renderedContent`, a validade
+das URIs de redirecionamento do Google ao longo dos 90 dias e a cota com grounding da
+conta operadora seguem pendentes. Ver
+[verificação 0047](../../specs/0047-chat-pesquisa-precos-web-gemini/verification.md)
+e [revisão](../../specs/0047-chat-pesquisa-precos-web-gemini/review.md).
+
+A UI informa antes do envio que Google processa o texto e pode usá-lo na modalidade
+gratuita, e orienta não incluir dados pessoais/confidenciais. O backend não adiciona
+email, cookie, ID de usuário ou segredo ao contexto. Texto livre pode conter o que
+a pessoa digitar; não há garantia de sanitização de todos os dados pessoais.
+Pesquisas expiram 90 dias após criação, sem prorrogação. O lifespan da API agenda
+limpeza a cada 3.600 s em thread, sem bloquear health/startup; durante indisponibilidade
+a remoção pode atrasar, mas o acesso já é negado. O comando manual em `backend/` é
+`uv run python -m app.research.cleanup`. Exclusão se limita ao banco ativo, sem
+promessa sobre backups ou registros do fornecedor.
+
+A [verificação 0034](../../specs/0034-assistencia-compras-bestprice-ai/verification.md)
+registra 239 testes aprovados, dois skips POSIX no Windows e um warning; 46 focados
+com HTTP, transporte simulado, PostgreSQL e RLS. Ruff passou; o módulo novo tem
+64 blocos com média A/2,34 e máximo B/10. O gate global respeitou a baseline e as
+dívidas legadas permaneceram idênticas à base. Esses resultados foram fornecidos
+pelos gates/revisão anteriores ao doc-sync; não comprovam CI ou deploy.
 
 ## Verificação e limites
 

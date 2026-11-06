@@ -1,16 +1,81 @@
 # Protótipo visual BestPrice
 
+## Histórico de conversas (spec 0045)
+
+Referência: BestPrice IA no Figma, frames 59:204 e 59:716, exportações identificadas
+da spec 0043 em 31/10/2026. O histórico usa cards brancos de raio 16 px, altura
+mínima 128 px e intervalos de 24 px desktop/16 px mobile, margem desktop 32 px e
+mobile 16 px (título recuado mais 4 px). Busca de 48 px com botão de ícone nomeado;
+Continuar usa Button outline e Excluir usa Button link, com alvos de 44 px.
+Reutilizam-se tokens existentes, Brand, Input, Button e Search. Bordas de controles
+mantêm o token acessível em vez da borda decorativa clara do desenho. Datas reais,
+exclusão mobile e prazo de 90 dias preservam as funções existentes. Não há novo
+token nem imagem estática; o aviso de exemplos do desenho não entra na aplicação.
+MCP indisponível por cota: alterações remotas posteriores não foram verificadas.
+
+O Figma é a ferramenta oficial de UI/UX e a referência visual principal desde a
+spec 0039. O fluxo é Figma → Codex → Implementação → Validação visual, com
+evolução gradual das telas. Consulte o
+[procedimento de implementação](../docs/apps/frontend.md#fluxo-oficial-de-design--figma)
+para frames, desktop/mobile, reutilização e exportações quando o MCP não estiver
+disponível. Os assets e protótipos locais abaixo permanecem preservados.
+
+## Harmonização do Figma em revisão — spec 0042
+
+Em 29/10/2026, a pessoa responsável solicitou alinhar todas as telas do Figma às
+propostas recentes de Assistente 0040 e Monitoramento 0041. Na proposta Figma,
+ações principais equivalentes passam a usar rosa `#c7005e` com texto branco;
+verde `#39ff14` permanece na marca/ilustração e situações favoráveis têm tinta
+verde escura legível. Isso resolve a concorrência entre CTAs verdes antigos e
+rosas recentes. Não altera os tokens executáveis da SPA nesta etapa.
+
+A composição em revisão usa header interno de 80 px, sidebar de 240 px, margem
+desktop de 32 px e margem mobile de 16–20 px. Títulos internos têm 30 px no
+desktop e 24 px no mobile; controles têm altura mínima de 44 px, raio 12 px e
+superfícies de seção com raio 16–20 px. IA permanece menor e elevada, junto do
+nome BestPrice, com a logo original preservada. A navegação mobile mostra
+Assistente, Comparar, Histórico e Monitorar, com ícone e rótulo.
+
+As superfícies afetadas são landing, entrada, páginas internas, estados e
+referências de componentes do mesmo arquivo Figma. A implementação e a aprovação
+visual continuam independentes desta harmonização; ver
+[spec 0042](../specs/0042-telas-figma-padrao-consistente/spec.md).
+
+## Extensão BestPrice AI em preparação — spec 0034
+
+A direção A, “Conversa em primeiro plano”, foi escolhida em 26/10/2026. Reutiliza
+logo, Brand, tema claro e tokens existentes; AI é uma indicação textual adjacente,
+sem alterar o desenho da logo. A pergunta de compra é a ação principal; categorias
+são atalhos editáveis e nenhum preço ou histórico ilustrativo é dado de aplicação.
+
+Composição original: sidebar desktop 248px, cabeçalho 88px, conteúdo com padding
+48px por 56px e intervalos de 32px; título 48/54px desktop e34/39px mobile,
+tracking até -.035em; compositor com padding24px e raio18px, ações de48px.
+Em telas estreitas, padding20px e navegação de quatro entradas; menu acessível
+contém destinos restantes. São referências de composição, adaptáveis para manter
+320px sem overflow. As famílias tipográficas e pesos da marca seguem Brand.
+
+Landing, dashboard, conversa e comparador compartilham superfícies neutras,
+verde para ação principal e rosa para links/foco. Reutilizar tokens de controle
+e bordas em vez de introduzir novos hex. Estado vazio exige resposta válida da
+API; integração ausente ou falha tem mensagem de indisponibilidade própria.
+Respostas de IA são texto identificado como não verificado; tabela de comparação
+mostra apenas informações fornecidas pela pessoa. Retenção90dias e processamento
+externo são informados antes do primeiro envio. Estados de envio, erro, limite,
+exclusão e dado expirado devem permanecer operáveis por teclado.
+
 `index.html` é uma página de demonstração do design system da BestPrice. Ela reúne tokens de cor e tipografia, componentes interativos e uma proposta de dashboard. Os produtos, preços e indicadores exibidos são exemplos, sem dados de lojas.
 
 O arquivo veio do protótipo local `designsystem/index.html` do checkout principal. Sua autoria e a origem dos trechos que ele descreve como tokens Apple ainda precisam ser esclarecidas antes de reutilizar esses trechos em outro produto.
 
 ## Uso na aplicação
 
-Conforme a spec 0015, `index.html` governa a identidade visual e seus tokens;
-`logo-bestprice.png` é a logo oficial fornecida, preservada sem redesenho ou distorção.
-`login.html` orienta a composição da entrada: se divergir dos tokens do catálogo,
-prevalece `index.html`. Consulte a skill `frontend-design` e a regra ativa
-`.agents/rules/frontend.md` antes de criar ou alterar uma tela.
+Desde a spec 0039, o Figma aprovado governa a referência visual.
+`index.html` preserva o catálogo de origem da spec 0015; `login.html` é uma
+referência histórica de composição. `logo-bestprice.png` é a logo oficial
+fornecida, preservada sem redesenho ou distorção. Consulte a skill
+`frontend-design` e a regra ativa `.agents/rules/frontend.md` antes de criar ou
+alterar uma tela. Divergências que alterem a identidade exigem esclarecimento.
 
 A partir da spec 0025, `agent-guidelines.md` publica as regras automatizáveis
 obrigatórias para agentes (toque 44 × 44 px, HTML semântico, contraste AA/AAA) e os
@@ -80,8 +145,9 @@ Referência visual externa: [Nudge Portfolio Template](https://nudge-folio.frame
 
 Referência: [Figma BestPrice](https://www.figma.com/design/LZVtUEAycEzfbwL0H5YL3r/BestPrice),
 com fontes editáveis em `prototypes/2026-10-21-bestprice-figma/`. O usuário aprovou
-implementar essa composição com shadcn/ui e Recharts/shadcn Charts. A identidade de
-`index.html` continua governando verde, rosa, fonte do sistema e logo original.
+implementar essa composição com shadcn/ui e Recharts/shadcn Charts.
+O Figma aprovado passa a ser a referência principal (spec 0039); verde, rosa,
+fonte do sistema e logo original continuam preservados na identidade existente.
 
 | Token/componente | Motivo | Superfícies |
 |---|---|---|
@@ -185,3 +251,29 @@ formulário a uma coluna legível; landing preserva as artes, com título neutro
 sequência mais discreta. As transições compartilhadas se limitam a cor/borda;
 o feedback de pressão já existente no login permanece. Movimento reduzido
 desativa transições e shimmer. Veja a [auditoria](../specs/0030-experiencia-visual-consistente/audit.md).
+
+## Assistente IA — spec 0040
+
+A tela adota o robô original fornecido, sem edição, em PNG com transparência.
+O shell interno usa sidebar de 240 px, header de 80 px e marca IA elevada.
+A navegação segue os três destinos da revisão 0043, preservando rotas existentes.
+O Button oferece a variante `brand` com `--primary` e `--primary-foreground`,
+para o envio rosa aprovado; o padrão verde das outras ações é preservado.
+As luzes junto ao personagem usam os tokens existentes `--color-brand-soft` e
+`--color-down-soft`; fundos, texto e controles continuam usando tokens oficiais.
+Sugestões editáveis e avisos reais complementam o protótipo estático para manter
+as informações necessárias antes do envio. Não são acrescentados anexos ou voz.
+
+## Cadastro self-service — spec 0048
+
+Quadros aprovados em `specs/0048-cadastro-self-service-usuarios/design/figma-frames.md`.
+Sem token ou cor nova: o cadastro reaproveita a composição, os campos, o botão pílula e
+os tokens do login.
+
+| Extensão da spec 0048 | Motivo | Superfícies |
+|---|---|---|
+| Dica e aviso curtos (`.login-hint`, 14 px, `--color-text-muted`, sem margem própria); a dica da senha some quando o erro do campo aparece | Seguir o espaçamento dos quadros 02b e não repetir a mesma regra em dois textos | Cadastro |
+| Ícone circular "!" decorativo (`::before` com `--color-danger-text` e `--color-bg`, texto alternativo vazio) antes do erro de campo e do alerta | O erro não depende só da cor; o texto continua carregando o significado | Cadastro |
+| Atalho entre telas (`.login-switch`, 24 px abaixo do botão) com link em negrito `--color-brand`, **sublinhado** e área de toque de 44 px sem alterar a linha | O Figma mostra o link sem sublinhado; o axe (`link-in-text-block`) exige distinção além da cor dentro do texto | Login ("Criar conta") e cadastro ("Entrar") |
+| Envio com o botão do login (`aria-busy`, `--color-surface`) e valores dos campos em `--color-text-muted` | O quadro usa 45% de opacidade, que derruba o contraste do texto; mantém a regra AA do login (0020/AC10) | Cadastro |
+| "Criar conta" na landing contornado em `--color-brand` (1,5 px, 13 px negrito, mínimo 128 × 44); à esquerda de "Entrar" no desktop (por `order`) e abaixo dele no menu móvel | Seguir os quadros `16:2` e `224:2` sem alterar a ordem do DOM, que já corresponde ao menu móvel | Cabeçalho da landing |

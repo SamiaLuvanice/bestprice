@@ -1,6 +1,176 @@
 # Aprendizados
 
+## 2026-11-04 — Condições visuais devem seguir o matcher da rota
+
+**Contexto:** a revisão da spec 0046 encontrou o rodapé em `/login/` e `/LOGIN`:
+o React Router aceitava essas entradas como login, mas a condição de composição
+comparava literalmente o pathname com `/login`.
+
+**Princípio:** reutilizar o matcher do roteador para decisões visuais que pertencem
+à mesma rota. Cobrir variantes aceitas pela rota e manter um controle positivo
+em outras páginas evita divergências entre navegação e composição.
+
+**Anti-pattern:** criar uma segunda normalização de URL ou assumir que igualdade
+textual de pathname representa a semântica do roteador.
+
+**Referências:** Issue #239; spec 0046, T03/T06; `frontend/src/App.tsx:110`;
+regressão Red/Green de variantes em `frontend/src/App.test.tsx`.
+
+## 2026-11-04 — Trap de foco não substitui o ciclo de um diálogo
+
+**Contexto:** o teste de exclusão da spec 0045 falhou porque o diálogo herdado
+prendia Tab e tratava Escape, mas mantinha o foco no botão Excluir atrás dele.
+Esperar mais no teste não corrigiu a falha. O CTA do vazio também expôs a cor
+global de links sobrepondo o texto de um Button brand.
+
+**Princípio:** conferir entrada do foco, circulação e retorno separadamente. Ao
+remover o acionador após sucesso, devolver foco a um destino estável da página.
+Verificar a cor calculada e contraste de Button asChild no contexto do CSS real;
+uma variante isolada não comprova a composição final.
+
+**Anti-pattern:** considerar o hook de trap como gestão completa do diálogo ou
+adicionar espera a um teste cujo comportamento nunca é executado.
+
+**Referências:** Issue #235; spec 0045; `DeleteResearchDialog` em
+`frontend/src/features/research/common.tsx`; teste de foco em `HistoryPage.test.tsx`.
+
 As decisões ativas ficam em `.agents/`, no [contexto do produto](product-context.md), `README.md` e nas specs em `specs/`.
+
+## 2026-10-28 — Uma referência oficial para o fluxo de design
+
+**Contexto:** a padronização 0039 adotou Figma como referência principal e retirou
+a Paper Bridge, preservando implementação, identidade e evidências anteriores.
+Conforme correção do usuário, o MCP oficial do Paper permanece configurado para
+uso eventual, sem reativar a Bridge ou substituir o Figma.
+
+**Princípio:** manter uma origem visual identificável e reutilizar os componentes
+e tokens existentes reduz divergências. Quando o conector oficial não permite
+consulta, registrar a origem, a data e os limites da exportação mantém o handoff
+revisável sem introduzir outra integração.
+
+**Anti-pattern:** contornar indisponibilidade ou cotas com uma bridge/automação
+não autorizada, ou tratar um export antigo como inspeção atual do arquivo remoto.
+
+**Referências:** [Issue #211](https://github.com/SamiaLuvanice/bestprice/issues/211),
+[fluxo oficial](apps/frontend.md#fluxo-oficial-de-design--figma).
+
+Os três aprendizados Paper abaixo são históricos: a Paper Bridge foi descontinuada
+pela spec 0039; o MCP oficial permanece para uso eventual. Os detalhes descrevem
+o código da Bridge anterior à retirada e não
+orientam a criação de novas automações.
+
+## 2026-10-28 — URL temporária não identifica conteúdo visual
+
+**Contexto:** na spec 0037, importar PNG/JPG/WebP funcionava, mas a validação
+posterior falhava porque o Paper trocava a URL blob pela referência persistida,
+mantendo os pixels. A regressão foi reproduzida em Chromium antes da correção.
+
+**Princípio:** conferir conteúdo renderizado e propriedades relevantes sem usar
+URL transitória como identidade visual. A Bridge combina dimensões/propriedades
+e pixels decodificados amostrados até 128×128, sem alegar comparação integral.
+Os registros das fixtures antigas só foram atualizados após conferir os pixels
+completos ou a assinatura SVG anterior, com auditoria local.
+
+**Anti-pattern:** tratar troca de URL como alteração de imagem ou substituir
+fingerprints silenciosamente após divergência sem conferir o conteúdo.
+
+**Referências:** [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205),
+[verificação 0037](../specs/0037-paper-bridge-images/verification.md),
+[tools/paper-bridge/src/image-ui.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/image-ui.mjs), [tools/paper-bridge/tests/image-ui.test.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/tests/image-ui.test.mjs).
+
+## 2026-10-28 — Reler parâmetros antes do consumo de créditos
+
+**Contexto:** a revisão da spec 0037 identificou que parâmetros preparados podiam
+ser alterados manualmente antes do clique de geração; o primeiro resultado de um
+pacote também não demonstrava conclusão de todos os resultados.
+
+**Princípio:** vincular a autorização ao pedido concreto e reler prompt/modelo/
+proporção imediatamente antes do consumo. Persistir a tentativa antes do clique
+impede consumo duplicado em erro/timeout. Um modo múltiplo sem conclusão comprovada
+permanece bloqueado; o fluxo individual exige uma nova camada carregada. A presença
+de modelos em menus não comprova acesso gratuito.
+
+**Anti-pattern:** autorização genérica, retry de consumo incerto, parâmetros
+conferidos só no preparo ou sucesso baseado no primeiro resultado de um lote.
+
+**Referências:** [Issue #205](https://github.com/SamiaLuvanice/bestprice/issues/205),
+[verificação 0037](../specs/0037-paper-bridge-images/verification.md),
+[tools/paper-bridge/src/images.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/images.mjs), [tools/paper-bridge/src/image-ui.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/image-ui.mjs).
+
+## 2026-10-27 — Confirmar a edição e o drop no Paper
+
+**Contexto:** na Paper Bridge da spec 0035, substituir um texto por outro mais
+curto com inserção em bloco podia deixar o editor ProseMirror vazio. O arraste de
+uma camada também podia soltar antes de a interface atualizar o alvo. Um clique
+ou gesto concluído não demonstrava o estado esperado.
+
+**Princípio:** neste editor, emitir eventos de teclado, concluir a edição pela
+ferramenta Move e reler conteúdo, estilo e parentesco após a transição. Para o
+drop, aguardar a atualização de renderização com prazo limitado antes de soltar
+o mouse. A execução live ampliou e reduziu o mesmo texto preservando o ID.
+
+**Anti-pattern:** tratar `fill`/`insertText`, ausência de erro de clique ou
+sobreposição visual ao frame como prova de conteúdo persistido ou de parentesco.
+Também não transformar o inventário de um DOM virtualizado em garantia global
+de unicidade.
+
+**Referências:** [Issue #201](https://github.com/SamiaLuvanice/bestprice/issues/201),
+[verificação 0035](../specs/0035-paper-bridge-local/verification.md),
+[tools/paper-bridge/src/text.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/text.mjs), [tools/paper-bridge/src/editor.mjs](https://github.com/SamiaLuvanice/bestprice/blob/3f230793e6699f16e8443ecad045dc1d13ba3304/tools/paper-bridge/src/editor.mjs).
+
+## 2026-10-27 — Rascunhos privados pertencem à sessão
+
+**Contexto:** na revisão da spec 0034, o rascunho enviado pelo dashboard em
+`history.state` podia reaparecer ao voltar no navegador após trocar de conta.
+Remontar componentes com `key=user.id` não apaga entradas do histórico.
+
+**Princípio:** transporte conteúdo privado transitório em memória vinculada à
+sessão. O histórico pode carregar um identificador opaco, cujo conteúdo deixa de
+existir ao sair. Teste voltar a uma entrada antiga após logout/login, inclusive
+quando a mesma conta entra novamente.
+
+**Anti-pattern:** guardar texto privado em URL, `history.state` ou armazenamento
+persistente e presumir que limpar o estado React invalida todas essas cópias.
+
+**Referências:** [Issue #195](https://github.com/SamiaLuvanice/bestprice/issues/195),
+[RF01](../specs/0034-assistencia-compras-bestprice-ai/review-frontend.md),
+`frontend/src/features/research/ResearchArea.tsx`.
+
+## 2026-10-27 — Reservar e capturar o contexto na mesma transação
+
+**Contexto:** um envio podia ler o histórico, esperar outra mensagem concluir e
+então reservar sua geração usando o contexto antigo. O teste PostgreSQL reproduziu
+essa ordem com eventos antes da correção.
+
+**Princípio:** capture os valores que sustentam uma operação sob a mesma exclusão
+que autoriza sua reserva. Copie os dados necessários e conclua a transação antes
+da chamada externa. Ao salvar a resposta, confira novamente propriedade,
+existência, expiração e versão.
+
+**Anti-pattern:** ler antes da trava e tratar o snapshot como atual depois dela,
+ou manter a transação aberta durante uma geração de IA.
+
+**Referências:** [RB01](../specs/0034-assistencia-compras-bestprice-ai/review-backend.md),
+`backend/app/research/service.py`, `backend/tests/test_research_integration.py`.
+
+## 2026-10-23 — Restringir sondas manuais com secrets de ambiente
+
+**Contexto:** o Render Free não oferece Shell nem One-off Jobs para a sonda
+operacional; um workflow `workflow_dispatch` só fica disponível na branch padrão.
+
+**Princípio:** quando um runner hospedado precisa acessar um serviço Stage,
+guarde os segredos em GitHub Environment dedicado, permita deployments apenas
+da branch padrão e injete-os somente na etapa que os consome. Passe entradas
+operacionais por variáveis de ambiente, fixe Actions por SHA e evite logs,
+artefatos ou resumos com valores secretos. Verifique se a sonda tem efeitos
+colaterais (como rotação de refresh token) antes de repetir uma execução.
+
+**Anti-pattern:** usar secrets globais do repositório, executar uma sonda de
+Stage a partir de uma feature branch ou presumir que um refresh OAuth é idempotente.
+
+**Referências:** [Issue #182](https://github.com/SamiaLuvanice/bestprice/issues/182),
+spec [0032](../specs/0032-sonda-mercado-livre-github-actions/spec.md),
+`.github/workflows/validate-mercadolivre-stage.yml`.
 
 ## 2026-10-23 — Distinguir anúncio selecionado do ID do catálogo
 
@@ -326,3 +496,22 @@ workspace e o tratamento de cada cota; registre o resultado observado no painel.
 
 **Referências:** Issue #60, `render.yaml`,
 [limites do Render Free](https://render.com/docs/free).
+
+## 2026-10-31 — Preservar foco após interação e navegação ao incorporar uma tela
+
+**Contexto:** na spec 0040, o foco de título agendado por `requestAnimationFrame`
+podia tomar o foco do campo depois de escolher uma sugestão. A revisão também
+identificou a interceptação de Tab desktop para um botão móvel oculto e duas
+navegações fixas disputando o rodapé do Monitoramento incorporado ao shell.
+
+**Princípio:** antes de aplicar foco agendado, confira se a pessoa já mudou o foco.
+Restrinja a lógica de saída do menu ao estado em que ele está aberto. Ao incorporar
+uma área a outro shell, mantenha uma única navegação fixa e coloque os destinos
+secundários no fluxo; teste o teclado e a geometria dos controles em desktop/mobile.
+
+**Anti-pattern:** mover foco incondicionalmente após o render ou reutilizar o
+posicionamento fixo de uma área autônoma dentro de outra navegação fixa.
+
+**Referências:** Issue #225; `frontend/src/features/research/ResearchArea.tsx`,
+`research.css`, `frontend/tests/visual/assistant.spec.ts` e
+[verificação da spec 0040](../specs/0040-assistente-ia-com-robo/verification.md).

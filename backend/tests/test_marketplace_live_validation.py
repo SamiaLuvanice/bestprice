@@ -1,6 +1,8 @@
 import json
 from decimal import Decimal
 
+import pytest
+
 from app.marketplace.client import IntegrationError, ListingData
 from app.marketplace.validate_live import run
 
@@ -12,14 +14,15 @@ IDS = {
 
 
 class FakeClient:
-    def __init__(self, *, fail_id: str | None = None) -> None:
+    def __init__(self, *, fail_id: str | None = None, blocked_resource: str = "item") -> None:
         self.calls: list[str] = []
         self.fail_id = fail_id
+        self.blocked_resource = blocked_resource
 
     def get_listing(self, item_id: str) -> ListingData:
         self.calls.append(item_id)
         if item_id == self.fail_id:
-            raise IntegrationError("integration_access_denied")
+            raise IntegrationError("integration_access_denied", resource=self.blocked_resource)
         return ListingData(
             external_id=item_id,
             title="Não deve aparecer na saída",
@@ -75,8 +78,12 @@ def test_live_validation_checks_all_three_scenarios_and_prints_sanitized_json() 
     assert "https://" not in result.stdout
 
 
-def test_live_validation_reports_safe_error_and_does_not_claim_success() -> None:
-    client = FakeClient(fail_id=IDS["MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID"])
+@pytest.mark.parametrize("blocked_resource", ["item", "sale_price"])
+def test_live_validation_reports_safe_error_and_does_not_claim_success(blocked_resource: str) -> None:
+    client = FakeClient(
+        fail_id=IDS["MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID"],
+        blocked_resource=blocked_resource,
+    )
 
     result = run(["--confirm-live-requests"], env=IDS, client_factory=lambda: (client, True))
     report = json.loads(result.stdout)
@@ -84,7 +91,24 @@ def test_live_validation_reports_safe_error_and_does_not_claim_success() -> None
     assert result.exit_code == 1
     assert report["status"] == "failed"
     assert report["items"][1]["error_code"] == "integration_access_denied"
+    assert report["items"][1]["blocked_resource"] == blocked_resource
     assert "Bearer" not in result.stdout
+    assert "private upstream" not in result.stdout
+
+
+def test_live_validation_does_not_invent_resource_for_403_without_metadata() -> None:
+    class UnclassifiedForbiddenClient(FakeClient):
+        def get_listing(self, item_id: str) -> ListingData:
+            raise IntegrationError("integration_access_denied")
+
+    client = UnclassifiedForbiddenClient()
+
+    result = run(["--confirm-live-requests"], env=IDS, client_factory=lambda: (client, True))
+    report = json.loads(result.stdout)
+
+    assert result.exit_code == 1
+    assert report["items"][0]["error_code"] == "integration_access_denied"
+    assert "blocked_resource" not in report["items"][0]
 
 
 def test_live_validation_hides_unexpected_client_exception_details() -> None:

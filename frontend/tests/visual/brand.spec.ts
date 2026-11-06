@@ -34,7 +34,7 @@ async function observe(page: Page) {
 }
 
 const scenarios = [
-  ['landing', '/', 'guest'], ['login', '/login', 'guest'], ['inicio', '/', 'ready'],
+  ['landing', '/', 'guest'], ['login', '/login', 'guest'], ['inicio', '/app/monitoring/overview', 'ready'],
   ['produtos', '/produtos', 'ready'], ['detalhe-erro', '/produtos/tracking-1', 'ready'],
   ['alertas', '/alertas', 'ready'], ['nao-encontrada', '/nao-existe', 'guest'],
   ['sessao-carregando', '/produtos', 'loading'], ['sessao-erro', '/produtos', 'error'],
@@ -78,7 +78,7 @@ for (const [name, path, state] of scenarios) {
         await page.getByRole('button', { name: 'Abrir menu' }).click()
         observations.push(await observe(page))
         steps.push('menu-aberto')
-        await page.getByRole('link', { name: 'Entrar e monitorar', exact: true }).first().click()
+        await page.getByRole('link', { name: 'Começar com IA', exact: true }).first().click()
         await expect(page.getByRole('heading', { name: 'Entrar na sua conta' })).toBeVisible()
         observations.push(await observe(page))
         steps.push('login')
@@ -115,10 +115,12 @@ for (const [name, path, state] of scenarios) {
     }
     const brand = page.getByRole('img', { name: 'BestPrice', exact: true })
       .or(page.getByRole('link', { name: 'BestPrice — Início', exact: true }))
+      .or(page.getByRole('link', { name: 'BestPrice AI — Início', exact: true }))
+      .or(page.getByRole('link', { name: 'BestPrice AI — Dashboard', exact: true })).filter({ visible: true })
     await expect(brand).toHaveCount(1)
     await expect(brand).toBeVisible()
     expect(await brand.evaluate((element) => {
-      const image = element.querySelector('img')!
+      const image = element instanceof HTMLImageElement ? element : element.querySelector('img')!
       const box = image.getBoundingClientRect()
       return element.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))
     })).toBe(true)

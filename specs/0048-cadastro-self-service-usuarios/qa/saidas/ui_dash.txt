@@ -1,0 +1,19 @@
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+1) cadastro -> painel
+  cadastro t≈0ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto=""
+  cadastro t≈1000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  cadastro t≈3000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  cadastro t≈6000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+1b) recarregar
+  reload t≈0ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  reload t≈1000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  reload t≈3000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  reload t≈6000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+  [console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+2) login -> painel
+  login t≈0ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto=""
+  login t≈1000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  login t≈3000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"
+  login t≈6000ms url=/app/dashboard h1=["Uma boa compra começa\ncom uma boa conversa."] texto="Pular para o conteúdo BestPrice IA Assistente IA Histórico Monitoramento Escolhas inteligentes. Compras melhores. Dashbo"

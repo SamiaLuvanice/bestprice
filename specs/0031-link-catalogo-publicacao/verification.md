@@ -58,3 +58,20 @@ Implementação commitada em `65794ff` e publicada na branch
 aberta para `develop`. Revisão independente e validação PostgreSQL real ainda
 pendentes. O monitoramento real continua condicionado à validação operacional
 0026; esta mudança não ativa a integração.
+
+## Atualização com develop — 06/11/2026
+
+A branch estava 153 commits atrás. `origin/develop` (`d105eb8`) foi integrada por
+merge, sem reescrever o histórico publicado. Conflitos só de adição em
+`docs/LEARNINGS.md` e `docs/PROGRESS.md`, resolvidos mantendo as duas entradas.
+`develop` ainda não tratava `pdp_filters`, então a correção continua necessária.
+
+Gates na worktree após o merge (Windows, sem PostgreSQL de teste):
+
+- `uv sync --locked --extra dev`; `uv run ruff check .`: All checks passed.
+- `uv run pytest -q`: **403 passed, 61 skipped** (`TEST_DATABASE_URL` não
+  configurada para integração PostgreSQL e script POSIX de startup).
+- `uv run pytest -q tests/test_url_error_codes.py`: **28 passed**.
+- `complexity_report.py`: nenhum bloco com rank >= D.
+
+A integração PostgreSQL real fica a cargo do CI da PR.

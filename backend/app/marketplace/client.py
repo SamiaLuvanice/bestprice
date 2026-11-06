@@ -2,6 +2,7 @@ import json
 import re
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Literal
 from urllib.parse import urlsplit
 
 import httpx
@@ -15,10 +16,17 @@ SHARED_PRICE_RESTRICTIONS = frozenset({"channel_marketplace"})
 
 
 class IntegrationError(Exception):
-    def __init__(self, code: str, retry_after_seconds: int | None = None) -> None:
+    def __init__(
+        self,
+        code: str,
+        retry_after_seconds: int | None = None,
+        *,
+        resource: Literal["item", "sale_price"] | None = None,
+    ) -> None:
         super().__init__(code)
         self.code = code
         self.retry_after_seconds = retry_after_seconds
+        self.resource = resource
 
 
 @dataclass(frozen=True)
@@ -49,7 +57,7 @@ class MercadoLivreClient:
             transport=self.transport,
             headers={"Authorization": f"Bearer {self.access_token}"},
         ) as client:
-            item_response = self._get(client, f"/items/{external_id}")
+            item_response = self._get(client, f"/items/{external_id}", resource="item")
             if item_response.status_code == 404:
                 raise IntegrationError("product_not_found")
             item = self._decode(item_response)
@@ -59,6 +67,7 @@ class MercadoLivreClient:
                 client,
                 f"/items/{external_id}/sale_price",
                 params={"context": "channel_marketplace", "quantity": "1"},
+                resource="sale_price",
             )
             price = None
             if price_response.status_code != 404:
@@ -100,7 +109,13 @@ class MercadoLivreClient:
             )
 
     @staticmethod
-    def _get(client: httpx.Client, path: str, params: dict[str, str] | None = None) -> httpx.Response:
+    def _get(
+        client: httpx.Client,
+        path: str,
+        params: dict[str, str] | None = None,
+        *,
+        resource: Literal["item", "sale_price"],
+    ) -> httpx.Response:
         try:
             response = client.get(path, params=params)
         except httpx.RequestError as exc:
@@ -108,7 +123,7 @@ class MercadoLivreClient:
         if response.status_code == 401:
             raise IntegrationError("integration_auth_required")
         if response.status_code == 403:
-            raise IntegrationError("integration_access_denied")
+            raise IntegrationError("integration_access_denied", resource=resource)
         if response.status_code == 429:
             retry_after = response.headers.get("Retry-After", "")
             seconds = int(retry_after) if retry_after.isdigit() else None

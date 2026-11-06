@@ -1,0 +1,27 @@
+== /me com o cookie do cadastro (sem login)
+HTTP/1.1 200 OK
+content-length: 71
+content-type: application/json
+
+{"id":"37b36cc2-65bb-49fb-bfb3-16a0a092376d","email":"ana@exemplo.com"}
+
+== /dashboard da conta nova
+{"summary":{"tracked_count":0,"price_drop_count":0,"active_alert_count":0,"target_reached_count":0},"opportunities":[],"tracked_products":{"items":[],"next_cursor":null},"recent_updates":[]}
+== logout
+HTTP/1.1 204 No Content
+== /me após logout
+HTTP/1.1 401 Unauthorized
+== AC03/AC04 login ana@exemplo.com com a senha original
+HTTP/1.1 200 OK
+content-length: 71
+content-type: application/json
+set-cookie: bestprice_session=<redigido>; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+
+{"id":"37b36cc2-65bb-49fb-bfb3-16a0a092376d","email":"ana@exemplo.com"}
+
+== AC07 login com a senha usada no cadastro duplicado (deve falhar)
+HTTP/1.1 401 Unauthorized
+content-length: 145
+content-type: application/json
+
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}

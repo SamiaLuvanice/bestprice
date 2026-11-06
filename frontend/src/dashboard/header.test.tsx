@@ -37,27 +37,27 @@ describe('cabeçalho', () => {
   })
 
   it('leva o foco às páginas e marca somente a rota ativada como atual', async () => {
-    const { user } = await renderArea(() => undefined, '/')
+    const { user } = await renderArea(() => undefined, '/app/monitoring/overview')
     const home = () => nav().getByRole('link', { name: 'Início' })
     const products = () => nav().getByRole('link', { name: 'Produtos' })
     const alerts = () => nav().getByRole('link', { name: 'Alertas' })
 
     await user.click(products())
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
-    expect(window.location.pathname).toBe('/produtos')
+    expect(window.location.pathname).toBe('/app/monitoring')
     expect(products()).toHaveAttribute('aria-current', 'page')
     expect(home()).not.toHaveAttribute('aria-current')
     expect(alerts()).not.toHaveAttribute('aria-current')
 
     await user.click(alerts())
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Alertas', level: 1 })).toHaveFocus())
-    expect(window.location.pathname).toBe('/alertas')
+    expect(window.location.pathname).toBe('/app/monitoring/alerts')
     expect(alerts()).toHaveAttribute('aria-current', 'page')
     expect(products()).not.toHaveAttribute('aria-current')
 
     await user.click(home())
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
-    expect(window.location.pathname).toBe('/')
+    expect(window.location.pathname).toBe('/app/monitoring/overview')
     expect(home()).toHaveAttribute('aria-current', 'page')
     expect(alerts()).not.toHaveAttribute('aria-current')
   })

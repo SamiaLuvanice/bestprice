@@ -1,0 +1,37 @@
+== CLI válida nova conta
+Conta criada
+exit=0
+== CLI a@b
+usage: qa_provision.py [-h] email
+qa_provision.py: error: Informe um e-mail válido, como nome@exemplo.com.
+exit=2
+== CLI e-mail com 331 caracteres (311 + 10 espaços em cada ponta)
+usage: qa_provision.py [-h] email
+qa_provision.py: error: O e-mail pode ter no máximo 320 caracteres.
+exit=2
+== CLI senha 1025
+usage: qa_provision.py [-h] email
+qa_provision.py: error: A senha pode ter no máximo 1024 caracteres.
+exit=2
+== CLI senha 11
+usage: qa_provision.py [-h] email
+qa_provision.py: error: A senha precisa ter pelo menos 12 caracteres.
+exit=2
+== CLI confirmação diferente
+usage: qa_provision.py [-h] email
+qa_provision.py: error: As senhas não conferem
+exit=2
+== CLI e-mail criado pelo cadastro (Maria, outra caixa)
+usage: qa_provision.py [-h] email
+qa_provision.py: error: Já existe uma conta com este e-mail.
+exit=2
+== CLI e-mail criado pelo cadastro (ana)
+usage: qa_provision.py [-h] email
+qa_provision.py: error: Já existe uma conta com este e-mail.
+exit=2
+        email
+----------------------
+ cli-nova@exemplo.com
+(1 row)
+
+{"id":"4ac1a5a7-b576-4f85-ae9b-30a4f3c0ee94","email":"cli-nova@exemplo.com"}

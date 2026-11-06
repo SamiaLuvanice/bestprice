@@ -27,25 +27,90 @@ function Sync-Junction([string]$RelativePath, [string]$SourcePath) {
     Write-Output "+ $RelativePath -> $SourcePath"
 }
 
+function Convert-AgentFrontmatterForOpenCode([string]$Content) {
+    $lines = $Content -split "`r?`n"
+    if ($lines.Count -lt 3 -or $lines[0] -ne '---') { return $Content }
+
+    $end = 1
+    while ($end -lt $lines.Count -and $lines[$end] -ne '---') { $end++ }
+    if ($end -ge $lines.Count) { return $Content }
+
+    $frontmatter = if ($end -gt 1) { @($lines[1..($end - 1)]) } else { @() }
+    $converted = [System.Collections.Generic.List[string]]::new()
+    foreach ($line in $frontmatter) {
+        if ($line -match '^\s*tools\s*:\s*$') {
+            throw 'tools: em formato objeto/multilinha não é suportado pelo sync; ajuste o agente ou a conversão.'
+        }
+        if ($line -match '^\s*tools\s*:\s*\S') {
+            $converted.Add('permission:')
+            $converted.Add('  edit: deny')
+            $converted.Add('  bash: deny')
+            $converted.Add('  task: deny')
+            $converted.Add('  todowrite: deny')
+            $converted.Add('  webfetch: deny')
+            $converted.Add('  websearch: deny')
+        } else {
+            $converted.Add($line)
+        }
+    }
+
+    $result = [System.Collections.Generic.List[string]]::new()
+    $result.Add('---')
+    $result.AddRange($converted)
+    $result.Add('---')
+    if ($end + 1 -lt $lines.Count) {
+        $result.AddRange([string[]]$lines[($end + 1)..($lines.Count - 1)])
+    }
+    return ($result -join "`r`n")
+}
+
+function Sync-OpenCodeAgents {
+    $source = Join-Path $Root '.agents/agents'
+    $generated = Join-Path $Root '.opencode/generated/agents'
+    New-Item -ItemType Directory -Path $generated -Force | Out-Null
+    Get-ChildItem -LiteralPath $generated -Filter '*.md' -File -ErrorAction SilentlyContinue |
+        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+
+    foreach ($file in Get-ChildItem -LiteralPath $source -Filter '*.md' -File) {
+        $content = Get-Content -LiteralPath $file.FullName -Raw
+        $converted = Convert-AgentFrontmatterForOpenCode $content
+        Set-Content -LiteralPath (Join-Path $generated $file.Name) `
+            -Value $converted -Encoding utf8 -NoNewline
+    }
+    Write-Output '+ .opencode/generated/agents (gerado — não editar)'
+}
+
 foreach ($area in @('agents', 'skills', 'commands')) {
     Sync-Junction ".claude/$area" ".agents/$area"
 }
 
 # MCP agnóstico: .agents/mcp.json é a fonte. Geramos o .mcp.json da raiz no
 # formato mcpServers (lido por Claude e afins) e o bloco mcp do opencode.json,
-# que o OpenCode expõe num formato próprio.
+# que o OpenCode expõe num formato próprio. Claude exige "type": "http" em
+# entradas com url e trata a ausência do campo como servidor stdio; por isso a
+# projeção não é uma cópia do canônico.
 function Project-McpConfig {
     $canonical = Join-Path $Root '.agents/mcp.json'
     if (-not (Test-Path -LiteralPath $canonical)) { return }
 
-    Copy-Item -LiteralPath $canonical -Destination (Join-Path $Root '.mcp.json') -Force
-    Write-Output '+ .mcp.json (gerado — não editar)'
-
     $def = Get-Content -LiteralPath $canonical -Raw | ConvertFrom-Json
+    $claude = [ordered]@{}
     $mcp = [ordered]@{}
     foreach ($prop in $def.mcpServers.PSObject.Properties) {
         $srv = $prop.Value
         if ($srv.url) {
+            $claudeEntry = [ordered]@{
+                type = 'http'
+                url  = $srv.url
+            }
+            if ($srv.headers) {
+                $headers = [ordered]@{}
+                foreach ($header in $srv.headers.PSObject.Properties) {
+                    $headers[$header.Name] = [string]$header.Value
+                }
+                $claudeEntry.headers = $headers
+            }
+
             $entry = [ordered]@{
                 type    = 'remote'
                 url     = $srv.url
@@ -64,6 +129,10 @@ function Project-McpConfig {
                 $entry.oauth = $false
             }
         } else {
+            $claudeEntry = [ordered]@{ command = $srv.command }
+            if ($srv.args) { $claudeEntry.args = @($srv.args) }
+            if ($srv.env) { $claudeEntry.env = $srv.env }
+
             $command = @($srv.command)
             if ($srv.args) { $command += @($srv.args) }
             $entry = [ordered]@{
@@ -73,8 +142,14 @@ function Project-McpConfig {
             }
             if ($srv.env) { $entry.environment = $srv.env }
         }
+        $claude[$prop.Name] = $claudeEntry
         $mcp[$prop.Name] = $entry
     }
+    $claudeConfig = [ordered]@{ mcpServers = $claude }
+    Set-Content -LiteralPath (Join-Path $Root '.mcp.json') `
+        -Value ($claudeConfig | ConvertTo-Json -Depth 10) -Encoding utf8
+    Write-Output '+ .mcp.json (gerado — não editar)'
+
     $config = [ordered]@{
         '$schema' = 'https://opencode.ai/config.json'
         mcp       = $mcp
@@ -87,7 +162,8 @@ function Project-McpConfig {
 Project-McpConfig
 
 if ($WithOpenCode -or (Test-Path -LiteralPath (Join-Path $Root '.opencode'))) {
-    Sync-Junction '.opencode/agent' '.agents/agents'
+    Sync-OpenCodeAgents
+    Sync-Junction '.opencode/agent' '.opencode/generated/agents'
     Sync-Junction '.opencode/skills' '.agents/skills'
     Sync-Junction '.opencode/command' '.agents/commands'
 }
@@ -95,6 +171,9 @@ if ($WithOpenCode -or (Test-Path -LiteralPath (Join-Path $Root '.opencode'))) {
 if ($WithCursor -or (Test-Path -LiteralPath (Join-Path $Root '.cursor'))) {
     Sync-Junction '.cursor/skills' '.agents/skills'
     Sync-Junction '.cursor/commands' '.agents/commands'
+    Copy-Item -LiteralPath (Join-Path $Root '.agents/mcp.json') `
+        -Destination (Join-Path $Root '.cursor/mcp.json') -Force
+    Write-Output '+ .cursor/mcp.json (gerado — não editar)'
     $rulesPath = Join-Path $Root '.cursor/rules'
     New-Item -ItemType Directory -Path $rulesPath -Force | Out-Null
     Get-ChildItem -LiteralPath $rulesPath -Filter '*.mdc' -File |

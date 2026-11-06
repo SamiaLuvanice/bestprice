@@ -176,7 +176,7 @@ it('login ignora retorno externo e não entra em ciclo com /login', async () => 
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
   await waitFor(() => expect(window.location.pathname).toBe('/'))
-  expect(await screen.findByRole('heading', { name: 'Seu painel de preços' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/ })).toBeInTheDocument()
 })
 
 it('abrir notificação navega ao monitoramento sem marcá-la como lida', async () => {
@@ -255,7 +255,7 @@ it('navegação entre Início, Produtos, detalhe e Alertas acompanha o históric
     if (url === '/api/tracked-products') return reply(200, { items: [item], next_cursor: null })
     return undefined
   }, dashboardFixture({ items: [item] }))
-  visit('/')
+  visit('/app/monitoring/overview')
   const user = userEvent.setup()
   await screen.findByRole('heading', { name: 'Seu painel de preços' })
   await user.click(screen.getByRole('link', { name: 'Produtos' }))
@@ -269,7 +269,7 @@ it('navegação entre Início, Produtos, detalhe e Alertas acompanha o históric
   expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Produtos' })).toHaveAttribute('aria-current', 'page')
   window.history.back()
-  await waitFor(() => expect(window.location.pathname).toBe('/produtos'))
+  await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring'))
   expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
 })
 
