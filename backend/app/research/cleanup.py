@@ -5,6 +5,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
+from app.auth.limiter import purge_signup_attempts
+from app.auth.settings import signup_settings
 from app.db import create_database_engine
 from app.research.repository import purge_expired
 from app.research.service import now_utc
@@ -15,7 +17,10 @@ CLEANUP_INTERVAL_SECONDS = 3600
 
 def purge_database() -> int:
     with Session(create_database_engine()) as session:
-        count = purge_expired(session, now_utc())
+        now = now_utc()
+        count = purge_expired(session, now)
+        # Não retém o HMAC da origem de quem não volta: retenção máxima ≈ janela + 1 h.
+        purge_signup_attempts(session, now, signup_settings().rate_limit_window)
         session.commit()
         return count
 

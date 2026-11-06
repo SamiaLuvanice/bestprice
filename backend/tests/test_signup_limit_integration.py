@@ -140,3 +140,25 @@ def test_simultaneous_attempts_from_the_same_source_respect_the_limit(engine) ->
             select(func.count()).select_from(SignupAttempt).where(SignupAttempt.source_hash == source),
         )
     assert count == 1
+
+
+def test_hourly_cleanup_also_purges_expired_signup_attempts(engine, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app import db
+    from app.research import cleanup
+
+    source = new_source()
+    with Session(engine) as session:
+        session.add_all([
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(hours=2)),
+            SignupAttempt(source_hash=source, attempted_at=NOW - timedelta(minutes=10)),
+        ])
+        session.commit()
+    monkeypatch.setenv("DATABASE_URL", os.environ["TEST_DATABASE_URL"])
+    monkeypatch.delenv("SIGNUP_RATE_LIMIT_WINDOW_MINUTES", raising=False)
+    monkeypatch.setattr(cleanup, "now_utc", lambda: NOW)
+    db.create_database_engine.cache_clear()
+    try:
+        cleanup.purge_database()
+    finally:
+        db.create_database_engine.cache_clear()
+    assert stored(engine, source) == [NOW - timedelta(minutes=10)]

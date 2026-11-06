@@ -230,3 +230,19 @@ no monitoramento, no alerta e na conversa da outra conta.
 - Red por mutação: sem `TrackedProduct.user_id == user.id` em `list_tracking` → **1 failed**
   (`AssertionError` com o monitoramento da outra conta em `tracked`). Restaurado (`git status`
   limpo em `backend/app`) → `tests/test_signup_http.py` **26 passed**.
+
+## B12 — Purge horário e configuração por ambiente
+
+- Red: `test_hourly_cleanup_also_purges_expired_signup_attempts` (PostgreSQL, `now_utc`
+  fixado, `DATABASE_URL` de teste com `cache_clear` do engine) → **1 failed**: a linha de
+  `NOW − 2 h` continuava após `cleanup.purge_database()`. Motivo esperado.
+- Green: `purge_database` chama `purge_signup_attempts(session, now, janela)` na mesma
+  transação do purge da pesquisa → `tests/test_signup_limit_integration.py tests/test_research_integration.py`
+  **18 passed**.
+- `.env.example`: as cinco variáveis comentadas, segredos vazios. `docker-compose.yml`: só o
+  serviço `backend`, com `${VAR:-padrão}`; `POSTGRES_PASSWORD=x docker compose config` mostra
+  `SIGNUP_ENABLED: "false"`, `5`, `60` e segredos vazios. `render.yaml`:
+  `SIGNUP_ENABLED: "false"`, `TRUSTED_PROXY_SECRET` e `SIGNUP_SOURCE_HASH_SECRET` com
+  `sync: false`; YAML válido (`yaml.safe_load`) e `test_stage_start.py` 1 passed (2 skips POSIX).
+  O Blueprint do Render precisa de sincronização manual depois dos checks
+  (`docs/apps/infraestrutura.md`).
