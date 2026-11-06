@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.auth.accounts import EMAIL_MAX_CHARS, PASSWORD_MAX_CHARS, normalize_email
 from app.auth.security import verify_password
 from app.db import get_session
 from app.errors import ApiError
@@ -55,18 +56,13 @@ def current_user(request: Request, session: SessionDep) -> User:
 CurrentUser = Annotated[User, Depends(current_user)]
 
 
-@router.post("/login", response_model=UserResponse)
-def login(payload: LoginRequest, response: Response, session: SessionDep) -> UserResponse:
-    if len(payload.password) > 1024 or len(payload.email) > 320:
-        raise ApiError(401, "invalid_credentials", "E-mail ou senha inválidos.")
-    user = session.scalar(select(User).where(User.email == payload.email.strip().lower()))
-    if user is None or not verify_password(payload.password, user.password_hash):
-        raise ApiError(401, "invalid_credentials", "E-mail ou senha inválidos.")
+def issue_session(session: Session, response: Response, user: User, now: datetime) -> None:
+    """Grava a sessão, confirma a transação e emite o cookie privado (login e cadastro)."""
     raw_token = secrets.token_urlsafe(32)
     session.add(UserSession(
         user_id=user.id,
         token_hash=hashlib.sha256(raw_token.encode("utf-8")).hexdigest(),
-        expires_at=datetime.now(UTC) + timedelta(seconds=SESSION_LIFETIME_SECONDS),
+        expires_at=now + timedelta(seconds=SESSION_LIFETIME_SECONDS),
     ))
     session.commit()
     response.set_cookie(
@@ -74,6 +70,17 @@ def login(payload: LoginRequest, response: Response, session: SessionDep) -> Use
         secure=os.environ.get("APP_ENV") in {"stage", "production"}, httponly=True,
         samesite="lax", path="/api",
     )
+
+
+@router.post("/login", response_model=UserResponse)
+def login(payload: LoginRequest, response: Response, session: SessionDep) -> UserResponse:
+    # O login não aplica o formato nome@domínio.tld: contas antigas continuam entrando.
+    if len(payload.password) > PASSWORD_MAX_CHARS or len(payload.email) > EMAIL_MAX_CHARS:
+        raise ApiError(401, "invalid_credentials", "E-mail ou senha inválidos.")
+    user = session.scalar(select(User).where(User.email == normalize_email(payload.email)))
+    if user is None or not verify_password(payload.password, user.password_hash):
+        raise ApiError(401, "invalid_credentials", "E-mail ou senha inválidos.")
+    issue_session(session, response, user, datetime.now(UTC))
     return UserResponse(id=user.id, email=user.email)
 
 

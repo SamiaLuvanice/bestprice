@@ -74,3 +74,19 @@ atrás do Pages) continua pendente até o interruptor ser ligado em Stage (I3).
   `IntegrityError` faz rollback, confirma por `SELECT` e levanta `EmailAlreadyRegistered`
   (relança se o e-mail não existir) → **34 passed**. Refactor: imports subidos ao topo; 34 passed;
   `ruff check` ok.
+
+## B3 — CLI e login alinhados
+
+- Red: `uv run pytest -q -p no:cacheprovider tests/test_user_provision.py tests/test_auth_http.py`
+  → **9 failed, 2 passed**. Motivos: `DID NOT RAISE AccountRuleError` (321 por espaços, `a@b`,
+  senha 1025 aceitos pela CLI antiga), `ValueError: Senha muito curta` em vez de
+  `AccountRuleError`, mensagem de duplicado antiga (`Usuário já existe`), prompt
+  `Senha (mínimo 12 caracteres)` e `DID NOT RAISE SystemExit`. Os 2 que passaram são o login
+  existente e o teste de regressão "conta `a@b` gravada no banco ainda entra", que já passava
+  por desenho (o login não muda de comportamento).
+- Green: `provision_user` passa a chamar `add_account` + `commit`; `AccountRuleError` traz as
+  mensagens em português, que `main` repassa a `parser.error`; prompt "Senha (12 a 1024
+  caracteres)". → **45 passed** (regras, CLI e auth).
+- Refactor: o login usa `EMAIL_MAX_CHARS`, `PASSWORD_MAX_CHARS` e `normalize_email` e a
+  emissão de sessão vira `issue_session(session, response, user, now)`, reaproveitada pelo
+  cadastro. `ruff check` ok; 45 passed.

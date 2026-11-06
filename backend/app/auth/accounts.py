@@ -70,7 +70,7 @@ def account_rule_violations(email: str, password: str) -> list[RuleViolation]:
 
 class AccountRuleError(ValueError):
     def __init__(self, violations: list[RuleViolation]) -> None:
-        super().__init__("Dados de conta inválidos")
+        super().__init__(" ".join(item.message for item in violations))
         self.violations = violations
 
 

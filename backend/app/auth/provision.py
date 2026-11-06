@@ -1,28 +1,17 @@
 import argparse
 import getpass
 
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.auth.security import hash_password
+from app.auth.accounts import add_account
 from app.db import create_database_engine
 from app.products.models import User
 
 
 def provision_user(session: Session, email: str, password: str) -> User:
-    normalized = email.strip().lower()
-    if not normalized or "@" not in normalized or len(normalized) > 320:
-        raise ValueError("E-mail inválido")
-    if session.scalar(select(User).where(User.email == normalized)) is not None:
-        raise ValueError("Usuário já existe")
-    user = User(email=normalized, password_hash=hash_password(password))
-    session.add(user)
-    try:
-        session.commit()
-    except IntegrityError as exc:
-        session.rollback()
-        raise ValueError("Usuário já existe") from exc
+    """Cria a conta com as mesmas regras do cadastro (AccountRuleError/EmailAlreadyRegistered)."""
+    user = add_account(session, email, password)
+    session.commit()
     return user
 
 
@@ -30,7 +19,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Provisiona uma conta BestPrice no banco configurado")
     parser.add_argument("email")
     args = parser.parse_args()
-    password = getpass.getpass("Senha (mínimo 12 caracteres): ")
+    password = getpass.getpass("Senha (12 a 1024 caracteres): ")
     confirmation = getpass.getpass("Confirme a senha: ")
     if password != confirmation:
         parser.error("As senhas não conferem")
