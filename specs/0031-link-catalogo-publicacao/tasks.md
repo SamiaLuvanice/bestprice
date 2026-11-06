@@ -11,11 +11,14 @@
   direto de anúncio.
 - [x] **T04 — Revisar e verificar.** Testes direcionados, gates aplicáveis e
   revisão documentada contra `docs/architecture.md` e regras de segurança; ver
-  `verification.md`. Revisão independente antes do merge ainda pendente.
+  `verification.md`. Revisão independente em 06/11/2026: aprovar com ressalvas;
+  a P2 (seleção igual ao ID do catálogo) foi corrigida com TDD antes do merge.
 - [x] **T05 — Sincronizar onboarding.** `doc-sync-onboarding` executado após a
   última alteração de código: README, guia backend, aprendizados, progresso e
   verificação atualizados; `AGENTS.md`, `CLAUDE.md` e índice de docs conferidos,
   sem necessidade de mudança.
 - [x] **T06 — Entregar para revisão.** Verificação e progresso atualizados; branch
   publicada e PR [#181](https://github.com/SamiaLuvanice/bestprice/pull/181)
-  aberta para `develop`, sem fazer merge. Revisão independente pendente.
+  aberta para `develop`; CI verde (8 checks, inclusive PR policy e PostgreSQL) e
+  integrada em `develop` em 06/11/2026 (`2275a69`). Worktree e branch local
+  removidas; Issue #180 fechada.
