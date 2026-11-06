@@ -117,3 +117,19 @@ Pré-requisito B0 registrado acima antes deste Red.
   balde `unknown`; IPv6 → `/64` (mesmo /64 compartilha balde, outro /64 não); IPv4 mapeado →
   IPv4; chave = HMAC-SHA256 hexadecimal de 64 caracteres, determinística, muda com o segredo,
   diferente do SHA-256 sem segredo e sem o IP. Comparação do segredo com `hmac.compare_digest`.
+
+## B6 — Migração `20261106signup`
+
+- Red: `signup_attempts` adicionada a `PUBLIC_TABLES`;
+  `uv run pytest -q -p no:cacheprovider tests/test_rls_migration_integration.py` (PostgreSQL)
+  → **2 failed**: o SQL offline não contém `ALTER TABLE public.signup_attempts ENABLE ROW LEVEL
+  SECURITY;` e o banco real não tem `{'signup_attempts': (True, False)}`. Motivo esperado.
+- Green: modelo `app/auth/models.py` (`SignupAttempt`), migração
+  `alembic/versions/20261106_signup_attempts.py` (`BIGINT GENERATED ALWAYS AS IDENTITY`,
+  `CHAR(64)`, `TIMESTAMPTZ`, índices `(source_hash, attempted_at)` e `(attempted_at)`, RLS) e
+  import em `alembic/env.py` → **2 passed**.
+- `DATABASE_URL=… uv run alembic check` → `No new upgrade operations detected.`
+- `alembic downgrade -1` → `to_regclass('public.signup_attempts')` vazio, versão
+  `20261104grounding`; `alembic upgrade head` → tabela de volta, versão `20261106signup`;
+  `\d signup_attempts`: `id bigint generated always as identity`, `source_hash character(64)`,
+  `attempted_at timestamp with time zone`, todos `not null`.

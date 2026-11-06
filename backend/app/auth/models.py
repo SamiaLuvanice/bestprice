@@ -1,0 +1,23 @@
+from datetime import datetime
+
+from sqlalchemy import CHAR, BigInteger, DateTime, Identity, Index
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db import Base
+
+
+class SignupAttempt(Base):
+    """Uma tentativa de cadastro que contou para o limite da origem.
+
+    `source_hash` é o HMAC-SHA256 hexadecimal da origem; o IP nunca é gravado.
+    """
+
+    __tablename__ = "signup_attempts"
+    __table_args__ = (
+        Index("ix_signup_attempts_source_hash_attempted_at", "source_hash", "attempted_at"),
+        Index("ix_signup_attempts_attempted_at", "attempted_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(always=True), primary_key=True)
+    source_hash: Mapped[str] = mapped_column(CHAR(64), nullable=False)
+    attempted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
