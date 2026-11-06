@@ -8,9 +8,14 @@ normalizada nunca é gravada nem registrada em log: só o HMAC-SHA256 com segred
 import hashlib
 import hmac
 import ipaddress
+import math
+from datetime import datetime, timedelta
 
+from sqlalchemy import delete, func, select
+from sqlalchemy.orm import Session
 from starlette.requests import Request
 
+from app.auth.models import SignupAttempt
 from app.auth.settings import SignupSettings
 
 CLIENT_IP_HEADER = "x-bestprice-client-ip"
@@ -54,3 +59,42 @@ def signup_source_key(request: Request, settings: SignupSettings) -> str:
     if raw is None:
         raw = request.client.host if request.client else UNKNOWN_SOURCE
     return source_hash(normalize_source(raw), settings.source_hash_secret)
+
+
+class SignupRateLimited(Exception):
+    def __init__(self, retry_after_seconds: int) -> None:
+        super().__init__("signup rate limited")
+        self.retry_after_seconds = retry_after_seconds
+
+
+def purge_signup_attempts(session: Session, now: datetime, window: timedelta) -> int:
+    """Apaga as tentativas que já saíram da janela (de todas as origens). Não confirma."""
+    result = session.execute(delete(SignupAttempt).where(SignupAttempt.attempted_at <= now - window))
+    return result.rowcount or 0
+
+
+class PostgresSignupLimiter:
+    """Janela deslizante por origem, persistida no PostgreSQL.
+
+    Recusas não são registradas: o Retry-After informado continua verdadeiro.
+    """
+
+    def check_and_record(self, session: Session, source_key: str, now: datetime, settings: SignupSettings) -> None:
+        # Serializa envios simultâneos da mesma origem até o commit desta transação.
+        session.execute(select(func.pg_advisory_xact_lock(
+            func.hashtextextended("signup:" + source_key, 0),
+        )))
+        window = settings.rate_limit_window
+        purge_signup_attempts(session, now, window)
+        recent = list(session.scalars(
+            select(SignupAttempt.attempted_at)
+            .where(SignupAttempt.source_hash == source_key, SignupAttempt.attempted_at > now - window)
+            .order_by(SignupAttempt.attempted_at),
+        ))
+        limit = settings.rate_limit_attempts
+        if len(recent) >= limit:
+            session.commit()  # mantém o purge e libera o lock
+            frees_at = recent[len(recent) - limit] + window
+            raise SignupRateLimited(max(1, math.ceil((frees_at - now).total_seconds())))
+        session.add(SignupAttempt(source_hash=source_key, attempted_at=now))
+        session.commit()

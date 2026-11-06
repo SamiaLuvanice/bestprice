@@ -133,3 +133,19 @@ Pré-requisito B0 registrado acima antes deste Red.
   `20261104grounding`; `alembic upgrade head` → tabela de volta, versão `20261106signup`;
   `\d signup_attempts`: `id bigint generated always as identity`, `source_hash character(64)`,
   `attempted_at timestamp with time zone`, todos `not null`.
+
+## B7 — Limitador em PostgreSQL (`tests/test_signup_limit_integration.py`)
+
+- Red: `TEST_DATABASE_URL=… uv run pytest -q -p no:cacheprovider tests/test_signup_limit_integration.py`
+  → `ImportError: cannot import name 'PostgresSignupLimiter' from 'app.auth.limiter'`. Motivo esperado.
+- Green: `PostgresSignupLimiter.check_and_record` (advisory lock por origem, purge global das
+  vencidas, contagem na janela deslizante, `SignupRateLimited(retry)` sem inserir, senão
+  `INSERT` + commit) e `purge_signup_attempts` → **6 passed** em PostgreSQL 18 real, sem skip.
+  Cobertos (relógio fixo, sem `sleep`): 5 passam; o 6º (30 min depois) → `retry_after = 1800`;
+  a recusa não insere; em `retry − 1` s ainda recusa com 1 s; em `now + retry` volta a passar;
+  arredondamento para cima (`2`); configuração 2/10 min (`480`); origens independentes;
+  purge apaga só `attempted_at <= now − janela`; dois envios simultâneos com limite 1 → um
+  passa, outro `3600`, exatamente 1 linha.
+- Prova do lock: removendo temporariamente o `pg_advisory_xact_lock`, o teste simultâneo falhou
+  3 de 3 vezes com `assert [None, None] == [None, 3600]` (os dois passavam). Lock restaurado →
+  22 passed (limitador + origem).
