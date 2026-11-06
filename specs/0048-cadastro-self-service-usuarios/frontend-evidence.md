@@ -119,3 +119,18 @@ textos vêm do plano e do brief `design/figma-brief.md` (provisórios até o Fig
 - Observação de processo: o pre-commit de commits do agente backend guarda e restaura arquivos não
   preparados da worktree compartilhada. Durante essa janela meus arquivos voltam à versão do
   último commit; uma das rodadas da suíte de F4 (210 falhas) coincidiu com isso.
+
+## F7 — proxy de Stage (`functions/api/[[path]].ts`)
+
+- Red: `npx vitest run src/pagesProxy.test.ts` → `Tests 4 failed | 2 passed (6)`:
+  `expected [ 'x-bestprice-client-ip', …(2) ] to deeply equal []`, `expected 'forjado' to be
+  'sss…'`, `expected '198.51.100.1' to be null` e `expected 'sss…' to be null` (o segredo
+  voltava na resposta). Os 2 que passaram são os testes existentes do proxy.
+- Green: mesmo comando → `Tests 6 passed (6)`. Depois, um teste de regressão para a resposta
+  recriada (status 204 e dois `Set-Cookie` preservados) → `Tests 7 passed (7)`.
+- Comportamento: remove todo `x-bestprice-*` vindo do cliente; com `API_PROXY_SECRET`, define
+  `x-bestprice-proxy-secret` e `x-bestprice-client-ip` a partir de `cf-connecting-ip` (sem ele,
+  não inventa IP); sem o segredo não injeta nada; remove `x-bestprice-*` também da resposta.
+- `npx tsc -b` e `npx eslint functions src/pagesProxy.test.ts` sem erros.
+- Pendente (fora do frontend): confirmar na documentação da Cloudflare que `cf-connecting-ip`
+  não é forjável pelo cliente (B0) e validar em Stage com o interruptor ligado (I3).
