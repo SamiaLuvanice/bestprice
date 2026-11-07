@@ -1,10 +1,22 @@
 import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, expect, it } from 'vitest'
+import { cloneElement, isValidElement, type ReactNode } from 'react'
+import { afterEach, expect, it, vi } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { formatAxisPrice } from '../lib/format'
 import { PriceHistoryChart } from './PriceHistoryChart'
 
 afterEach(cleanup)
+
+// jsdom não mede layout: o ResponsiveContainer ficaria com 0 px e não desenharia o SVG.
+// O dublê entrega uma dimensão fixa ao gráfico; o resto do Recharts é o real.
+vi.mock('recharts', async (importOriginal) => {
+  const recharts = await importOriginal<typeof import('recharts')>()
+  return {
+    ...recharts,
+    ResponsiveContainer: ({ children }: { children: ReactNode }) =>
+      isValidElement<{ width?: number; height?: number }>(children) ? cloneElement(children, { width: 800, height: 400 }) : children,
+  }
+})
 
 it('orienta quando nenhum preço válido está disponível sem desenhar uma série fictícia', () => {
   render(<PriceHistoryChart history={[]} partial={false} />)
@@ -48,4 +60,46 @@ it.each([
 it('menciona "sem frete" uma única vez, no cabeçalho do detalhe', () => {
   render(<PriceHistoryChart partial={false} history={[{ id: 'a', price: '10.00', currency: 'BRL', captured_at: '2026-10-21T15:00:00Z' }]} />)
   expect(screen.queryByText(/sem frete/)).not.toBeInTheDocument()
+})
+
+// 0049/AC10: série em degraus, ponto atual só na última leitura e alvo tracejado opcional.
+const readings = [
+  { id: 'a', price: '349.90', currency: 'BRL', captured_at: '2026-10-01T12:00:00Z' },
+  { id: 'b', price: '319.90', currency: 'BRL', captured_at: '2026-10-04T12:00:00Z' },
+  { id: 'c', price: '299.90', currency: 'BRL', captured_at: '2026-10-07T12:00:00Z' },
+]
+
+it('desenha degraus com área e um único ponto atual, na última leitura', () => {
+  const { container } = render(<PriceHistoryChart partial={false} history={readings} />)
+  expect(container.querySelector('.recharts-area-area')).not.toBeNull()
+  expect(container.querySelector('.recharts-line-curve')).not.toBeNull()
+  expect(container.querySelectorAll('.recharts-line-dot, .recharts-dot:not([data-current])')).toHaveLength(0)
+  const current = container.querySelectorAll('[data-current="true"]')
+  expect(current).toHaveLength(1)
+  expect(current[0]).toHaveAttribute('data-price', '299.90')
+})
+
+it('sem preço-alvo, não desenha a linha tracejada', () => {
+  const { container } = render(<PriceHistoryChart partial={false} history={readings} />)
+  expect(container.querySelector('.recharts-reference-line')).toBeNull()
+})
+
+it('com preço-alvo, desenha a linha tracejada rosa do alvo', () => {
+  const { container } = render(<PriceHistoryChart partial={false} history={readings} targetPrice="279.90" />)
+  const line = container.querySelector('.recharts-reference-line-line')
+  expect(line).not.toBeNull()
+  expect(line).toHaveAttribute('stroke', 'var(--chart-3)')
+  expect(line?.getAttribute('stroke-dasharray')).toBeTruthy()
+})
+
+it('preço-alvo inválido não vira linha', () => {
+  const { container } = render(<PriceHistoryChart partial={false} history={readings} targetPrice="abc" />)
+  expect(container.querySelector('.recharts-reference-line')).toBeNull()
+})
+
+it('com uma única leitura, mostra só o ponto, sem degrau nem área', () => {
+  const { container } = render(<PriceHistoryChart partial={false} history={[readings[0]]} />)
+  expect(container.querySelector('.recharts-line-curve')).toBeNull()
+  expect(container.querySelector('.recharts-area-area')).toBeNull()
+  expect(container.querySelectorAll('[data-current="true"]')).toHaveLength(1)
 })
