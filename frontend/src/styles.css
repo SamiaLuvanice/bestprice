@@ -147,7 +147,7 @@
   --color-border-soft: var(--border);
   --color-control-border: var(--input);
   --color-brand: var(--primary);
-  --color-brand-strong: #a0004c; /* divergência registrada (tokens.figma.test.ts): hover de link */
+  --color-brand-strong: #a0004c; /* Figma color/brand-strong: hover de link */
   --color-brand-soft: var(--accent);
   --color-action-text: var(--action-foreground);
   --color-badge-text: var(--destructive-foreground);

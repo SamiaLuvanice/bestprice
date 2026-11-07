@@ -6,7 +6,7 @@ Referência: Figma BestPrice IA (`LZVtUEAycEzfbwL0H5YL3r`), página "00 · BestP
 system", versão de histórico "Design system 2026 · shadcn/ui" (07/11/2026).
 
 - **Tokens:** o snapshot [`tokens/figma-variables-2026-11.json`](tokens/figma-variables-2026-11.json)
-  (67 variáveis, 22 estilos de texto, 7 efeitos) é o contrato com `frontend/src/styles.css`;
+  (68 variáveis, 22 estilos de texto, 7 efeitos) é o contrato com `frontend/src/styles.css`;
   `frontend/src/tokens.figma.test.ts` compara os dois. Mudanças: `--card` `#f5f5f7` → `#ffffff`
   e `--action-hover` `#65ff48` → `#2fe80c` (o Figma prevalece sobre a 0039). Novos:
   `--surface`, `--surface-raised`, `--chart-1..5`, `--sidebar-*`, `--night-*`, `--status-*`,
@@ -45,10 +45,11 @@ system", versão de histórico "Design system 2026 · shadcn/ui" (07/11/2026).
   e sem `next-themes`. O `sonner.tsx` foi escrito à mão (`theme="light"`). Os rótulos do registry
   foram traduzidos para o português. O catálogo local fica em `/dev/design-system`, só no servidor
   de desenvolvimento.
-- **Divergência de token aprovada:** `--color-brand-strong: #a0004c` (hover de link, 8,1:1 sobre
-  branco). O Figma não define estado hover para link. É a única exceção da lista
-  `colorLiteralExceptions` em `frontend/src/tokens.figma.test.ts`. Os demais tokens próprios
-  derivam de variáveis do Figma; `--color-danger-bg` usa o alias `--destructive-soft`.
+- **Sem divergência de token:** `--color-brand-strong: #a0004c` (hover de link, 8,1:1 sobre
+  branco) era a única exceção aprovada só no código. Desde a #271 ela é a variável
+  `color/brand-strong` do Figma e está no snapshot; a lista `colorLiteralExceptions` de
+  `frontend/src/tokens.figma.test.ts` ficou vazia. Os demais tokens próprios derivam de variáveis
+  do Figma; `--color-danger-bg` usa o alias `--destructive-soft`.
 - **Divergências de tela aprovadas (AC08, 07/11/2026):**
   - títulos na pilha de sistema sem SF Pro Expanded (fonte substituta);
   - aviso do Google dentro do campo do assistente, alça de redimensionar e "Conversas recentes" no

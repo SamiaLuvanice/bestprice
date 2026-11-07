@@ -6,7 +6,8 @@
 PR [#268](https://github.com/SamiaLuvanice/bestprice/pull/268) integrada em `develop` (`45920b4`) com CI verde,
 depois da revisão independente aprovada. A Issue #222 (0042) foi fechada manualmente: a ação principal
 passa a ser o verde, com texto preto. Worktree e branches local e remota da feature removidas.
-Pendência fora do código: criar no Figma a variável `brand-strong` (#a0004c), hoje exceção aprovada só no código.
+A variável `color/brand-strong` (#a0004c) foi criada no Figma e entrou no snapshot de tokens pela
+[Issue #271](https://github.com/SamiaLuvanice/bestprice/issues/271); não resta divergência de token entre Figma e código.
 
 O que entrou:
 - tokens do Figma 2026 (cores, superfícies escuras fixas, status, raios, espaços, elevação, foco e
