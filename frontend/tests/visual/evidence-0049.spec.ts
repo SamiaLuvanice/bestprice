@@ -1,5 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 
 // 0049/F24 (AC08): capturas das telas da lista A nos mesmos estados e larguras dos quadros do
@@ -106,7 +107,11 @@ const frames = [['desktop', DESKTOP], ['mobile', MOBILE]] as const
 
 test.describe('evidência 0049 (lista A × Figma)', () => {
   test.use({ colorScheme: 'light' })
-  test.beforeEach(({ browserName }, info) => test.skip(info.project.name !== 'viewport-1440' || browserName !== 'chromium', 'capturas fixam o tamanho do quadro'))
+  // Grava arquivos versionados: só roda quando pedido (EVIDENCE_0049=1), para a rodada completa não os alterar.
+  test.beforeEach(({ browserName }, info) => {
+    test.skip(!process.env.EVIDENCE_0049, 'evidência da 0049: rode com EVIDENCE_0049=1')
+    test.skip(info.project.name !== 'viewport-1440' || browserName !== 'chromium', 'capturas fixam o tamanho do quadro')
+  })
 
   for (const [frame, size] of frames) {
     test(`entrar · ${frame}`, async ({ page }) => {
@@ -204,7 +209,7 @@ test.describe('evidência 0049 (lista A × Figma)', () => {
       })
       await page.goto('/app/monitoring')
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-      await page.waitForLoadState('networkidle')
+      await expect(page.getByText('Você ainda não está acompanhando nenhum produto.')).toBeVisible()
       await settle(page)
       await capture(page, `monitoramento-vazio-${frame}`)
     })

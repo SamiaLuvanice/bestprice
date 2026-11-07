@@ -34,7 +34,15 @@ function withoutComments(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' ')).replace(/^\s*\/\/.*$/gm, '')
 }
 
-const rawColor = /(?<![\w&-])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])|\b(?:rgba?|hsla?)\(/g
+const palette = 'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
+const utilities = 'bg|text|border|ring|fill|stroke|from|via|to|outline|shadow|decoration|accent|caret|divide|placeholder'
+const rawColor = new RegExp([
+  String.raw`(?<![\w&-])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])`,
+  // Funções de cor, inclusive os espaços modernos (oklch, lab...).
+  String.raw`\b(?:rgba?|hsla?|oklch|oklab|lch|lab|hwb)\(`,
+  // Paleta fixa do Tailwind (bg-white, text-zinc-500, bg-black/50): cor fora dos tokens do tema.
+  String.raw`(?<![\w-])(?:${utilities})-(?:white|black|(?:${palette})-\d{2,3})(?:\/\d+)?(?![\w-])`,
+].join('|'), 'g')
 
 /** Cores soltas de uma linha, depois de retirar só os trechos permitidos (não a linha inteira). */
 function rawColorsInLine(file: string, line: string): string[] {
@@ -59,4 +67,19 @@ it('não há cor solta fora dos tokens (exceções justificadas acima)', () => {
 it('a exceção retira só o trecho permitido: outra cor na mesma linha ainda falha', () => {
   const line = `"[&_.recharts-dot[stroke='#fff']]:stroke-transparent text-[#123456]"`
   expect(rawColorsInLine('components/ui/chart.tsx', line)).toEqual([`components/ui/chart.tsx: #123456 — ${line}`])
+})
+
+// I3: espaços de cor modernos e a paleta fixa do Tailwind também são cor solta.
+it.each([
+  ['oklch(0.7 0.1 200)', 'oklch('],
+  ['color: lab(50% 40 59)', 'lab('],
+  ['className="bg-white"', 'bg-white'],
+  ['className="text-zinc-500"', 'text-zinc-500'],
+  ['className="bg-black/50"', 'bg-black/50'],
+])('detecta %s', (line, found) => {
+  expect(rawColorsInLine('exemplo.tsx', line).some((entry) => entry.includes(found))).toBe(true)
+})
+
+it('não confunde tokens e utilitários do tema com paleta fixa', () => {
+  expect(rawColorsInLine('exemplo.tsx', 'className="bg-background text-muted-foreground border-border bg-transparent"')).toEqual([])
 })

@@ -24,7 +24,7 @@ it('no servidor de desenvolvimento, /dev/design-system abre o catálogo', async 
   // O catálogo é um chunk grande carregado por lazy import; sob a suíte paralela leva mais que 6 s.
   expect(await screen.findByRole('heading', { level: 1, name: 'Design system BestPrice 2026' }, { timeout: 14_000 })).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'Este endereço saiu do radar.' })).toBeNull()
-})
+}, 30_000) // limite explícito: a espera de 14 s acima não pode estourar o testTimeout global (15 s)
 
 it('fora do desenvolvimento, o mesmo endereço mostra a página não encontrada', async () => {
   vi.stubEnv('DEV', false)

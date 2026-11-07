@@ -161,7 +161,8 @@
   --color-amber: var(--status-warning);
   --color-amber-soft: var(--status-warning-soft);
   --color-danger-text: var(--destructive);
-  --color-danger-bg: var(--status-up-soft);
+  --destructive-soft: color-mix(in srgb, var(--destructive) 7%, var(--background));
+  --color-danger-bg: var(--destructive-soft); /* erro tem o próprio fundo, sem ligar ao status "preço subiu" */
   --color-danger-border: color-mix(in srgb, var(--destructive) 25%, var(--background));
   --color-focus: var(--ring);
   --color-glass: color-mix(in srgb, var(--surface-raised) 96%, transparent);
@@ -303,7 +304,7 @@ h1, h2 { text-wrap: balance; }
 .cell-price strong, .current-price, .product-price, .alert-current, .alert-item-target, .history-data td { font-variant-numeric: tabular-nums; }
 /* 0049/AC03: dados (preço, horário, MLB, contador) em Geist Mono com algarismos de largura fixa; texto e formato iguais. */
 .cell-price strong, .current-price, .previous-price, .product-price, .min-price strong, .history-data td, .relative-time,
-.bell-count, .indicator-value, .detail-reference-id, #assistant-character-count, .variation, .price-chart-figure .recharts-tooltip-wrapper strong { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.bell-count, .indicator-value, .detail-reference-id, .assistant-character-count, .variation, .price-chart-figure .recharts-tooltip-wrapper strong { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .indicator-note { margin-top: -4px; }
 .is-read .read-state { color: var(--color-text-muted); background: var(--color-surface); }
 
