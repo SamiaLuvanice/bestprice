@@ -56,7 +56,8 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
   `warning` e `success` no Alert e Tabs em pílula.
 - [x] F11 — **Table, Pagination, Sidebar, Skeleton, Avatar, Progress, Separator,
   EmptyState e PriceChartCard.**
-- [ ] I2 — Revisão `arch-reviewer` das Fases 1 e 2.
+- [x] I2 — Revisão `arch-reviewer` das Fases 1 e 2. Achados corrigidos; ver
+  "Correções da revisão independente (I2)" em `verification.md`.
 
 ## Fase 3 — Catálogo (AC05, AC06)
 
@@ -104,7 +105,8 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 ## Fechamento
 
-- [ ] I3 — Revisão `arch-reviewer` final e QA (`qa`) dos AC01–AC15.
+- [x] I3 — Revisão `arch-reviewer` final e QA (`qa`) dos AC01–AC15. Lacunas corrigidas
+  com testes; a re-revisão de 07/11/2026 aprovou o PR.
 - [x] F27 — Gates:
   - `npm run lint`, `npm test`, `npm run build`, `npm run build:check` e
     `npx playwright test`;
@@ -117,6 +119,8 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
   - fontes e licença;
   - a versão do Figma.
   - Também `docs/apps/frontend.md` e `docs/PROGRESS.md` (AC15).
-- [ ] I4 — `doc-sync-onboarding` por último.
-- [ ] I5 — PR para `develop` com `Closes #267` e `Closes #222`, a spec, as evidências e
-  as pendências.
+- [x] I4 — `doc-sync-onboarding` por último (07/11/2026).
+- [x] I5 — PR [#268](https://github.com/SamiaLuvanice/bestprice/pull/268) para `develop` com
+  `Closes #267` e `Refs #222` (a política aceita um único `Closes`), a spec, as evidências e
+  as pendências. CI verde e integrada em `develop` em 07/11/2026 (`45920b4`). Issue #222
+  fechada manualmente; worktree e branches local e remota removidas.

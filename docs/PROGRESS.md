@@ -2,9 +2,11 @@
 
 ## 0049 — Design system 2026 no código
 
-**07/11/2026: implementação entregue; aguarda revisão e PR.** [Issue #267](https://github.com/SamiaLuvanice/bestprice/issues/267),
-branch/worktree `feature/0049-issue-267-design-system-2026`, base origin/develop `de5d8ee`. Fecha também a
-Issue #222 (0042): a ação principal passa a ser o verde, com texto preto.
+**07/11/2026: spec `implementada`.** [Issue #267](https://github.com/SamiaLuvanice/bestprice/issues/267) fechada;
+PR [#268](https://github.com/SamiaLuvanice/bestprice/pull/268) integrada em `develop` (`45920b4`) com CI verde,
+depois da revisão independente aprovada. A Issue #222 (0042) foi fechada manualmente: a ação principal
+passa a ser o verde, com texto preto. Worktree e branches local e remota da feature removidas.
+Pendência fora do código: criar no Figma a variável `brand-strong` (#a0004c), hoje exceção aprovada só no código.
 
 O que entrou:
 - tokens do Figma 2026 (cores, superfícies escuras fixas, status, raios, espaços, elevação, foco e
