@@ -90,6 +90,15 @@ async function blur(page: Page) {
 }
 
 async function capture(page: Page, name: string) {
+  const viewport = page.viewportSize()!
+  if (viewport.width < 960) {
+    // No mobile, a navegação inferior é fixa: em vez de fullPage (que a desenharia no meio da página),
+    // a viewport cresce até a altura do documento, como um quadro alto do Figma.
+    const height = await page.evaluate(() => document.documentElement.scrollHeight)
+    if (height > viewport.height) await page.setViewportSize({ width: viewport.width, height })
+    await page.screenshot({ path: `${OUT}${name}.png`, animations: 'disabled', caret: 'hide' })
+    return
+  }
   await page.screenshot({ path: `${OUT}${name}.png`, fullPage: true, animations: 'disabled', caret: 'hide' })
 }
 
@@ -147,7 +156,12 @@ test.describe('evidência 0049 (lista A × Figma)', () => {
         await settle(page)
         await act(page)
         if (index !== 2) await page.mouse.move(0, 0)
-        if (index === 2) await page.getByLabel('E-mail').focus()
+        if (index === 2) {
+          // Quadros 220:382/220:900: e-mail e senha preenchidos, foco em Confirmar senha.
+          await page.getByLabel('E-mail').fill('ana@exemplo.com.br')
+          await page.getByLabel('Senha', { exact: true }).fill('senha-segura-123')
+          await page.getByLabel('Confirmar senha').focus()
+        }
         if (index !== 2) await blur(page)
         await capture(page, `cadastro-${index}-${frame}`)
       })
