@@ -724,7 +724,7 @@ h1, h2 { text-wrap: balance; }
 .btn-pill[aria-disabled="true"], .btn-pill[aria-disabled="true"]:hover:not(:disabled), .btn-pill[aria-disabled="true"]:active:not(:disabled) { transform: none; cursor: progress; background: var(--color-surface); color: var(--color-text-muted); box-shadow: inset 0 0 0 1px var(--color-control-border); } /* 0020/AC08: aparência distinta sem tirar o foco; sem opacity, para manter 4,5:1 (AC10) */
 .btn-pill:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; border-radius: var(--radius-pill); }
 .login-note { margin-top: 40px; font-size: 15px; color: var(--color-text-muted); }
-.login-back { align-self: start; padding-left: 0; margin-top: 12px; }
+.login-back { align-self: start; padding-left: 0; margin-top: 12px; font-size: 14px; line-height: 18px; } /* Figma 59:44: Button/S */
 @media (min-width: 841px) {
   .login-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .login-visual { position: relative; display: block; min-width: 0; min-height: 0; height: 100%; overflow: hidden; background: center top / cover no-repeat url('./assets/redesign/login-left.webp'); }

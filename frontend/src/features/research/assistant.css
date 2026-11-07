@@ -1,11 +1,14 @@
 .assistant-page { position:relative; display:block; max-width:none; padding:24px 32px; }
-.assistant-stage { display:flex; flex-direction:column; gap:24px; min-height:calc(100dvh - 128px); padding:96px clamp(32px,8vw,128px) 48px; border-radius:24px; background:var(--color-bg); }
+.assistant-stage { display:flex; flex-direction:column; gap:24px; overflow:clip; min-height:calc(100dvh - 128px); padding:96px clamp(32px,8vw,128px) 48px; border-radius:24px; background:var(--color-bg); }
 .assistant-stage > * { width:100%; max-width:880px; margin-inline:auto; }
 .assistant-welcome { position:relative; min-height:116px; }
 .assistant-greeting { padding-right:160px; }
 .assistant-page .assistant-greeting h1 { font-size:32px; line-height:1.2; letter-spacing:-.02em; margin:0; }
 .assistant-greeting p { margin:16px 0 0; font-size:16px; }
 .assistant-robot { position:absolute; right:0; top:-28px; display:block; width:144px; height:auto; object-fit:contain; }
+.assistant-welcome::after { content:""; position:absolute; z-index:0; right:-88px; top:-112px; width:320px; height:320px; border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--chart-5) 16%, transparent), transparent 68%); pointer-events:none; } /* halo do mascote (Figma 132:27) */
+.assistant-welcome > * { position:relative; z-index:1; }
+.assistant-robot { z-index:1; }
 .assistant-page .assistant-composer { border-color:var(--color-brand); border-radius:20px; padding:20px 24px; gap:16px; background:var(--color-bg); }
 .assistant-page .assistant-composer label { color:var(--color-text); font-size:14px; }
 .assistant-page .assistant-composer textarea { min-height:56px; font-size:20px; line-height:1.5; }
@@ -13,10 +16,11 @@
 .assistant-page .assistant-essential-notice { font-size:13px; line-height:1.6; max-width:74ch; margin:0; }
 .assistant-composer-footer { display:flex; justify-content:space-between; gap:12px; align-items:center; }
 .assistant-composer-footer p { font-size:12px; margin:0; }
+#assistant-message-hint { font-family:var(--font-mono); font-variant-numeric:tabular-nums; } /* contador/limite como dado (Mono/Data) */
 .assistant-composer-footer .assistant-character-count { color:var(--color-text); }
 .assistant-page .assistant-composer-footer button { width:48px; height:48px; border-radius:50%; flex-shrink:0; }
 .assistant-recents-disclosure { position:absolute; top:40px; right:clamp(48px,10%,144px); z-index:5; }
-.assistant-page .assistant-recents-toggle { min-width:240px; justify-content:flex-start; gap:10px; background:var(--color-bg); }
+.assistant-page .assistant-recents-toggle { min-width:240px; min-height:48px; justify-content:flex-start; gap:10px; border-radius:var(--radius-md); background:var(--color-bg); font-size:14px; line-height:18px; } /* Figma 132:27: 240 × 48, raio 12, Button/S */
 .assistant-recents-toggle svg:last-child { margin-left:auto; }
 .assistant-recents-toggle[aria-expanded=true] svg:last-child { transform:rotate(180deg); }
 .assistant-recents-disclosure > div { position:absolute; top:calc(100% + 8px); right:0; width:360px; max-width:calc(100vw - 32px); max-height:calc(100dvh - 200px); overflow:auto; border:1px solid var(--color-border); border-radius:20px; background:var(--color-bg); box-shadow:0 12px 32px var(--color-brand-soft); }
@@ -34,6 +38,11 @@
 .assistant-recent li svg { width:16px; height:16px; flex-shrink:0; margin-top:3px; color:var(--color-text-muted); }
 .assistant-recent-empty { font-size:14px; padding-block:16px; }
 .assistant-page .assistant-conversation-heading h1 { font-size:28px; line-height:1.3; letter-spacing:-.02em; overflow-wrap:anywhere; }
+/* Figma 133:169: na conversa, o título fica na linha de "Conversas recentes" e a resposta da IA usa Display S. */
+.assistant-stage:not(.assistant-stage-welcome) { padding-top:40px; }
+.assistant-page .assistant-conversation-heading { padding-right:280px; }
+.assistant-page .assistant-conversation-heading h1 { font-size:32px; line-height:40px; }
+.assistant-stage .assistant-messages .ai-message > p, .assistant-stage .assistant-messages .ai-message .assistant-answer { font-family:var(--font-display); font-stretch:expanded; font-size:22px; line-height:32px; font-weight:600; letter-spacing:-.01em; }
 .assistant-stage .assistant-messages { gap:32px; }
 .assistant-stage .assistant-messages article { border:0; padding:0; border-radius:0; background:transparent; }
 .assistant-stage .assistant-messages .user-message { padding:20px 24px; margin-left:24%; border-radius:20px; background:var(--color-brand-soft); }
@@ -50,6 +59,8 @@
 .message-grounding-sources a svg { width:14px; height:14px; flex-shrink:0; }
 .message-grounding-suggestions { display:block; width:100%; max-width:100%; height:72px; border:0; border-radius:var(--radius-sm); background:var(--color-bg); }
 @media (max-width:959px) {
+  .assistant-welcome::after { right:-48px; top:-72px; width:200px; height:200px; }
+  .assistant-stage { overflow:hidden; }
   .assistant-page { padding:16px; }
   .assistant-stage { min-height:0; padding:72px 0 16px; border-radius:0; gap:24px; }
   .assistant-welcome { min-height:0; }
@@ -63,6 +74,9 @@
   .assistant-recents-disclosure { top:16px; right:16px; }
   .assistant-recents-disclosure > div { max-height:calc(100dvh - 250px); }
   .assistant-page .assistant-conversation-heading h1 { font-size:26px; }
+  .assistant-stage:not(.assistant-stage-welcome) { padding-top:72px; }
+  .assistant-page .assistant-conversation-heading { padding-right:0; }
+  .assistant-stage .assistant-messages .ai-message > p { font-size:19px; line-height:28px; }
   .assistant-stage .assistant-messages .user-message { margin-left:16px; padding:16px; }
   .assistant-stage .assistant-messages p { font-size:16px; }
   .message-grounding { padding:12px 14px; }

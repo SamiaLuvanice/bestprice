@@ -1,5 +1,5 @@
 .research-content.history-page { max-width:none; padding:24px 32px 40px; gap:24px; }
-.history-page .history-heading h1 { margin:0; font-size:30px; line-height:36px; letter-spacing:-.02em; }
+.history-page .history-heading h1 { margin:0; font-size:32px; line-height:40px; letter-spacing:-.02em; }
 .history-heading p { margin-top:10px; font-size:16px; }
 .history-mobile-description { display:none; }
 .history-search { display:flex; align-items:center; margin-bottom:8px; border:1px solid var(--color-control-border); border-radius:12px; background:var(--color-bg); }
@@ -13,8 +13,8 @@
 .history-page .history-card h2 { font-size:18px; line-height:28px; }
 .history-card p { margin-top:4px; font-size:14px; }
 .history-card-actions { display:flex; align-self:center; align-items:center; gap:8px; }
-.history-page .history-card-actions a[data-slot=button] { min-width:184px; min-height:44px; justify-content:flex-start; padding-inline:20px; color:var(--color-text); text-decoration:none; }
-.history-page .history-card-actions button { min-width:88px; min-height:44px; }
+.history-page .history-card-actions a[data-slot=button] { min-width:184px; min-height:44px; justify-content:center; padding-inline:20px; border-radius:var(--radius-md); color:var(--color-text); font-size:14px; line-height:18px; text-decoration:none; } /* Figma 59:204: 184 × 44, raio 12, Button/S */
+.history-page .history-card-actions button { min-width:88px; min-height:44px; font-size:14px; font-weight:500; }
 .history-page .history-retention { margin-top:32px; font-size:12px; }
 @media(max-width:959px) {
   .research-content.history-page { padding:16px 16px 32px; }
