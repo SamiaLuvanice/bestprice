@@ -283,10 +283,11 @@ footer { color: var(--color-text-muted); text-align: center; padding: var(--spac
 
 /* Controles shadcn: alvo mínimo de 44 px e peso da identidade. */
 /* 0049: forma (pílula), peso e alturas vêm do Button (Figma 2026); aqui só o alvo mínimo de 44 px. */
-[data-slot="button"] { min-height: 44px; min-width: 44px; }
+[data-slot="button"]:where(:not([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"])) { min-height: 44px; min-width: 44px; }
 /* sm/xs: aparência menor; o alvo de toque continua com 44 px por uma área invisível. */
-[data-slot="button"]:is([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"]) { position: relative; min-height: 0; min-width: 0; }
-[data-slot="button"]:is([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"])::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%); }
+/* :where() zera a especificidade: uma classe da tela (position: absolute...) continua vencendo. */
+:where([data-slot="button"]):where([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"]) { position: relative; }
+:where([data-slot="button"]):where([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"])::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%); }
 [data-slot="button"][data-variant="outline"] { border-color: var(--color-control-border); }
 [data-slot="button"][data-variant="link"] { white-space: normal; }
 [data-slot="input"] { min-height: 44px; font-size: 16px; }

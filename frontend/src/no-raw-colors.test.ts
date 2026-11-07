@@ -36,18 +36,27 @@ function withoutComments(text: string): string {
 
 const rawColor = /(?<![\w&-])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])|\b(?:rgba?|hsla?)\(/g
 
+/** Cores soltas de uma linha, depois de retirar só os trechos permitidos (não a linha inteira). */
+function rawColorsInLine(file: string, line: string): string[] {
+  const cleaned = (allowed[file] ?? []).reduce((text, snippet) => text.split(snippet).join(''), line)
+  return Array.from(cleaned.matchAll(rawColor), (match) => `${file}: ${match[0]} — ${line.trim().slice(0, 120)}`)
+}
+
 function rawColors(): string[] {
   return sourceFiles(sourceRoot).flatMap((path) => {
     const file = relative(sourceRoot, path).split(sep).join('/')
     const source = withoutComments(readFileSync(path, 'utf-8'))
     const text = path.endsWith('.css') ? withoutTokenBlocks(source) : source
-    return text.split('\n').flatMap((line) => Array.from(line.matchAll(rawColor), (match) => match[0])
-      .filter(() => !(allowed[file] ?? []).some((snippet) => line.includes(snippet)))
-      .map((color) => `${file}: ${color} — ${line.trim().slice(0, 120)}`))
+    return text.split('\n').flatMap((line) => rawColorsInLine(file, line))
   })
 }
 
 it('não há cor solta fora dos tokens (exceções justificadas acima)', () => {
   expect(sourceFiles(sourceRoot).length).toBeGreaterThan(20)
   expect(rawColors()).toEqual([])
+})
+
+it('a exceção retira só o trecho permitido: outra cor na mesma linha ainda falha', () => {
+  const line = `"[&_.recharts-dot[stroke='#fff']]:stroke-transparent text-[#123456]"`
+  expect(rawColorsInLine('components/ui/chart.tsx', line)).toEqual([`components/ui/chart.tsx: #123456 — ${line}`])
 })

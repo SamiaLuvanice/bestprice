@@ -67,3 +67,15 @@ test('catálogo: estados abertos por teclado (select, menu, tooltip, diálogo e 
   await expect(page.locator('[data-sonner-toast]').getByText('Alerta criado.')).toBeVisible()
   await capture('toast')
 })
+
+test('catálogo: Button sm tem 36 px visíveis e alvo de toque de 44 px', async ({ page }) => {
+  await openCatalog(page)
+  const small = page.getByRole('button', { name: 'Pequeno', exact: true })
+  const box = await small.boundingBox()
+  expect(box?.height).toBe(36)
+  const target = await small.evaluate((element) => {
+    const after = getComputedStyle(element, '::after')
+    return { height: after.height, position: getComputedStyle(element).position }
+  })
+  expect(target).toEqual({ height: '44px', position: 'relative' })
+})
