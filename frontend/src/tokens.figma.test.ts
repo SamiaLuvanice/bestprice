@@ -130,7 +130,7 @@ describe('AC03 — estilos de texto', () => {
 // apontam para um token do Figma (var(), color-mix sobre var()). A única saída é esta lista de
 // divergências, cada uma justificada e registrada em verification.md ("Divergências de token").
 const colorLiteralExceptions: Record<string, string> = {
-  '--color-brand-strong': 'hover de link (rosa escurecido, 7,6:1 sobre branco); o Figma não define estado hover para link',
+  '--color-brand-strong': 'hover de link (rosa escurecido, 8,1:1 sobre branco); o Figma não define estado hover para link',
 }
 
 describe('AC01 — tokens próprios sem cor literal fora do Figma', () => {
