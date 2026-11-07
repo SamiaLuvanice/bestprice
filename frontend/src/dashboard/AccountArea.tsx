@@ -650,7 +650,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
       {(!isEmpty || dashboardError) && <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
         {dashboardError && <div className="region-error">
           <p role="alert" className="error-box">{dashboardError}</p>
-          <Button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button>
+          <Button variant="ghost" type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button>
         </div>}
         {loading && <IndicatorsSkeleton />}
         {dashboard && !isEmpty && <><h2 className="overview-title">Visão geral</h2><SummaryIndicators summary={dashboard.summary} /></>}
@@ -675,7 +675,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
 
     {currentSection === 'products' && !detailId && <div className="content dashboard-content">
       {dashboardError && <div className="region-error"><p role="alert" className="error-box">{dashboardError}</p>
-        <Button type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button></div>}
+        <Button variant="ghost" type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button></div>}
       <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
         loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)}
         renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
@@ -689,7 +689,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
       {selected?.id !== detailId && error && <div className="region-error">
         <h1 tabIndex={-1}>Produto indisponível</h1>
         <p role="alert" className="error-box">{error.message}</p>
-        <Button type="button" className="secondary-button" onClick={() => void open(detailId)}>Tentar novamente</Button>
+        <Button variant="outline" type="button" className="secondary-button" onClick={() => void open(detailId)}>Tentar novamente</Button>
         <Link className="text-button" to="/produtos">Ir para Produtos</Link>
       </div>}
       {selected?.id === detailId && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}

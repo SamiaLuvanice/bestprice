@@ -62,7 +62,7 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
     {notifications.status === 'loading' && <p role="status" className="loading-status">Carregando notificações…</p>}
     {notifications.status === 'error' && <div className="region-error">
       <p role="alert" className="error-box">{notifications.message}</p>
-      <Button type="button" className="secondary-button" onClick={onRetry}>Tentar novamente</Button>
+      <Button variant="outline" type="button" className="secondary-button" onClick={onRetry}>Tentar novamente</Button>
     </div>}
     {error && <p role="alert" className="error-box">{error}</p>}
     {notifications.status === 'ready' && notifications.items.length === 0 && <p className="empty">Nenhuma notificação por enquanto.</p>}
@@ -77,14 +77,14 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
         </div>
         <span className="read-state">{notification.read_at ? 'Lida' : 'Não lida'}</span>
         <Link className="text-button" to={`/produtos/${notification.tracked_product_id}`}>Abrir produto</Link>
-        {!notification.read_at && <Button type="button" className="secondary-button" data-notification-id={notification.id}
+        {!notification.read_at && <Button variant="outline" type="button" className="secondary-button" data-notification-id={notification.id}
           aria-disabled={pending === notification.id || undefined} onClick={() => void markRead(notification.id)}>
           Marcar como lida<span className="sr-only">: {notification.product_title}</span>
         </Button>}
       </li>)}
     </ul>}
     {notifications.status !== 'error' && notifications.message && <p role="alert" className="error-box">{notifications.message}</p>}
-    {notifications.nextCursor && <Button type="button" className="secondary-button" disabled={notifications.loadingMore} onClick={() => void loadMore()}>
+    {notifications.nextCursor && <Button variant="outline" type="button" className="secondary-button" disabled={notifications.loadingMore} onClick={() => void loadMore()}>
       Carregar mais notificações
     </Button>}
   </section>

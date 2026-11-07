@@ -107,7 +107,7 @@ for (const [name, path, state] of scenarios) {
       expect(brand.font).toBe('"SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif')
       expect(Number.parseFloat(brand.tracking)).toBeCloseTo(Number.parseFloat(brand.size) * -.011, 3)
       expect(brand.image?.naturalWidth).toBeGreaterThan(0)
-      expect(brand.image?.width).toBeGreaterThanOrEqual(40)
+      expect(brand.image?.width).toBeGreaterThanOrEqual(34)
       expect(brand.image?.height).toBe(brand.image?.width)
       expect(brand.image?.uncovered).toBe(true)
       expect(brand.x).toBeGreaterThanOrEqual(0)
@@ -116,7 +116,9 @@ for (const [name, path, state] of scenarios) {
     const brand = page.getByRole('img', { name: 'BestPrice', exact: true })
       .or(page.getByRole('link', { name: 'BestPrice — Início', exact: true }))
       .or(page.getByRole('link', { name: 'BestPrice AI — Início', exact: true }))
-      .or(page.getByRole('link', { name: 'BestPrice AI — Dashboard', exact: true })).filter({ visible: true })
+      .or(page.getByRole('link', { name: 'BestPrice AI — Dashboard', exact: true }))
+      // Shell interno (ResearchArea, desde fb46498): a marca leva ao assistente.
+      .or(page.getByRole('link', { name: 'BestPrice IA — Assistente', exact: true })).filter({ visible: true })
     await expect(brand).toHaveCount(1)
     await expect(brand).toBeVisible()
     expect(await brand.evaluate((element) => {

@@ -3,42 +3,75 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Tokens BestPrice (spec 0028/AC04; ver designsystem/README.md, "Tokens da aplicação").
+ * Tokens BestPrice (spec 0028/AC04; design system 2026, spec 0049).
+ * Contrato: designsystem/tokens/figma-variables-2026-11.json (coleção "shadcn/ui · BestPrice"
+ * do Figma). src/tokens.figma.test.ts compara cada variável, efeito e estilo de texto com este
+ * arquivo; mudar um token exige atualizar o snapshot.
  * Dois grupos, sem nomes repetidos com significados diferentes:
- *  - Tema shadcn/Tailwind: --background, --primary, --action, --muted... expostos como
- *    utilitários (bg-primary, text-muted-foreground) pelo bloco @theme abaixo.
- *  - CSS próprio da aplicação: --color-brand, --color-text-muted, --color-surface...
- *    Não usam nomes do namespace do tema (primary, muted, accent, card...).
- * --primary é o rosa da marca (texto, links, foco); --action é o verde das ações principais.
- * --muted é superfície (bg-muted); texto secundário usa --muted-foreground, text-muted-foreground
- * ou text-muted (mapeado para --muted-foreground).
+ *  - Tema shadcn/Tailwind: --background, --primary, --action, --surface, --sidebar-*,
+ *    --status-*... expostos como utilitários (bg-primary, bg-sidebar) pelo bloco @theme.
+ *  - CSS próprio da aplicação: --color-brand, --color-text-muted... Quando o nome coincide com
+ *    um utilitário do tema (--color-surface), aponta para o mesmo token.
+ * --primary é o rosa da marca (texto, links, foco); --action é o verde da ação principal.
+ * Tema claro fixo (0016): os valores "Noite" do Figma valem só para superfícies escuras fixas
+ * (--sidebar-*, --night-*), que têm o mesmo valor nos dois modos.
  */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-card-foreground: var(--foreground);
-  --color-popover: var(--background);
-  --color-popover-foreground: var(--foreground);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-action: var(--action);
   --color-action-foreground: var(--action-foreground);
   --color-action-hover: var(--action-hover);
   --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --text-color-muted: var(--muted-foreground);
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--foreground);
+  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-down: var(--status-down);
+  --color-status-down-soft: var(--status-down-soft);
+  --color-status-up: var(--status-up);
+  --color-status-up-soft: var(--status-up-soft);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-soft: var(--status-warning-soft);
+  --color-status-target: var(--status-target);
+  --color-night-950: var(--night-950);
+  --color-night-900: var(--night-900);
+  --color-night-800: var(--night-800);
+  --color-night-line: var(--night-line);
+  --color-night-muted: var(--night-muted);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
 }
 
 /* 0028/AC04: text-muted é texto secundário (--text-color-muted no tema, que só vale para text-*);
@@ -47,90 +80,175 @@
 
 :root {
   color-scheme: light;
-  /* Tema shadcn/Tailwind. */
-  --background: #fff;
+  /* Tema shadcn/Tailwind (Figma 2026, valores claros). */
+  --background: #ffffff;
   --foreground: #1d1d1f;
-  --card: #f5f5f7;
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
   --primary: #c7005e;
   --primary-foreground: #fff;
-  --action: #39ff14;
-  --action-foreground: #000;
-  --action-hover: #65ff48;
   --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
   --muted: #f5f5f7;
   --muted-foreground: #626267;
   --accent: #fce9f2;
+  --accent-foreground: #1d1d1f;
   --destructive: #b42318;
+  --destructive-foreground: #ffffff;
   --border: #d2d2d7;
   --input: #86868b;
   --ring: #c7005e;
+  --action: #39ff14;
+  --action-foreground: #000;
+  --action-hover: #2fe80c;
+  --surface: #f5f5f7;
+  --surface-raised: #fbfbfd;
+  --chart-1: #1d1d1f;
+  --chart-2: #39ff14;
+  --chart-3: #c7005e;
+  --chart-4: #86868b;
+  --chart-5: #ff3ea5;
+  /* Superfícies escuras fixas: barra lateral (valores "Noite", iguais nos dois modos). */
+  --sidebar: #0a0a0f;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #ff3ea5;
+  --sidebar-primary-foreground: #0a0a0f;
+  --sidebar-accent: #1e1e28;
+  --sidebar-accent-foreground: #ff3ea5;
+  --sidebar-border: #2a2a36;
+  --sidebar-ring: #ff3ea5;
+  --night-950: #0a0a0f;
+  --night-900: #13131a;
+  --night-800: #1e1e28;
+  --night-line: #2a2a36;
+  --night-muted: #a1a1aa;
+  /* Status de preço (Badge e textos de variação). */
+  --status-down: #146c38;
+  --status-down-soft: #e9fbe8;
+  --status-up: #b42318;
+  --status-up-soft: #fff0ee;
+  --status-warning: #925400;
+  --status-warning-soft: #fff4dd;
+  --status-target: #39ff14;
 
-  /* Mesmo significado do tema (borda e ação): o CSS próprio lê o mesmo valor. */
+  /* Mesmo significado do tema (borda, ação e superfícies): o CSS próprio lê o mesmo valor. */
   --color-border: var(--border);
   --color-action: var(--action);
   --color-action-hover: var(--action-hover);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
 
   /* CSS próprio da aplicação. */
   --color-text: var(--foreground);
   --color-text-muted: var(--muted-foreground);
   --color-bg: var(--background);
-  --color-surface: #f5f5f7;
-  --color-surface-raised: #fbfbfd;
-  --color-border-soft: #e8e8ed;
+  --color-border-soft: var(--border);
   --color-control-border: var(--input);
   --color-brand: var(--primary);
-  --color-brand-strong: #a0004c;
+  --color-brand-strong: #a0004c; /* divergência registrada (tokens.figma.test.ts): hover de link */
   --color-brand-soft: var(--accent);
   --color-action-text: var(--action-foreground);
-  --color-badge-text: #fff;
-  --color-logo-surface: #fff;
+  --color-badge-text: var(--destructive-foreground);
+  --color-logo-surface: var(--background);
   --color-danger-button: var(--destructive);
-  --color-danger-button-text: #fff;
-  --color-down: #146c38;
-  --color-down-soft: #e9fbe8;
-  --color-up: #b42318;
-  --color-up-soft: #fff0ee;
-  --color-amber: #925400;
-  --color-amber-soft: #fff4dd;
-  --color-danger-text: #a61b1b;
-  --color-danger-bg: #fff0f0;
-  --color-danger-border: #ffd4d4;
+  --color-danger-button-text: var(--destructive-foreground);
+  --color-down: var(--status-down);
+  --color-down-soft: var(--status-down-soft);
+  --color-up: var(--status-up);
+  --color-up-soft: var(--status-up-soft);
+  --color-amber: var(--status-warning);
+  --color-amber-soft: var(--status-warning-soft);
+  --color-danger-text: var(--destructive);
+  --destructive-soft: color-mix(in srgb, var(--destructive) 7%, var(--background));
+  --color-danger-bg: var(--destructive-soft); /* erro tem o próprio fundo, sem ligar ao status "preço subiu" */
+  --color-danger-border: color-mix(in srgb, var(--destructive) 25%, var(--background));
   --color-focus: var(--ring);
-  --color-glass: rgba(251, 251, 253, .96);
-  --color-glass-edge: rgba(255, 255, 255, .9);
-  --color-overlay: rgba(0, 0, 0, .62);
-  --color-skeleton-a: #e8e8ed;
-  --color-skeleton-b: #f5f5f7;
-  --color-graphite: #18171b;
-  --color-on-graphite: #fff;
-  --color-footer-bg: #000;
-  --color-chart-grid: #49474f;
-  --color-chart-label: #d2d2d7;
+  --color-glass: color-mix(in srgb, var(--surface-raised) 96%, transparent);
+  --color-glass-edge: color-mix(in srgb, var(--background) 90%, transparent);
+  --color-overlay: color-mix(in srgb, var(--night-950) 62%, transparent);
+  --color-skeleton-a: color-mix(in srgb, var(--border) 50%, var(--muted));
+  --color-skeleton-b: var(--muted);
+  --color-graphite: var(--night-900);
+  --color-on-graphite: var(--primary-foreground);
+  --color-footer-bg: var(--night-950);
+  /* 0049/AC10: gráfico sobre superfície clara (linha escura --chart-1, área verde --chart-2). */
+  --color-chart-grid: var(--border);
+  --color-chart-label: var(--muted-foreground);
   --radius-card: 18px;
   --radius-control: 12px;
   --radius-pill: 980px;
-  --shadow-card: 0 12px 32px rgba(0, 0, 0, .08);
+  /* Elevação, foco e desfoque (Figma 2026, "Espaço, raio, elevação e movimento"). */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .04), 0 8px 24px rgb(0 0 0 / .06);
+  --shadow-2: 0 12px 32px rgb(0 0 0 / .10);
+  --shadow-3: 0 30px 60px rgb(0 0 0 / .14);
+  --shadow-action-glow: 0 8px 24px rgb(56 255 20 / .45);
+  --shadow-card: var(--shadow-2);
+  --ring-width: 3px;
+  --blur-glass: 20px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-20: 80px;
+  --space-30: 120px;
   --motion-fast: 160ms;
+  --motion-base: 250ms;
+  --motion-enter: 400ms;
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   /* 0028/AC12: uma só largura de página para cabeçalho, conteúdo e landing. */
   --page-width: 1248px;
   --page-gutter: 32px;
   --page-inline: min(100% - 2 * var(--page-gutter), var(--page-width));
+  /* Títulos: SF Pro na largura "Expanded" quando existir (font-stretch nos utilitários de
+     display); nos demais aparelhos, a mesma pilha na largura normal. A fonte não é distribuída. */
   --font-display: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Dados (preço, horário, MLB, contador): Geist Mono empacotada (@fontsource, OFL 1.1). */
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
+/* 0049/AC04 e AC12: com movimento reduzido, as transições não essenciais param. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0ms; --motion-base: 0ms; --motion-enter: 0ms; }
+}
+
+/* Estilos de texto do Figma 2026 (22). Tracking = porcentagem do Figma / 100, em em. */
+@utility text-display-xl { font-family: var(--font-display); font-stretch: expanded; font-size: 76px; line-height: 80px; letter-spacing: -0.03em; font-weight: 700; }
+@utility text-display-l { font-family: var(--font-display); font-stretch: expanded; font-size: 56px; line-height: 62px; letter-spacing: -0.025em; font-weight: 700; }
+@utility text-display-m { font-family: var(--font-display); font-stretch: expanded; font-size: 42px; line-height: 48px; letter-spacing: -0.02em; font-weight: 700; }
+@utility text-display-s { font-family: var(--font-display); font-stretch: expanded; font-size: 30px; line-height: 36px; letter-spacing: -0.015em; font-weight: 600; }
+@utility text-mobile-display-xl { font-family: var(--font-display); font-stretch: expanded; font-size: 42px; line-height: 46px; letter-spacing: -0.03em; font-weight: 700; }
+@utility text-mobile-display-m { font-family: var(--font-display); font-stretch: expanded; font-size: 30px; line-height: 34px; letter-spacing: -0.02em; font-weight: 700; }
+@utility text-mobile-display-s { font-family: var(--font-display); font-stretch: expanded; font-size: 21px; line-height: 27px; letter-spacing: -0.01em; font-weight: 600; }
+@utility text-heading-h3 { font-size: 22px; line-height: 28px; letter-spacing: -0.005em; font-weight: 600; }
+@utility text-heading-h4 { font-size: 17px; line-height: 22px; letter-spacing: -0.002em; font-weight: 600; }
+@utility text-body-l { font-size: 20px; line-height: 30px; letter-spacing: -0.002em; font-weight: 400; }
+@utility text-body-m { font-size: 17px; line-height: 25px; letter-spacing: -0.002em; font-weight: 400; }
+@utility text-body-s { font-size: 14px; line-height: 20px; letter-spacing: 0em; font-weight: 400; }
+@utility text-body-s-medium { font-size: 14px; line-height: 20px; letter-spacing: 0em; font-weight: 500; }
+@utility text-body-xs { font-size: 12px; line-height: 16px; letter-spacing: 0em; font-weight: 400; }
+@utility text-button-m { font-size: 16px; line-height: 20px; letter-spacing: -0.001em; font-weight: 600; }
+@utility text-button-s { font-size: 14px; line-height: 18px; letter-spacing: 0em; font-weight: 600; }
+@utility text-label-m { font-size: 14px; line-height: 18px; letter-spacing: 0em; font-weight: 500; }
+@utility text-data-price-xl { font-family: var(--font-display); font-stretch: expanded; font-size: 40px; line-height: 44px; letter-spacing: -0.02em; font-weight: 700; font-variant-numeric: tabular-nums; }
+@utility text-data-price-m { font-family: var(--font-display); font-stretch: expanded; font-size: 22px; line-height: 26px; letter-spacing: -0.01em; font-weight: 600; font-variant-numeric: tabular-nums; }
+@utility text-mono-label { font-family: var(--font-mono); font-size: 12px; line-height: 16px; letter-spacing: 0.06em; font-weight: 500; text-transform: uppercase; }
+@utility text-mono-data { font-family: var(--font-mono); font-size: 13px; line-height: 18px; letter-spacing: 0em; font-weight: 400; font-variant-numeric: tabular-nums; }
+@utility text-mono-data-strong { font-family: var(--font-mono); font-size: 13px; line-height: 18px; letter-spacing: 0em; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Dado sem mudar o tamanho do contexto: família monoespaçada e algarismos de largura fixa (AC03). */
+@utility data-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 @media (max-width: 700px) { :root { --page-gutter: 20px; } }
 
 /* Cores de elementos ficam na camada base: utilitários (text-primary-foreground...) vencem sem regras corretivas. */
@@ -145,13 +263,15 @@
 * { box-sizing: border-box; }
 html { background: var(--color-bg); scroll-padding-block: 104px 24px; }
 body { margin: 0; background: var(--color-bg); color: var(--color-text); line-height: 1.47; caret-color: var(--color-brand); scrollbar-color: var(--color-control-border) var(--color-surface); }
-button, input { font: inherit; }
+/* font: inherit dos controles vem do preflight (camada base), para os estilos de texto do Button valerem. */
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .65; }
-:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; border-radius: 6px; }
 [tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { outline: none; }
 h1, h2[tabindex="-1"] { scroll-margin-top: 88px; }
 h1, h2, h3 { font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; font-weight: 700; }
+/* 0049: títulos na largura "Expanded" da SF Pro quando existir; sem ela, largura normal (fallback decidido). */
+h1, h2 { font-stretch: expanded; }
 h1 { font-size: clamp(32px, 4.6vw, 56px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 var(--space-4); }
 h2 { font-size: clamp(20px, 2.4vw, 24px); line-height: 1.2; letter-spacing: -.03em; margin: 0; }
 h3 { font-size: 16px; letter-spacing: -.01em; margin: 0 0 8px; }
@@ -163,20 +283,28 @@ h3 { font-size: 16px; letter-spacing: -.01em; margin: 0 0 8px; }
 footer { color: var(--color-text-muted); text-align: center; padding: var(--space-6); margin-top: auto; font-size: 13px; border-top: 1px solid var(--color-border-soft); }
 
 /* Controles shadcn: alvo mínimo de 44 px e peso da identidade. */
-[data-slot="button"] { min-height: 44px; min-width: 44px; border-radius: var(--radius-control); font-weight: 650; }
+/* 0049: forma (pílula), peso e alturas vêm do Button (Figma 2026); aqui só o alvo mínimo de 44 px. */
+[data-slot="button"]:where(:not([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"])) { min-height: 44px; min-width: 44px; }
+/* sm/xs: aparência menor; o alvo de toque continua com 44 px por uma área invisível. */
+/* :where() zera a especificidade: uma classe da tela (position: absolute...) continua vencendo. */
+:where([data-slot="button"]):where([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"]) { position: relative; }
+:where([data-slot="button"]):where([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"])::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%); }
 [data-slot="button"][data-variant="outline"] { border-color: var(--color-control-border); }
 [data-slot="button"][data-variant="link"] { white-space: normal; }
-[data-slot="input"] { min-height: 48px; font-size: 16px; }
+[data-slot="input"] { min-height: 44px; font-size: 16px; }
 [data-slot="card"] { box-shadow: none; }
 
 h1, h2 { text-wrap: balance; }
 [data-slot="button"], .main-nav a, .icon-button, .account-button, .panel-item {
-  transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
+  transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out);
 }
-[data-slot="button"]:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; box-shadow: none; }
+[data-slot="button"]:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; box-shadow: none; }
 [data-slot="input"], .login-input { box-shadow: none; }
 .product-group:hover { background: var(--color-surface-raised); }
 .cell-price strong, .current-price, .product-price, .alert-current, .alert-item-target, .history-data td { font-variant-numeric: tabular-nums; }
+/* 0049/AC03: dados (preço, horário, MLB, contador) em Geist Mono com algarismos de largura fixa; texto e formato iguais. */
+.cell-price strong, .current-price, .previous-price, .product-price, .min-price strong, .history-data td, .relative-time,
+.bell-count, .indicator-value, .detail-reference-id, .assistant-character-count, .variation, .price-chart-figure .recharts-tooltip-wrapper strong { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .indicator-note { margin-top: -4px; }
 .is-read .read-state { color: var(--color-text-muted); background: var(--color-surface); }
 
@@ -202,6 +330,7 @@ h1, h2 { text-wrap: balance; }
 .account-button { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; max-width: 280px; padding: 0 var(--space-2); border: 0; border-radius: 22px; background: transparent; color: var(--color-text); }
 .account-button:hover { background: var(--color-surface); }
 .avatar { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: var(--color-brand-soft); color: var(--color-brand); font-weight: 700; font-size: 14px; }
+.avatar[data-initial]::before { content: attr(data-initial); }
 .account-email { min-width: 0; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 600; }
 .account-panel-email { margin: 0 0 var(--space-3); color: var(--color-text-muted); font-size: 13px; overflow-wrap: anywhere; }
 .panel-item { width: 100%; min-height: 44px; border: 0; border-radius: var(--radius-control); background: var(--color-surface); color: var(--color-text); font-weight: 600; text-align: left; padding: 0 var(--space-3); }
@@ -221,7 +350,7 @@ h1, h2 { text-wrap: balance; }
 .masthead { min-height: 72px; display: flex; align-items: center; gap: 12px; padding-inline: max(var(--page-gutter), calc((100% - var(--page-width)) / 2)); border-bottom: 1px solid var(--color-border-soft); background: var(--color-glass); }
 .masthead .brand-logo { width: 52px; height: 52px; }
 .session-check .content { padding-top: 48px; }
-.panel { padding: 30px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); min-width: 0; }
+.panel { padding: 30px; background: var(--card); border: 1px solid var(--color-border); border-radius: var(--radius-card); min-width: 0; }
 
 /* Hero da área autenticada */
 .hero { width: var(--page-inline); margin: 48px auto 0; }
@@ -242,7 +371,7 @@ h1, h2 { text-wrap: balance; }
 .hero-compact .track-panel { margin-top: var(--space-2); }
 .add-listing { padding-inline: 0; font-size: 16px; }
 .intro { color: var(--color-text-muted); font-size: 17px; line-height: 1.5; max-width: 72ch; margin: 0 0 var(--space-6); }
-.track-panel { display: block; padding: var(--space-6); border: 0; border-radius: var(--radius-card); background: var(--color-surface); }
+.track-panel { display: block; padding: var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--card); } /* 0049: card branco com borda (Figma 2026 prevalece sobre a 0039) */
 .track-panel h2 { font-size: 22px; }
 .track-description { margin: 12px 0 24px; font-size: 15px; color: var(--color-text-muted); }
 .track-form { display: flex; align-items: end; gap: 16px; }
@@ -307,7 +436,7 @@ h1, h2 { text-wrap: balance; }
 .opportunities { display: grid; grid-template-columns: 1fr; list-style: none; margin: 0; padding: 0; }
 .opportunity-card { position: relative; display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 4px 20px; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--color-border); }
 .opportunity-card:hover { background: var(--color-surface-raised); }
-.opportunity-card:focus-within { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.opportunity-card:focus-within { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; }
 .opportunity-media { position: relative; display: grid; place-items: center; grid-column: 1; grid-row: 1 / 5; width: 72px; height: 72px; border-radius: 10px; background: var(--color-bg); }
 .opportunity-media .product-image { width: 64px; height: 64px; }
 .product-image { width: 96px; height: 96px; flex: none; object-fit: contain; border-radius: 10px; }
@@ -318,7 +447,7 @@ h1, h2 { text-wrap: balance; }
 .opportunity-title { grid-column: 2; margin: 0; font-size: 16px; }
 .card-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: var(--color-text); font-weight: 700; text-align: left; overflow-wrap: anywhere; }
 .card-link::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }
-.card-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.card-link:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; }
 .opportunity-prices, .min-price, .observed { margin: 0; }
 .opportunity-prices { grid-column: 3; grid-row: 1 / 3; text-align: right; }
 .previous-price { color: var(--color-text-muted); font-size: 13px; }
@@ -344,7 +473,7 @@ h1, h2 { text-wrap: balance; }
 .section-order { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: 14px; }
 .section-status:not(:empty) { margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); background: var(--color-brand-soft); color: var(--color-brand-strong); font-weight: 600; }
 .products-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.products-table th { padding: 16px 10px; border-bottom: 1px solid var(--color-border-soft); background: var(--color-surface); color: var(--color-text-muted); font-size: 13px; font-weight: 600; text-align: left; }
+.products-table th { padding: 16px 10px; border-bottom: 1px solid var(--color-border-soft); background: var(--color-surface); color: var(--color-text-muted); font-family: var(--font-mono); font-size: 12px; line-height: 16px; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; text-align: left; }
 .products-table td { padding: 18px 10px; vertical-align: middle; }
 .product-group { border-bottom: 1px solid var(--color-border-soft); }
 .product-group.is-busy { background: var(--color-brand-soft); }
@@ -365,6 +494,25 @@ h1, h2 { text-wrap: balance; }
 .availability-unavailable { background: var(--color-up-soft); color: var(--color-up); }
 .availability-unknown { background: var(--color-surface-raised); color: var(--color-text-muted); }
 .cell-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+/* 0049 (Figma 151:11): com dados em Geist Mono, preço, data e ações ficam numa linha quando a ÁREA DE
+   CONTEÚDO tem largura para isso (container query: o shell com barra lateral tira 240 px da janela; o
+   breakpoint de viewport causava rolagem lateral entre 1100 e 1279 px, achado I-1). Colunas e dados
+   inalterados; no mobile a tabela vira cartões. */
+.dashboard-content { container: dashboard-content / inline-size; }
+@container dashboard-content (min-width: 1120px) {
+  .products-table .cell-price strong, .products-table .price-flag, .products-table .relative-time, .products-table td:nth-child(4) { white-space: nowrap; }
+  .products-table .cell-actions { flex-wrap: nowrap; justify-content: flex-end; }
+  .products-table th:first-child { width: 24%; }
+  .products-table .row-title { overflow-wrap: normal; }
+}
+/* Área de conteúdo estreita com a barra lateral (960–1199 px de janela): a tabela fica compacta para caber
+   sem rolagem lateral (AC12). */
+@container dashboard-content (max-width: 900px) {
+  .products-table th, .products-table td { padding-inline: 6px; }
+  .products-table th { letter-spacing: 0; }
+  .products-table .cell-product { min-width: 0; }
+  .products-table .cell-actions { flex-wrap: wrap; }
+}
 .row-details-chevron { display: none; }
 .row-menu-panel { width: 260px; display: grid; gap: var(--space-1); padding: var(--space-2); }
 .row-menu-panel .panel-item { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; }
@@ -414,7 +562,7 @@ h1, h2 { text-wrap: balance; }
 .detail-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 16px; }
 .detail-workspace { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(260px, 1fr); gap: 32px; margin-top: 48px; }
 .detail-history { min-width: 0; }
-.detail-alert-card { align-self: start; display: grid; gap: 16px; padding: var(--space-6); background: var(--color-surface); border: 0; border-radius: var(--radius-card); }
+.detail-alert-card { align-self: start; display: grid; gap: 16px; padding: var(--space-6); background: var(--card); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
 .detail-alert-card h2 { margin: 0; }
 .alert-current { margin: 0; font-weight: 600; }
 .alert-form { display: grid; gap: 8px; }
@@ -438,9 +586,9 @@ h1, h2 { text-wrap: balance; }
 
 /* Gráfico do histórico */
 .price-chart-figure { margin: 0; }
-.price-chart-surface { padding: 24px 12px 16px; background: var(--color-graphite); border-radius: 18px; color: var(--color-on-graphite); }
+.price-chart-surface { padding: 24px 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); color: var(--foreground); }
 .price-chart { width: 100%; height: 280px; aspect-ratio: auto; min-width: 0; }
-.price-chart .recharts-text { fill: var(--color-chart-label); }
+.price-chart .recharts-text { fill: var(--color-chart-label); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .price-chart-note { font-size: 14px; color: var(--color-text-muted); margin-top: 16px; }
 .history-data { margin-top: 16px; }
 .history-data table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -500,7 +648,7 @@ h1, h2 { text-wrap: balance; }
   .products-table .row-details-link { width: 44px; min-width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--color-brand); }
   .products-table .row-details-link::after { content: ""; position: absolute; inset: 0; }
   .products-table .row-details-link:focus-visible { outline: none; }
-  .products-table .row-details-link:focus-visible::after { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: 12px; }
+  .products-table .row-details-link:focus-visible::after { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; border-radius: 12px; }
   .products-table .row-details-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
   .products-table .row-details-chevron { display: block; width: 24px; height: 24px; }
   .products-table .product-secondary td { padding: 0 0 0 76px; }
@@ -583,20 +731,20 @@ h1, h2 { text-wrap: balance; }
 .login-field { display: grid; gap: var(--space-2); min-width: 0; }
 .login-field label { font-size: 14px; font-weight: 600; color: var(--color-text); }
 .input-wrap { position: relative; }
-.login-input { width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid var(--color-control-border); border-radius: var(--radius-control); background: var(--color-bg); color: var(--color-text); font-size: 17px; transition: border-color 150ms ease; }
+.login-input { width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid var(--color-control-border); border-radius: var(--radius-control); background: var(--color-bg); color: var(--color-text); font-size: 17px; transition: border-color var(--motion-fast) var(--ease-out); }
 .login-input:hover { border-color: var(--color-text); }
 .login-input:focus-visible { border-color: var(--color-focus); border-radius: var(--radius-control); outline: 2px solid var(--color-focus); outline-offset: 2px; } /* 0020/AC06: anel além da cor da borda */
 .login-input[aria-invalid="true"] { border-color: var(--color-danger-text); }
 .login-input--password { padding-right: 56px; }
-.password-toggle { position: absolute; top: 50%; right: 2px; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--color-text-muted); transition: color 150ms ease, background-color 150ms ease; }
+.password-toggle { position: absolute; top: 50%; right: 2px; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--color-text-muted); transition: color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
 .password-toggle:hover { color: var(--color-text); background: var(--color-surface); }
 .password-toggle[aria-pressed="true"] { color: var(--color-brand); }
-.btn-pill { width: 100%; min-height: 50px; margin-top: var(--space-2); border-radius: var(--radius-pill); font-size: 17px; transition: background-color 150ms ease, transform 150ms ease; }
+.btn-pill { width: 100%; min-height: 50px; margin-top: var(--space-2); border-radius: var(--radius-pill); font-size: 17px; transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
 .btn-pill:active:not(:disabled) { transform: scale(.98); }
-.btn-pill[aria-disabled="true"], .btn-pill[aria-disabled="true"]:hover:not(:disabled), .btn-pill[aria-disabled="true"]:active:not(:disabled) { transform: none; cursor: progress; background: var(--color-surface); color: var(--color-text-muted); box-shadow: inset 0 0 0 1px var(--color-control-border); } /* 0020/AC08: aparência distinta sem tirar o foco; sem opacity, para manter 4,5:1 (AC10) */
-.btn-pill:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; border-radius: var(--radius-pill); }
+.btn-pill[aria-disabled="true"], .btn-pill[aria-disabled="true"]:hover:not(:disabled), .btn-pill[aria-disabled="true"]:active:not(:disabled) { transform: none; cursor: progress; background: color-mix(in srgb, var(--action) 45%, var(--background)); color: var(--foreground); box-shadow: none; } /* Figma 220:421: verde de ação esmaecido com texto escuro (15:1); sem opacity, para manter o contraste */ /* 0020/AC08: aparência distinta sem tirar o foco; sem opacity, para manter 4,5:1 (AC10) */
+.btn-pill:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; border-radius: var(--radius-pill); }
 .login-note { margin-top: 40px; font-size: 15px; color: var(--color-text-muted); }
-.login-back { align-self: start; padding-left: 0; margin-top: 12px; }
+.login-back { align-self: start; padding-left: 0; margin-top: 12px; font-size: 14px; line-height: 18px; } /* Figma 59:44: Button/S */
 @media (min-width: 841px) {
   .login-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .login-visual { position: relative; display: block; min-width: 0; min-height: 0; height: 100%; overflow: hidden; background: center top / cover no-repeat url('./assets/redesign/login-left.webp'); }
@@ -606,6 +754,10 @@ h1, h2 { text-wrap: balance; }
 }
 @media (max-width: 700px) {
   .login-form-side { padding: 28px 20px; }
+  /* Quadros 59:602 e 220:871: marca, título e campos mais próximos no mobile. */
+  .login-brand { margin-bottom: 28px; }
+  .login-form-side h1 { margin-bottom: 6px; }
+  .login-fields { margin-top: 24px; }
 }
 @media (max-width: 380px) {
   .login-brand { margin-bottom: var(--space-6); }
@@ -619,10 +771,10 @@ h1, h2 { text-wrap: balance; }
 .login-hint { margin: 0; font-size: 14px; line-height: 1.4; color: var(--color-text-muted); }
 .login-switch { margin-top: var(--space-6); }
 .login-switch a, .signup-shell .field-error a { font-weight: 700; color: var(--color-brand); text-decoration: underline; text-underline-offset: 3px; display: inline-block; padding-block: 12px; margin-block: -12px; } /* alvo de 44px sem mudar a linha; sublinhado: link no texto não depende só da cor (axe link-in-text-block) */
-.signup-shell .login-error { margin: 0; position: relative; padding-left: 44px; }
+.signup-shell .login-error { margin: 0; position: relative; padding: 10px 16px 10px 40px; font-size: 15px; line-height: 18px; } /* Figma 220:546: caixa de 58 px com duas linhas */
 .signup-shell .field-error { position: relative; padding-left: 24px; }
 .signup-shell .field-error::before, .signup-shell .login-error::before { content: "!" / ""; position: absolute; left: 0; top: .15em; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--color-danger-text); color: var(--color-bg); font-size: 11px; font-weight: 700; line-height: 1; } /* ícone decorativo; o texto carrega o significado */
-.signup-shell .login-error::before { left: 16px; top: 15px; }
+.signup-shell .login-error::before { left: 16px; top: 11px; }
 .signup-shell .login-fields:has(.btn-pill[aria-busy="true"]) .login-input { color: var(--color-text-muted); }
 @media (max-width: 700px) {
   /* Quadros 220:871/220:965: topo fixo (marca em y ≈ 130) em vez de centralizar; o cadastro é mais alto que o login e subiria. */

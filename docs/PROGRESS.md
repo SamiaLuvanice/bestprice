@@ -1,5 +1,32 @@
 # Progresso das specs
 
+## 0049 — Design system 2026 no código
+
+**07/11/2026: implementação entregue; aguarda revisão e PR.** [Issue #267](https://github.com/SamiaLuvanice/bestprice/issues/267),
+branch/worktree `feature/0049-issue-267-design-system-2026`, base origin/develop `de5d8ee`. Fecha também a
+Issue #222 (0042): a ação principal passa a ser o verde, com texto preto.
+
+O que entrou:
+- tokens do Figma 2026 (cores, superfícies escuras fixas, status, raios, espaços, elevação, foco e
+  movimento), conferidos contra o snapshot versionado;
+- 22 estilos de texto;
+- Geist Mono empacotada (OFL 1.1, só latin e latin-ext);
+- biblioteca da seção 2 completa em `src/components/ui/`;
+- catálogo `/dev/design-system`, só em desenvolvimento;
+- gráfico em degraus com ponto atual e alvo do alerta ativo;
+- barra lateral escura;
+- telas da lista A aproximadas dos quadros, com as divergências aprovadas em 07/11/2026;
+- referências visuais (F26) atualizadas com aprovação.
+
+Comportamento, rotas, API e textos visíveis das telas não mudaram; os rótulos dos componentes do registry (paginação, sheet e barra lateral) foram traduzidos. Os detalhes e as contagens estão em
+[verificação da 0049](../specs/0049-design-system-2026-no-codigo/verification.md).
+
+Doc-sync de onboarding executado em 07/11/2026: README, arquitetura, infraestrutura, fluxo GitHub,
+guias de design e skill quality-gates passam a citar `npm run build:check`, Geist Mono, `sonner`,
+catálogo e a regra da ação principal verde.
+
+Pendências: revisão independente final, PR para develop (`Closes #267`, `Closes #222`) e CI.
+
 ## 0048 — Cadastro self-service de usuários
 
 **06/11/2026: implementada.** [PR #253](https://github.com/SamiaLuvanice/bestprice/pull/253)

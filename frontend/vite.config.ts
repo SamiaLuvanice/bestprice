@@ -1,4 +1,5 @@
 import { configDefaults, defineConfig } from 'vitest/config'
+import { searchForWorkspaceRoot } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
@@ -6,7 +7,15 @@ import { fileURLToPath, URL } from 'node:url'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  build: {
+    // 0049: fontes nunca viram base64 dentro do CSS (aumentariam o CSS principal e baixariam
+    // todas as variações); os demais assets seguem o limite padrão do Vite.
+    assetsInlineLimit: (filePath) => (/\.woff2?$/.test(filePath) ? false : undefined),
+  },
   server: {
+    // 0049: o catálogo de desenvolvimento lê o snapshot do Figma em ../designsystem/tokens.
+    // Só essa pasta é liberada além da raiz padrão; o build de distribuição não a usa.
+    fs: { allow: [searchForWorkspaceRoot(process.cwd()), fileURLToPath(new URL('../designsystem/tokens', import.meta.url))] },
     proxy: {
       '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:8000',
     },

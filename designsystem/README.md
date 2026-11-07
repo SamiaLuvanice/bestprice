@@ -1,5 +1,73 @@
 # Protótipo visual BestPrice
 
+## Design system 2026 — spec 0049
+
+Referência: Figma BestPrice IA (`LZVtUEAycEzfbwL0H5YL3r`), página "00 · BestPrice IA — Design
+system", versão de histórico "Design system 2026 · shadcn/ui" (07/11/2026).
+
+- **Tokens:** o snapshot [`tokens/figma-variables-2026-11.json`](tokens/figma-variables-2026-11.json)
+  (67 variáveis, 22 estilos de texto, 7 efeitos) é o contrato com `frontend/src/styles.css`;
+  `frontend/src/tokens.figma.test.ts` compara os dois. Mudanças: `--card` `#f5f5f7` → `#ffffff`
+  e `--action-hover` `#65ff48` → `#2fe80c` (o Figma prevalece sobre a 0039). Novos:
+  `--surface`, `--surface-raised`, `--chart-1..5`, `--sidebar-*`, `--night-*`, `--status-*`,
+  `--radius-xl/2xl`, `--space-5/10/20/30`, `--shadow-0..3`, `--shadow-action-glow`,
+  `--ring-width`, `--blur-glass`, `--motion-base/enter`. Os tokens próprios antigos
+  (`--color-down`, `--color-surface`...) apontam para os novos.
+- **Tema:** claro fixo (0016). Os valores "Noite" valem só para superfícies escuras fixas
+  (`--sidebar-*`, `--night-*`).
+- **Cor solta:** `frontend/src/no-raw-colors.test.ts` impede `#hex`/`rgb()`/`hsl()` fora dos
+  blocos `:root` (exceções justificadas no próprio teste).
+- **Fontes:** títulos usam a pilha `--font-display` com `font-stretch: expanded` (SF Pro Expanded
+  quando o aparelho a tem; largura normal nos demais; a fonte não é distribuída). Dados (preço,
+  horário, MLB, contador) usam `--font-mono`: **Geist Mono**, empacotada por
+  `@fontsource/geist-mono` (pesos 400/500/600, `woff2` no próprio build, sem serviço externo).
+  Licença: **SIL Open Font License 1.1**, © 2024 The Geist Project Authors
+  (texto integral com o aviso de copyright em [`licenses/GeistMono-OFL.txt`](licenses/GeistMono-OFL.txt),
+  copiado do pacote `@fontsource/geist-mono`; origem https://github.com/vercel/geist-font). Só os
+  subconjuntos latin e latin-ext são empacotados (`scripts/check-fonts.mjs`).
+- **Estilos de texto:** utilitários `text-display-*`, `text-mobile-display-*`, `text-heading-h3/h4`,
+  `text-body-*`, `text-button-m/s`, `text-label-m`, `text-data-price-xl/m`, `text-mono-*` e
+  `data-mono` (só família mono + `tabular-nums`).
+- **Button — correspondência Figma → código:** `action` → `default` (verde, texto preto);
+  `default` → `brand` (rosa); `secondary`, `outline`, `ghost`, `link`, `destructive` iguais.
+  Tamanhos: `default` 44 px, `sm` 36 px (alvo de toque de 44 px por área invisível), `lg` 52 px,
+  `icon` 44 px; pílula; estado `loading` (`aria-busy`, indicador). No máximo uma ação
+  `default` (verde) visível por tela (`frontend/src/primaryAction.test.tsx`).
+- **Substitui a spec 0042, AC05:** a direção "ação principal rosa com texto branco" deixa de valer.
+  O verde `--action` é a ação principal; o rosa `--primary` fica para leitura, links, itens ativos
+  e foco. Com isso, a Issue #222 (0042) é fechada junto com a 0049.
+- **Badge — status de preço (nomes em inglês, regra `naming.md`):** queda → `down`, alta → `up`,
+  estável → `stable`, alvo → `target`, desatualizado → `stale`, não verificado → `unverified`. Cada
+  status tem ícone decorativo e texto, porque a cor não é o único sinal. Também existem `default`,
+  `secondary`, `destructive` e `outline`.
+- **Componentes:** a biblioteca da seção 2 está em `frontend/src/components/ui/`. Os 16 componentes
+  da CLI do shadcn foram instalados sem sobrescrever os existentes, sem as variáveis CSS do registry
+  e sem `next-themes`. O `sonner.tsx` foi escrito à mão (`theme="light"`). Os rótulos do registry
+  foram traduzidos para o português. O catálogo local fica em `/dev/design-system`, só no servidor
+  de desenvolvimento.
+- **Divergência de token aprovada:** `--color-brand-strong: #a0004c` (hover de link, 8,1:1 sobre
+  branco). O Figma não define estado hover para link. É a única exceção da lista
+  `colorLiteralExceptions` em `frontend/src/tokens.figma.test.ts`. Os demais tokens próprios
+  derivam de variáveis do Figma; `--color-danger-bg` usa o alias `--destructive-soft`.
+- **Divergências de tela aprovadas (AC08, 07/11/2026):**
+  - títulos na pilha de sistema sem SF Pro Expanded (fonte substituta);
+  - aviso do Google dentro do campo do assistente, alça de redimensionar e "Conversas recentes" no
+    topo no mobile;
+  - texto de erro de e-mail atual e senhas apagadas após 409, 429 ou falha de rede (0048);
+  - "Excluir" no card do histórico mobile;
+  - estrutura do estado vazio e densidade da tabela do monitoramento;
+  - "Tentar novamente" em texto no monitoramento (AC07);
+  - indisponibilidade como aviso "Preço desatualizado" na linha;
+  - elementos sem comportamento omitidos: indicadores, busca, filtros, seletor de período e resumo
+    por situação.
+
+  O registro par a par fica em `specs/0049-design-system-2026-no-codigo/verification.md`.
+- **Verificação contínua:**
+  - `node scripts/token-table.mjs` (em `frontend/`) gera a tabela 1:1 do snapshot;
+  - `tests/visual/ds-measures.spec.ts` mede raio, sombra, foco, durações e contraste;
+  - `npm run build:check` confere que o catálogo não vai para `dist/` e que as fontes só incluem
+    latin e latin-ext, sem base64.
+
 ## Histórico de conversas (spec 0045)
 
 Referência: BestPrice IA no Figma, frames 59:204 e 59:716, exportações identificadas
