@@ -378,3 +378,71 @@ evidência e a checagem de 320 px, que rodam num só projeto cada. Nenhuma basel
 | `signup.spec.ts` 7 estados × desktop/mobile + login/landing com "Criar conta" | 16 | Diferença visual desta spec (inclui o raio de 12 px e "Voltar para o início" em Button/S) | F26 |
 | `review-corrections.spec.ts` (390) rodapé e marca do login | 2 | Instáveis sob carga (tempo esgotado em `scrollIntoViewIfNeeded`) | Reexecução isolada: `review-corrections` + `assistant.spec.ts:36` → 1 failed / 15 passed na 1ª e **16 passed** na 2ª |
 | `assistant.spec.ts:36` (768) robô `loaded: false` | 1 | Instável sob carga (já registrado na Fase 4) | idem |
+
+### Revisão da F24: todos os pares abertos (substitui a coluna "Conferência" acima)
+
+A coordenação apontou uma regressão no início do assistente e quebras na tabela. Por isso, **os 29
+quadros do Figma e as 38 capturas do app foram abertos um a um** (ferramenta Read, PNG), depois da
+recaptura. Em cada par foram procurados sobreposição, elemento fora do lugar, quebra indevida e corte.
+A coluna "Conferência" da tabela anterior ("por amostragem") fica substituída por esta seção.
+
+**Regressão corrigida — mascote do assistente.**
+
+- **Causa:** a regra `.assistant-welcome > * { position: relative }` (commit `b4bf355`) tirava o mascote
+  da posição absoluta. No desktop ele caía sobre o subtítulo; no mobile, entre o subtítulo e o campo.
+  O halo ficava sozinho no canto.
+- **Correção:** o halo é centrado no mascote pelas mesmas variáveis (`--robot-size`, `--robot-top`,
+  `--halo-size`). No mobile, o título reserva o espaço do mascote.
+- **Teste novo:** `tests/visual/assistant-hero.spec.ts` (320, 390, 768, 1280). Falha se a caixa do
+  mascote cruzar a do `h1` ou a do subtítulo, ou se o centro do halo ficar fora da caixa do mascote.
+- **Red:** → **4 failed**: "mascote cobre o subtítulo" a 1280 e "centro do halo fora do mascote" a 320,
+  390 e 768. Depois da 1ª correção → 3 failed ("mascote cobre o título" no mobile: o `h1` usava
+  `padding-right` e a caixa dele cruzava a do mascote).
+- **Green:** → **4 passed**.
+
+| Par (Figma × app) | Largura | Achado ao abrir | Ação |
+|---|---|---|---|
+| entrar | 1440 | sem sobreposição nem corte; título FS | "Voltar para o início" em Button/S |
+| entrar | 390 | espaçamento vertical maior que o do quadro | marca 28 px, título 6 px e campos 24 px abaixo do subtítulo (≤ 700 px) |
+| cadastro-1 | 1440 | ok (FS) | — |
+| cadastro-2 | 1440 | **estado errado na captura**: foco no e-mail vazio, mas o quadro mostra e-mail e senha preenchidos e foco em Confirmar senha | spec de evidência ajustado |
+| cadastro-3 | 1440 | botão "Criando conta…" cinza com contorno; no quadro, verde esmaecido com texto escuro | `aria-disabled` com `color-mix(--action 45%, --background)` e texto `--foreground` (15:1), sem opacity |
+| cadastro-4 | 1440 | mensagem de e-mail mais longa (texto atual, LT) | — |
+| cadastro-5 | 1440 | senhas apagadas após o 409 (comportamento da 0048, LT) | — |
+| cadastro-6 | 1440 | caixa de erro com 72 px; no quadro, 58 px | caixa 15/18 com padding 10 px |
+| cadastro-7 | 1440 | mensagem quebrava em duas linhas por causa do tamanho da caixa | mesma correção; senhas apagadas (LT) |
+| cadastro-1 a 7 | 390 | estrutura igual à do quadro; espaçamento maior (corrigido junto com Entrar); erro de e-mail em duas linhas (texto atual, LT); senhas apagadas após 409, 429 e falha de rede (LT) | — |
+| assistente-inicio | 1440 | **mascote sobre o subtítulo, halo sozinho** | corrigido (acima) |
+| assistente-inicio | 390 | **mascote entre subtítulo e campo, halo vazio** | corrigido (acima) |
+| assistente-conversa | 1440 | ok depois do ajuste anterior | — |
+| assistente-conversa | 390 | navegação inferior desenhada no meio da página (artefato da captura `fullPage` com elemento fixo); resposta e mensagem maiores que no quadro | capturas mobile sem `fullPage` (a viewport cresce até o documento); resposta 17/25 e mensagem do usuário 15/24 |
+| historico | 1440 | ok | — |
+| historico | 390 | mesmo artefato da navegação fixa | corrigido na captura |
+| monitoramento-vazio | 1440 / 390 | divergência estrutural já registrada; sem sobreposição nem corte | — |
+| monitoramento-produtos | 1440 | **data "29/10/2026, 14:30" em duas linhas; nomes curtos quebrando; "Ver detalhes" e ⋮ empilhados** | ≥ 1100 px: coluna do produto com 24%; preço, aviso de preço, data e menor preço sem quebra; ações lado a lado. Colunas e dados iguais |
+| monitoramento-produtos | 390 | linhas compactas; sem corte | — (densidade já registrada) |
+| estados-desktop-a × carregando, vazio, falha da lista | 1440 | painel de recentes cobre o mascote por ser sobreposição (intencional); "Nova conversa" e "Tentar novamente" em pílula, mas o quadro usa raio 12 | raio 12 e Button/S; "Tentar novamente" com contorno rosa |
+| estados-desktop-a × envio em andamento | 1440 | campo sem esmaecer; aviso sem destaque | campo `--surface` durante o envio; "Preparando uma resposta…" em 600 |
+| estados-desktop-a × falha no envio | 1440 | sem a caixa "mensagem preservada" nem o botão de tentar de novo do quadro (SC) | — |
+| estados-desktop-a × IA indisponível | 1440 | aviso cinza; no quadro, amarelo de atenção | aviso com `--status-warning-soft`/`--status-warning`. A primeira versão ficou em negrito escuro por uma regra de status; corrigida com `:not(.research-notice)` |
+| estados-desktop-b × carregando, primeiro preço, falha | 1440 | sem sobreposição; "Tentar novamente" em texto (já registrado, aguarda aprovação) | — |
+| estados-desktop-b × atualização indisponível | 1440 | "Preço desatualizado" quebrava em duas linhas | sem quebra no desktop |
+| estados-mobile × conversas recentes, falha no envio | 390 | datas sem Mono | datas das recentes em Mono |
+
+Recaptura final: `npx playwright test tests/visual/evidence-0049.spec.ts tests/visual/assistant-hero.spec.ts`
+→ **42 passed**.
+
+### Playwright completo depois da revisão da F24 (ponta `cfa2b19`)
+
+`npx playwright test` → **238 passed, 53 failed, 242 skipped** (6,6 min).
+
+| Grupo | Falhas | Classe | Destino |
+|---|---|---|---|
+| `public-pages` landing (claro/escuro × 4) | 8 | Preexistente (#259) | F26 / #259 |
+| `brand` marca landing/inicio (× 4) | 8 | Preexistente (#259, asserção ≥ 40 px) | F26 / #259 |
+| `public-pages` login e "não encontrada" (claro/escuro × 4) | 16 | Diferença visual desta spec | F26 |
+| `signup.spec.ts` 7 estados × desktop/mobile + login/landing com "Criar conta" | 16 | Diferença visual desta spec (agora inclui o botão enviando em verde esmaecido, a caixa de erro de 58 px e o espaçamento mobile) | F26 |
+| `signup.spec.ts:170`, `:214`, `assistant.spec.ts:36`, `:84`, `:109` | 5 | Instáveis no ambiente: `net::ERR_NETWORK_CHANGED` em `page.goto` e tempo esgotado sob carga | Reexecução isolada (`assistant.spec.ts`, `signup.spec.ts:170`, `:214`) → **40 passed** |
+
+A lista da F26 não muda de composição: são as 16 preexistentes e as 32 desta spec, e as capturas
+do cadastro absorvem os novos ajustes.
