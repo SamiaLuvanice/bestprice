@@ -96,7 +96,7 @@ export function ProductDetailDialog(props: Props) {
     <Link className="text-button detail-back" to="/produtos">Ir para Produtos</Link>
     <div className="detail-product-heading"><ProductImage src={product.image_url} /><div className="detail-product-copy">
       <h1 id="detail-title" tabIndex={-1}>{product.title}</h1>
-      <p className="detail-reference">{product.external_id} · Mercado Livre</p>
+      <p className="detail-reference"><span className="detail-reference-id">{product.external_id}</span> · Mercado Livre</p>
       <p className="muted">{availabilityLabel(product.availability)} · preço unitário sem frete</p></div></div>
     {error && <p role="alert" className="error-box">{error}</p>}
     <p className="product-price">{money(product.current_price)}</p>
@@ -108,7 +108,7 @@ export function ProductDetailDialog(props: Props) {
     </div>
     {!tracked.active && <p role="status" className="empty">Monitoramento interrompido.</p>}
     <div className="detail-workspace"><section className="detail-history" aria-labelledby="history-title"><h2 id="history-title">Histórico de preços</h2>
-      <Suspense fallback={<p role="status">Carregando gráfico…</p>}><PriceHistoryChart history={history} partial={historyCursor !== null} /></Suspense>
+      <Suspense fallback={<p role="status">Carregando gráfico…</p>}><PriceHistoryChart history={history} partial={historyCursor !== null} targetPrice={alert?.target_price ?? null} /></Suspense>
       {historyCursor && <Button type="button" variant="outline" disabled={busy} onClick={props.onLoadMoreHistory}>Carregar mais preços</Button>}
     </section>{tracked.active && <section className="detail-alert-card" aria-labelledby="price-alert-title"><h2 id="price-alert-title">Alerta de preço</h2>
       {alert ? <>

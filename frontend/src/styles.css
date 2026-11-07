@@ -172,8 +172,9 @@
   --color-graphite: #18171b;
   --color-on-graphite: #fff;
   --color-footer-bg: #000;
-  --color-chart-grid: #49474f;
-  --color-chart-label: #d2d2d7;
+  /* 0049/AC10: gráfico sobre superfície clara (linha escura --chart-1, área verde --chart-2). */
+  --color-chart-grid: var(--border);
+  --color-chart-label: var(--muted-foreground);
   --radius-card: 18px;
   --radius-control: 12px;
   --radius-pill: 980px;
@@ -268,6 +269,8 @@ button:disabled { cursor: not-allowed; opacity: .65; }
 [tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { outline: none; }
 h1, h2[tabindex="-1"] { scroll-margin-top: 88px; }
 h1, h2, h3 { font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; font-weight: 700; }
+/* 0049: títulos na largura "Expanded" da SF Pro quando existir; sem ela, largura normal (fallback decidido). */
+h1, h2 { font-stretch: expanded; }
 h1 { font-size: clamp(32px, 4.6vw, 56px); line-height: 1.08; letter-spacing: -.025em; margin: 0 0 var(--space-4); }
 h2 { font-size: clamp(20px, 2.4vw, 24px); line-height: 1.2; letter-spacing: -.03em; margin: 0; }
 h3 { font-size: 16px; letter-spacing: -.01em; margin: 0 0 8px; }
@@ -297,6 +300,9 @@ h1, h2 { text-wrap: balance; }
 [data-slot="input"], .login-input { box-shadow: none; }
 .product-group:hover { background: var(--color-surface-raised); }
 .cell-price strong, .current-price, .product-price, .alert-current, .alert-item-target, .history-data td { font-variant-numeric: tabular-nums; }
+/* 0049/AC03: dados (preço, horário, MLB, contador) em Geist Mono com algarismos de largura fixa; texto e formato iguais. */
+.cell-price strong, .current-price, .previous-price, .product-price, .min-price strong, .history-data td, .relative-time,
+.bell-count, .indicator-value, .detail-reference-id, #assistant-character-count, .variation, .price-chart-figure .recharts-tooltip-wrapper strong { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .indicator-note { margin-top: -4px; }
 .is-read .read-state { color: var(--color-text-muted); background: var(--color-surface); }
 
@@ -342,7 +348,7 @@ h1, h2 { text-wrap: balance; }
 .masthead { min-height: 72px; display: flex; align-items: center; gap: 12px; padding-inline: max(var(--page-gutter), calc((100% - var(--page-width)) / 2)); border-bottom: 1px solid var(--color-border-soft); background: var(--color-glass); }
 .masthead .brand-logo { width: 52px; height: 52px; }
 .session-check .content { padding-top: 48px; }
-.panel { padding: 30px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); min-width: 0; }
+.panel { padding: 30px; background: var(--card); border: 1px solid var(--color-border); border-radius: var(--radius-card); min-width: 0; }
 
 /* Hero da área autenticada */
 .hero { width: var(--page-inline); margin: 48px auto 0; }
@@ -363,7 +369,7 @@ h1, h2 { text-wrap: balance; }
 .hero-compact .track-panel { margin-top: var(--space-2); }
 .add-listing { padding-inline: 0; font-size: 16px; }
 .intro { color: var(--color-text-muted); font-size: 17px; line-height: 1.5; max-width: 72ch; margin: 0 0 var(--space-6); }
-.track-panel { display: block; padding: var(--space-6); border: 0; border-radius: var(--radius-card); background: var(--color-surface); }
+.track-panel { display: block; padding: var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--card); } /* 0049: card branco com borda (Figma 2026 prevalece sobre a 0039) */
 .track-panel h2 { font-size: 22px; }
 .track-description { margin: 12px 0 24px; font-size: 15px; color: var(--color-text-muted); }
 .track-form { display: flex; align-items: end; gap: 16px; }
@@ -465,7 +471,7 @@ h1, h2 { text-wrap: balance; }
 .section-order { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: 14px; }
 .section-status:not(:empty) { margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); background: var(--color-brand-soft); color: var(--color-brand-strong); font-weight: 600; }
 .products-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-.products-table th { padding: 16px 10px; border-bottom: 1px solid var(--color-border-soft); background: var(--color-surface); color: var(--color-text-muted); font-size: 13px; font-weight: 600; text-align: left; }
+.products-table th { padding: 16px 10px; border-bottom: 1px solid var(--color-border-soft); background: var(--color-surface); color: var(--color-text-muted); font-family: var(--font-mono); font-size: 12px; line-height: 16px; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; text-align: left; }
 .products-table td { padding: 18px 10px; vertical-align: middle; }
 .product-group { border-bottom: 1px solid var(--color-border-soft); }
 .product-group.is-busy { background: var(--color-brand-soft); }
@@ -535,7 +541,7 @@ h1, h2 { text-wrap: balance; }
 .detail-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 16px; }
 .detail-workspace { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(260px, 1fr); gap: 32px; margin-top: 48px; }
 .detail-history { min-width: 0; }
-.detail-alert-card { align-self: start; display: grid; gap: 16px; padding: var(--space-6); background: var(--color-surface); border: 0; border-radius: var(--radius-card); }
+.detail-alert-card { align-self: start; display: grid; gap: 16px; padding: var(--space-6); background: var(--card); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
 .detail-alert-card h2 { margin: 0; }
 .alert-current { margin: 0; font-weight: 600; }
 .alert-form { display: grid; gap: 8px; }
@@ -559,9 +565,9 @@ h1, h2 { text-wrap: balance; }
 
 /* Gráfico do histórico */
 .price-chart-figure { margin: 0; }
-.price-chart-surface { padding: 24px 12px 16px; background: var(--color-graphite); border-radius: 18px; color: var(--color-on-graphite); }
+.price-chart-surface { padding: 24px 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-card); color: var(--foreground); }
 .price-chart { width: 100%; height: 280px; aspect-ratio: auto; min-width: 0; }
-.price-chart .recharts-text { fill: var(--color-chart-label); }
+.price-chart .recharts-text { fill: var(--color-chart-label); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .price-chart-note { font-size: 14px; color: var(--color-text-muted); margin-top: 16px; }
 .history-data { margin-top: 16px; }
 .history-data table { width: 100%; border-collapse: collapse; font-size: 14px; }
