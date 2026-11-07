@@ -3,7 +3,7 @@ numero: 0049
 titulo: Design system 2026 no código e telas internas fiéis ao Figma
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend, docs]
 depende_de: [0016, 0039, 0040, 0041, 0042, 0044, 0045, 0048]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/267
