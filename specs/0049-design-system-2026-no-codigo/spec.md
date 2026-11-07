@@ -145,7 +145,7 @@ redesenho próprio, e as diferenças entram na revisão do AC13:
   - fonte substituta;
   - elemento sem comportamento ou dado existente;
   - limite técnico descrito.
-- [ ] **AC09 — Navegação:** dada a área logada em desktop, quando a navegação é exibida, então a barra lateral é escura e o destino ativo fica realçado em rosa, como no Figma. No mobile, a navegação inferior mostra Assistente, Histórico e Monitoramento com ícone e rótulo, e o destino ativo fica realçado em rosa.
+- [ ] **AC09 — Navegação:** dada a área logada em desktop, quando a navegação é exibida, então a barra lateral é escura e o destino ativo fica realçado em rosa, como no Figma. No mobile, a navegação inferior mantém os três destinos e rótulos atuais (Assistente, Histórico e Monitorar) com ícone, e o destino ativo fica realçado em rosa.
 - [ ] **AC10 — Gráfico de histórico:** dado um produto com histórico, quando o gráfico é exibido, então:
   - a série aparece em degraus, com linha escura e área verde;
   - o último degrau termina na última leitura registrada;
