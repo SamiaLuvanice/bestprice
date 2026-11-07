@@ -456,3 +456,16 @@ A responsável aprovou, no chat, todas as divergências que aguardavam decisão:
 - **Monitoramento:** estrutura do estado vazio; densidade da tabela; "Tentar novamente" em texto (AC07); indisponibilidade como aviso "Preço desatualizado" na linha.
 
 Nenhuma divergência do AC08 fica pendente.
+
+## F26 — Atualização das referências visuais (2026-11-07)
+
+- A revisão aconteceu numa página com o antes e o depois de cada captura. A responsável aprovou no chat todos os grupos:
+  - Entrar: 9 capturas, mais o login mobile com "Criar conta";
+  - Criar conta: 14 capturas;
+  - Não encontrada: 8 capturas;
+  - Landing atual: 9 capturas, mais o menu mobile.
+- No total foram 42 capturas, em `public-pages.spec.ts` e `signup.spec.ts`.
+- Comando: `npx playwright test tests/visual/public-pages.spec.ts tests/visual/signup.spec.ts --update-snapshots`.
+  - Na reexecução sem a atualização: **48 passed**.
+- `brand.spec.ts`: o tamanho mínimo da marca passou de 40 para 34 px. Isso segue a mudança intencional do cabeçalho feita nas specs 0040 e 0043 (#259). Resultado: **32 passed**.
+- As 16 falhas preexistentes da #259 ficam resolvidas por esta atualização, aprovada pela responsável.

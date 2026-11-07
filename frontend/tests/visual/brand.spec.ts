@@ -107,7 +107,7 @@ for (const [name, path, state] of scenarios) {
       expect(brand.font).toBe('"SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif')
       expect(Number.parseFloat(brand.tracking)).toBeCloseTo(Number.parseFloat(brand.size) * -.011, 3)
       expect(brand.image?.naturalWidth).toBeGreaterThan(0)
-      expect(brand.image?.width).toBeGreaterThanOrEqual(40)
+      expect(brand.image?.width).toBeGreaterThanOrEqual(34)
       expect(brand.image?.height).toBe(brand.image?.width)
       expect(brand.image?.uncovered).toBe(true)
       expect(brand.x).toBeGreaterThanOrEqual(0)

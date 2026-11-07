@@ -91,7 +91,7 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 ## Fase 5 — Verificação visual e acessibilidade (AC08, AC12, AC13)
 
-- [ ] D3 — Exportar do Figma os PNGs dos quadros da lista A (node-id e data) para
+- [x] D3 — Exportar do Figma os PNGs dos quadros da lista A (node-id e data) para
   `evidence/`.
 - [x] F24 — Projeto `viewport-1440` e capturas de evidência das telas da lista A em 1440 e
   390.
@@ -99,7 +99,7 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
     divergência.
 - [ ] F25 — Rodar axe, alvos de 44 px, teclado, movimento reduzido e ausência de rolagem
   horizontal nas listas A e B, em 320, 390, 768 e 1280.
-- [ ] F26 — Atualizar os baselines por spec de teste, apresentando cada diff.
+- [x] F26 — Atualizar os baselines por spec de teste, apresentando cada diff.
   - **Aceite:** aprovação registrada (AC13).
 
 ## Fechamento
