@@ -301,3 +301,80 @@ falhou.
 | `signup.spec.ts` login e landing com "Criar conta" | 2 | Diferença visual nova desta spec | F26 |
 
 O `assistant.spec.ts:36` (instável na Fase 4) passou nesta execução.
+
+## F24 e F17–F20 — Telas da lista A × quadros do Figma (AC08)
+
+- **Quadros:** `evidence/figma/` (commit `4ae5777`; node-ids no README da pasta), exportados em 07/11/2026.
+- **Capturas do app:** `evidence/app/`, mesmo nome do PNG do Figma, geradas por
+  `frontend/tests/visual/evidence-0049.spec.ts` (projeto `viewport-1440`, cada teste fixa a largura e
+  a altura do quadro; `fullPage`; API simulada). São evidência, não baselines.
+- **Execução:** `npx playwright test tests/visual/evidence-0049.spec.ts --project=viewport-1440` → **38 passed**.
+- **Sistema:** Windows 11 e Chromium, sem SF Pro. Os títulos caem para a pilha de sistema (fonte substituta).
+
+**Categorias de divergência (AC08):** **FS** = fonte substituta; **SC** = elemento sem
+comportamento ou dado existente; **LT** = limite técnico descrito. Toda divergência precisa de
+aprovação explícita; as que não têm decisão anterior na spec estão marcadas **aguarda aprovação**.
+
+**Conferência:** "lado a lado" = os dois PNGs foram abertos e comparados; "por amostragem" = o
+estado compartilha layout com um par conferido e só o conteúdo do estado muda.
+
+### Ajustes feitos depois da comparação
+
+| Tela | Ajuste |
+|---|---|
+| Campos (todas) | Input, Textarea e Select com raio de 12 px (`rounded-md`); os quadros 59:44 e 220:* mostram 12 px, não 24 |
+| Entrar / Criar conta | "Voltar para o início" em Button/S (14/18) |
+| Barra lateral | Logo sem quadro branco sobre a superfície escura; espaço entre marca e navegação de 62 px; ativo sem filete lateral; topo sem filete inferior |
+| Assistente — início | Envio como ação verde (`default`, antes `brand`); "Conversas recentes" com 240 × 48, raio 12 e Button/S; halo rosa do mascote (`--chart-5` via `color-mix`); "Até 2.000 caracteres" em Mono |
+| Assistente — conversa | Título na linha de "Conversas recentes" (padding superior 40 px) em 32/40; resposta da IA em Display S expandido (22/32, 600) |
+| Histórico | Título 32/40; Continuar com raio 12 e Button/S; Excluir com 14 px |
+| Monitoramento | Título Display expandido 32/40; área de conteúdo `--surface-raised`; estado vazio em card branco com borda |
+| Navegação inferior | Destino ativo com pílula `--accent`, além do rosa; rótulos mantidos (AC09) |
+
+### Pares
+
+| Tela / estado | Largura | Figma | App | Conferência | Divergências restantes (categoria) |
+|---|---|---|---|---|---|
+| Entrar | 1440 | `figma/entrar-desktop.png` | `app/entrar-desktop.png` | lado a lado | Título sem SF Pro Expanded e bloco 24 px mais alto por causa da altura da fonte (FS). "Criar conta" sublinhado, pela regra axe `link-in-text-block` da 0048 (LT, aprovado na 0048) |
+| Entrar | 390 | `figma/entrar-mobile.png` | `app/entrar-mobile.png` | lado a lado | Título em uma linha mais estreita, subtítulo em uma linha e marca ~20 px mais alta (FS) |
+| Criar conta 1–7 | 1440 | `figma/cadastro-{1..7}-desktop.png` | `app/cadastro-{1..7}-desktop.png` | estado 4 lado a lado; demais por amostragem | Título (FS). A mensagem de e-mail inválido é o texto atual do produto, mais longo que o do quadro (LT: texto inalterado por regra da spec) — **aguarda aprovação** |
+| Criar conta 1–7 | 390 | `figma/cadastro-{1..7}-mobile.png` | `app/cadastro-{1..7}-mobile.png` | por amostragem | Igual ao desktop (FS; o texto de erro é LT e **aguarda aprovação**) |
+| Assistente — início | 1440 | `figma/assistente-inicio-desktop.png` | `app/assistente-inicio-desktop.png` | lado a lado | Título (FS). O aviso do Google dentro do campo segue visível; no Figma ele vai para "Sobre a IA e seus dados", sob demanda, um painel que o produto não tem (SC) — **aguarda aprovação**. Alça de redimensionar do textarea (LT: comportamento nativo preservado) — **aguarda aprovação** |
+| Assistente — início | 390 | `figma/assistente-inicio-mobile.png` | `app/assistente-inicio-mobile.png` | lado a lado | Título (FS). "Conversas recentes" fica no topo, e não fixo acima da navegação inferior: a posição fixa cobriria o campo em telas baixas, como 390 × 640 (LT) — **aguarda aprovação**. Navegação inferior com rótulos, enquanto o quadro mostra só ícones (decisão AC09). Aviso do Google (SC, **aguarda aprovação**). Placeholder "até R$ 3.500" em Mono no quadro (LT: o placeholder é um texto único) |
+| Assistente — conversa | 1440 | `figma/assistente-conversa-desktop.png` | `app/assistente-conversa-desktop.png` | lado a lado (depois do ajuste) | Título e resposta (FS). "R$ 3.500" dentro da mensagem do usuário em Mono no quadro (LT: o conteúdo livre não é analisado). Aviso do Google (SC, **aguarda aprovação**) |
+| Assistente — conversa | 390 | `figma/assistente-conversa-mobile.png` | `app/assistente-conversa-mobile.png` | por amostragem | Iguais às do desktop e do início mobile |
+| Histórico | 1440 | `figma/historico-desktop.png` | `app/historico-desktop.png` | lado a lado | Título (FS). Subtítulo "Retome suas conversas…", data "Atualizada em …" e rodapé de retenção são textos e dados atuais (LT: texto inalterado). Borda da busca com `--input` (3:1) em vez da borda clara do quadro (LT: AC12, já registrado na 0045) |
+| Histórico | 390 | `figma/historico-mobile.png` | `app/historico-mobile.png` | lado a lado | Título (FS). "Excluir" aparece no card, enquanto o quadro mobile só mostra "Continuar" (LT: a ação existe e não pode sumir) — **aguarda aprovação**. Na captura `fullPage`, a navegação inferior fixa aparece no meio da página (artefato da captura, não do layout) |
+| Monitoramento — sem produtos | 1440 | `figma/monitoramento-vazio-desktop.png` | `app/monitoramento-vazio-desktop.png` | lado a lado | Estrutura diferente. O quadro reúne num só painel o título "Monitoramento de preços", o aviso de atualização indisponível, o card vazio com "Ir ao assistente", o card do histórico de preço e a seção Alertas. O app mantém as páginas atuais (Início/Produtos/Alertas, com "Seus produtos" e o formulário de link). Refazer a arquitetura mudaria rotas e textos, fora do escopo (LT). O aviso e "Ir ao assistente" não existem nesse estado (SC). **Aguarda aprovação** |
+| Monitoramento — sem produtos | 390 | `figma/monitoramento-vazio-mobile.png` | `app/monitoramento-vazio-mobile.png` | por amostragem | Iguais às do desktop (LT/SC, **aguarda aprovação**) |
+| Monitoramento — com produtos | 1440 | `figma/monitoramento-produtos-desktop.png` | `app/monitoramento-produtos-desktop.png` | lado a lado | Omitidos (SC, decididos na spec): indicadores com "sem estoque", seletor de período, gráfico agregado, "Visão dos produtos", busca, filtros por situação, coluna Loja e seleção. A tabela do app mantém colunas, detalhes por linha e "Ver detalhes" atuais (LT: comportamento preservado) — **aguarda aprovação** quanto à densidade da tabela. Título (FS) |
+| Monitoramento — com produtos | 390 | `figma/monitoramento-produtos-mobile.png` | `app/monitoramento-produtos-mobile.png` | por amostragem | Iguais às do desktop |
+| Estados do assistente (137:43) | 1440 | `figma/estados-desktop-a.png` | `app/estados-desktop-a-{carregando-conversas,historico-vazio,falha-lista,envio-em-andamento,falha-envio,ia-indisponivel}.png` | por estado, por amostragem | O quadro é uma prancha de referência com cards isolados; o app mostra cada estado na própria tela. Os textos são os atuais (LT). Nota de rodapé do quadro (SC) |
+| Estados do monitoramento (152:535) | 1440 | `figma/estados-desktop-b.png` | `app/estados-desktop-b-{carregando,primeiro-preco,falha,atualizacao-indisponivel}.png` | por estado, por amostragem | "Tentar novamente" é verde no quadro; no app fica em texto, porque a página mantém "Monitorar preço" como única ação verde (AC07) — **aguarda aprovação**. O card "Atualização de preços indisponível" com dados salvos aparece no app só como sinal "Preço desatualizado" na linha (SC para o card) — **aguarda aprovação** |
+| Estados do assistente mobile (184:200) | 390 | `figma/estados-mobile.png` | `app/estados-mobile-{conversas-recentes,falha-envio}.png` | por amostragem | "Ver exemplos" e "Sobre a IA e seus dados" não existem no produto (SC). "Conversas recentes" e "Quando algo não funciona" foram capturados nos estados reais |
+
+### AC12 — títulos largos a 320 px
+
+- O WebKit do Playwright **não está instalado** (`~/AppData/Local/ms-playwright` só tem Chromium).
+  Pela instrução, não foi baixado: fica registrado como limite.
+- **Simulação:** `tests/visual/wide-titles.spec.ts` injeta `h1, h2 { letter-spacing: .14em }`, cerca
+  de 25% a mais de largura média, acima da diferença entre SF Pro e SF Pro Expanded. Confere em 320 px
+  as 12 telas das listas A e B: nenhum `h1`/`h2` passa da viewport e não há rolagem horizontal.
+  `npx playwright test tests/visual/wide-titles.spec.ts --project=viewport-320` → **12 passed**.
+- **Sensibilidade:** com `1em` de tracking, o mesmo teste falha (8 failed, 4 passed), então ele detecta
+  o problema.
+
+### Playwright completo depois de F24/F17–F20 (ponta `518a534`)
+
+`npx playwright test` → **236 passed, 51 failed, 242 skipped** (6,2 min). Os skips incluem a
+evidência e a checagem de 320 px, que rodam num só projeto cada. Nenhuma baseline foi atualizada.
+
+| Grupo | Falhas | Classe | Destino |
+|---|---|---|---|
+| `public-pages` landing (claro/escuro × 4) | 8 | Preexistente (#259) | F26 / #259 |
+| `brand` marca landing/inicio (× 4) | 8 | Preexistente (#259, asserção ≥ 40 px) | F26 / #259 |
+| `public-pages` login (claro/escuro × 4) | 8 | Diferença visual desta spec | F26 |
+| `public-pages` "não encontrada" (claro/escuro × 4) | 8 | Diferença visual desta spec | F26 |
+| `signup.spec.ts` 7 estados × desktop/mobile + login/landing com "Criar conta" | 16 | Diferença visual desta spec (inclui o raio de 12 px e "Voltar para o início" em Button/S) | F26 |
+| `review-corrections.spec.ts` (390) rodapé e marca do login | 2 | Instáveis sob carga (tempo esgotado em `scrollIntoViewIfNeeded`) | Reexecução isolada: `review-corrections` + `assistant.spec.ts:36` → 1 failed / 15 passed na 1ª e **16 passed** na 2ª |
+| `assistant.spec.ts:36` (768) robô `loaded: false` | 1 | Instável sob carga (já registrado na Fase 4) | idem |

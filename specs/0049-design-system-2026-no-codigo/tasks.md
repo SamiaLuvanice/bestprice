@@ -76,12 +76,12 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
   - **Green:** Area + Line `stepAfter`, ponto final e alvo tracejado.
 - [x] F16 — **Barra lateral e navegação inferior** (`ResearchArea`, `research.css`): tokens
   `sidebar-*`, ativo em rosa e rótulos inalterados (AC09).
-- [ ] F17 — **Entrar e Criar conta (7 estados)** com os componentes novos. Textos e fluxos
+- [x] F17 — **Entrar e Criar conta (7 estados)** com os componentes novos. Textos e fluxos
   inalterados; os testes existentes seguem verdes.
-- [ ] F18 — **Assistente (início e conversa) e Histórico.**
-- [ ] F19 — **Monitoramento (vazio e com produtos):** sem indicadores, busca ou filtros
+- [x] F18 — **Assistente (início e conversa) e Histórico.**
+- [x] F19 — **Monitoramento (vazio e com produtos):** sem indicadores, busca ou filtros
   inexistentes; as omissões vão para `verification.md`.
-- [ ] F20 — **Estados de indisponibilidade e recuperação** (quadros 137:43, 152:535 e
+- [x] F20 — **Estados de indisponibilidade e recuperação** (quadros 137:43, 152:535 e
   184:200).
 - [x] F21 — **Lista B:** produtos, detalhe, alertas, comparador, landing atual e
   "não encontrada", só com tokens e componentes.
@@ -93,7 +93,7 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 - [ ] D3 — Exportar do Figma os PNGs dos quadros da lista A (node-id e data) para
   `evidence/`.
-- [ ] F24 — Projeto `viewport-1440` e capturas de evidência das telas da lista A em 1440 e
+- [x] F24 — Projeto `viewport-1440` e capturas de evidência das telas da lista A em 1440 e
   390.
   - **Aceite:** pares lado a lado em `verification.md`, com a classificação de cada
     divergência.
