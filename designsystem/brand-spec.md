@@ -32,7 +32,9 @@ verde de ação `--accent: #39ff14` com texto `--accent-on: #000000` (nomes vál
 `--success: #16a34a`, `--warn: #eab308`, `--danger: #dc2626`.
 
 Tipografia: `--font-display`/`--font-body` SF Pro com fallback Helvetica/Arial
-sans-serif (fontes do sistema; não distribuir fontes de terceiros). Escala
+sans-serif (fontes do sistema; não distribuir fontes de terceiros). Exceção no app
+React desde a spec 0049: dados usam Geist Mono, empacotada localmente sob OFL 1.1
+(ver `designsystem/README.md`). Escala
 `--text-xs: 12px` até `--text-4xl: 80px`, corpo em 17px, entrelinha 1.47.
 
 Espaçamento e forma: escala 4–48px (`--space-1`…`--space-12`), raios 8/12/18px e
@@ -55,7 +57,7 @@ dentro de contêiner com `overflow: hidden`.
 
 ## Restrições de execução das ferramentas
 
-- Sem rede em tempo de execução nas suítes de teste; fontes do sistema, sem CDN.
+- Sem rede em tempo de execução nas suítes de teste; fontes do sistema ou empacotadas no build (Geist Mono, 0049), sem CDN.
 - Scripts opt-in da skill `huashu-design` que acessam rede (TTS Doubao, API Volces,
   busca de imagens no Wikimedia Commons) só são executados sob pedido explícito da
   pessoa usuária, com credenciais em variáveis de ambiente fora do repositório.
