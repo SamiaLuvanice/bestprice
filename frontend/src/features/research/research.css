@@ -37,8 +37,8 @@
 .research-content input, .research-content textarea, .research-content select { width:100%; border:1px solid var(--color-control-border); border-radius:8px; min-height:48px; background:var(--color-bg); padding:12px 14px; font-size:16px; color:var(--color-text); }
 .research-content textarea { resize:vertical; min-height:88px; }
 .research-content button, .research-landing button, .research-content a[data-slot=button] { min-height:48px; }
-.research-content :is(input,textarea,select):focus-visible, .research-shell a:focus-visible, .research-landing a:focus-visible { outline:3px solid var(--color-focus); outline-offset:3px; }
-.research-content h1:focus-visible { outline:3px solid var(--color-focus); outline-offset:6px; }
+.research-content :is(input,textarea,select):focus-visible, .research-shell a:focus-visible, .research-landing a:focus-visible { outline:var(--ring-width) solid var(--color-focus); outline-offset:3px; }
+.research-content h1:focus-visible { outline:var(--ring-width) solid var(--color-focus); outline-offset:6px; }
 .research-prompt { border:1px solid var(--color-control-border); border-radius:18px; padding:24px; display:flex; flex-direction:column; gap:20px; }
 .research-prompt label { margin:0; }
 .research-prompt textarea { border:0; border-radius:0; padding:0; background:transparent; font-size:19px; line-height:28px; min-height:56px; }

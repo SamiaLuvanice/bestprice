@@ -3,42 +3,75 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Tokens BestPrice (spec 0028/AC04; ver designsystem/README.md, "Tokens da aplicação").
+ * Tokens BestPrice (spec 0028/AC04; design system 2026, spec 0049).
+ * Contrato: designsystem/tokens/figma-variables-2026-11.json (coleção "shadcn/ui · BestPrice"
+ * do Figma). src/tokens.figma.test.ts compara cada variável, efeito e estilo de texto com este
+ * arquivo; mudar um token exige atualizar o snapshot.
  * Dois grupos, sem nomes repetidos com significados diferentes:
- *  - Tema shadcn/Tailwind: --background, --primary, --action, --muted... expostos como
- *    utilitários (bg-primary, text-muted-foreground) pelo bloco @theme abaixo.
- *  - CSS próprio da aplicação: --color-brand, --color-text-muted, --color-surface...
- *    Não usam nomes do namespace do tema (primary, muted, accent, card...).
- * --primary é o rosa da marca (texto, links, foco); --action é o verde das ações principais.
- * --muted é superfície (bg-muted); texto secundário usa --muted-foreground, text-muted-foreground
- * ou text-muted (mapeado para --muted-foreground).
+ *  - Tema shadcn/Tailwind: --background, --primary, --action, --surface, --sidebar-*,
+ *    --status-*... expostos como utilitários (bg-primary, bg-sidebar) pelo bloco @theme.
+ *  - CSS próprio da aplicação: --color-brand, --color-text-muted... Quando o nome coincide com
+ *    um utilitário do tema (--color-surface), aponta para o mesmo token.
+ * --primary é o rosa da marca (texto, links, foco); --action é o verde da ação principal.
+ * Tema claro fixo (0016): os valores "Noite" do Figma valem só para superfícies escuras fixas
+ * (--sidebar-*, --night-*), que têm o mesmo valor nos dois modos.
  */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
-  --color-card-foreground: var(--foreground);
-  --color-popover: var(--background);
-  --color-popover-foreground: var(--foreground);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-action: var(--action);
   --color-action-foreground: var(--action-foreground);
   --color-action-hover: var(--action-hover);
   --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --text-color-muted: var(--muted-foreground);
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--foreground);
+  --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-down: var(--status-down);
+  --color-status-down-soft: var(--status-down-soft);
+  --color-status-up: var(--status-up);
+  --color-status-up-soft: var(--status-up-soft);
+  --color-status-warning: var(--status-warning);
+  --color-status-warning-soft: var(--status-warning-soft);
+  --color-status-target: var(--status-target);
+  --color-night-950: var(--night-950);
+  --color-night-900: var(--night-900);
+  --color-night-800: var(--night-800);
+  --color-night-line: var(--night-line);
+  --color-night-muted: var(--night-muted);
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
 }
 
 /* 0028/AC04: text-muted é texto secundário (--text-color-muted no tema, que só vale para text-*);
@@ -47,35 +80,70 @@
 
 :root {
   color-scheme: light;
-  /* Tema shadcn/Tailwind. */
-  --background: #fff;
+  /* Tema shadcn/Tailwind (Figma 2026, valores claros). */
+  --background: #ffffff;
   --foreground: #1d1d1f;
-  --card: #f5f5f7;
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
   --primary: #c7005e;
   --primary-foreground: #fff;
-  --action: #39ff14;
-  --action-foreground: #000;
-  --action-hover: #65ff48;
   --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
   --muted: #f5f5f7;
   --muted-foreground: #626267;
   --accent: #fce9f2;
+  --accent-foreground: #1d1d1f;
   --destructive: #b42318;
+  --destructive-foreground: #ffffff;
   --border: #d2d2d7;
   --input: #86868b;
   --ring: #c7005e;
+  --action: #39ff14;
+  --action-foreground: #000;
+  --action-hover: #2fe80c;
+  --surface: #f5f5f7;
+  --surface-raised: #fbfbfd;
+  --chart-1: #1d1d1f;
+  --chart-2: #39ff14;
+  --chart-3: #c7005e;
+  --chart-4: #86868b;
+  --chart-5: #ff3ea5;
+  /* Superfícies escuras fixas: barra lateral (valores "Noite", iguais nos dois modos). */
+  --sidebar: #0a0a0f;
+  --sidebar-foreground: #f5f5f7;
+  --sidebar-primary: #ff3ea5;
+  --sidebar-primary-foreground: #0a0a0f;
+  --sidebar-accent: #1e1e28;
+  --sidebar-accent-foreground: #ff3ea5;
+  --sidebar-border: #2a2a36;
+  --sidebar-ring: #ff3ea5;
+  --night-950: #0a0a0f;
+  --night-900: #13131a;
+  --night-800: #1e1e28;
+  --night-line: #2a2a36;
+  --night-muted: #a1a1aa;
+  /* Status de preço (Badge e textos de variação). */
+  --status-down: #146c38;
+  --status-down-soft: #e9fbe8;
+  --status-up: #b42318;
+  --status-up-soft: #fff0ee;
+  --status-warning: #925400;
+  --status-warning-soft: #fff4dd;
+  --status-target: #39ff14;
 
-  /* Mesmo significado do tema (borda e ação): o CSS próprio lê o mesmo valor. */
+  /* Mesmo significado do tema (borda, ação e superfícies): o CSS próprio lê o mesmo valor. */
   --color-border: var(--border);
   --color-action: var(--action);
   --color-action-hover: var(--action-hover);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
 
   /* CSS próprio da aplicação. */
   --color-text: var(--foreground);
   --color-text-muted: var(--muted-foreground);
   --color-bg: var(--background);
-  --color-surface: #f5f5f7;
-  --color-surface-raised: #fbfbfd;
   --color-border-soft: #e8e8ed;
   --color-control-border: var(--input);
   --color-brand: var(--primary);
@@ -85,13 +153,13 @@
   --color-badge-text: #fff;
   --color-logo-surface: #fff;
   --color-danger-button: var(--destructive);
-  --color-danger-button-text: #fff;
-  --color-down: #146c38;
-  --color-down-soft: #e9fbe8;
-  --color-up: #b42318;
-  --color-up-soft: #fff0ee;
-  --color-amber: #925400;
-  --color-amber-soft: #fff4dd;
+  --color-danger-button-text: var(--destructive-foreground);
+  --color-down: var(--status-down);
+  --color-down-soft: var(--status-down-soft);
+  --color-up: var(--status-up);
+  --color-up-soft: var(--status-up-soft);
+  --color-amber: var(--status-warning);
+  --color-amber-soft: var(--status-warning-soft);
   --color-danger-text: #a61b1b;
   --color-danger-bg: #fff0f0;
   --color-danger-border: #ffd4d4;
@@ -109,28 +177,76 @@
   --radius-card: 18px;
   --radius-control: 12px;
   --radius-pill: 980px;
-  --shadow-card: 0 12px 32px rgba(0, 0, 0, .08);
+  /* Elevação, foco e desfoque (Figma 2026, "Espaço, raio, elevação e movimento"). */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgb(0 0 0 / .04), 0 8px 24px rgb(0 0 0 / .06);
+  --shadow-2: 0 12px 32px rgb(0 0 0 / .10);
+  --shadow-3: 0 30px 60px rgb(0 0 0 / .14);
+  --shadow-action-glow: 0 8px 24px rgb(56 255 20 / .45);
+  --shadow-card: var(--shadow-2);
+  --ring-width: 3px;
+  --blur-glass: 20px;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-20: 80px;
+  --space-30: 120px;
   --motion-fast: 160ms;
+  --motion-base: 250ms;
+  --motion-enter: 400ms;
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   /* 0028/AC12: uma só largura de página para cabeçalho, conteúdo e landing. */
   --page-width: 1248px;
   --page-gutter: 32px;
   --page-inline: min(100% - 2 * var(--page-gutter), var(--page-width));
+  /* Títulos: SF Pro na largura "Expanded" quando existir (font-stretch nos utilitários de
+     display); nos demais aparelhos, a mesma pilha na largura normal. A fonte não é distribuída. */
   --font-display: "SF Pro Display", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  /* Dados (preço, horário, MLB, contador): Geist Mono empacotada (@fontsource, OFL 1.1). */
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
+/* 0049/AC04 e AC12: com movimento reduzido, as transições não essenciais param. */
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-fast: 0ms; --motion-base: 0ms; --motion-enter: 0ms; }
+}
+
+/* Estilos de texto do Figma 2026 (22). Tracking = porcentagem do Figma / 100, em em. */
+@utility text-display-xl { font-family: var(--font-display); font-stretch: expanded; font-size: 76px; line-height: 80px; letter-spacing: -0.03em; font-weight: 700; }
+@utility text-display-l { font-family: var(--font-display); font-stretch: expanded; font-size: 56px; line-height: 62px; letter-spacing: -0.025em; font-weight: 700; }
+@utility text-display-m { font-family: var(--font-display); font-stretch: expanded; font-size: 42px; line-height: 48px; letter-spacing: -0.02em; font-weight: 700; }
+@utility text-display-s { font-family: var(--font-display); font-stretch: expanded; font-size: 30px; line-height: 36px; letter-spacing: -0.015em; font-weight: 600; }
+@utility text-mobile-display-xl { font-family: var(--font-display); font-stretch: expanded; font-size: 42px; line-height: 46px; letter-spacing: -0.03em; font-weight: 700; }
+@utility text-mobile-display-m { font-family: var(--font-display); font-stretch: expanded; font-size: 30px; line-height: 34px; letter-spacing: -0.02em; font-weight: 700; }
+@utility text-mobile-display-s { font-family: var(--font-display); font-stretch: expanded; font-size: 21px; line-height: 27px; letter-spacing: -0.01em; font-weight: 600; }
+@utility text-heading-h3 { font-size: 22px; line-height: 28px; letter-spacing: -0.005em; font-weight: 600; }
+@utility text-heading-h4 { font-size: 17px; line-height: 22px; letter-spacing: -0.002em; font-weight: 600; }
+@utility text-body-l { font-size: 20px; line-height: 30px; letter-spacing: -0.002em; font-weight: 400; }
+@utility text-body-m { font-size: 17px; line-height: 25px; letter-spacing: -0.002em; font-weight: 400; }
+@utility text-body-s { font-size: 14px; line-height: 20px; letter-spacing: 0em; font-weight: 400; }
+@utility text-body-s-medium { font-size: 14px; line-height: 20px; letter-spacing: 0em; font-weight: 500; }
+@utility text-body-xs { font-size: 12px; line-height: 16px; letter-spacing: 0em; font-weight: 400; }
+@utility text-button-m { font-size: 16px; line-height: 20px; letter-spacing: -0.001em; font-weight: 600; }
+@utility text-button-s { font-size: 14px; line-height: 18px; letter-spacing: 0em; font-weight: 600; }
+@utility text-label-m { font-size: 14px; line-height: 18px; letter-spacing: 0em; font-weight: 500; }
+@utility text-data-price-xl { font-family: var(--font-display); font-stretch: expanded; font-size: 40px; line-height: 44px; letter-spacing: -0.02em; font-weight: 700; font-variant-numeric: tabular-nums; }
+@utility text-data-price-m { font-family: var(--font-display); font-stretch: expanded; font-size: 22px; line-height: 26px; letter-spacing: -0.01em; font-weight: 600; font-variant-numeric: tabular-nums; }
+@utility text-mono-label { font-family: var(--font-mono); font-size: 12px; line-height: 16px; letter-spacing: 0.06em; font-weight: 500; text-transform: uppercase; }
+@utility text-mono-data { font-family: var(--font-mono); font-size: 13px; line-height: 18px; letter-spacing: 0em; font-weight: 400; font-variant-numeric: tabular-nums; }
+@utility text-mono-data-strong { font-family: var(--font-mono); font-size: 13px; line-height: 18px; letter-spacing: 0em; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Dado sem mudar o tamanho do contexto: família monoespaçada e algarismos de largura fixa (AC03). */
+@utility data-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 @media (max-width: 700px) { :root { --page-gutter: 20px; } }
 
 /* Cores de elementos ficam na camada base: utilitários (text-primary-foreground...) vencem sem regras corretivas. */
@@ -148,7 +264,7 @@ body { margin: 0; background: var(--color-bg); color: var(--color-text); line-he
 button, input { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .65; }
-:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; border-radius: 6px; }
 [tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { outline: none; }
 h1, h2[tabindex="-1"] { scroll-margin-top: 88px; }
 h1, h2, h3 { font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; font-weight: 700; }
@@ -173,7 +289,7 @@ h1, h2 { text-wrap: balance; }
 [data-slot="button"], .main-nav a, .icon-button, .account-button, .panel-item {
   transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
 }
-[data-slot="button"]:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; box-shadow: none; }
+[data-slot="button"]:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; box-shadow: none; }
 [data-slot="input"], .login-input { box-shadow: none; }
 .product-group:hover { background: var(--color-surface-raised); }
 .cell-price strong, .current-price, .product-price, .alert-current, .alert-item-target, .history-data td { font-variant-numeric: tabular-nums; }
@@ -308,7 +424,7 @@ h1, h2 { text-wrap: balance; }
 .opportunities { display: grid; grid-template-columns: 1fr; list-style: none; margin: 0; padding: 0; }
 .opportunity-card { position: relative; display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 4px 20px; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--color-border); }
 .opportunity-card:hover { background: var(--color-surface-raised); }
-.opportunity-card:focus-within { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.opportunity-card:focus-within { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; }
 .opportunity-media { position: relative; display: grid; place-items: center; grid-column: 1; grid-row: 1 / 5; width: 72px; height: 72px; border-radius: 10px; background: var(--color-bg); }
 .opportunity-media .product-image { width: 64px; height: 64px; }
 .product-image { width: 96px; height: 96px; flex: none; object-fit: contain; border-radius: 10px; }
@@ -319,7 +435,7 @@ h1, h2 { text-wrap: balance; }
 .opportunity-title { grid-column: 2; margin: 0; font-size: 16px; }
 .card-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: var(--color-text); font-weight: 700; text-align: left; overflow-wrap: anywhere; }
 .card-link::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }
-.card-link:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.card-link:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; }
 .opportunity-prices, .min-price, .observed { margin: 0; }
 .opportunity-prices { grid-column: 3; grid-row: 1 / 3; text-align: right; }
 .previous-price { color: var(--color-text-muted); font-size: 13px; }
@@ -501,7 +617,7 @@ h1, h2 { text-wrap: balance; }
   .products-table .row-details-link { width: 44px; min-width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--color-brand); }
   .products-table .row-details-link::after { content: ""; position: absolute; inset: 0; }
   .products-table .row-details-link:focus-visible { outline: none; }
-  .products-table .row-details-link:focus-visible::after { outline: 3px solid var(--color-focus); outline-offset: 2px; border-radius: 12px; }
+  .products-table .row-details-link:focus-visible::after { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; border-radius: 12px; }
   .products-table .row-details-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
   .products-table .row-details-chevron { display: block; width: 24px; height: 24px; }
   .products-table .product-secondary td { padding: 0 0 0 76px; }
@@ -584,18 +700,18 @@ h1, h2 { text-wrap: balance; }
 .login-field { display: grid; gap: var(--space-2); min-width: 0; }
 .login-field label { font-size: 14px; font-weight: 600; color: var(--color-text); }
 .input-wrap { position: relative; }
-.login-input { width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid var(--color-control-border); border-radius: var(--radius-control); background: var(--color-bg); color: var(--color-text); font-size: 17px; transition: border-color 150ms ease; }
+.login-input { width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid var(--color-control-border); border-radius: var(--radius-control); background: var(--color-bg); color: var(--color-text); font-size: 17px; transition: border-color var(--motion-fast) var(--ease-out); }
 .login-input:hover { border-color: var(--color-text); }
 .login-input:focus-visible { border-color: var(--color-focus); border-radius: var(--radius-control); outline: 2px solid var(--color-focus); outline-offset: 2px; } /* 0020/AC06: anel além da cor da borda */
 .login-input[aria-invalid="true"] { border-color: var(--color-danger-text); }
 .login-input--password { padding-right: 56px; }
-.password-toggle { position: absolute; top: 50%; right: 2px; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--color-text-muted); transition: color 150ms ease, background-color 150ms ease; }
+.password-toggle { position: absolute; top: 50%; right: 2px; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--color-text-muted); transition: color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
 .password-toggle:hover { color: var(--color-text); background: var(--color-surface); }
 .password-toggle[aria-pressed="true"] { color: var(--color-brand); }
-.btn-pill { width: 100%; min-height: 50px; margin-top: var(--space-2); border-radius: var(--radius-pill); font-size: 17px; transition: background-color 150ms ease, transform 150ms ease; }
+.btn-pill { width: 100%; min-height: 50px; margin-top: var(--space-2); border-radius: var(--radius-pill); font-size: 17px; transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
 .btn-pill:active:not(:disabled) { transform: scale(.98); }
 .btn-pill[aria-disabled="true"], .btn-pill[aria-disabled="true"]:hover:not(:disabled), .btn-pill[aria-disabled="true"]:active:not(:disabled) { transform: none; cursor: progress; background: var(--color-surface); color: var(--color-text-muted); box-shadow: inset 0 0 0 1px var(--color-control-border); } /* 0020/AC08: aparência distinta sem tirar o foco; sem opacity, para manter 4,5:1 (AC10) */
-.btn-pill:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; border-radius: var(--radius-pill); }
+.btn-pill:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; border-radius: var(--radius-pill); }
 .login-note { margin-top: 40px; font-size: 15px; color: var(--color-text-muted); }
 .login-back { align-self: start; padding-left: 0; margin-top: 12px; }
 @media (min-width: 841px) {
