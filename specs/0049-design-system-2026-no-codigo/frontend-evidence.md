@@ -121,3 +121,38 @@ dist (5 marcadores conferidos)".
 
 `npm run lint` → 0 problemas; `npm test` → 48 arquivos, **687 passed**; `npm run build:check` →
 ok, sem vestígios do catálogo.
+
+## F8–F11 — Componentes da CLI (após a decisão da F5)
+
+- **Teste:** `src/components/ui/controls.test.tsx` (10 casos): Checkbox alterna com Espaço e fica
+  rosa; Switch liga com Espaço e Enter, verde de ação, 24 px de altura; Radio muda com as setas;
+  Select abre com Enter e escolhe com setas e Enter, gatilho de 44 px; Alert `default`,
+  `destructive`, `warning` e `success` com `data-variant`, token e papel (`alert`/`status`); Tabs em
+  pílula trocam com as setas; Textarea com raio e anel do Input.
+- **Red** (componentes do registry, só com o `cn` corrigido): `npx vitest run
+  src/components/ui/controls.test.tsx` → **10 failed (10)**. Motivos: classes do registry (anel
+  `ring-[3px]`, Switch `bg-primary`, Select `h-9`, Tabs `rounded-lg`, Textarea `rounded-md`), Alert
+  sem `data-variant`/`warning`/`success` e sempre `role="alert"`, e o Radio (no jsdom o Radix move
+  o foco com a seta, mas só marca com Espaço; o teste passou a conferir foco + Espaço).
+- **Green:** → **10 passed**. O comportamento de teclado vem do Radix; o que o Red pegou foi a
+  aparência por token e o contrato do Alert.
+- `src/dev/catalogRoute.test.tsx`: `matchMedia` simulado (a Sidebar do catálogo consulta a
+  largura); espera de 14 s para o chunk do catálogo sob a suíte paralela (falhou uma vez por tempo
+  na suíte completa e passou isolado).
+- `tests/visual/catalog.spec.ts` → **15 passed** (3 testes × 5 larguras): seções, estados abertos
+  por teclado, axe no catálogo e no diálogo aberto, Button `sm` com 36 px visíveis e alvo de 44 px.
+  O axe acusou contraste da aba inativa (`text-foreground/60` sobre `--muted`); corrigido para
+  `--muted-foreground`.
+
+## Correções da revisão (I2)
+
+Red/Green de cada item em verification.md ("Correções da revisão independente"): fontes
+(`check-fonts`, 13 problemas no build antigo → 0), tokens com literal (1 failed → 105 passed),
+espera do AC07 (10 passed, com caso negativo), `no-raw-colors` (2 passed), botões pequenos
+(catálogo), alvo só com alerta ativo (`chartTargetPrice is not a function` → 2 passed).
+
+## Gates finais
+
+`npm run lint` → 0 problemas; `npm test` → 50 arquivos, **706 passed**; `npm run build:check` →
+build ok, "Sem vestígios do catálogo em dist (5 marcadores conferidos)" e "Fontes conforme em dist".
+CSS principal 146,69 kB (gzip 26,28 kB).

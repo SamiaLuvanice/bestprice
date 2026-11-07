@@ -10,7 +10,7 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 - [x] Spec `pronta`, Issue #267, worktree a partir de `origin/develop` `de5d8ee`.
 - [x] Plano ([plan.md](plan.md)), sem mudança de contrato REST.
-- [ ] I1 — Aprovação explícita para:
+- [x] I1 — Aprovação explícita para:
   - a CLI do shadcn (decisão 6);
   - as dependências novas `@fontsource/geist-mono` e `sonner`.
 
@@ -41,20 +41,20 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 ## Fase 2 — Componentes (AC05)
 
-- [ ] F5 — Rodar a CLI (após I1) e revisar o diff de `package.json` e do lockfile.
+- [x] F5 — Rodar a CLI (após I1) e revisar o diff de `package.json` e do lockfile.
 - [x] F6 — **Button:**
   - **Red:** testes de `loading` (desabilitado, `aria-busy`, spinner) e dos tamanhos.
   - **Green:** variantes e estados conforme a correspondência da decisão 2.
 - [x] F7 — **Badge:** variantes de status com ícone e texto, mais o teste de renderização.
-- [ ] F8 — **Input, Textarea, Label e Field:**
+- [x] F8 — **Input, Textarea, Label e Field:**
   - **Red:** Field liga `aria-describedby` e `aria-invalid`; o contador aparece perto do
     limite.
   - **Green:** implementação.
-- [ ] F9 — **Checkbox, Switch, Radio e Select:** estilos com tokens e teste de teclado
+- [x] F9 — **Checkbox, Switch, Radio e Select:** estilos com tokens e teste de teclado
   (Space/Enter/setas).
-- [ ] F10 — **Card, Alert, Alert Dialog, Dropdown Menu, Tooltip, Sonner e Tabs:** variantes
+- [x] F10 — **Card, Alert, Alert Dialog, Dropdown Menu, Tooltip, Sonner e Tabs:** variantes
   `warning` e `success` no Alert e Tabs em pílula.
-- [ ] F11 — **Table, Pagination, Sidebar, Skeleton, Avatar, Progress, Separator,
+- [x] F11 — **Table, Pagination, Sidebar, Skeleton, Avatar, Progress, Separator,
   EmptyState e PriceChartCard.**
 - [ ] I2 — Revisão `arch-reviewer` das Fases 1 e 2.
 
@@ -62,10 +62,10 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 - [x] F12 — **Red:** teste de rotas mostra que `/dev/design-system` dá "não encontrada" com
   `DEV=false` e abre com `DEV=true`. **Green:** rota condicional e `lazy`.
-- [ ] F13 — Catálogo com todas as variantes e estados, mais as tabelas de token do JSON.
+- [x] F13 — Catálogo com todas as variantes e estados, mais as tabelas de token do JSON.
 - [x] F14 — Criar `scripts/check-no-catalog.mjs`: `dist/` sem nenhum vestígio do catálogo.
   - Chamado por `npm run build:check` e incluído no CI de frontend.
-- [ ] D2 — Inventário do AC05 em `verification.md`: componente, variantes, estados,
+- [x] D2 — Inventário do AC05 em `verification.md`: componente, variantes, estados,
   node-id e captura `catalog.spec.ts`.
 
 ## Fase 4 — Telas (AC07–AC10, AC12)

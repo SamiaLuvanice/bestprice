@@ -38,49 +38,91 @@ Reexecutadas com `npx playwright test --last-failed --reporter=line`; diffs em
 | 9–16 | `brand.spec.ts` "marca landing" e "marca inicio" | 320, 390, 768, 1280 | `image.width` esperado ≥ 40, recebido 34 | Mesma mudança intencional: `.research-brand .brand-logo { width:34px }` (shell interno aprovado no Figma, 0040/0043). A asserção é anterior ao shell | **Asserção visual desatualizada** (não é regressão de produto) | Separada para a Fase 5 / #259; atualizar a asserção exige confirmar o tamanho contra o quadro do Figma |
 | 17–19 | `redesign.spec.ts` "produtos", "detalhe", "alertas" | 1280 | axe `label-content-name-mismatch` em `.account-button` | Em 1280 o e-mail fica visível; o texto visível do botão incluía a inicial do avatar ("P" + e-mail), que não está contida no nome acessível `Conta: pessoa@example.com` (WCAG 2.5.3) | **Regressão real de acessibilidade** | **Corrigida** antes da Fase 1: a inicial passou para `data-initial` + `::before` (CSS), sem mudar o nome acessível. `npx playwright test tests/visual/redesign.spec.ts --project=viewport-1280` → **15 passed** |
 
-## F5 — CLI do shadcn: bloqueada (pendente de aprovação)
+## F5 — CLI do shadcn (07/11/2026)
 
-`npx shadcn@latest add textarea label checkbox switch radio-group select tabs alert alert-dialog dropdown-menu tooltip sonner avatar progress pagination sidebar --dry-run`
-(07/11/2026, em `frontend/`) mostrou, **antes de gravar qualquer arquivo**:
+**1ª tentativa (bloqueada):** o `--dry-run` do comando aprovado mostrou dependências fora da
+aprovação (`next-themes`, exigida pelo `sonner` do registry, e um pacote npm `cn`, declarado por
+todos os itens), 4 sobrescritas (`button`, `separator`, `input`, `skeleton`) e "16 CSS variables
+added to src/styles.css". A CLI não foi executada; reportado à coordenação.
 
-- **Dependências fora da aprovação:** `next-themes` (exigida pelo `sonner` do registry) e `cn`
-  (declarada por todos os itens, inclusive `textarea` e `sidebar`). A aprovação cobre só
-  `sonner` e `@fontsource/geist-mono`. Pela regra da delegação, a CLI **não foi executada**.
-- **Sobrescritas:** `button.tsx`, `separator.tsx`, `input.tsx` e `skeleton.tsx` (dependências de
-  `sidebar`/`alert-dialog`/`pagination`) seriam sobrescritas; seriam recusadas.
-- **CSS:** "16 CSS variables added to src/styles.css" (variáveis do `sidebar`), que entrariam em
-  conflito com os tokens do snapshot do Figma.
+**Decisão da responsável ("Sem next-themes"):** rodar a CLI sem `sonner`, sem sobrescritas, sem
+aceitar variáveis CSS do registry, sem pacote `cn`; `sonner.tsx` escrito à mão sobre o pacote
+`sonner`.
 
-Ficam pendentes F5, F9 (Checkbox, Switch, Radio, Select) e a parte CLI de F8 (Textarea, Label),
-F10 (Alert, Alert Dialog, Dropdown Menu, Tooltip, Sonner, Tabs) e F11 (Pagination, Sidebar,
-Avatar, Progress). Decisão necessária da pessoa responsável: aprovar `next-themes` (ou um
-`sonner.tsx` sem ele, já que o tema é claro fixo) e decidir sobre `cn` (possivelmente um
-artefato do registry; instalar um pacote npm chamado `cn` não é necessário, pois `cn` já existe
-em `src/lib/utils.ts`), além de rodar a CLI recusando as sobrescritas e sem aceitar as variáveis
-CSS do registry.
+**Execução:**
 
-## D2 — Inventário do AC05 no catálogo local (parcial)
+1. `npx shadcn@latest add textarea label checkbox switch radio-group select tabs alert alert-dialog dropdown-menu tooltip avatar progress pagination sidebar --dry-run`
+   → 17 arquivos novos, 4 sobrescritas, dependências `cn`, `radix-ui`, `class-variance-authority`,
+   `lucide-react`, 16 variáveis CSS.
+2. Para que nem o pacote `cn` nem as variáveis CSS chegassem ao projeto, a CLI rodou numa cópia
+   isolada (`package.json`, `package-lock.json`, `components.json`, `tsconfig.json`,
+   `vite.config.ts`, `styles.css`, `lib/utils.ts` e `components/ui/` copiados para o scratchpad),
+   com `npm_config_dry_run=true` e `npm_config_ignore_scripts=true` (o npm não instalou nada) e
+   respondendo **n** a cada pergunta de sobrescrita (`yes n | npx shadcn@latest add … --yes`).
+3. Conferido na cópia: `button`, `separator`, `input` e `skeleton` idênticos aos do projeto;
+   `package.json` e `package-lock.json` idênticos. A cópia de `styles.css` recebeu as variáveis do
+   registry e **não** foi trazida.
+4. Copiados para o projeto só os arquivos novos: `textarea`, `label`, `checkbox`, `switch`,
+   `radio-group`, `select`, `tabs`, `alert`, `alert-dialog`, `dropdown-menu`, `tooltip`, `avatar`,
+   `progress`, `pagination`, `sidebar`, `sheet` (dependência do `sidebar`) e `hooks/use-mobile.ts`.
+5. O registry gerou `import { cn } from "cn"` em 16 arquivos; trocado por `@/lib/utils`.
+   `buttonVariants` foi para `components/ui/button-variants.ts` (o `pagination` o importa; mantém o
+   `button.tsx` só com componentes, sem aviso de fast refresh).
+6. `npm install sonner` (aprovado). `components/ui/sonner.tsx` escrito à mão: `theme="light"` fixo,
+   cores e raio por token, sem `next-themes`.
+
+**Diff de dependências** (`git diff` antes do commit `10f6d2d`):
+
+| Arquivo | Mudança |
+|---|---|
+| `package.json` | `+ "sonner": "^2.0.8"` (única linha) |
+| `package-lock.json` | +17 linhas: entrada raiz `sonner ^2.0.8` e `node_modules/sonner` 2.0.8 (MIT, peers `react`/`react-dom` 18–19, `@types/react` opcional) |
+| `next-themes`, `cn` | ausentes do `package.json` e do lockfile (`grep -c '"node_modules/next-themes"\|"node_modules/cn"'` → 0) |
+
+Somando a Fase 1: dependências novas da spec = `@fontsource/geist-mono` e `sonner`, as duas aprovadas.
+
+**Ajustes aos tokens** (sem dark: — tema claro fixo): campos com 44 px e `rounded-xl` como o
+Input; foco com `--ring-width`; Switch ligado em `bg-action`, 44 × 24 px; Checkbox e Radio
+marcados em rosa `--primary`; Tabs em pílula (`rounded-full`, aba ativa com `--shadow-1`, inativa
+com `--muted-foreground` para AA); Alert com `warning` e `success` sobre `--status-*-soft`
+(`role="alert"` para destrutivo e atenção, `role="status"` para informação e sucesso); Alert
+Dialog e Sheet com sobreposição `--color-overlay` e `--shadow-3`; Dropdown com itens de 44 px e
+`--shadow-2`; Tooltip na superfície escura fixa `--night-900`; Avatar em `--accent`/`--primary`;
+Sidebar com os tokens `--sidebar-*` do registry, já definidos pelo snapshot do Figma.
+
+## D2 — Inventário do AC05 no catálogo local
 
 Catálogo em `/dev/design-system` (`src/dev/DesignSystemCatalog.tsx`), capturado por
-`tests/visual/catalog.spec.ts` (seções em `frontend/test-results/catalog-*/<seção>.png`, não
-versionadas). `npx playwright test tests/visual/catalog.spec.ts` → **5 passed** (320, 390, 768,
-1280 e 1440): seções visíveis, nenhuma fonte de origem externa, `document.fonts.check('13px
-"Geist Mono"')` verdadeiro, sem rolagem horizontal e axe WCAG 2.2 AA sem violações.
-Os node-ids da seção 2 não estão no snapshot exportado; a coluna fica para a Fase 5 (D3), com
-acesso ao Figma.
+`tests/visual/catalog.spec.ts`: uma captura por seção (22 seções) e os estados abertos por teclado
+(select, menu, tooltip, diálogo e toast), em 320, 390, 768, 1280 e 1440. Capturas em
+`frontend/test-results/catalog-*/` (não versionadas). Node-ids da seção 2: **a preencher na D3**
+(o snapshot exportado não os traz e não houve acesso ao Figma nesta sessão).
 
-| Componente (Figma) | Código | Variantes no catálogo | Estados no catálogo | Situação |
+| Componente (Figma) | Código | Variantes no catálogo | Estados no catálogo | Node-id |
 |---|---|---|---|---|
-| Button | `ui/button.tsx` | action→`default`, default→`brand`, secondary, outline, ghost, link, destructive; sm/default/lg/icon | padrão, hover e foco forçados por classe, desabilitado, carregando | presente |
-| Badge | `ui/badge.tsx` | default, secondary, destructive, outline; status `down`, `up`, `stable`, `target`, `stale`, `unverified` (ícone + texto) | — | presente |
-| Input / Field | `ui/input.tsx`, `ui/field.tsx` | com descrição, erro, contador | padrão, foco forçado, inválido, desabilitado, contador perto do limite | presente |
-| Card | `ui/card.tsx` | header, descrição, conteúdo, rodapé | — | presente |
-| Table | `ui/table.tsx` | cabeçalho mono, linhas | linha com hover forçado | presente |
-| Skeleton, Separator | `ui/skeleton.tsx`, `ui/separator.tsx` | — | — | presente |
-| Estado vazio | `components/EmptyState.tsx` | com ação | — | presente |
-| Card de gráfico | `components/PriceChartCard.tsx` + `PriceHistoryChart` | — | — | presente |
-| Chart | `ui/chart.tsx` | dentro do card de gráfico | — | presente |
-| Textarea, Label, Checkbox, Switch, Radio Group, Select, Tabs, Alert (+warning/success), Alert Dialog, Dropdown Menu, Tooltip, Sonner, Avatar, Progress, Pagination, Sidebar | — | — | — | **pendente (F5 bloqueada)**; listados na seção "Pendentes" do catálogo |
+| Button | `ui/button.tsx` (+ `button-variants.ts`) | action→`default`, default→`brand`, secondary, outline, ghost, link, destructive; sm, default, lg, icon | padrão, hover e foco forçados por classe, desabilitado, carregando; sm com 36 px visíveis e alvo de 44 px | a preencher na D3 |
+| Badge | `ui/badge.tsx` | default, secondary, destructive, outline, `down`, `up`, `stable`, `target`, `stale`, `unverified` | — | a preencher na D3 |
+| Input / Field | `ui/input.tsx`, `ui/field.tsx` | com descrição, erro, contador | padrão, foco forçado, inválido, desabilitado, contador perto do limite | a preencher na D3 |
+| Textarea / Label | `ui/textarea.tsx`, `ui/label.tsx` | dentro de Field | padrão, erro | a preencher na D3 |
+| Checkbox | `ui/checkbox.tsx` | — | desmarcado, marcado, inválido, desabilitado; foco por teclado (teste) | a preencher na D3 |
+| Switch | `ui/switch.tsx` | default, sm | desligado, ligado, desabilitado; Espaço/Enter (teste) | a preencher na D3 |
+| Radio Group | `ui/radio-group.tsx` | — | selecionado, não selecionado, desabilitado; setas (teste) | a preencher na D3 |
+| Select | `ui/select.tsx` | default | fechado, aberto (captura `select-aberto`); Enter + setas (teste) | a preencher na D3 |
+| Tabs | `ui/tabs.tsx` | pílula | ativa, inativa, desabilitada; setas (teste) | a preencher na D3 |
+| Card | `ui/card.tsx` | header, descrição, conteúdo, rodapé | — | a preencher na D3 |
+| Alert | `ui/alert.tsx` | default, success, warning, destructive | — | a preencher na D3 |
+| Alert Dialog | `ui/alert-dialog.tsx` | — | fechado, aberto (captura `dialogo-aberto`, axe sem violações), Esc fecha | a preencher na D3 |
+| Dropdown Menu | `ui/dropdown-menu.tsx` | item padrão e destrutivo, rótulo, separador | aberto (captura `menu-aberto`) | a preencher na D3 |
+| Tooltip | `ui/tooltip.tsx` | — | aberto por foco (captura `tooltip-aberto`) | a preencher na D3 |
+| Sonner | `ui/sonner.tsx` | success, warning, error | toast visível (captura `toast`) | a preencher na D3 |
+| Table | `ui/table.tsx` | cabeçalho Mono/Label | linha com hover forçado | a preencher na D3 |
+| Pagination | `ui/pagination.tsx` | anterior, página, ativa, reticências, próxima | — | a preencher na D3 |
+| Sidebar | `ui/sidebar.tsx` (+ `sheet.tsx`, `hooks/use-mobile.ts`) | `collapsible="none"` | item ativo em rosa | a preencher na D3 |
+| Avatar | `ui/avatar.tsx` | default, lg | iniciais | a preencher na D3 |
+| Progress | `ui/progress.tsx` | — | 25%, 70% | a preencher na D3 |
+| Skeleton, Separator | `ui/skeleton.tsx`, `ui/separator.tsx` | — | — | a preencher na D3 |
+| Chart / card de gráfico | `ui/chart.tsx`, `components/PriceChartCard.tsx` | degraus, área, ponto atual | — | a preencher na D3 |
+| Estado vazio | `components/EmptyState.tsx` | com ação | — | a preencher na D3 |
 
 ## F12–F14 — Catálogo restrito (AC06)
 
@@ -131,8 +173,8 @@ corrigidas na F0.
 
 ### Asserções visuais existentes alteradas
 
-Nenhuma. Nenhum teste existente teve expectativa mudada; os testes novos estão em
-frontend-evidence.md. As baselines afetadas ficam para a F26.
+Nenhuma nesta fase (ver "Correções da revisão independente" para a única alteração posterior).
+As baselines afetadas ficam para a F26.
 
 ### Omissões de elementos do Figma (sem comportamento ou dado existente)
 
@@ -153,3 +195,109 @@ que já existiam (`SummaryIndicators`) seguem com os mesmos dados e textos.
   `text-data-price-*` fiéis ao estilo do Figma (usados no catálogo e no `PriceChartCard`).
 - **Títulos expandidos em macOS:** `font-stretch: expanded` alarga `h1`/`h2` onde a SF Pro
   Expanded existir; a ausência de rolagem horizontal só foi conferida no Windows (sem SF Pro).
+
+## Correções da revisão independente (I2)
+
+### 1. Fontes: subconjuntos e base64 (AC14)
+
+- `main.tsx` importa só `latin-{400,500,600}` e `latin-ext-{400,500,600}` da Geist Mono.
+- `vite.config.ts`: `build.assetsInlineLimit` como função; `.woff`/`.woff2` nunca viram base64.
+- `scripts/check-fonts.mjs` (no `npm run build:check`) falha com fonte em base64 no CSS ou com
+  subconjunto/peso fora de latin/latin-ext 400–600. Teste próprio: `scripts/check-fonts.test.ts`, 3 passed.
+- **Red:** build da configuração anterior (`main.tsx` e `vite.config.ts` de `HEAD`, saída no
+  scratchpad) → `node scripts/check-fonts.mjs <dist-antigo>` sai com 1 e 13 problemas (CSS com fonte
+  em base64 e 12 arquivos `cyrillic`/`vietnamese`/`symbols2`/etc.).
+- **Tamanho do CSS principal:**
+
+| Momento | CSS principal | gzip |
+|---|---|---|
+| Medição da revisão (antes dos componentes da F5) | 167,78 kB | — |
+| Antes da correção, com os componentes da F5 (`index-CUlqhbPn.css`) | 206,11 kB | 69,09 kB |
+| Depois da correção (`index-DVVJlnca.css`) | 145,75 kB | 26,19 kB |
+| Ponta final (catálogo e ajustes; `index-OUTF1db7.css`) | 146,69 kB | 26,28 kB |
+
+### 2. Licença versionada (AC14)
+
+`designsystem/licenses/GeistMono-OFL.txt`: texto integral da OFL 1.1 com o aviso de copyright
+(© 2024 The Geist Project Authors), copiado de `@fontsource/geist-mono/LICENSE`. Referenciado no
+`designsystem/README.md`.
+
+### 3. Tokens próprios com literal (AC01) — divergências
+
+Teste novo em `src/tokens.figma.test.ts`: todo token de `:root` com cor literal precisa ser
+variável ou efeito do Figma, ou estar na lista de divergências do próprio teste.
+**Red:** → 1 failed | 103 passed (104), listando os 15 tokens próprios com literal (mais as 4 sombras,
+que são efeitos do Figma; o teste passou a aceitar os nomes de `effectStyles`).
+**Green:** → 105 passed, depois do mapeamento:
+
+| Token próprio | Antes | Depois (token do Figma) | Observação |
+|---|---|---|---|
+| `--color-border-soft` | `#e8e8ed` | `var(--border)` | divisórias ficam no `#d2d2d7` do Figma (mais visíveis) |
+| `--color-badge-text` | `#fff` | `var(--destructive-foreground)` | mesmo valor |
+| `--color-logo-surface` | `#fff` | `var(--background)` | mesmo valor |
+| `--color-danger-text` | `#a61b1b` | `var(--destructive)` (`#b42318`) | 5,9:1 sobre `--status-up-soft` |
+| `--color-danger-bg` | `#fff0f0` | `var(--status-up-soft)` (`#fff0ee`) | — |
+| `--color-danger-border` | `#ffd4d4` | `color-mix(in srgb, var(--destructive) 25%, var(--background))` | — |
+| `--color-glass` | `rgba(251,251,253,.96)` | `color-mix(in srgb, var(--surface-raised) 96%, transparent)` | mesmo valor |
+| `--color-glass-edge` | `rgba(255,255,255,.9)` | `color-mix(in srgb, var(--background) 90%, transparent)` | mesmo valor |
+| `--color-overlay` | `rgba(0,0,0,.62)` | `color-mix(in srgb, var(--night-950) 62%, transparent)` | — |
+| `--color-skeleton-a` | `#e8e8ed` | `color-mix(in srgb, var(--border) 50%, var(--muted))` | — |
+| `--color-skeleton-b` | `#f5f5f7` | `var(--muted)` | mesmo valor |
+| `--color-graphite` | `#18171b` | `var(--night-900)` | — |
+| `--color-on-graphite` | `#fff` | `var(--primary-foreground)` | mesmo valor |
+| `--color-footer-bg` | `#000` | `var(--night-950)` (`#0a0a0f`) | asserção visual atualizada (abaixo) |
+
+**Divergência que restou** (lista `colorLiteralExceptions` do teste):
+
+| Token | Valor | Motivo | Aprovação |
+|---|---|---|---|
+| `--color-brand-strong` | `#a0004c` | hover de link (rosa escurecido, 8,1:1 sobre branco); o Figma não define estado hover para link | pendente da responsável |
+
+Qualquer literal novo fora dessa lista falha o teste (é o Red acima). Um segundo caso garante que a
+lista não tem entrada morta.
+
+### 4. Ação principal única sem espera fixa (AC07)
+
+`src/primaryAction.test.tsx`: cada tela espera um título ou texto próprio do estado (`findBy*`),
+sem `setTimeout`; um caso extra comprova que a espera falha quando o elemento não aparece.
+→ 10 passed. O estado "Assistente indisponível" passou a usar `capabilities.enabled: false` (aviso
+"O assistente está indisponível no momento…"), que é o estado da tela; o 503 anterior não tinha
+um elemento visível para esperar.
+
+### 5. Menores
+
+- `no-raw-colors`: a exceção retira só o trecho permitido da linha; teste novo comprova que outra
+  cor na mesma linha ainda falha (2 passed).
+- Botões pequenos: regras com `:where()`; o alvo mínimo de 44 px do CSS global vale só fora de
+  `sm`/`xs`/`icon-sm`/`icon-xs`. Teste no catálogo: Button `sm` com 36 px visíveis, `::after` de 44 px.
+- `@source not "./dev"` **não foi aplicado**: classes usadas só no catálogo
+  (`md:grid-cols-[160px_1fr]`, `max-w-[1248px]` e outras) deixariam de ser geradas e o catálogo
+  ficaria sem estilo no dev. O build de distribuição continua sem vestígio do catálogo
+  (`check-no-catalog`); os utilitários gerados são genéricos.
+- Catálogo: comentário liga o componente aos 5 marcadores de `scripts/check-no-catalog.mjs`.
+- Gráfico: a linha do alvo aparece só com alerta ativo (`chartTargetPrice`, `src/lib/targetPrice.ts`).
+  **Red:** `chartTargetPrice is not a function` (2 failed); **Green:** 2 passed.
+
+### Asserções visuais existentes alteradas (AC11)
+
+| Arquivo | Antes | Depois | Motivo |
+|---|---|---|---|
+| `tests/visual/review-corrections.spec.ts` (rodapé da landing) | `background: 'rgb(0, 0, 0)'` | `background: 'rgb(10, 10, 15)'` | `--color-footer-bg` → `--night-950` (AC01). `npx playwright test tests/visual/review-corrections.spec.ts` → 12 passed |
+
+## Playwright final desta delegação (ponta `74ee602`)
+
+`npx playwright test` → **189 passed, 48 failed, 54 skipped** (5,0 min; 291 testes com o projeto
+`viewport-1440`, que roda só `catalog.spec.ts`). Nenhuma baseline foi atualizada. Todas as falhas
+são de captura ou da asserção ≥ 40 px da #259; nenhuma asserção funcional ou de acessibilidade
+falhou.
+
+| Grupo | Falhas | Classe | Destino |
+|---|---|---|---|
+| `public-pages` landing (claro/escuro × 4) | 8 | Preexistente (#259, baseline desatualizada) | F26 / #259 |
+| `brand` marca landing/inicio (× 4) | 8 | Preexistente (#259, asserção ≥ 40 px desatualizada) | F26 / #259 |
+| `public-pages` login (claro/escuro × 4) | 8 | Diferença visual nova desta spec | F26 |
+| `public-pages` "não encontrada" (claro/escuro × 4) | 8 | Diferença visual nova desta spec | F26 |
+| `signup.spec.ts` 7 estados do cadastro × desktop/mobile | 14 | Diferença visual nova desta spec | F26 (quadros 220:*) |
+| `signup.spec.ts` login e landing com "Criar conta" | 2 | Diferença visual nova desta spec | F26 |
+
+O `assistant.spec.ts:36` (instável na Fase 4) passou nesta execução.
