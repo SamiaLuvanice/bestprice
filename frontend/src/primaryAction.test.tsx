@@ -23,26 +23,39 @@ function visibleActions(): Element[] {
     .filter((element) => !element.closest('[hidden], [aria-hidden="true"]'))
 }
 
-const screens: [string, string, Route, unknown, string | RegExp][] = [
-  ['Entrar', '/login', guest, undefined, 'Entrar na sua conta'],
-  ['Criar conta', '/cadastro', (url, init) => guest(url, init) ?? (url === '/api/auth/signup' ? reply(200, { enabled: true }) : undefined), undefined, /Criar (sua )?conta/],
-  ['Assistente — início', '/app/assistant', ai, undefined, /.+/],
-  ['Assistente — conversa', '/app/assistant/c1', ai, undefined, /.+/],
-  ['Assistente indisponível', '/app/assistant', (url) => url === '/api/ai/capabilities' ? reply(503, apiError('unavailable', 'Serviço indisponível.')) : ai(url), undefined, /.+/],
-  ['Histórico', '/app/history', ai, undefined, /.+/],
-  ['Monitoramento — sem produtos', '/app/monitoring', () => undefined, undefined, /.+/],
-  ['Monitoramento — com produtos', '/app/monitoring', () => undefined, dashboardWith([trackedFixture()]), /.+/],
-  ['Monitoramento indisponível', '/app/monitoring', (url) => url === '/api/dashboard' ? reply(503, apiError('unavailable', 'Não foi possível carregar o painel. Tente novamente.')) : undefined, undefined, /.+/],
+type Ready = () => Promise<unknown>
+const heading = (name: string | RegExp): Ready => () => screen.findByRole('heading', { level: 1, name })
+const text = (content: string): Ready => async () => (await screen.findAllByText(content))[0]
+
+// Cada tela espera um elemento próprio do estado (dados carregados ou erro). Se ele não aparecer,
+// o findBy falha e o teste também: a contagem nunca roda sobre uma tela errada ou incompleta.
+const screens: [string, string, Route, unknown, Ready][] = [
+  ['Entrar', '/login', guest, undefined, heading('Entrar na sua conta')],
+  ['Criar conta', '/cadastro', (url, init) => guest(url, init) ?? (url === '/api/auth/signup' ? reply(200, { enabled: true }) : undefined), undefined, heading('Criar sua conta')],
+  ['Assistente — início', '/app/assistant', ai, undefined, heading('O que você quer comprar?')],
+  ['Assistente — conversa', '/app/assistant/c1', ai, undefined, text('Qual o seu uso?')],
+  ['Assistente indisponível', '/app/assistant', (url) => url === '/api/ai/capabilities' ? reply(200, { ...capabilities, enabled: false }) : ai(url), undefined,
+    text('O assistente está indisponível no momento. Suas pesquisas salvas continuam acessíveis.')],
+  ['Histórico', '/app/history', ai, undefined, text('Notebook')],
+  ['Monitoramento — sem produtos', '/app/monitoring', () => undefined, undefined, text('Você ainda não está acompanhando nenhum produto.')],
+  ['Monitoramento — com produtos', '/app/monitoring', () => undefined, dashboardWith([trackedFixture()]), text('Fone sem fio')],
+  ['Monitoramento indisponível', '/app/monitoring', (url) => url === '/api/dashboard' ? reply(503, apiError('unavailable', 'Não foi possível carregar o painel. Tente novamente.')) : undefined, undefined,
+    text('Não foi possível carregar o painel. Tente novamente.')],
 ]
 
-it.each(screens)('%s tem no máximo uma ação verde', async (_, path, route, dashboard, heading) => {
+it.each(screens)('%s tem no máximo uma ação verde', async (_, path, route, dashboard, ready) => {
   fakeApi(route, dashboard)
   window.history.replaceState({}, '', path)
   render(<App />)
-  await screen.findByRole('heading', { level: 1, name: heading })
-  // Espera a tela assentar (dados carregados ou erro) antes de contar.
-  await new Promise((resolve) => setTimeout(resolve, 50))
+  await ready()
   const actions = visibleActions()
   expect(actions.length, actions.map((action) => action.textContent).join(' | ')).toBeLessThanOrEqual(1)
   for (const action of actions) expect(action.className).toContain('text-action-foreground')
+})
+
+it('falha quando o elemento esperado da tela não aparece', async () => {
+  fakeApi(guest)
+  window.history.replaceState({}, '', '/login')
+  render(<App />)
+  await expect(text('Elemento que não existe')()).rejects.toThrow()
 })
