@@ -1,5 +1,22 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowRight, Plus } from 'lucide-react'
+import { ArrowRight, Bell, Clock3, MessageSquare, Monitor, Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Checkbox } from '@/components/ui/checkbox'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Label } from '@/components/ui/label'
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
+import { Progress } from '@/components/ui/progress'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from '@/components/ui/sidebar'
+import { Toaster } from '@/components/ui/sonner'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Textarea } from '@/components/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,6 +35,9 @@ import { formatMoney } from '../lib/format'
  * desenvolvimento: App.tsx registra a rota com import.meta.env.DEV e lazy import, e
  * scripts/check-no-catalog.mjs confirma que nada daqui chega ao dist/.
  * Os estados hover e focus são forçados por classe, para a captura (catalog.spec.ts).
+ * Vínculo com scripts/check-no-catalog.mjs: os marcadores procurados no dist/ são o nome deste
+ * componente, o caminho da rota, o título "Design system BestPrice", o nome do snapshot do Figma
+ * e o atributo data-catalog-section. Mudar um deles exige mudar o script (e vice-versa).
  */
 
 type Snapshot = {
@@ -50,9 +70,6 @@ const badgeLabels: Record<(typeof badgeVariants)[number], string> = {
   default: 'Novo', secondary: 'Ativo', destructive: 'Erro', outline: 'Rascunho', down: 'Queda', up: 'Alta', stable: 'Estável',
   target: 'No alvo', stale: 'Desatualizado', unverified: 'Não verificado',
 }
-/** Componentes da seção 2 cuja instalação pela CLI do shadcn ficou bloqueada (verification.md, F5). */
-const pending = ['Textarea', 'Label', 'Checkbox', 'Switch', 'Radio Group', 'Select', 'Tabs', 'Alert', 'Alert Dialog',
-  'Dropdown Menu', 'Tooltip', 'Sonner', 'Avatar', 'Progress', 'Pagination', 'Sidebar']
 // Classes literais: o Tailwind só gera os utilitários que encontra escritos no código.
 const textStyleClasses: Record<string, string> = {
   'display-xl': 'text-display-xl', 'display-l': 'text-display-l', 'display-m': 'text-display-m', 'display-s': 'text-display-s',
@@ -62,6 +79,8 @@ const textStyleClasses: Record<string, string> = {
   'label-m': 'text-label-m', 'data-price-xl': 'text-data-price-xl', 'data-price-m': 'text-data-price-m', 'mono-label': 'text-mono-label',
   'mono-data': 'text-mono-data', 'mono-data-strong': 'text-mono-data-strong',
 }
+const sectionIds = ['tokens', 'button', 'badge', 'input', 'selection', 'select', 'tabs', 'card', 'alert', 'alert-dialog', 'dropdown-menu',
+  'tooltip', 'sonner', 'table', 'pagination', 'sidebar', 'avatar', 'progress', 'skeleton', 'separator', 'empty-state', 'price-chart-card']
 const history = ['369.90', '349.90', '359.90', '279.90', '319.90', '299.90'].map((price, index) => ({
   id: `h-${index}`, price, currency: 'BRL', captured_at: `2026-10-${String(index * 3 + 1).padStart(2, '0')}T12:00:00Z`,
 }))
@@ -131,7 +150,7 @@ export default function DesignSystemCatalog() {
     <h1 className="text-display-m">Design system BestPrice 2026</h1>
     <p className="text-body-m text-muted-foreground">Catálogo local (só no servidor de desenvolvimento). Figma BestPrice IA, página 00, versão “Design system 2026 · shadcn/ui”.</p>
     <nav aria-label="Seções do catálogo" className="flex flex-wrap gap-2 py-4">
-      {['tokens', 'button', 'badge', 'input', 'card', 'table', 'skeleton', 'separator', 'empty-state', 'price-chart-card', 'pendentes'].map((id) =>
+      {sectionIds.map((id) =>
         <a key={id} href={`#${id}`} className="inline-flex min-h-11 items-center px-2 text-body-s">{id}</a>)}
     </nav>
 
@@ -163,7 +182,51 @@ export default function DesignSystemCatalog() {
         <Field label="Com erro" error="Informe um e-mail válido."><Input defaultValue="pessoa@" /></Field>
         <Field label="Desabilitado"><Input disabled defaultValue="Indisponível" /></Field>
         <Field label="Contador perto do limite" count={{ length: 1840, max: 2000 }}><Input defaultValue="Texto longo…" /></Field>
+        <Field label="Mensagem (Textarea)" description="Até 2.000 caracteres."><Textarea placeholder="Conte o que você procura…" /></Field>
+        <Field label="Textarea com erro" error="Escreva uma mensagem."><Textarea /></Field>
       </div>
+    </Section>
+
+    <Section id="selection" title="Checkbox, Switch e Radio">
+      <Row label="checkbox">
+        <span className="flex items-center gap-2"><Checkbox id="cb-off" /><Label htmlFor="cb-off">Desmarcado</Label></span>
+        <span className="flex items-center gap-2"><Checkbox id="cb-on" defaultChecked /><Label htmlFor="cb-on">Marcado</Label></span>
+        <span className="flex items-center gap-2"><Checkbox id="cb-invalid" aria-invalid /><Label htmlFor="cb-invalid">Inválido</Label></span>
+        <span className="flex items-center gap-2"><Checkbox id="cb-disabled" disabled /><Label htmlFor="cb-disabled">Desabilitado</Label></span>
+      </Row>
+      <Row label="switch">
+        <span className="flex items-center gap-2"><Switch id="sw-off" /><Label htmlFor="sw-off">Desligado</Label></span>
+        <span className="flex items-center gap-2"><Switch id="sw-on" defaultChecked /><Label htmlFor="sw-on">Ligado</Label></span>
+        <span className="flex items-center gap-2"><Switch id="sw-sm" size="sm" /><Label htmlFor="sw-sm">Pequeno</Label></span>
+        <span className="flex items-center gap-2"><Switch id="sw-disabled" disabled /><Label htmlFor="sw-disabled">Desabilitado</Label></span>
+      </Row>
+      <Row label="radio">
+        <RadioGroup defaultValue="week" aria-label="Período de exemplo" className="flex flex-wrap gap-4">
+          <span className="flex items-center gap-2"><RadioGroupItem value="day" id="radio-day" /><Label htmlFor="radio-day">Dia</Label></span>
+          <span className="flex items-center gap-2"><RadioGroupItem value="week" id="radio-week" /><Label htmlFor="radio-week">Semana</Label></span>
+          <span className="flex items-center gap-2"><RadioGroupItem value="month" id="radio-month" disabled /><Label htmlFor="radio-month">Mês (desabilitado)</Label></span>
+        </RadioGroup>
+      </Row>
+    </Section>
+
+    <Section id="select" title="Select">
+      <div className="grid max-w-sm gap-2">
+        <Label htmlFor="select-demo">Ordenar por</Label>
+        <Select defaultValue="recent">
+          <SelectTrigger id="select-demo" className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent><SelectGroup>
+            <SelectItem value="recent">Mais recentes</SelectItem><SelectItem value="drop">Maior queda</SelectItem><SelectItem value="name">Nome</SelectItem>
+          </SelectGroup></SelectContent>
+        </Select>
+      </div>
+    </Section>
+
+    <Section id="tabs" title="Tabs (pílula)">
+      <Tabs defaultValue="summary">
+        <TabsList><TabsTrigger value="summary">Resumo</TabsTrigger><TabsTrigger value="history">Histórico</TabsTrigger><TabsTrigger value="alerts" disabled>Alertas</TabsTrigger></TabsList>
+        <TabsContent value="summary"><p className="m-0 text-body-s text-muted-foreground">Conteúdo da aba Resumo.</p></TabsContent>
+        <TabsContent value="history"><p className="m-0 text-body-s text-muted-foreground">Conteúdo da aba Histórico.</p></TabsContent>
+      </Tabs>
     </Section>
 
     <Section id="card" title="Card">
@@ -172,6 +235,52 @@ export default function DesignSystemCatalog() {
         <CardContent><p className="m-0 text-data-price-m">{formatMoney('299.90')}</p></CardContent>
         <CardFooter><Button variant="outline">Ver detalhes</Button></CardFooter>
       </Card>
+    </Section>
+
+    <Section id="alert" title="Alert">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Alert><Bell /><AlertTitle>Informação</AlertTitle><AlertDescription>O preço é consultado automaticamente.</AlertDescription></Alert>
+        <Alert variant="success"><Bell /><AlertTitle>Sucesso</AlertTitle><AlertDescription>Alerta criado.</AlertDescription></Alert>
+        <Alert variant="warning"><Clock3 /><AlertTitle>Atenção</AlertTitle><AlertDescription>Preço desatualizado.</AlertDescription></Alert>
+        <Alert variant="destructive"><Bell /><AlertTitle>Erro</AlertTitle><AlertDescription>Não foi possível consultar agora.</AlertDescription></Alert>
+      </div>
+    </Section>
+
+    <Section id="alert-dialog" title="Alert Dialog">
+      <AlertDialog>
+        <AlertDialogTrigger asChild><Button variant="destructive">Parar de monitorar</Button></AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Parar de monitorar?</AlertDialogTitle><AlertDialogDescription>O histórico deixa de ser atualizado.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction>Parar</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Section>
+
+    <Section id="dropdown-menu" title="Dropdown Menu">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild><Button variant="outline">Ações do produto</Button></DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuLabel>Fone sem fio</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup><DropdownMenuItem>Atualizar agora</DropdownMenuItem><DropdownMenuItem variant="destructive">Parar de monitorar</DropdownMenuItem></DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </Section>
+
+    <Section id="tooltip" title="Tooltip">
+      <TooltipProvider><Tooltip>
+        <TooltipTrigger asChild><Button variant="outline" size="icon" aria-label="Notificações"><Bell /></Button></TooltipTrigger>
+        <TooltipContent>Notificações</TooltipContent>
+      </Tooltip></TooltipProvider>
+    </Section>
+
+    <Section id="sonner" title="Sonner (toast)">
+      <Toaster />
+      <Row label="toast">
+        <Button variant="outline" onClick={() => toast.success('Alerta criado.')}>Sucesso</Button>
+        <Button variant="outline" onClick={() => toast.warning('Preço desatualizado.')}>Atenção</Button>
+        <Button variant="outline" onClick={() => toast.error('Não foi possível consultar agora.')}>Erro</Button>
+      </Row>
     </Section>
 
     <Section id="table" title="Table">
@@ -184,14 +293,44 @@ export default function DesignSystemCatalog() {
       </Table></Scroll>
     </Section>
 
-    <Section id="skeleton" title="Skeleton"><div className="flex flex-col gap-3"><Skeleton className="h-6 w-1/2" /><Skeleton className="h-4 w-3/4" /><Skeleton className="h-4 w-2/3" /></div></Section>
+    <Section id="pagination" title="Pagination">
+      <Pagination><PaginationContent>
+        <PaginationItem><PaginationPrevious href="#pagination" /></PaginationItem>
+        <PaginationItem><PaginationLink href="#pagination">1</PaginationLink></PaginationItem>
+        <PaginationItem><PaginationLink href="#pagination" isActive>2</PaginationLink></PaginationItem>
+        <PaginationItem><PaginationEllipsis /></PaginationItem>
+        <PaginationItem><PaginationNext href="#pagination" /></PaginationItem>
+      </PaginationContent></Pagination>
+    </Section>
+
+    <Section id="sidebar" title="Sidebar (superfície escura fixa)">
+      <SidebarProvider className="min-h-0">
+        <Sidebar collapsible="none" className="h-auto rounded-lg">
+          <SidebarContent><SidebarGroup>
+            <SidebarGroupLabel>Espaço de compras</SidebarGroupLabel>
+            <SidebarMenu>
+              <SidebarMenuItem><SidebarMenuButton><MessageSquare /><span>Assistente IA</span></SidebarMenuButton></SidebarMenuItem>
+              <SidebarMenuItem><SidebarMenuButton><Clock3 /><span>Histórico</span></SidebarMenuButton></SidebarMenuItem>
+              <SidebarMenuItem><SidebarMenuButton isActive><Monitor /><span>Monitoramento</span></SidebarMenuButton></SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup></SidebarContent>
+        </Sidebar>
+      </SidebarProvider>
+    </Section>
+
+    <Section id="avatar" title="Avatar">
+      <Row label="iniciais"><Avatar><AvatarFallback>P</AvatarFallback></Avatar><Avatar size="lg"><AvatarFallback>BP</AvatarFallback></Avatar></Row>
+    </Section>
+
+    <Section id="progress" title="Progress">
+      <div className="flex max-w-md flex-col gap-3"><Progress value={25} aria-label="Progresso 25%" /><Progress value={70} aria-label="Progresso 70%" /></div>
+    </Section>
+
+    <Section id="skeleton" title="Skeleton">
+<div className="flex flex-col gap-3"><Skeleton className="h-6 w-1/2" /><Skeleton className="h-4 w-3/4" /><Skeleton className="h-4 w-2/3" /></div></Section>
     <Section id="separator" title="Separator"><Separator /></Section>
     <Section id="empty-state" title="Estado vazio"><EmptyState title="Você ainda não acompanha produtos" description="Cole o link de um anúncio do Mercado Livre para começar." action={<Button>Monitorar produto</Button>} /></Section>
     <Section id="price-chart-card" title="Card de gráfico"><PriceChartCard title="Histórico de preço" price={formatMoney('299.90')}><PriceHistoryChart history={history} partial={false} /></PriceChartCard></Section>
 
-    <Section id="pendentes" title="Pendentes da CLI do shadcn">
-      <p className="m-0 text-body-s text-muted-foreground">Instalação bloqueada até aprovar as dependências extras (verification.md, F5):</p>
-      <ul className="m-0 grid gap-1 pl-5 text-body-s">{pending.map((name) => <li key={name}>{name}</li>)}</ul>
-    </Section>
   </main>
 }
