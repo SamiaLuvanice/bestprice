@@ -42,7 +42,7 @@ export default defineConfig({
       // 0049/AC08: evidência lado a lado com os quadros desktop do Figma (1440 px). Sem baselines:
       // roda só as specs listadas, que gravam capturas em test-results.
       name: 'viewport-1440',
-      testMatch: ['catalog.spec.ts'],
+      testMatch: ['catalog.spec.ts', 'evidence-0049.spec.ts'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
