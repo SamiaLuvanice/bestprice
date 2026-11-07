@@ -86,3 +86,38 @@ com preço recebido já formatado).
 `npx vitest run scripts` → 1º Red acidental no Windows (caminho com `\`), corrigido com
 normalização para `/`; → **3 passed**. `npm run build:check` → "Sem vestígios do catálogo em
 dist (5 marcadores conferidos)".
+
+## F15 — Gráfico de histórico (AC10)
+
+- **Teste:** 5 casos novos em `src/dashboard/PriceHistoryChart.test.tsx` (degraus com área e um
+  único ponto atual na última leitura; sem alvo, sem linha; alvo tracejado `var(--chart-3)`; alvo
+  inválido sem linha; uma leitura, só o ponto). O jsdom não mede layout e o `ResponsiveContainer`
+  ficava com 0 px (sondagem: `<div style="width: 0px; height: 0px">`); o arquivo passou a usar
+  um dublê que só entrega 800 × 400 ao gráfico, mantendo o Recharts real.
+- **Red** (implementação anterior restaurada de `HEAD`, com o dublê): `npx vitest run
+  src/dashboard/PriceHistoryChart.test.tsx` → **3 failed | 11 passed (14)** — sem área, sem
+  ponto atual marcado e sem linha de alvo.
+- **Green:** → **14 passed**. `ComposedChart` com `Area` + `Line` `stepAfter` só com 2+ leituras,
+  `ReferenceDot` no último registro e `ReferenceLine` só com preço-alvo decimal válido. O detalhe
+  passa `alert?.target_price` (dado já carregado; nenhuma chamada nova).
+
+## F22 — Ação principal única (AC07)
+
+- **Teste:** `src/primaryAction.test.tsx` renderiza a App em 9 telas/estados da lista A (Entrar,
+  Criar conta, Assistente início/conversa/indisponível, Histórico, Monitoramento vazio/com
+  produtos/indisponível) e conta `[data-slot="button"][data-variant="default"]` fora de
+  `[hidden]`/`[aria-hidden]`.
+- **Red:** → **5 failed | 4 passed (9)**: Entrar 2, Criar conta 3, Monitoramento 3 (vazio, com
+  produtos, indisponível). Causa: controles com aparência própria (alternar senha, conta,
+  notificações, menu da linha, "Tentar novamente" em texto) usavam o `Button` sem variante,
+  herdando `default` (verde) e sendo repintados pelo CSS da classe.
+- **Green:** variante explícita conforme o papel visual (`password-toggle`, `account-button`,
+  `panel-item`, `icon-button`, `text-button` → `ghost`; `secondary-button` → `outline`;
+  `danger-button` → `destructive`; `link-button` → `link`), 21 botões em 10 arquivos. Textos,
+  rótulos e handlers inalterados. → **9 passed**.
+- **Limite:** o jsdom não aplica CSS de visibilidade; a contagem no navegador fica para a Fase 5.
+
+## Gates da Fase 4
+
+`npm run lint` → 0 problemas; `npm test` → 48 arquivos, **687 passed**; `npm run build:check` →
+ok, sem vestígios do catálogo.

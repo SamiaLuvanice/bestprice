@@ -16,36 +16,36 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 ## Fase 0 — Linha de base
 
-- [ ] F0 — Rodar `npm run lint`, `npm test`, `npm run build` e `npx playwright test` na
+- [x] F0 — Rodar `npm run lint`, `npm test`, `npm run build` e `npx playwright test` na
   worktree sem alterações. Registrar as contagens e classificar as 19 falhas da #259
   (baseline × regressão).
   - **Aceite:** tabela em `verification.md`.
 
 ## Fase 1 — Tokens e fontes (AC01–AC04, AC14)
 
-- [ ] D1 — Exportar a coleção "shadcn/ui · BestPrice" do Figma para
+- [x] D1 — Exportar a coleção "shadcn/ui · BestPrice" do Figma para
   `designsystem/tokens/figma-variables-2026-11.json` (67 variáveis, mais os valores Noite
   documentados e os 22 estilos de texto).
-- [ ] F1 — **Red:** `src/tokens.figma.test.ts` compara o JSON com `styles.css` e falha nos
+- [x] F1 — **Red:** `src/tokens.figma.test.ts` compara o JSON com `styles.css` e falha nos
   tokens ausentes ou divergentes. **Green:** atualizar `:root` e `@theme inline`.
   - Atualizar as expectativas visuais de `tokens.test.ts` (`--card`, `--action-hover`) e
     listar cada mudança (AC11).
-- [ ] F2 — **Red:** `src/no-raw-colors.test.ts` lista as cores soltas atuais. **Green** ao
+- [x] F2 — **Red:** `src/no-raw-colors.test.ts` lista as cores soltas atuais. **Green** ao
   fim da Fase 4, quando as exceções restantes estiverem justificadas.
-- [ ] F3 — Tipografia:
+- [x] F3 — Tipografia:
   - `--font-display` com `font-stretch: expanded`;
   - `--font-mono` com Geist Mono (import em `main.tsx`);
   - utilitários dos 22 estilos.
   - **Aceite:** build sem requisição externa de fonte (Network) e licença registrada.
-- [ ] F4 — Sombras, anel de foco, durações e `prefers-reduced-motion` (AC04 e AC12).
+- [x] F4 — Sombras, anel de foco, durações e `prefers-reduced-motion` (AC04 e AC12).
 
 ## Fase 2 — Componentes (AC05)
 
 - [ ] F5 — Rodar a CLI (após I1) e revisar o diff de `package.json` e do lockfile.
-- [ ] F6 — **Button:**
+- [x] F6 — **Button:**
   - **Red:** testes de `loading` (desabilitado, `aria-busy`, spinner) e dos tamanhos.
   - **Green:** variantes e estados conforme a correspondência da decisão 2.
-- [ ] F7 — **Badge:** variantes de status com ícone e texto, mais o teste de renderização.
+- [x] F7 — **Badge:** variantes de status com ícone e texto, mais o teste de renderização.
 - [ ] F8 — **Input, Textarea, Label e Field:**
   - **Red:** Field liga `aria-describedby` e `aria-invalid`; o contador aparece perto do
     limite.
@@ -60,21 +60,21 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 
 ## Fase 3 — Catálogo (AC05, AC06)
 
-- [ ] F12 — **Red:** teste de rotas mostra que `/dev/design-system` dá "não encontrada" com
+- [x] F12 — **Red:** teste de rotas mostra que `/dev/design-system` dá "não encontrada" com
   `DEV=false` e abre com `DEV=true`. **Green:** rota condicional e `lazy`.
 - [ ] F13 — Catálogo com todas as variantes e estados, mais as tabelas de token do JSON.
-- [ ] F14 — Criar `scripts/check-no-catalog.mjs`: `dist/` sem nenhum vestígio do catálogo.
+- [x] F14 — Criar `scripts/check-no-catalog.mjs`: `dist/` sem nenhum vestígio do catálogo.
   - Chamado por `npm run build:check` e incluído no CI de frontend.
 - [ ] D2 — Inventário do AC05 em `verification.md`: componente, variantes, estados,
   node-id e captura `catalog.spec.ts`.
 
 ## Fase 4 — Telas (AC07–AC10, AC12)
 
-- [ ] F15 — **Gráfico:**
+- [x] F15 — **Gráfico:**
   - **Red:** sem alvo, nenhuma `ReferenceLine`; um registro, só o ponto; nenhum ponto
     além dos registros.
   - **Green:** Area + Line `stepAfter`, ponto final e alvo tracejado.
-- [ ] F16 — **Barra lateral e navegação inferior** (`ResearchArea`, `research.css`): tokens
+- [x] F16 — **Barra lateral e navegação inferior** (`ResearchArea`, `research.css`): tokens
   `sidebar-*`, ativo em rosa e rótulos inalterados (AC09).
 - [ ] F17 — **Entrar e Criar conta (7 estados)** com os componentes novos. Textos e fluxos
   inalterados; os testes existentes seguem verdes.
@@ -83,11 +83,11 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
   inexistentes; as omissões vão para `verification.md`.
 - [ ] F20 — **Estados de indisponibilidade e recuperação** (quadros 137:43, 152:535 e
   184:200).
-- [ ] F21 — **Lista B:** produtos, detalhe, alertas, comparador, landing atual e
+- [x] F21 — **Lista B:** produtos, detalhe, alertas, comparador, landing atual e
   "não encontrada", só com tokens e componentes.
-- [ ] F22 — **Red/Green:** teste de ação única (≤ 1 `data-variant="default"` visível) em
+- [x] F22 — **Red/Green:** teste de ação única (≤ 1 `data-variant="default"` visível) em
   cada tela da lista A (AC07).
-- [ ] F23 — Fechar o F2: nenhuma cor solta fora das exceções justificadas (AC02).
+- [x] F23 — Fechar o F2: nenhuma cor solta fora das exceções justificadas (AC02).
 
 ## Fase 5 — Verificação visual e acessibilidade (AC08, AC12, AC13)
 
