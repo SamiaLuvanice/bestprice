@@ -116,7 +116,9 @@ for (const [name, path, state] of scenarios) {
     const brand = page.getByRole('img', { name: 'BestPrice', exact: true })
       .or(page.getByRole('link', { name: 'BestPrice — Início', exact: true }))
       .or(page.getByRole('link', { name: 'BestPrice AI — Início', exact: true }))
-      .or(page.getByRole('link', { name: 'BestPrice AI — Dashboard', exact: true })).filter({ visible: true })
+      .or(page.getByRole('link', { name: 'BestPrice AI — Dashboard', exact: true }))
+      // Shell interno (ResearchArea, desde fb46498): a marca leva ao assistente.
+      .or(page.getByRole('link', { name: 'BestPrice IA — Assistente', exact: true })).filter({ visible: true })
     await expect(brand).toHaveCount(1)
     await expect(brand).toBeVisible()
     expect(await brand.evaluate((element) => {
