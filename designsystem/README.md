@@ -22,7 +22,9 @@ system", versão de histórico "Design system 2026 · shadcn/ui" (07/11/2026).
   horário, MLB, contador) usam `--font-mono`: **Geist Mono**, empacotada por
   `@fontsource/geist-mono` (pesos 400/500/600, `woff2` no próprio build, sem serviço externo).
   Licença: **SIL Open Font License 1.1**, © 2024 The Geist Project Authors
-  (`frontend/node_modules/@fontsource/geist-mono/LICENSE`, https://github.com/vercel/geist-font).
+  (texto integral com o aviso de copyright em [`licenses/GeistMono-OFL.txt`](licenses/GeistMono-OFL.txt),
+  copiado do pacote `@fontsource/geist-mono`; origem https://github.com/vercel/geist-font). Só os
+  subconjuntos latin e latin-ext são empacotados (`scripts/check-fonts.mjs`).
 - **Estilos de texto:** utilitários `text-display-*`, `text-mobile-display-*`, `text-heading-h3/h4`,
   `text-body-*`, `text-button-m/s`, `text-label-m`, `text-data-price-xl/m`, `text-mono-*` e
   `data-mono` (só família mono + `tabular-nums`).
