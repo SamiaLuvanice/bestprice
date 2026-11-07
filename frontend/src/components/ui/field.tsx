@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { Label } from "./label"
 
 type ControlProps = { id?: string; "aria-describedby"?: string; "aria-invalid"?: React.AriaAttributes["aria-invalid"] }
 
@@ -46,7 +47,7 @@ function Field({
 
   return (
     <div data-slot="field" data-invalid={error ? true : undefined} className={cn("grid gap-2", className)}>
-      <label data-slot="field-label" htmlFor={controlId} className="text-label-m text-foreground">{label}</label>
+      <Label data-slot="field-label" htmlFor={controlId}>{label}</Label>
       {control}
       {description && <p data-slot="field-description" id={descriptionId} className="m-0 text-body-xs text-muted-foreground">{description}</p>}
       {error && <p data-slot="field-error" id={errorId} className="m-0 text-body-xs text-destructive">{error}</p>}
