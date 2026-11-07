@@ -7,7 +7,7 @@ const PriceHistoryChart = lazy(() => import('./PriceHistoryChart').then((module)
 import { Link } from 'react-router-dom'
 import type { HistoryEntry, Product, TrackedProduct } from '../api'
 import { formatMoney, formatPercentage } from '../lib/format'
-import { normalizeTargetPrice, targetPriceError } from '../lib/targetPrice'
+import { chartTargetPrice, normalizeTargetPrice, targetPriceError } from '../lib/targetPrice'
 import { ExternalListingLink } from './ExternalListingLink'
 import { attemptResult, availabilityLabel } from './labels'
 
@@ -108,7 +108,7 @@ export function ProductDetailDialog(props: Props) {
     </div>
     {!tracked.active && <p role="status" className="empty">Monitoramento interrompido.</p>}
     <div className="detail-workspace"><section className="detail-history" aria-labelledby="history-title"><h2 id="history-title">Histórico de preços</h2>
-      <Suspense fallback={<p role="status">Carregando gráfico…</p>}><PriceHistoryChart history={history} partial={historyCursor !== null} targetPrice={alert?.target_price ?? null} /></Suspense>
+      <Suspense fallback={<p role="status">Carregando gráfico…</p>}><PriceHistoryChart history={history} partial={historyCursor !== null} targetPrice={chartTargetPrice(alert)} /></Suspense>
       {historyCursor && <Button type="button" variant="outline" disabled={busy} onClick={props.onLoadMoreHistory}>Carregar mais preços</Button>}
     </section>{tracked.active && <section className="detail-alert-card" aria-labelledby="price-alert-title"><h2 id="price-alert-title">Alerta de preço</h2>
       {alert ? <>

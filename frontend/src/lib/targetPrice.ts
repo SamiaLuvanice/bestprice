@@ -1,3 +1,4 @@
+import type { Alert } from '../api'
 // Preço-alvo digitado no formato brasileiro (0028/AC02). A normalização é feita só com texto:
 // o contrato `target_price` continua decimal com ponto e duas casas ("99.90"), validado no backend.
 
@@ -38,3 +39,8 @@ export function targetPriceInput(value: string): string {
 }
 
 export const targetPriceError = 'Informe um valor em reais, como 99,90.'
+
+/** 0049/AC10: o gráfico só desenha a linha do alvo quando o alerta está ativo; pausado ou ausente, nenhuma. */
+export function chartTargetPrice(alert: Alert | null | undefined): string | null {
+  return alert?.enabled ? alert.target_price : null
+}
