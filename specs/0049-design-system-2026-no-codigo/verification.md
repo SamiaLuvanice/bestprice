@@ -251,7 +251,7 @@ que são efeitos do Figma; o teste passou a aceitar os nomes de `effectStyles`).
 
 | Token | Valor | Motivo | Aprovação |
 |---|---|---|---|
-| `--color-brand-strong` | `#a0004c` | hover de link (rosa escurecido, 8,1:1 sobre branco); o Figma não define estado hover para link | pendente da responsável |
+| `--color-brand-strong` | `#a0004c` | hover de link (rosa escurecido, 8,1:1 sobre branco); o Figma não define estado hover para link | aprovada pela responsável em 2026-11-07; criar a variável no Figma depois |
 
 Qualquer literal novo fora dessa lista falha o teste (é o Red acima). Um segundo caso garante que a
 lista não tem entrada morta.
