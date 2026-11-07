@@ -11,7 +11,7 @@ export function AccountMenu({ email, onLogout, loggingOut }: Props) {
   const panelId = useId()
   const initial = email.trim().charAt(0).toUpperCase()
   return <div className="disclosure account-menu" ref={menu.containerRef} onKeyDown={menu.onKeyDown} onBlur={menu.onBlur}>
-    <Button ref={menu.buttonRef} type="button" className="account-button" aria-label={`Conta: ${email}`} aria-expanded={menu.open} aria-controls={panelId} onClick={menu.toggle}>
+    <Button variant="ghost" ref={menu.buttonRef} type="button" className="account-button" aria-label={`Conta: ${email}`} aria-expanded={menu.open} aria-controls={panelId} onClick={menu.toggle}>
       {/* #259: a inicial vem do CSS (data-initial) para o texto visível estar contido no nome acessível (WCAG 2.5.3). */}
       <span className="avatar" aria-hidden="true" data-initial={initial} />
       <span className="sr-only">Conta: </span>
@@ -20,7 +20,7 @@ export function AccountMenu({ email, onLogout, loggingOut }: Props) {
     </Button>
     {menu.open && <div id={panelId} ref={menu.panelRef} className="disclosure-panel account-panel">
       <p className="account-panel-email">{email}</p>
-      <Button type="button" className="panel-item" disabled={loggingOut} onClick={onLogout}>Sair</Button>
+      <Button variant="ghost" type="button" className="panel-item" disabled={loggingOut} onClick={onLogout}>Sair</Button>
     </div>}
   </div>
 }

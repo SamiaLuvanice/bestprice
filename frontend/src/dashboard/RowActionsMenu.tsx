@@ -22,14 +22,14 @@ export function RowActionsMenu({ id, title, href, disabled, onRefresh, onStop }:
     action()
   }
   return <div className="disclosure row-menu" ref={menu.containerRef} onKeyDown={menu.onKeyDown} onBlur={menu.onBlur}>
-    <Button ref={menu.buttonRef} type="button" className="icon-button row-menu-button" data-row-menu={id} disabled={disabled}
+    <Button variant="ghost" ref={menu.buttonRef} type="button" className="icon-button row-menu-button" data-row-menu={id} disabled={disabled}
       aria-expanded={menu.open} aria-controls={panelId} onClick={menu.toggle}>
       <MoreIcon /><span className="sr-only">Ações de {title}</span>
     </Button>
     {menu.open && <div id={panelId} ref={menu.panelRef} role="group" aria-label={`Ações de ${title}`} className="disclosure-panel row-menu-panel">
-      <Button type="button" className="panel-item" onClick={() => select(onRefresh)}>Atualizar agora</Button>
+      <Button variant="ghost" type="button" className="panel-item" onClick={() => select(onRefresh)}>Atualizar agora</Button>
       <ExternalListingLink href={href} className="panel-item" onClick={() => menu.close()} />
-      <Button type="button" className="panel-item" onClick={() => select(onStop)}>Parar de monitorar</Button>
+      <Button variant="ghost" type="button" className="panel-item" onClick={() => select(onStop)}>Parar de monitorar</Button>
     </div>}
   </div>
 }

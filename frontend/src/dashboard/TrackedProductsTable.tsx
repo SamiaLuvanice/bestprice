@@ -44,7 +44,7 @@ export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore,
       </Table>
       <p className="table-note">Menor e maior preço desde o primeiro registro no BestPrice.</p>
       {loadMoreError && <p role="alert" className="error-box">{loadMoreError}</p>}
-      {hasMore && <Button type="button" className="secondary-button" disabled={loadingMore} onClick={onLoadMore}>
+      {hasMore && <Button variant="outline" type="button" className="secondary-button" disabled={loadingMore} onClick={onLoadMore}>
         Carregar mais{' '}<span className="sr-only">produtos</span>
       </Button>}
     </>}

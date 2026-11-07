@@ -61,7 +61,7 @@ export function ConfiguredAlerts({ onUnauthenticated }: Props) {
     </div>
     {loading && <p role="status">Carregando alertas configurados…</p>}
     {error && <div className="region-error"><p role="alert" className="error-box">{error}</p>
-      <Button type="button" className="secondary-button" onClick={() => void load(cursor === undefined)}>Tentar novamente</Button>
+      <Button variant="outline" type="button" className="secondary-button" onClick={() => void load(cursor === undefined)}>Tentar novamente</Button>
     </div>}
     {!loading && !error && items.length === 0 && cursor === null && <p className="empty">Nenhum alerta configurado por enquanto.</p>}
     {items.length > 0 && <ul className="configured-alerts-list">{items.map((item) => <li key={item.id}>
@@ -70,7 +70,7 @@ export function ConfiguredAlerts({ onUnauthenticated }: Props) {
       <Badge variant="secondary" className={item.alert?.enabled ? 'alert-item-state availability-available' : 'alert-item-state'}>{item.alert?.enabled ? 'Ativo' : 'Pausado'}</Badge>
       <Link className="text-button alert-item-action" to={`/produtos/${item.id}`}>Configurar alerta</Link>
     </li>)}</ul>}
-    {cursor && !error && <Button type="button" className="secondary-button" disabled={loading} onClick={() => void load()}>
+    {cursor && !error && <Button variant="outline" type="button" className="secondary-button" disabled={loading} onClick={() => void load()}>
       Carregar mais alertas
     </Button>}
   </section>

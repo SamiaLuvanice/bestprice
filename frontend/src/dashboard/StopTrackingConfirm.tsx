@@ -25,8 +25,8 @@ export function StopTrackingConfirm({ title, alertActive, busy, cancelRef, onCan
       {alertActive && <p>O alerta deste produto será pausado.</p>}
     </div>
     <div className="confirm-actions">
-      <Button ref={cancelRef} type="button" className="secondary-button" onClick={onCancel}>Cancelar</Button>
-      <Button type="button" className="danger-button" disabled={busy} onClick={onConfirm}>Parar de monitorar</Button>
+      <Button variant="outline" ref={cancelRef} type="button" className="secondary-button" onClick={onCancel}>Cancelar</Button>
+      <Button variant="destructive" type="button" className="danger-button" disabled={busy} onClick={onConfirm}>Parar de monitorar</Button>
     </div>
   </div>
 }
