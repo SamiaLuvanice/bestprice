@@ -261,7 +261,7 @@
 * { box-sizing: border-box; }
 html { background: var(--color-bg); scroll-padding-block: 104px 24px; }
 body { margin: 0; background: var(--color-bg); color: var(--color-text); line-height: 1.47; caret-color: var(--color-brand); scrollbar-color: var(--color-control-border) var(--color-surface); }
-button, input { font: inherit; }
+/* font: inherit dos controles vem do preflight (camada base), para os estilos de texto do Button valerem. */
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .65; }
 :focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; border-radius: 6px; }
