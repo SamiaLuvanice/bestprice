@@ -125,3 +125,25 @@ describe('AC03 — estilos de texto', () => {
     expect(utilityBlock('text-data-price-xl').get('font-variant-numeric')).toBe('tabular-nums')
   })
 })
+
+// 0049/AC01: todo token de cor com valor literal em :root é uma variável do Figma. Tokens próprios
+// apontam para um token do Figma (var(), color-mix sobre var()). A única saída é esta lista de
+// divergências, cada uma justificada e registrada em verification.md ("Divergências de token").
+const colorLiteralExceptions: Record<string, string> = {
+  '--color-brand-strong': 'hover de link (rosa escurecido, 7,6:1 sobre branco); o Figma não define estado hover para link',
+}
+
+describe('AC01 — tokens próprios sem cor literal fora do Figma', () => {
+  const figmaNames = new Set([...snapshot.variables.map((variable) => variable.css), ...snapshot.effectStyles.map((effect) => effect.css)])
+  const literal = /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(/i
+
+  it('cada literal de cor em :root é variável do Figma ou divergência registrada', () => {
+    const offenders = Array.from(root).filter(([name, value]) => literal.test(value) && !figmaNames.has(name) && !(name in colorLiteralExceptions))
+      .map(([name, value]) => `${name}: ${value}`)
+    expect(offenders).toEqual([])
+  })
+
+  it('as divergências registradas continuam existindo (lista sem entrada morta)', () => {
+    for (const name of Object.keys(colorLiteralExceptions)) expect(literal.test(root.get(name) ?? ''), name).toBe(true)
+  })
+})

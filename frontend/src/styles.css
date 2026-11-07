@@ -144,14 +144,14 @@
   --color-text: var(--foreground);
   --color-text-muted: var(--muted-foreground);
   --color-bg: var(--background);
-  --color-border-soft: #e8e8ed;
+  --color-border-soft: var(--border);
   --color-control-border: var(--input);
   --color-brand: var(--primary);
-  --color-brand-strong: #a0004c;
+  --color-brand-strong: #a0004c; /* divergência registrada (tokens.figma.test.ts): hover de link */
   --color-brand-soft: var(--accent);
   --color-action-text: var(--action-foreground);
-  --color-badge-text: #fff;
-  --color-logo-surface: #fff;
+  --color-badge-text: var(--destructive-foreground);
+  --color-logo-surface: var(--background);
   --color-danger-button: var(--destructive);
   --color-danger-button-text: var(--destructive-foreground);
   --color-down: var(--status-down);
@@ -160,18 +160,18 @@
   --color-up-soft: var(--status-up-soft);
   --color-amber: var(--status-warning);
   --color-amber-soft: var(--status-warning-soft);
-  --color-danger-text: #a61b1b;
-  --color-danger-bg: #fff0f0;
-  --color-danger-border: #ffd4d4;
+  --color-danger-text: var(--destructive);
+  --color-danger-bg: var(--status-up-soft);
+  --color-danger-border: color-mix(in srgb, var(--destructive) 25%, var(--background));
   --color-focus: var(--ring);
-  --color-glass: rgba(251, 251, 253, .96);
-  --color-glass-edge: rgba(255, 255, 255, .9);
-  --color-overlay: rgba(0, 0, 0, .62);
-  --color-skeleton-a: #e8e8ed;
-  --color-skeleton-b: #f5f5f7;
-  --color-graphite: #18171b;
-  --color-on-graphite: #fff;
-  --color-footer-bg: #000;
+  --color-glass: color-mix(in srgb, var(--surface-raised) 96%, transparent);
+  --color-glass-edge: color-mix(in srgb, var(--background) 90%, transparent);
+  --color-overlay: color-mix(in srgb, var(--night-950) 62%, transparent);
+  --color-skeleton-a: color-mix(in srgb, var(--border) 50%, var(--muted));
+  --color-skeleton-b: var(--muted);
+  --color-graphite: var(--night-900);
+  --color-on-graphite: var(--primary-foreground);
+  --color-footer-bg: var(--night-950);
   /* 0049/AC10: gráfico sobre superfície clara (linha escura --chart-1, área verde --chart-2). */
   --color-chart-grid: var(--border);
   --color-chart-label: var(--muted-foreground);
