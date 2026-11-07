@@ -493,6 +493,14 @@ h1, h2 { text-wrap: balance; }
 .availability-unavailable { background: var(--color-up-soft); color: var(--color-up); }
 .availability-unknown { background: var(--color-surface-raised); color: var(--color-text-muted); }
 .cell-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+/* 0049 (Figma 151:11): com dados em Geist Mono, preço, data e ações ficam numa linha no desktop; o nome
+   do produto ganha a largura que sobra. Colunas e dados inalterados; no mobile a tabela vira cartões. */
+@media (min-width: 1100px) {
+  .products-table .cell-price strong, .products-table .price-flag, .products-table .relative-time, .products-table td:nth-child(4) { white-space: nowrap; }
+  .products-table .cell-actions { flex-wrap: nowrap; justify-content: flex-end; }
+  .products-table th:first-child { width: 24%; }
+  .products-table .row-title { overflow-wrap: normal; }
+}
 .row-details-chevron { display: none; }
 .row-menu-panel { width: 260px; display: grid; gap: var(--space-1); padding: var(--space-2); }
 .row-menu-panel .panel-item { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; }
@@ -721,7 +729,7 @@ h1, h2 { text-wrap: balance; }
 .password-toggle[aria-pressed="true"] { color: var(--color-brand); }
 .btn-pill { width: 100%; min-height: 50px; margin-top: var(--space-2); border-radius: var(--radius-pill); font-size: 17px; transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
 .btn-pill:active:not(:disabled) { transform: scale(.98); }
-.btn-pill[aria-disabled="true"], .btn-pill[aria-disabled="true"]:hover:not(:disabled), .btn-pill[aria-disabled="true"]:active:not(:disabled) { transform: none; cursor: progress; background: var(--color-surface); color: var(--color-text-muted); box-shadow: inset 0 0 0 1px var(--color-control-border); } /* 0020/AC08: aparência distinta sem tirar o foco; sem opacity, para manter 4,5:1 (AC10) */
+.btn-pill[aria-disabled="true"], .btn-pill[aria-disabled="true"]:hover:not(:disabled), .btn-pill[aria-disabled="true"]:active:not(:disabled) { transform: none; cursor: progress; background: color-mix(in srgb, var(--action) 45%, var(--background)); color: var(--foreground); box-shadow: none; } /* Figma 220:421: verde de ação esmaecido com texto escuro (15:1); sem opacity, para manter o contraste */ /* 0020/AC08: aparência distinta sem tirar o foco; sem opacity, para manter 4,5:1 (AC10) */
 .btn-pill:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; border-radius: var(--radius-pill); }
 .login-note { margin-top: 40px; font-size: 15px; color: var(--color-text-muted); }
 .login-back { align-self: start; padding-left: 0; margin-top: 12px; font-size: 14px; line-height: 18px; } /* Figma 59:44: Button/S */
@@ -734,6 +742,10 @@ h1, h2 { text-wrap: balance; }
 }
 @media (max-width: 700px) {
   .login-form-side { padding: 28px 20px; }
+  /* Quadros 59:602 e 220:871: marca, título e campos mais próximos no mobile. */
+  .login-brand { margin-bottom: 28px; }
+  .login-form-side h1 { margin-bottom: 6px; }
+  .login-fields { margin-top: 24px; }
 }
 @media (max-width: 380px) {
   .login-brand { margin-bottom: var(--space-6); }
@@ -747,10 +759,10 @@ h1, h2 { text-wrap: balance; }
 .login-hint { margin: 0; font-size: 14px; line-height: 1.4; color: var(--color-text-muted); }
 .login-switch { margin-top: var(--space-6); }
 .login-switch a, .signup-shell .field-error a { font-weight: 700; color: var(--color-brand); text-decoration: underline; text-underline-offset: 3px; display: inline-block; padding-block: 12px; margin-block: -12px; } /* alvo de 44px sem mudar a linha; sublinhado: link no texto não depende só da cor (axe link-in-text-block) */
-.signup-shell .login-error { margin: 0; position: relative; padding-left: 44px; }
+.signup-shell .login-error { margin: 0; position: relative; padding: 10px 16px 10px 40px; font-size: 15px; line-height: 18px; } /* Figma 220:546: caixa de 58 px com duas linhas */
 .signup-shell .field-error { position: relative; padding-left: 24px; }
 .signup-shell .field-error::before, .signup-shell .login-error::before { content: "!" / ""; position: absolute; left: 0; top: .15em; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--color-danger-text); color: var(--color-bg); font-size: 11px; font-weight: 700; line-height: 1; } /* ícone decorativo; o texto carrega o significado */
-.signup-shell .login-error::before { left: 16px; top: 15px; }
+.signup-shell .login-error::before { left: 16px; top: 11px; }
 .signup-shell .login-fields:has(.btn-pill[aria-busy="true"]) .login-input { color: var(--color-text-muted); }
 @media (max-width: 700px) {
   /* Quadros 220:871/220:965: topo fixo (marca em y ≈ 130) em vez de centralizar; o cadastro é mais alto que o login e subiria. */
