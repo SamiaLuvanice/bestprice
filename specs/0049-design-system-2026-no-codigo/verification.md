@@ -251,7 +251,7 @@ que são efeitos do Figma; o teste passou a aceitar os nomes de `effectStyles`).
 
 | Token | Valor | Motivo | Aprovação |
 |---|---|---|---|
-| `--color-brand-strong` | `#a0004c` | hover de link (rosa escurecido, 8,1:1 sobre branco); o Figma não define estado hover para link | aprovada pela responsável em 2026-11-07; criar a variável no Figma depois |
+| `--color-brand-strong` | `#a0004c` | hover de link (rosa escurecido, 8,1:1 sobre branco); o Figma não define estado hover para link | aprovada pela responsável em 2026-11-07; **resolvida em 2026-11-07 (#271):** variável `color/brand-strong` criada no Figma e incluída no snapshot; a lista ficou vazia |
 
 Qualquer literal novo fora dessa lista falha o teste (é o Red acima). Um segundo caso garante que a
 lista não tem entrada morta.
@@ -642,8 +642,8 @@ contagens positivas.
 
 ### AC01 — tabela 1:1 gerada (`cd frontend && node scripts/token-table.mjs`)
 
-A tabela abaixo é a saída do script, não foi escrita à mão. `scripts/token-table.test.ts` garante 74
-linhas e nenhuma divergência. "Noite (fixas)" confere as superfícies escuras fixas (`--sidebar-*`, `--night-*`).
+A tabela abaixo é a saída do script, não foi escrita à mão. `scripts/token-table.test.ts` garante 75
+linhas (68 variáveis desde a #271, com `color/brand-strong`) e nenhuma divergência. "Noite (fixas)" confere as superfícies escuras fixas (`--sidebar-*`, `--night-*`).
 
 | Variável do Figma | Token CSS | Esperado | Obtido | Noite (fixas) | Confere |
 |---|---|---|---|---|---|
@@ -714,6 +714,7 @@ linhas e nenhuma divergência. "Noite (fixas)" confere as superfícies escuras f
 | space/16 | `--space-16` | `64px` | `64px` | — | sim |
 | space/20 | `--space-20` | `80px` | `80px` | — | sim |
 | space/30 | `--space-30` | `120px` | `120px` | — | sim |
+| color/brand-strong | `--color-brand-strong` | `#a0004c` | `#a0004c` | — | sim |
 | Elevação/0 · plano | `--shadow-0` | `none` | `none` | — | sim |
 | Elevação/1 · card | `--shadow-1` | `0 1px 2px rgb(0 0 0 / .04), 0 8px 24px rgb(0 0 0 / .06)` | `0 1px 2px rgb(0 0 0 / .04), 0 8px 24px rgb(0 0 0 / .06)` | — | sim |
 | Elevação/2 · flutuante | `--shadow-2` | `0 12px 32px rgb(0 0 0 / .10)` | `0 12px 32px rgb(0 0 0 / .10)` | — | sim |
@@ -722,7 +723,7 @@ linhas e nenhuma divergência. "Noite (fixas)" confere as superfícies escuras f
 | Foco/Anel rosa | `--ring-width` | `3px` | `3px` | — | sim |
 | Vidro/Desfoque 20 | `--blur-glass` | `20px` | `20px` | — | sim |
 
-74 linhas (67 variáveis + 7 efeitos); divergências: 0.
+75 linhas (68 variáveis + 7 efeitos); divergências: 0.
 
 ### AC04 — esperado × obtido nos estilos calculados (`tests/visual/ds-measures.spec.ts`)
 
@@ -772,3 +773,25 @@ O anel de foco do Input é o contorno global `:focus-visible` (3 px `--ring`) so
 
 Não foi preciso reexecutar com `--workers=2`. Nenhuma referência visual aprovada na F26 mudou: os 42
 snapshots de `public-pages.spec.ts` e `signup.spec.ts` passaram sem atualização.
+
+## Pós-integração — `brand-strong` no Figma e no snapshot (#271, 2026-11-07)
+
+- Variável `color/brand-strong` criada na coleção "shadcn/ui · BestPrice" do arquivo BestPrice IA
+  (modo "Claro", `#a0004c`, escopo cor de texto, código `var(--color-brand-strong)`). A coleção passou
+  a ter 68 variáveis.
+- Conferência Figma × snapshot pela API de plugin no Chrome: 68 variáveis no Figma, nenhuma ausente do
+  snapshot depois da atualização e nenhum valor diferente nas 67 anteriores.
+- **Red** (só o teste atualizado): `npx vitest run src/tokens.figma.test.ts` → 2 failed | 102 passed;
+  contagem 67 em vez de 68 e `--color-brand-strong: #a0004c` fora do Figma.
+- **Green** (snapshot com a variável, lista `colorLiteralExceptions` vazia):
+  `npx vitest run src/tokens.figma.test.ts src/no-raw-colors.test.ts` → 113 passed;
+  `npx vitest run scripts/token-table.test.ts` → 1 passed (75 linhas, divergências: 0).
+- `styles.css` mantém o mesmo valor; só o comentário mudou. Sem mudança visual.
+
+- Gates (frontend, ponta da branch `chore/0049-issue-271-snapshot-brand-strong`): `npm run lint` sem
+  erros; `npm test` → 52 arquivos, **719 passed**; `npm run build:check` ok (catálogo ausente de
+  `dist`, Geist Mono conforme); `npx playwright test tests/visual/catalog.spec.ts
+  tests/visual/ds-measures.spec.ts` → **22 passed**, 21 skipped, sem atualizar baseline.
+- Revisão documentada do diff: só dados de token (snapshot), contagens e a lista de exceções do
+  teste, um comentário em `styles.css` e documentação. Nenhum valor CSS, componente ou tela mudou.
+  Backend fora do escopo (não executado).

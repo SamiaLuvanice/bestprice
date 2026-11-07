@@ -5,10 +5,10 @@
     "version": "Design system 2026 · shadcn/ui",
     "exportedAt": "2026-11-07",
     "spec": "specs/0049-design-system-2026-no-codigo",
-    "note": "night = valores documentados para superfícies escuras fixas (plano Starter permite um modo por coleção); o produto mantém tema claro fixo (spec 0016)."
+    "note": "night = valores documentados para superfícies escuras fixas (plano Starter permite um modo por coleção); o produto mantém tema claro fixo (spec 0016). color/brand-strong foi criada no Figma em 2026-11-07 (#271), sem valor night documentado."
   },
   "counts": {
-    "variables": 67,
+    "variables": 68,
     "textStyles": 22,
     "effectStyles": 7
   },
@@ -463,6 +463,12 @@
       "type": "FLOAT",
       "css": "--space-30",
       "value": 120
+    },
+    {
+      "name": "color/brand-strong",
+      "type": "COLOR",
+      "css": "--color-brand-strong",
+      "light": "#a0004c"
     }
   ],
   "textStyles": [

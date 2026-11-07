@@ -46,7 +46,7 @@ const weights: Record<string, string> = { Regular: '400', Medium: '500', Semibol
 describe('snapshot do Figma 2026', () => {
   it('traz as contagens declaradas na exportação', () => {
     expect(snapshot.variables).toHaveLength(snapshot.counts.variables)
-    expect(snapshot.variables).toHaveLength(67)
+    expect(snapshot.variables).toHaveLength(68)
     expect(snapshot.textStyles).toHaveLength(22)
     expect(snapshot.effectStyles).toHaveLength(7)
   })
@@ -129,9 +129,8 @@ describe('AC03 — estilos de texto', () => {
 // 0049/AC01: todo token de cor com valor literal em :root é uma variável do Figma. Tokens próprios
 // apontam para um token do Figma (var(), color-mix sobre var()). A única saída é esta lista de
 // divergências, cada uma justificada e registrada em verification.md ("Divergências de token").
-const colorLiteralExceptions: Record<string, string> = {
-  '--color-brand-strong': 'hover de link (rosa escurecido, 8,1:1 sobre branco); o Figma não define estado hover para link',
-}
+// Vazia desde a #271: `--color-brand-strong` passou a ser a variável `color/brand-strong` do Figma.
+const colorLiteralExceptions: Record<string, string> = {}
 
 describe('AC01 — tokens próprios sem cor literal fora do Figma', () => {
   const figmaNames = new Set([...snapshot.variables.map((variable) => variable.css), ...snapshot.effectStyles.map((effect) => effect.css)])
