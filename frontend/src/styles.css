@@ -493,13 +493,24 @@ h1, h2 { text-wrap: balance; }
 .availability-unavailable { background: var(--color-up-soft); color: var(--color-up); }
 .availability-unknown { background: var(--color-surface-raised); color: var(--color-text-muted); }
 .cell-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
-/* 0049 (Figma 151:11): com dados em Geist Mono, preço, data e ações ficam numa linha no desktop; o nome
-   do produto ganha a largura que sobra. Colunas e dados inalterados; no mobile a tabela vira cartões. */
-@media (min-width: 1100px) {
+/* 0049 (Figma 151:11): com dados em Geist Mono, preço, data e ações ficam numa linha quando a ÁREA DE
+   CONTEÚDO tem largura para isso (container query: o shell com barra lateral tira 240 px da janela; o
+   breakpoint de viewport causava rolagem lateral entre 1100 e 1279 px, achado I-1). Colunas e dados
+   inalterados; no mobile a tabela vira cartões. */
+.dashboard-content { container: dashboard-content / inline-size; }
+@container dashboard-content (min-width: 1120px) {
   .products-table .cell-price strong, .products-table .price-flag, .products-table .relative-time, .products-table td:nth-child(4) { white-space: nowrap; }
   .products-table .cell-actions { flex-wrap: nowrap; justify-content: flex-end; }
   .products-table th:first-child { width: 24%; }
   .products-table .row-title { overflow-wrap: normal; }
+}
+/* Área de conteúdo estreita com a barra lateral (960–1199 px de janela): a tabela fica compacta para caber
+   sem rolagem lateral (AC12). */
+@container dashboard-content (max-width: 900px) {
+  .products-table th, .products-table td { padding-inline: 6px; }
+  .products-table th { letter-spacing: 0; }
+  .products-table .cell-product { min-width: 0; }
+  .products-table .cell-actions { flex-wrap: wrap; }
 }
 .row-details-chevron { display: none; }
 .row-menu-panel { width: 260px; display: grid; gap: var(--space-1); padding: var(--space-2); }
