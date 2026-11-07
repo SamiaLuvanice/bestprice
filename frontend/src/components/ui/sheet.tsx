@@ -1,3 +1,5 @@
+// 0049 (I-2): desvio do registry do shadcn — rótulos traduzidos para o português (textos para pessoas usuárias).
+// 0049 (I3): o botão Fechar usa o anel de foco do DS (--ring-width).
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { XIcon } from "lucide-react"
@@ -72,9 +74,9 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus-visible:ring-[length:var(--ring-width)] focus-visible:ring-ring focus-visible:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
             <XIcon className="size-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">Fechar</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>
