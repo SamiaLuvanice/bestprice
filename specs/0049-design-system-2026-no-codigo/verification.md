@@ -95,34 +95,34 @@ Sidebar com os tokens `--sidebar-*` do registry, já definidos pelo snapshot do 
 Catálogo em `/dev/design-system` (`src/dev/DesignSystemCatalog.tsx`), capturado por
 `tests/visual/catalog.spec.ts`: uma captura por seção (22 seções) e os estados abertos por teclado
 (select, menu, tooltip, diálogo e toast), em 320, 390, 768, 1280 e 1440. Capturas em
-`frontend/test-results/catalog-*/` (não versionadas). Node-ids da seção 2: **a preencher na D3**
+`frontend/test-results/catalog-*/` (não versionadas). Node-ids da seção 2: preenchidos com os valores tirados do Figma (seção 2) e enviados pela coordenação em 07/11/2026
 (o snapshot exportado não os traz e não houve acesso ao Figma nesta sessão).
 
 | Componente (Figma) | Código | Variantes no catálogo | Estados no catálogo | Node-id |
 |---|---|---|---|---|
-| Button | `ui/button.tsx` (+ `button-variants.ts`) | action→`default`, default→`brand`, secondary, outline, ghost, link, destructive; sm, default, lg, icon | padrão, hover e foco forçados por classe, desabilitado, carregando; sm com 36 px visíveis e alvo de 44 px | a preencher na D3 |
-| Badge | `ui/badge.tsx` | default, secondary, destructive, outline, `down`, `up`, `stable`, `target`, `stale`, `unverified` | — | a preencher na D3 |
-| Input / Field | `ui/input.tsx`, `ui/field.tsx` | com descrição, erro, contador | padrão, foco forçado, inválido, desabilitado, contador perto do limite | a preencher na D3 |
-| Textarea / Label | `ui/textarea.tsx`, `ui/label.tsx` | dentro de Field | padrão, erro | a preencher na D3 |
-| Checkbox | `ui/checkbox.tsx` | — | desmarcado, marcado, inválido, desabilitado; foco por teclado (teste) | a preencher na D3 |
-| Switch | `ui/switch.tsx` | default, sm | desligado, ligado, desabilitado; Espaço/Enter (teste) | a preencher na D3 |
-| Radio Group | `ui/radio-group.tsx` | — | selecionado, não selecionado, desabilitado; setas (teste) | a preencher na D3 |
-| Select | `ui/select.tsx` | default | fechado, aberto (captura `select-aberto`); Enter + setas (teste) | a preencher na D3 |
-| Tabs | `ui/tabs.tsx` | pílula | ativa, inativa, desabilitada; setas (teste) | a preencher na D3 |
-| Card | `ui/card.tsx` | header, descrição, conteúdo, rodapé | — | a preencher na D3 |
-| Alert | `ui/alert.tsx` | default, success, warning, destructive | — | a preencher na D3 |
-| Alert Dialog | `ui/alert-dialog.tsx` | — | fechado, aberto (captura `dialogo-aberto`, axe sem violações), Esc fecha | a preencher na D3 |
-| Dropdown Menu | `ui/dropdown-menu.tsx` | item padrão e destrutivo, rótulo, separador | aberto (captura `menu-aberto`) | a preencher na D3 |
-| Tooltip | `ui/tooltip.tsx` | — | aberto por foco (captura `tooltip-aberto`) | a preencher na D3 |
-| Sonner | `ui/sonner.tsx` | success, warning, error | toast visível (captura `toast`) | a preencher na D3 |
-| Table | `ui/table.tsx` | cabeçalho Mono/Label | linha com hover forçado | a preencher na D3 |
-| Pagination | `ui/pagination.tsx` | anterior, página, ativa, reticências, próxima | — | a preencher na D3 |
-| Sidebar | `ui/sidebar.tsx` (+ `sheet.tsx`, `hooks/use-mobile.ts`) | `collapsible="none"` | item ativo em rosa | a preencher na D3 |
-| Avatar | `ui/avatar.tsx` | default, lg | iniciais | a preencher na D3 |
-| Progress | `ui/progress.tsx` | — | 25%, 70% | a preencher na D3 |
-| Skeleton, Separator | `ui/skeleton.tsx`, `ui/separator.tsx` | — | — | a preencher na D3 |
-| Chart / card de gráfico | `ui/chart.tsx`, `components/PriceChartCard.tsx` | degraus, área, ponto atual | — | a preencher na D3 |
-| Estado vazio | `components/EmptyState.tsx` | com ação | — | a preencher na D3 |
+| Button | `ui/button.tsx` (+ `button-variants.ts`) | action→`default`, default→`brand`, secondary, outline, ghost, link, destructive; sm, default, lg, icon | padrão, hover e foco forçados por classe, desabilitado, carregando; sm com 36 px visíveis e alvo de 44 px | 239:2710 |
+| Badge | `ui/badge.tsx` | default, secondary, destructive, outline, `down`, `up`, `stable`, `target`, `stale`, `unverified` | — | 239:2762 |
+| Input / Field | `ui/input.tsx`, `ui/field.tsx` | com descrição, erro, contador | padrão, foco forçado, inválido, desabilitado, contador perto do limite | 239:2799 (Input), 239:2850 (Field) |
+| Textarea / Label | `ui/textarea.tsx`, `ui/label.tsx` | dentro de Field | padrão, erro | 239:2812 (Textarea) |
+| Checkbox | `ui/checkbox.tsx` | — | desmarcado, marcado, inválido, desabilitado; foco por teclado (teste) | 239:2862 |
+| Switch | `ui/switch.tsx` | default, sm | desligado, ligado, desabilitado; Espaço/Enter (teste) | 239:2875 |
+| Radio Group | `ui/radio-group.tsx` | — | selecionado, não selecionado, desabilitado; setas (teste) | 239:2885 (Radio Group Item) |
+| Select | `ui/select.tsx` | default | fechado, aberto (captura `select-aberto`); Enter + setas (teste) | 239:2907 |
+| Tabs | `ui/tabs.tsx` | pílula | ativa, inativa, desabilitada; setas (teste) | 239:3197 |
+| Card | `ui/card.tsx` | header, descrição, conteúdo, rodapé | — | 239:3065 |
+| Alert | `ui/alert.tsx` | default, success, warning, destructive | — | 239:3094 |
+| Alert Dialog | `ui/alert-dialog.tsx` | — | fechado, aberto (captura `dialogo-aberto`, axe sem violações), Esc fecha | 239:3095 |
+| Dropdown Menu | `ui/dropdown-menu.tsx` | item padrão e destrutivo, rótulo, separador | aberto (captura `menu-aberto`) | 239:3113 |
+| Tooltip | `ui/tooltip.tsx` | — | aberto por foco (captura `tooltip-aberto`) | 239:3144 |
+| Sonner | `ui/sonner.tsx` | success, warning, error | toast visível (captura `toast`) | 239:3175 (Toast) |
+| Table | `ui/table.tsx` | cabeçalho Mono/Label | linha com hover forçado | 239:3293 (Table Row) |
+| Pagination | `ui/pagination.tsx` | anterior, página, ativa, reticências, próxima | — | 239:3457 |
+| Sidebar | `ui/sidebar.tsx` (+ `sheet.tsx`, `hooks/use-mobile.ts`) | `collapsible="none"` | item ativo em rosa | 239:3488 (Sidebar MenuItem) |
+| Avatar | `ui/avatar.tsx` | default, lg | iniciais | 239:3525 |
+| Progress | `ui/progress.tsx` | — | 25%, 70% | 239:3530 |
+| Skeleton, Separator | `ui/skeleton.tsx`, `ui/separator.tsx` | — | — | 239:3518 (Skeleton), 239:3532 (Separator) |
+| Chart / card de gráfico | `ui/chart.tsx`, `components/PriceChartCard.tsx` | degraus, área, ponto atual | — | 239:3533 (Chart card) |
+| Estado vazio | `components/EmptyState.tsx` | com ação | — | 239:3560 (Empty State) |
 
 ## F12–F14 — Catálogo restrito (AC06)
 
@@ -467,7 +467,8 @@ Nenhuma divergência do AC08 fica pendente.
 - No total foram 42 capturas, em `public-pages.spec.ts` e `signup.spec.ts`.
 - Comando: `npx playwright test tests/visual/public-pages.spec.ts tests/visual/signup.spec.ts --update-snapshots`.
   - Na reexecução sem a atualização: **48 passed**.
-- `brand.spec.ts`: o tamanho mínimo da marca passou de 40 para 34 px. Isso segue a mudança intencional do cabeçalho feita nas specs 0040 e 0043 (#259). Resultado: **32 passed**.
+- `brand.spec.ts`: o tamanho mínimo da marca passou de 40 para 34 px. Isso segue a mudança intencional do cabeçalho feita nas specs 0040 e 0043 (#259).
+  - **Correção do registro (I3/QA):** a execução teve **32 passed e 4 failed**, não "32 passed". "marca inicio" falhava nas 4 larguras com `toHaveCount(1)` recebendo 0: o teste procurava a marca por um nome que o shell interno não usa. Corrigido no commit "procura a marca do shell interno pelo nome que a tela usa" (seletor por "BestPrice IA — Assistente", demais asserções iguais). `npx playwright test tests/visual/brand.spec.ts --workers=2` → **36 passed**.
 - As 16 falhas preexistentes da #259 ficam resolvidas por esta atualização, aprovada pela responsável.
 
 ## F25 — Acessibilidade e responsividade das listas A e B (QA, 2026-11-07, ponta `a2d2e32`)
@@ -621,3 +622,137 @@ contagens positivas.
 | AC13 Regressão visual revisada | Seção F26 (42 capturas aprovadas) | **Parcial:** as 4 falhas de `brand` "marca inicio" da #259 não estão resolvidas nem separadas explicitamente |
 | AC14 Fontes sem serviço externo | `catalog.spec.ts` (fonte local), `scripts/check-fonts.mjs`. F25 ad hoc: 0 requisições externas de fonte em 52 combinações. `designsystem/licenses/GeistMono-OFL.txt` | Demonstrado |
 | AC15 Documentação | `designsystem/README.md` § "Design system 2026" (tokens novos e alterados, correspondência do Button, substituição da 0042, fontes e licença, versão do Figma) | **Parcial:** D4 em aberto. O README não registra as variantes de status de preço do Badge, a exceção `--color-brand-strong` nem a lista das divergências resolvidas a favor do Figma; `docs/apps/frontend.md` e `docs/PROGRESS.md` não foram conferidos pelo QA |
+
+## Correções da revisão I3 e lacunas da QA (2026-11-07)
+
+| Item | Resultado | Evidência |
+|---|---|---|
+| I-1 rolagem lateral no monitoramento (AC12) | **Corrigido.** O bloco de uma linha da tabela passou de `@media (min-width:1100px)` para uma container query na área de conteúdo (`.dashboard-content`, ≥ 1120 px), com tabela compacta abaixo de 900 px | `tests/visual/monitoring-overflow.spec.ts` (preço R$ 12.879,00 e nome longo, em `/app/monitoring` e `/produtos`). **Red:** 2 failed (+130 px a 1100 e +50 px a 1200; 1280 e 1440 passaram). 1ª correção: +28 px a 1100. **Green:** **10 passed** (1024, 1100, 1200, 1280 e 1440 nas duas rotas), data numa linha a 1440 |
+| I-2 textos em inglês | **Corrigido** em `pagination.tsx`, `sheet.tsx` e `sidebar.tsx`, com comentário do desvio em relação ao registry | `src/components/ui/i18n.test.tsx`: **Red** 5 failed; **Green** 5 passed |
+| `brand.spec.ts:44` "marca inicio" | **Corrigido no teste:** o seletor aceita "BestPrice IA — Assistente", o nome do shell desde `fb46498`. Demais asserções iguais | `npx playwright test tests/visual/brand.spec.ts --workers=2` → **36 passed** (antes: 32 passed, 4 failed) |
+| Evidência sob `EVIDENCE_0049=1` | `evidence-0049.spec.ts` é pulado sem a variável; a rodada completa não altera `evidence/app/` | Para regravar: `EVIDENCE_0049=1 npx playwright test tests/visual/evidence-0049.spec.ts --project=viewport-1440` |
+| `networkidle` → espera de texto | Espera "Você ainda não está acompanhando nenhum produto." | — |
+| `catalogRoute.test.tsx` | `it(..., 30_000)`, limite explícito acima da espera de 14 s | `npx vitest run src/dev` → 2 passed |
+| `--destructive-soft` | `--color-danger-bg: var(--destructive-soft)`, com `--destructive-soft: color-mix(in srgb, var(--destructive) 7%, var(--background))`; o erro não usa mais o token de status "preço subiu" | `tokens.figma.test.ts` verde |
+| `no-raw-colors` | Detecta `oklch()`, `lab()`, `lch()`, `oklab()` e `hwb()`, além da paleta fixa do Tailwind (`bg-white`, `text-zinc-500`, `bg-black/50`...) | **Red:** 5 failed; **Green:** 8 passed. Nenhuma ocorrência no código |
+| `sheet.tsx` foco | Fechar com `focus-visible:ring-[length:var(--ring-width)]` | — |
+| Seletor por id em `assistant.css` | Trocado por `.assistant-message-hint`; em `styles.css`, `#assistant-character-count` virou `.assistant-character-count` | — |
+
+### AC01 — tabela 1:1 gerada (`cd frontend && node scripts/token-table.mjs`)
+
+A tabela abaixo é a saída do script, não foi escrita à mão. `scripts/token-table.test.ts` garante 74
+linhas e nenhuma divergência. "Noite (fixas)" confere as superfícies escuras fixas (`--sidebar-*`, `--night-*`).
+
+| Variável do Figma | Token CSS | Esperado | Obtido | Noite (fixas) | Confere |
+|---|---|---|---|---|---|
+| color/background | `--background` | `#ffffff` | `#ffffff` | — | sim |
+| color/foreground | `--foreground` | `#1d1d1f` | `#1d1d1f` | — | sim |
+| color/card | `--card` | `#ffffff` | `#ffffff` | — | sim |
+| color/card-foreground | `--card-foreground` | `#1d1d1f` | `#1d1d1f` | — | sim |
+| color/popover | `--popover` | `#ffffff` | `#ffffff` | — | sim |
+| color/popover-foreground | `--popover-foreground` | `#1d1d1f` | `#1d1d1f` | — | sim |
+| color/primary | `--primary` | `#c7005e` | `#c7005e` | — | sim |
+| color/primary-foreground | `--primary-foreground` | `#ffffff` | `#ffffff` | — | sim |
+| color/secondary | `--secondary` | `#f5f5f7` | `#f5f5f7` | — | sim |
+| color/secondary-foreground | `--secondary-foreground` | `#1d1d1f` | `#1d1d1f` | — | sim |
+| color/muted | `--muted` | `#f5f5f7` | `#f5f5f7` | — | sim |
+| color/muted-foreground | `--muted-foreground` | `#626267` | `#626267` | — | sim |
+| color/accent | `--accent` | `#fce9f2` | `#fce9f2` | — | sim |
+| color/accent-foreground | `--accent-foreground` | `#1d1d1f` | `#1d1d1f` | — | sim |
+| color/destructive | `--destructive` | `#b42318` | `#b42318` | — | sim |
+| color/destructive-foreground | `--destructive-foreground` | `#ffffff` | `#ffffff` | — | sim |
+| color/border | `--border` | `#d2d2d7` | `#d2d2d7` | — | sim |
+| color/input | `--input` | `#86868b` | `#86868b` | — | sim |
+| color/ring | `--ring` | `#c7005e` | `#c7005e` | — | sim |
+| color/action | `--action` | `#39ff14` | `#39ff14` | — | sim |
+| color/action-foreground | `--action-foreground` | `#000000` | `#000000` | — | sim |
+| color/action-hover | `--action-hover` | `#2fe80c` | `#2fe80c` | — | sim |
+| color/surface | `--surface` | `#f5f5f7` | `#f5f5f7` | — | sim |
+| color/surface-raised | `--surface-raised` | `#fbfbfd` | `#fbfbfd` | — | sim |
+| color/chart-1 | `--chart-1` | `#1d1d1f` | `#1d1d1f` | — | sim |
+| color/chart-2 | `--chart-2` | `#39ff14` | `#39ff14` | — | sim |
+| color/chart-3 | `--chart-3` | `#c7005e` | `#c7005e` | — | sim |
+| color/chart-4 | `--chart-4` | `#86868b` | `#86868b` | — | sim |
+| color/chart-5 | `--chart-5` | `#ff3ea5` | `#ff3ea5` | — | sim |
+| color/sidebar | `--sidebar` | `#0a0a0f` | `#0a0a0f` | `#0a0a0f` | sim |
+| color/sidebar-foreground | `--sidebar-foreground` | `#f5f5f7` | `#f5f5f7` | `#f5f5f7` | sim |
+| color/sidebar-primary | `--sidebar-primary` | `#ff3ea5` | `#ff3ea5` | `#ff3ea5` | sim |
+| color/sidebar-primary-foreground | `--sidebar-primary-foreground` | `#0a0a0f` | `#0a0a0f` | `#0a0a0f` | sim |
+| color/sidebar-accent | `--sidebar-accent` | `#1e1e28` | `#1e1e28` | `#1e1e28` | sim |
+| color/sidebar-accent-foreground | `--sidebar-accent-foreground` | `#ff3ea5` | `#ff3ea5` | `#ff3ea5` | sim |
+| color/sidebar-border | `--sidebar-border` | `#2a2a36` | `#2a2a36` | `#2a2a36` | sim |
+| color/sidebar-ring | `--sidebar-ring` | `#ff3ea5` | `#ff3ea5` | `#ff3ea5` | sim |
+| color/status/down | `--status-down` | `#146c38` | `#146c38` | — | sim |
+| color/status/down-soft | `--status-down-soft` | `#e9fbe8` | `#e9fbe8` | — | sim |
+| color/status/up | `--status-up` | `#b42318` | `#b42318` | — | sim |
+| color/status/up-soft | `--status-up-soft` | `#fff0ee` | `#fff0ee` | — | sim |
+| color/status/warning | `--status-warning` | `#925400` | `#925400` | — | sim |
+| color/status/warning-soft | `--status-warning-soft` | `#fff4dd` | `#fff4dd` | — | sim |
+| color/status/target | `--status-target` | `#39ff14` | `#39ff14` | — | sim |
+| color/night/950 | `--night-950` | `#0a0a0f` | `#0a0a0f` | `#0a0a0f` | sim |
+| color/night/900 | `--night-900` | `#13131a` | `#13131a` | `#13131a` | sim |
+| color/night/800 | `--night-800` | `#1e1e28` | `#1e1e28` | `#1e1e28` | sim |
+| color/night/line | `--night-line` | `#2a2a36` | `#2a2a36` | `#2a2a36` | sim |
+| color/night/muted | `--night-muted` | `#a1a1aa` | `#a1a1aa` | `#a1a1aa` | sim |
+| radius/sm | `--radius-sm` | `8px` | `8px` | — | sim |
+| radius/md | `--radius-md` | `12px` | `12px` | — | sim |
+| radius/lg | `--radius-lg` | `18px` | `18px` | — | sim |
+| radius/xl | `--radius-xl` | `24px` | `24px` | — | sim |
+| radius/2xl | `--radius-2xl` | `32px` | `32px` | — | sim |
+| radius/pill | `--radius-pill` | `980px` | `980px` | — | sim |
+| space/1 | `--space-1` | `4px` | `4px` | — | sim |
+| space/2 | `--space-2` | `8px` | `8px` | — | sim |
+| space/3 | `--space-3` | `12px` | `12px` | — | sim |
+| space/4 | `--space-4` | `16px` | `16px` | — | sim |
+| space/5 | `--space-5` | `20px` | `20px` | — | sim |
+| space/6 | `--space-6` | `24px` | `24px` | — | sim |
+| space/8 | `--space-8` | `32px` | `32px` | — | sim |
+| space/10 | `--space-10` | `40px` | `40px` | — | sim |
+| space/12 | `--space-12` | `48px` | `48px` | — | sim |
+| space/16 | `--space-16` | `64px` | `64px` | — | sim |
+| space/20 | `--space-20` | `80px` | `80px` | — | sim |
+| space/30 | `--space-30` | `120px` | `120px` | — | sim |
+| Elevação/0 · plano | `--shadow-0` | `none` | `none` | — | sim |
+| Elevação/1 · card | `--shadow-1` | `0 1px 2px rgb(0 0 0 / .04), 0 8px 24px rgb(0 0 0 / .06)` | `0 1px 2px rgb(0 0 0 / .04), 0 8px 24px rgb(0 0 0 / .06)` | — | sim |
+| Elevação/2 · flutuante | `--shadow-2` | `0 12px 32px rgb(0 0 0 / .10)` | `0 12px 32px rgb(0 0 0 / .10)` | — | sim |
+| Elevação/3 · destaque | `--shadow-3` | `0 30px 60px rgb(0 0 0 / .14)` | `0 30px 60px rgb(0 0 0 / .14)` | — | sim |
+| Elevação/Brilho ação | `--shadow-action-glow` | `0 8px 24px rgb(56 255 20 / .45)` | `0 8px 24px rgb(56 255 20 / .45)` | — | sim |
+| Foco/Anel rosa | `--ring-width` | `3px` | `3px` | — | sim |
+| Vidro/Desfoque 20 | `--blur-glass` | `20px` | `20px` | — | sim |
+
+74 linhas (67 variáveis + 7 efeitos); divergências: 0.
+
+### AC04 — esperado × obtido nos estilos calculados (`tests/visual/ds-measures.spec.ts`)
+
+Medido no Chromium (1280 px) sobre o catálogo local. Os estados de foco foram medidos com movimento
+reduzido, para não ler uma transição em curso. A tabela vem de `ac04-medidas.json`, gerado pelo
+spec (`test-results/`). O spec falha se algum valor divergir.
+
+| Componente | Propriedade | Esperado (Figma) | Obtido (estilo calculado) |
+|---|---|---|---|
+| Button (`default`) | raio | pílula (`rounded-full`) | `3.35544e+07px` |
+| Button (`default`) | duração da transição | `--motion-fast` 160 ms | `0.16s, 0.16s, 0.16s, 0.16s` |
+| Button (`default`) | anel de foco | 3px `--ring` (#c7005e) | `3px rgb(199, 0, 94)` |
+| Input | raio | `--radius-md` 12 px | `12px` |
+| Input | duração da transição | 160 ms | `0.16s` |
+| Input | borda em repouso | `--input` (#86868b) | `rgb(134, 134, 139)` |
+| Input | foco: borda / anel | `--ring` / 3px `--ring` | `rgb(199, 0, 94) / 3px rgb(199, 0, 94)` |
+| Card | raio | `--radius-lg` 18 px | `18px` |
+| Card | sombra | `--shadow-0` (none) | `none` |
+| Alert Dialog | raio | `--radius-xl` 24 px | `24px` |
+| Alert Dialog | sombra | `--shadow-3` 0 30px 60px rgb(0 0 0 / .14) | `0.14) 0px 30px 60px 0px` |
+
+Contraste (WCAG 1.4.11, mínimo 3:1, contra o fundo `#ffffff`): borda do campo **3.62:1**; borda do campo em foco **5.85:1**; anel de foco do Button **5.85:1**.
+
+O anel de foco do Input é o contorno global `:focus-visible` (3 px `--ring`) somado à borda rosa: o
+`box-shadow` do anel do Tailwind é anulado pela regra global `[data-slot="input"] { box-shadow: none }`.
+
+### AC05, AC09 e AC12
+
+- **AC05:** node-ids da seção 2 preenchidos no inventário da D2 (valores do Figma enviados pela coordenação).
+- **AC09:** `ds-measures.spec.ts` confere que a cor calculada do item ativo é a do token: na barra
+  lateral, a 1280 px, é `--sidebar-accent-foreground` (rgb(255, 62, 165)); na navegação inferior, a
+  390 px, é `--primary` (rgb(199, 0, 94)). → 2 passed.
+- **AC12:** contraste ≥ 3:1 da borda do campo, da borda em foco e do anel de foco (valores acima).
+  Comparador (`/app/compare`) com axe WCAG 2.2 AA, alvos de 44 px e sem rolagem lateral em 320, 390,
+  768 e 1280 px → **4 passed**. `ds-measures.spec.ts` no total: **7 passed**.

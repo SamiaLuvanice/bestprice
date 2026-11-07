@@ -30,7 +30,43 @@ system", versão de histórico "Design system 2026 · shadcn/ui" (07/11/2026).
   `data-mono` (só família mono + `tabular-nums`).
 - **Button — correspondência Figma → código:** `action` → `default` (verde, texto preto);
   `default` → `brand` (rosa); `secondary`, `outline`, `ghost`, `link`, `destructive` iguais.
-  A direção "ação principal rosa" da 0042 deixa de valer.
+  Tamanhos: `default` 44 px, `sm` 36 px (alvo de toque de 44 px por área invisível), `lg` 52 px,
+  `icon` 44 px; pílula; estado `loading` (`aria-busy`, indicador). No máximo uma ação
+  `default` (verde) visível por tela (`frontend/src/primaryAction.test.tsx`).
+- **Substitui a spec 0042, AC05:** a direção "ação principal rosa com texto branco" deixa de valer.
+  O verde `--action` é a ação principal; o rosa `--primary` fica para leitura, links, itens ativos
+  e foco. Com isso, a Issue #222 (0042) é fechada junto com a 0049.
+- **Badge — status de preço (nomes em inglês, regra `naming.md`):** queda → `down`, alta → `up`,
+  estável → `stable`, alvo → `target`, desatualizado → `stale`, não verificado → `unverified`. Cada
+  status tem ícone decorativo e texto, porque a cor não é o único sinal. Também existem `default`,
+  `secondary`, `destructive` e `outline`.
+- **Componentes:** a biblioteca da seção 2 está em `frontend/src/components/ui/`. Os 16 componentes
+  da CLI do shadcn foram instalados sem sobrescrever os existentes, sem as variáveis CSS do registry
+  e sem `next-themes`. O `sonner.tsx` foi escrito à mão (`theme="light"`). Os rótulos do registry
+  foram traduzidos para o português. O catálogo local fica em `/dev/design-system`, só no servidor
+  de desenvolvimento.
+- **Divergência de token aprovada:** `--color-brand-strong: #a0004c` (hover de link, 8,1:1 sobre
+  branco). O Figma não define estado hover para link. É a única exceção da lista
+  `colorLiteralExceptions` em `frontend/src/tokens.figma.test.ts`. Os demais tokens próprios
+  derivam de variáveis do Figma; `--color-danger-bg` usa o alias `--destructive-soft`.
+- **Divergências de tela aprovadas (AC08, 07/11/2026):**
+  - títulos na pilha de sistema sem SF Pro Expanded (fonte substituta);
+  - aviso do Google dentro do campo do assistente, alça de redimensionar e "Conversas recentes" no
+    topo no mobile;
+  - texto de erro de e-mail atual e senhas apagadas após 409, 429 ou falha de rede (0048);
+  - "Excluir" no card do histórico mobile;
+  - estrutura do estado vazio e densidade da tabela do monitoramento;
+  - "Tentar novamente" em texto no monitoramento (AC07);
+  - indisponibilidade como aviso "Preço desatualizado" na linha;
+  - elementos sem comportamento omitidos: indicadores, busca, filtros, seletor de período e resumo
+    por situação.
+
+  O registro par a par fica em `specs/0049-design-system-2026-no-codigo/verification.md`.
+- **Verificação contínua:**
+  - `node scripts/token-table.mjs` (em `frontend/`) gera a tabela 1:1 do snapshot;
+  - `tests/visual/ds-measures.spec.ts` mede raio, sombra, foco, durações e contraste;
+  - `npm run build:check` confere que o catálogo não vai para `dist/` e que as fontes só incluem
+    latin e latin-ext, sem base64.
 
 ## Histórico de conversas (spec 0045)
 
