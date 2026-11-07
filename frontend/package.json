@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
+    "build:check": "npm run build && node scripts/check-no-catalog.mjs",
     "test": "vitest run",
     "test:visual": "playwright test",
     "lint": "eslint ."
