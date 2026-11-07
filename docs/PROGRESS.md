@@ -18,7 +18,7 @@ O que entrou:
 - telas da lista A aproximadas dos quadros, com as divergências aprovadas em 07/11/2026;
 - referências visuais (F26) atualizadas com aprovação.
 
-Comportamento, textos, rotas e API não mudaram. Os detalhes e as contagens estão em
+Comportamento, rotas, API e textos visíveis das telas não mudaram; os rótulos dos componentes do registry (paginação, sheet e barra lateral) foram traduzidos. Os detalhes e as contagens estão em
 [verificação da 0049](../specs/0049-design-system-2026-no-codigo/verification.md).
 
 Pendências: revisão independente final, PR para develop (`Closes #267`, `Closes #222`), CI e doc-sync.

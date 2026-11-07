@@ -27,7 +27,7 @@ registradas em `designsystem/README.md` antes da implementação.
 
 Cores: fundo `--bg: #ffffff`; superfície `--surface: #f5f5f7`; texto `--fg: #1d1d1f`;
 apoio `--fg-2: #424245`, `--muted: #6e6e73`, `--meta: #86868b`; borda `--border: #d2d2d7`;
-verde de ação `--accent: #39ff14` com texto `--accent-on: #000000`; rosa de leitura
+verde de ação `--accent: #39ff14` com texto `--accent-on: #000000` (nomes válidos só nesta identidade; no app React o verde é `--action` e `--accent` é o rosa claro do shadcn); rosa de leitura
 `--accent-ink: #c7005e` (claro) e `#ff3ea5` no escuro (extensão 0015); semânticas
 `--success: #16a34a`, `--warn: #eab308`, `--danger: #dc2626`.
 

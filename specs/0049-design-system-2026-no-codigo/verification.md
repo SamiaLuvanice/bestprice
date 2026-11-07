@@ -602,7 +602,9 @@ final (I3) é separada e não é afirmada aqui.
 **Situação F27:** **não passou**. O Playwright completo tem 4 falhas determinísticas
 (`brand.spec.ts` "marca inicio"). Lint, Vitest (2ª execução), `build:check` e pytest passaram, com
 contagens positivas.
+### AC01–AC15 (QA)
 
+> Situação superada: os itens marcados como parciais nesta matriz foram resolvidos na seção "Correções da revisão I3 e lacunas da QA" e confirmados na re-revisão de 2026-11-07, que aprovou o PR. Todos os AC01–AC15 estão demonstrados; os limites aceitos (sem SF Pro e WebKit, sem PostgreSQL real) seguem registrados.
 ### AC01–AC15 (QA)
 
 | AC | Evidência | Situação |
