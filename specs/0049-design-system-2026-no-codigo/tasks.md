@@ -105,12 +105,12 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
 ## Fechamento
 
 - [ ] I3 — Revisão `arch-reviewer` final e QA (`qa`) dos AC01–AC15.
-- [ ] F27 — Gates:
+- [x] F27 — Gates:
   - `npm run lint`, `npm test`, `npm run build`, `npm run build:check` e
     `npx playwright test`;
   - pytest do backend como sanidade.
   - Contagens positivas em `verification.md`.
-- [ ] D4 — Documentação: `designsystem/README.md` com:
+- [x] D4 — Documentação: `designsystem/README.md` com:
   - tokens;
   - a correspondência de variantes;
   - a substituição da 0042;

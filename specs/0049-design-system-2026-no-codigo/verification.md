@@ -756,3 +756,17 @@ O anel de foco do Input é o contorno global `:focus-visible` (3 px `--ring`) so
 - **AC12:** contraste ≥ 3:1 da borda do campo, da borda em foco e do anel de foco (valores acima).
   Comparador (`/app/compare`) com axe WCAG 2.2 AA, alvos de 44 px e sem rolagem lateral em 320, 390,
   768 e 1280 px → **4 passed**. `ds-measures.spec.ts` no total: **7 passed**.
+
+### F27 — Gates depois das correções da I3 e da QA (ponta `72566f7`)
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | 0 problemas |
+| `npm test` | 52 arquivos, **718 passed** |
+| `npm run build:check` | build ok; "Sem vestígios do catálogo em dist"; "Fontes conforme em dist" (CSS principal 151,15 kB, gzip 27,02 kB) |
+| `npx playwright test` (12 workers, execução única) | **270 passed, 0 failed, 331 skipped** (5,9 min). Os skips são testes com largura fixa que rodam num só projeto e a evidência sem `EVIDENCE_0049` |
+| `git status` depois do Playwright | limpo (a evidência versionada não foi regravada) |
+| Backend (sanidade): `uv run ruff check .` / `uv run pytest -q` | All checks passed! / **407 passed, 61 skipped** (integração sem `TEST_DATABASE_URL`, como no registro da QA) |
+
+Não foi preciso reexecutar com `--workers=2`. Nenhuma referência visual aprovada na F26 mudou: os 42
+snapshots de `public-pages.spec.ts` e `signup.spec.ts` passaram sem atualização.
