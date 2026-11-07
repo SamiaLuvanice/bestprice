@@ -1,5 +1,35 @@
 # Protótipo visual BestPrice
 
+## Design system 2026 — spec 0049
+
+Referência: Figma BestPrice IA (`LZVtUEAycEzfbwL0H5YL3r`), página "00 · BestPrice IA — Design
+system", versão de histórico "Design system 2026 · shadcn/ui" (07/11/2026).
+
+- **Tokens:** o snapshot [`tokens/figma-variables-2026-11.json`](tokens/figma-variables-2026-11.json)
+  (67 variáveis, 22 estilos de texto, 7 efeitos) é o contrato com `frontend/src/styles.css`;
+  `frontend/src/tokens.figma.test.ts` compara os dois. Mudanças: `--card` `#f5f5f7` → `#ffffff`
+  e `--action-hover` `#65ff48` → `#2fe80c` (o Figma prevalece sobre a 0039). Novos:
+  `--surface`, `--surface-raised`, `--chart-1..5`, `--sidebar-*`, `--night-*`, `--status-*`,
+  `--radius-xl/2xl`, `--space-5/10/20/30`, `--shadow-0..3`, `--shadow-action-glow`,
+  `--ring-width`, `--blur-glass`, `--motion-base/enter`. Os tokens próprios antigos
+  (`--color-down`, `--color-surface`...) apontam para os novos.
+- **Tema:** claro fixo (0016). Os valores "Noite" valem só para superfícies escuras fixas
+  (`--sidebar-*`, `--night-*`).
+- **Cor solta:** `frontend/src/no-raw-colors.test.ts` impede `#hex`/`rgb()`/`hsl()` fora dos
+  blocos `:root` (exceções justificadas no próprio teste).
+- **Fontes:** títulos usam a pilha `--font-display` com `font-stretch: expanded` (SF Pro Expanded
+  quando o aparelho a tem; largura normal nos demais; a fonte não é distribuída). Dados (preço,
+  horário, MLB, contador) usam `--font-mono`: **Geist Mono**, empacotada por
+  `@fontsource/geist-mono` (pesos 400/500/600, `woff2` no próprio build, sem serviço externo).
+  Licença: **SIL Open Font License 1.1**, © 2024 The Geist Project Authors
+  (`frontend/node_modules/@fontsource/geist-mono/LICENSE`, https://github.com/vercel/geist-font).
+- **Estilos de texto:** utilitários `text-display-*`, `text-mobile-display-*`, `text-heading-h3/h4`,
+  `text-body-*`, `text-button-m/s`, `text-label-m`, `text-data-price-xl/m`, `text-mono-*` e
+  `data-mono` (só família mono + `tabular-nums`).
+- **Button — correspondência Figma → código:** `action` → `default` (verde, texto preto);
+  `default` → `brand` (rosa); `secondary`, `outline`, `ghost`, `link`, `destructive` iguais.
+  A direção "ação principal rosa" da 0042 deixa de valer.
+
 ## Histórico de conversas (spec 0045)
 
 Referência: BestPrice IA no Figma, frames 59:204 e 59:716, exportações identificadas
