@@ -103,6 +103,6 @@ it('Tabs em pílula trocam de aba com as setas', async () => {
 it('Textarea segue o Input (raio, borda e anel de foco)', () => {
   render(<Textarea aria-label="Mensagem" />)
   const textarea = screen.getByRole('textbox', { name: 'Mensagem' })
-  expect(textarea.className).toContain('rounded-xl')
+  expect(textarea.className).toContain('rounded-md')
   expect(textarea.className).toContain('focus-visible:ring-[length:var(--ring-width)]')
 })
