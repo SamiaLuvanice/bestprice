@@ -469,3 +469,155 @@ Nenhuma divergência do AC08 fica pendente.
   - Na reexecução sem a atualização: **48 passed**.
 - `brand.spec.ts`: o tamanho mínimo da marca passou de 40 para 34 px. Isso segue a mudança intencional do cabeçalho feita nas specs 0040 e 0043 (#259). Resultado: **32 passed**.
 - As 16 falhas preexistentes da #259 ficam resolvidas por esta atualização, aprovada pela responsável.
+
+## F25 — Acessibilidade e responsividade das listas A e B (QA, 2026-11-07, ponta `a2d2e32`)
+
+Papel `qa`. Windows 11, Chromium do Playwright 1.64 headless, sem SF Pro e sem WebKit. Todas as
+verificações usam API simulada por `page.route`; nenhuma usa backend nem PostgreSQL reais.
+
+### Cobertura dos specs Playwright versionados (execução completa na F27, abaixo)
+
+| Verificação | Specs que cobrem | Telas | Larguras |
+|---|---|---|---|
+| axe (wcag2a/aa, 21a/aa, 22aa) | `redesign`, `assistant`, `history`, `signup`, `brand`, `grounding`, `catalog` | Entrar, Criar conta, Assistente, Conversa, Histórico, Monitoramento (vazio, erro, carregando), Produtos, Detalhe, Alertas, Landing, Não encontrada, catálogo | 320, 390, 768, 1280 |
+| Alvos de 44 px | `redesign`, `assistant`, `history`, `signup`, `grounding`, `catalog` | as mesmas | 320, 390, 768, 1280 |
+| Sem rolagem horizontal | os mesmos, mais `wide-titles` (títulos largos simulados) e `login-footer` | as mesmas, mais o Comparador (só no `wide-titles`) | 320, 390, 768, 1280; `wide-titles` só a 320 |
+| Teclado | `interaction` (menu da landing), `signup` (Tab/Shift+Tab), `history` (busca), `assistant` (shell), `catalog` (select, menu, tooltip, diálogo, toast), `grounding` | Landing, Criar conta, Histórico, Assistente/Monitoramento, catálogo | 320, 390, 768, 1280 |
+| `prefers-reduced-motion` | `interaction.spec.ts` ("movimento reduzido…") | só Entrar | 320, 390, 768, 1280 |
+
+**Lacunas dos specs versionados:**
+
+- **Comparador** (`/app/compare`, lista B): sem axe, sem alvos de 44 px e sem teclado. Só tem a
+  checagem de rolagem do `wide-titles`, a 320 px.
+- **Movimento reduzido:** só a tela Entrar é verificada.
+- **Teclado:** não há um percurso por Tab com foco visível em cada tela.
+
+### Verificação suplementar ad hoc (não versionada)
+
+Para fechar essas lacunas sem alterar testes, rodou-se um script no scratchpad da sessão
+(`qa-f25.cjs`), com o Chromium e o `@axe-core/playwright` do `frontend/`, contra
+`npm run dev -- --port 5199`. Foram 13 telas × 4 larguras = **52 combinações**, todas com
+`reducedMotion: 'reduce'` e altura de 800 px.
+
+- **Telas:** Entrar, Criar conta, Assistente, Conversa, Histórico, Monitoramento vazio,
+  Monitoramento com produtos, Produtos, Detalhe, Alertas, Comparador, Landing e Não encontrada.
+- **Medidas por combinação:**
+  - axe com as mesmas tags;
+  - controles visíveis menores que 43 px (contando o `::after` de alvo);
+  - `scrollWidth − innerWidth`;
+  - animações CSS ativas e transições não nulas;
+  - até 60 Tabs, com o indicador de foco (outline ou box-shadow) de cada parada;
+  - requisições de fonte para fora da origem;
+  - botões verdes visíveis.
+
+| Medida | Resultado nas 52 combinações |
+|---|---|
+| Violações axe | **0** |
+| Alvos < 44 px | **0** |
+| Rolagem horizontal | **0 px** em todas |
+| Animação ativa / transição não nula com `reduce` | **0 / 0** |
+| Paradas de Tab sem indicador | 0 reais. O script marcou "Ver detalhes de …" (Monitoramento com produtos e Produtos, a 320, 390 e 768); a inspeção mostrou que o anel fica no `::after` que cobre a linha (`styles.css:639`). É falso positivo do script |
+| Fonte externa | **0** requisições |
+| Verde visível (AC07) | Lista A: no máximo 1 (Entrar, Criar conta, Enviar mensagem, Monitorar preço; Histórico e Monitoramento com produtos: 0). Lista B: Detalhe 1, Comparador 1, Não encontrada 1; a Landing tem 2 ou 3 "Começar com IA" (o AC07 vale só para a lista A; a landing atual fica para a spec própria) |
+
+**Limites:**
+
+- O script é evidência de QA, não teste versionado; quem quiser repetir precisa recriá-lo.
+- O contraste 3:1 de bordas de controle e foco (WCAG 1.4.11) não é medido pelo axe nem pelo
+  script; só os pares de texto e fundo (`color-contrast`) foram verificados.
+- Os estados de carregamento sem quadro só têm a cobertura do `redesign` ("carregando").
+- Títulos largos continuam simulados (WebKit não instalado, limite já aceito).
+
+**Situação F25:** passou. Nenhuma violação nas 4 larguras, nas listas A e B, somando os specs
+versionados e a verificação ad hoc. As lacunas dos specs (Comparador, movimento reduzido fora de
+Entrar, percurso de Tab) ficam registradas como sugestão de teste, sem defeito de produto.
+
+## F27/QA — Gates finais (2026-11-07, ponta `a2d2e32`)
+
+### Frontend (`frontend/`, `node_modules` já instalado, Node 22.18.0)
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | saída 0, sem problemas |
+| `npm test` (1ª) | **1 failed, 705 passed (706)**, 50 arquivos. A falha foi em `App.test.tsx` "preserva preço desconhecido…": `findByRole('heading', 'Fone sem fio')` esgotou o tempo, a mesma instabilidade de carga da F0 |
+| `npx vitest run src/App.test.tsx` (2 vezes) | **40 passed** nas duas |
+| `npm test` (2ª, completa) | **706 passed (706)**, 50 arquivos |
+| `npm run build:check` | saída 0. `tsc -b` + `vite build` passaram (CSS `index-CSJhvWMH.css` 150,37 kB, gzip 26,86 kB). Saídas: "Sem vestígios do catálogo em dist (5 marcadores conferidos)" e "Fontes conforme em dist: Geist Mono latin/latin-ext 400–600, sem base64" |
+| `npx playwright test` (completa) | **286 passed, 5 failed, 242 skipped** (533 testes, 6,8 min) |
+| Reexecução isolada: `npx playwright test tests/visual/brand.spec.ts tests/visual/assistant.spec.ts:36` | **36 passed, 4 failed**. `assistant.spec.ts:36` (390) passou: é a instabilidade conhecida da imagem de 1,1 MB (`loaded: false`). Os 4 de `brand` "marca inicio" falharam de novo |
+
+**Falha determinística (defeito, não corrigido pelo QA):** `brand.spec.ts:44` "marca inicio"
+falha em 320, 390, 768 e 1280.
+
+- **Erro:** `toHaveCount(1)` recebeu 0 na linha 120.
+- **Causa:** o localizador aceita `img "BestPrice"` ou os links "BestPrice — Início",
+  "BestPrice AI — Início" e "BestPrice AI — Dashboard". Em `/app/monitoring/overview`, a marca é o
+  link "BestPrice IA — Assistente" (`ResearchArea.tsx:67`, igual em `origin/develop` desde `fb46498`).
+- **Por que só apareceu agora:** antes da F26, o teste parava antes, na asserção de largura ≥ 40 px
+  (linha 110). Com o limite em 34 px, ele chega ao localizador.
+- **Registro da F26:** o "brand.spec.ts: 32 passed" corresponde a 32 de 36 testes; esses 4 não
+  foram registrados como falha.
+- **Reproduzir:** `cd frontend && npx playwright test tests/visual/brand.spec.ts -g "marca inicio"`.
+- **Situação:** falha da #259 ainda aberta. A correção é do teste (incluir o nome
+  "BestPrice IA — Assistente" no localizador) e precisa de decisão da responsável e do papel
+  `frontend`.
+
+**Efeito colateral observado:** a execução completa regravou 6 PNGs versionados de
+`evidence/app/`, porque `evidence-0049.spec.ts` grava direto em `specs/…/evidence/app/`:
+
+- `cadastro-3` e `cadastro-7` (desktop e mobile);
+- `estados-desktop-a-envio-em-andamento`;
+- `estados-desktop-a-falha-envio`.
+
+Os arquivos foram restaurados com `git checkout`. Qualquer `npx playwright test` completo suja a
+árvore com diferenças de renderização.
+
+### Backend (sanidade; o branch não altera `backend/`: `git diff --stat de5d8ee..HEAD -- backend` vazio)
+
+| Comando | Resultado |
+|---|---|
+| `uv sync --locked --extra dev` | ok |
+| `uv run ruff check .` | All checks passed! |
+| `uv run pytest -q -rs` | **407 passed, 61 skipped**, 1 warning (34,8 s) |
+| `uv run pytest -q tests/test_health.py tests/test_health_integration.py -rs` | **3 passed, 2 skipped** |
+
+- **Testes pulados:** 59 dos 61 são de integração, pulados por `TEST_DATABASE_URL` não
+  configurada; os outros 2 são `test_stage_start.py`, um script POSIX.
+- **Ambiente:** o Docker não está disponível (`docker ps` não conecta ao `dockerDesktopLinuxEngine`)
+  e não há PostgreSQL de teste.
+- **`/api/health`:** as respostas **200 e 503 foram verificadas só por simulação**
+  (`test_health.py`, conexão substituída por dublê). As versões com PostgreSQL real
+  (`test_health_integration.py`) **não rodaram**.
+- **Falha de rede na UI:** também só por simulação, com API interceptada. Cobrem esse caso
+  `signup.spec.ts` "falha-de-rede", o `redesign` "erro" (503 do painel) e os estados de falha de
+  `assistant`/`history`.
+- **Fluxo ponta a ponta:** não foi conferido com os três serviços reais (API, SPA e PostgreSQL). A
+  spec não muda o backend nem o contrato; fica como limite.
+- **Complexidade:** o `complexity_report.py` não foi executado, porque não há mudança no backend.
+
+**Não executado / não afirmado:** CI do GitHub, PR, Project e release. A revisão `arch-reviewer`
+final (I3) é separada e não é afirmada aqui.
+
+**Situação F27:** **não passou**. O Playwright completo tem 4 falhas determinísticas
+(`brand.spec.ts` "marca inicio"). Lint, Vitest (2ª execução), `build:check` e pytest passaram, com
+contagens positivas.
+
+### AC01–AC15 (QA)
+
+| AC | Evidência | Situação |
+|---|---|---|
+| AC01 Tokens | `src/tokens.figma.test.ts` compara as 67 variáveis, os valores Noite, os efeitos e os estilos de texto com `styles.css` (no `npm test`, 706 passed). Divergência `--color-brand-strong` aprovada (seção I2) | **Parcial:** a comparação é automática, mas a verificação não traz a tabela 1:1 (variável, token, esperado, obtido) que o AC pede |
+| AC02 Sem cor solta | `src/no-raw-colors.test.ts` (2 passed, dentro dos 706). Exceções justificadas: seletores de traço do Recharts e `--color-brand-strong` | Demonstrado (varredura estática de `src/`) |
+| AC03 Tipografia | `tokens.figma.test.ts` (22 estilos), pares do AC08 e Geist Mono + `tabular-nums` nos dados (seção Fase 4). Sistema da comparação: Windows 11, sem SF Pro | Demonstrado, com fonte substituta (FS) aprovada |
+| AC04 Forma, elevação, foco e movimento | `tokens.figma.test.ts` (efeitos, `--ring-width`, `--motion-*`, bloco de movimento reduzido). Com `reduce`, 0 transições (F25) | **Parcial:** falta na verificação a lista de valor esperado × obtido dos estilos calculados de botão, campo, card, menu e diálogo |
+| AC05 Biblioteca completa | Inventário D2, `catalog.spec.ts` (passou nas 5 larguras) | **Parcial:** a coluna node-id da seção 2 continua "a preencher na D3" |
+| AC06 Catálogo restrito | `src/dev/catalogRoute.test.tsx`, `scripts/check-no-catalog.test.ts`, `npm run build:check` ("Sem vestígios… 5 marcadores") | Demonstrado |
+| AC07 Ação única | `src/primaryAction.test.tsx` (jsdom). Contagem no navegador (F25 ad hoc): no máximo 1 verde nas telas da lista A. `redesign` "tokens": `bg-action` `rgb(57,255,20)` com texto `rgb(0,0,0)` | Demonstrado |
+| AC08 Telas fiéis | Pares em `evidence/`, seção F24 e aprovação de 2026-11-07 | Demonstrado (todas as divergências aprovadas) |
+| AC09 Navegação | Seção Fase 4 (F16), capturas `evidence/app/*`, `assistant.spec.ts` "shell" (uma `aria-current`) | Demonstrado por captura e revisão visual; a cor rosa do item ativo não tem asserção automática |
+| AC10 Gráfico | `src/dashboard/PriceHistoryChart.test.tsx` (14 passed na F15; dentro dos 706); `chartTargetPrice` (seção I2); `App.test.tsx` "preserva preço desconhecido" (sem histórico) | Demonstrado |
+| AC11 Comportamento preservado | Vitest **706 passed**; pytest **407 passed**. Asserções visuais alteradas listadas (rodapé `rgb(10,10,15)`; marca ≥ 34 px na F26) | **Parcial:** a suíte Playwright não está verde (`brand` "marca inicio", 4 failed) |
+| AC12 Acessibilidade | F25: specs versionados e verificação ad hoc com 52 combinações, 0 violações | **Parcial:** o 3:1 de bordas e foco (1.4.11) não foi medido de forma sistemática; títulos largos só simulados (limite aceito) |
+| AC13 Regressão visual revisada | Seção F26 (42 capturas aprovadas) | **Parcial:** as 4 falhas de `brand` "marca inicio" da #259 não estão resolvidas nem separadas explicitamente |
+| AC14 Fontes sem serviço externo | `catalog.spec.ts` (fonte local), `scripts/check-fonts.mjs`. F25 ad hoc: 0 requisições externas de fonte em 52 combinações. `designsystem/licenses/GeistMono-OFL.txt` | Demonstrado |
+| AC15 Documentação | `designsystem/README.md` § "Design system 2026" (tokens novos e alterados, correspondência do Button, substituição da 0042, fontes e licença, versão do Figma) | **Parcial:** D4 em aberto. O README não registra as variantes de status de preço do Badge, a exceção `--color-brand-strong` nem a lista das divergências resolvidas a favor do Figma; `docs/apps/frontend.md` e `docs/PROGRESS.md` não foram conferidos pelo QA |

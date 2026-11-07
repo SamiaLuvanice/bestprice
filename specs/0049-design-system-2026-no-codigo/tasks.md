@@ -97,7 +97,7 @@ Legenda: **[F]** frontend · **[D]** design/evidência · **[I]** integração/c
   390.
   - **Aceite:** pares lado a lado em `verification.md`, com a classificação de cada
     divergência.
-- [ ] F25 — Rodar axe, alvos de 44 px, teclado, movimento reduzido e ausência de rolagem
+- [x] F25 — Rodar axe, alvos de 44 px, teclado, movimento reduzido e ausência de rolagem
   horizontal nas listas A e B, em 320, 390, 768 e 1280.
 - [x] F26 — Atualizar os baselines por spec de teste, apresentando cada diff.
   - **Aceite:** aprovação registrada (AC13).
