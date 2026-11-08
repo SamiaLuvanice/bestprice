@@ -73,7 +73,7 @@ export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
   }
 
   return <div className="disclosure bell" ref={panel.containerRef} onKeyDown={panel.onKeyDown} onBlur={panel.onBlur}>
-    <Button ref={panel.buttonRef} type="button" className="icon-button bell-button" aria-expanded={panel.open} aria-controls={panelId} onClick={panel.toggle}>
+    <Button variant="ghost" ref={panel.buttonRef} type="button" className="icon-button bell-button" aria-expanded={panel.open} aria-controls={panelId} onClick={panel.toggle}>
       <BellIcon />
       <span className="sr-only">{counter.label}</span>
       {counter.text && <span className="bell-count" aria-hidden="true">{counter.text}</span>}
@@ -84,7 +84,7 @@ export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
       {unread.status === 'loading' && <p role="status" className="panel-note">Carregando notificações…</p>}
       {unread.status === 'error' && <div className="panel-note">
         <p>Notificações indisponíveis</p>
-        <Button type="button" className="text-button" onClick={() => void retry()}>Tentar novamente</Button>
+        <Button variant="ghost" type="button" className="text-button" onClick={() => void retry()}>Tentar novamente</Button>
       </div>}
       {unread.status === 'ready' && (visible.length === 0
         ? <p className="panel-note">Nenhuma notificação não lida.</p>
@@ -95,7 +95,7 @@ export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
           </span>
           <RelativeTime iso={item.created_at} receivedAt={unread.receivedAt} />
           <Link className="link-button" to={`/produtos/${item.tracked_product_id}`} onClick={() => panel.close()}>Abrir produto</Link>
-          <Button type="button" className="link-button" data-notification-id={item.id} aria-disabled={pending === item.id || undefined}
+          <Button variant="link" type="button" className="link-button" data-notification-id={item.id} aria-disabled={pending === item.id || undefined}
             onClick={() => void markRead(item.id)}>
             Marcar como lida<span className="sr-only">: {item.product_title}</span>
           </Button>

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import { BrowserRouter, matchPath, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type User } from './api'
 import { LoginForm } from './LoginForm'
@@ -17,6 +17,11 @@ function message(error: unknown): string {
 }
 
 const systemClock = () => new Date()
+// 0049/AC06: catálogo do design system só no servidor de desenvolvimento. No build de
+// distribuição, DEV é false, o ramo some e nenhum chunk do catálogo é emitido
+// (scripts/check-no-catalog.mjs confere o dist/).
+const DesignSystemCatalog = import.meta.env.DEV ? lazy(() => import('./dev/DesignSystemCatalog')) : null
+const catalogPath = '/dev/design-system'
 type Props = { clock?: () => Date }
 
 function AppRoutes({ clock }: { clock: () => Date }) {
@@ -47,6 +52,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
       const frame = window.requestAnimationFrame(() => document.getElementById('signup-title')?.focus())
       return () => window.cancelAnimationFrame(frame)
     }
+    if (import.meta.env.DEV && location.pathname === catalogPath) return
     if (!/^\/app(?:\/|$)/.test(location.pathname) && !['/', '/produtos', '/alertas', '/cadastro'].includes(location.pathname) &&
       !/^\/produtos\/[^/]+$/.test(location.pathname)) {
       document.title = 'Página não encontrada · BestPrice'
@@ -129,6 +135,9 @@ function AppRoutes({ clock }: { clock: () => Date }) {
 
   const footer = matchPath('/login', location.pathname) || matchPath('/cadastro', location.pathname)
     ? null : <footer>BestPrice · Acompanhe com clareza</footer>
+  if (import.meta.env.DEV && DesignSystemCatalog && location.pathname === catalogPath) {
+    return <Suspense fallback={<p role="status">Carregando catálogo…</p>}><DesignSystemCatalog /></Suspense>
+  }
   if (location.pathname === '/') return <LandingPage signupAvailable={signup.availability === 'enabled'} />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">

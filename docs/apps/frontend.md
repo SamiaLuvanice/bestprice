@@ -608,13 +608,39 @@ O card e o detalhe mostram “Preço indisponível” sem preço atual e “Desc
 
 Com a integração Mercado Livre desligada, o backend ainda valida a URL, informa duplicação e retoma vínculos interrompidos; uma publicação que exige consulta externa retorna indisponibilidade. A UI ainda não expõe filtros de data no histórico. Limites registrados na [evidência da spec 0012](../../specs/0012-area-usuario-monitoramento/verification.md): “Atualizar agora” com sucesso depende de credencial real; `formatMoney` usa `signDisplay: 'negative'`, que lança `RangeError` em navegadores antigos (Chrome < 106, Firefox < 116, Safari < 15.4).
 
+## Design system 2026 — spec 0049
+
+- **Tokens e componentes:** os tokens do Figma 2026 ficam em `src/styles.css`, conferidos contra
+  `designsystem/tokens/figma-variables-2026-11.json` por `src/tokens.figma.test.ts`. A tabela 1:1 é
+  gerada por `node scripts/token-table.mjs`. Os componentes estão em `src/components/ui/`, e a
+  correspondência de variantes (Figma `action` → `default`, `default` → `brand`), os status do Badge
+  e as divergências aprovadas ficam em `designsystem/README.md`.
+- **Catálogo:** `/dev/design-system` abre só no servidor de desenvolvimento (`npm run dev`), por
+  `import.meta.env.DEV` e lazy import. Em build de distribuição, o endereço mostra a página "não
+  encontrada".
+- **`npm run build:check`:** faz o build e roda `scripts/check-no-catalog.mjs` (nenhum vestígio do
+  catálogo no `dist/`) e `scripts/check-fonts.mjs` (Geist Mono só em latin e latin-ext 400–600,
+  nunca em base64). O CI do frontend usa esse comando no lugar de `npm run build`.
+- **Evidência da 0049:** `tests/visual/evidence-0049.spec.ts` regrava as capturas da lista A em
+  `specs/0049-design-system-2026-no-codigo/evidence/app/`. É pulado sem a variável; para regravar:
+  `EVIDENCE_0049=1 npx playwright test tests/visual/evidence-0049.spec.ts --project=viewport-1440`.
+  O projeto `viewport-1440` roda só `catalog.spec.ts` e esse spec.
+- **Outros specs da 0049:**
+  - `catalog.spec.ts` captura as seções do catálogo;
+  - `ds-measures.spec.ts` mede estilos calculados, cor do destino ativo, contraste 3:1 e axe/44 px
+    no comparador;
+  - `monitoring-overflow.spec.ts` confere que não há rolagem lateral com a barra lateral entre 1024
+    e 1440 px;
+  - `assistant-hero.spec.ts` posiciona mascote e halo;
+  - `wide-titles.spec.ts` simula títulos expandidos a 320 px.
+
 ## Testes e verificação
 
-Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build`. Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 6 s (`vite.config.ts` e `src/test-setup.ts`; aumentado de 3 s na 0028 após falhas intermitentes sob carga, descritas na [verificação da 0028](../../specs/0028-ajustes-auditoria-redesign/verification.md)); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código TypeScript/CSS da interface. Dados de exemplo de listas ficam nas fixtures; as artes públicas são ilustrações estáticas identificadas. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
+Em `frontend/`: `npm ci`, `npm run lint`, `npm test -- --run` e `npm run build` (ou `npm run build:check`, usado no CI desde a 0049). Vitest roda em jsdom com `TZ=America/Sao_Paulo` fixo, `testTimeout` de 15 s e `asyncUtilTimeout` de 6 s (`vite.config.ts` e `src/test-setup.ts`; aumentado de 3 s na 0028 após falhas intermitentes sob carga, descritas na [verificação da 0028](../../specs/0028-ajustes-auditoria-redesign/verification.md)); as interações usam `@testing-library/user-event`. Os testes ficam ao lado do código (`src/**/*.test.ts(x)`). `src/test/fakeApi.ts` substitui `fetch` por um roteador com fixtures no formato exato do contrato; rota não prevista é registrada e o `afterEach` global de `src/test-setup.ts` reprova o teste. `src/test/productsHarness.tsx` renderiza a `App` com rota inicial e relógio fixo. `src/content.test.tsx` impede citações a Amazon, prime, estrelas/avaliações e preços fixos no código TypeScript/CSS da interface. Dados de exemplo de listas ficam nas fixtures; as artes públicas são ilustrações estáticas identificadas. Os resultados da navegação por URL estão na [verificação da spec 0021](../../specs/0021-navegacao-por-rotas/verification.md).
 
 A regressão visual (specs 0025, 0027, 0028 e 0029) roda por Playwright com `npm run test:visual`.
 `frontend/playwright.config.ts` sobe o Vite em `http://127.0.0.1:5173` e define os
-projetos `viewport-320`, `viewport-390`, `viewport-768` e `viewport-1280`;
+projetos `viewport-320`, `viewport-390`, `viewport-768` e `viewport-1280` (a 0049 acrescentou `viewport-1440`, só para evidência e sem baselines; ver a seção da 0049);
 `frontend/tests/visual/public-pages.spec.ts` captura landing, login e página não
 encontrada, com `GET /api/auth/me` interceptado em 401 para um estado de visitante
 determinístico, sem backend, e com o esquema de cor claro/escuro emulado pelo

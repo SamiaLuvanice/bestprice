@@ -1,0 +1,158 @@
+# Evidência do frontend — 0049
+
+Papel `frontend`, worktree `.worktrees/feature-0049-issue-267-design-system-2026`. Comandos
+executados em `frontend/` (Windows 11, Node local, Vitest 5.0.3). Contagens copiadas da saída.
+
+## F1 — Tokens do Figma (AC01, AC03, AC04)
+
+- **Teste:** `src/tokens.figma.test.ts` lê `designsystem/tokens/figma-variables-2026-11.json` e
+  compara as 67 variáveis (cor clara, Noite das superfícies fixas, raio e espaço), os 7 efeitos,
+  as durações de movimento, o bloco de movimento reduzido e os 22 estilos de texto com
+  `src/styles.css`.
+- **Red:** `npx vitest run src/tokens.figma.test.ts` → **75 failed | 27 passed (102)**. Motivos
+  esperados: tokens ausentes (`--card-foreground`, `--surface`, `--chart-*`, `--sidebar-*`,
+  `--status-*`, `--night-*`, `--radius-xl/2xl`, `--space-5/10/20/30`, sombras, `--ring-width`,
+  `--blur-glass`, `--motion-base/enter`), valores divergentes (`--card` `#f5f5f7` ≠ `#ffffff`,
+  `--action-hover` `#65ff48` ≠ `#2fe80c`) e os 22 utilitários de texto inexistentes.
+- **Green:** novo bloco de tokens em `styles.css` (`:root`, `@theme inline`, `@utility`).
+  `npx vitest run src/tokens.figma.test.ts src/tokens.test.ts` → **106 passed (106)**.
+- **Asserções existentes alteradas:** nenhuma. `tokens.test.ts` não fixava `--card` nem
+  `--action-hover`; continua verde sem mudança.
+
+## F2 — Cor solta (AC02)
+
+- **Teste:** `src/no-raw-colors.test.ts` varre `.ts/.tsx/.css` de `src/` (exceto testes) em busca
+  de `#hex`, `rgb(`, `rgba(`, `hsl(` fora dos blocos `:root` e dos comentários.
+- **Red:** `npx vitest run src/no-raw-colors.test.ts` → **1 failed**, 7 ocorrências: 5 seletores
+  `[stroke='#ccc']`/`[stroke='#fff']` em `components/ui/chart.tsx`, 1 comentário
+  `#259` em `AccountMenu.tsx` e 1 comentário `(#f5f5f7)` em `styles.css`.
+- **Ajuste do teste:** comentários deixaram de contar (citam valores, não aplicam cor). Os
+  seletores do `chart.tsx` entraram como exceção justificada: localizam o traço padrão do
+  Recharts para repintá-lo com tokens; não aplicam cor.
+- **Green:** `npx vitest run src/no-raw-colors.test.ts` → **1 passed**. O teste continua ativo
+  nas Fases 2–4 como guarda (F23).
+
+## Gates por fase
+
+| Fase | `npm run lint` | `npm test` | `npm run build` |
+|---|---|---|---|
+| 0 (linha de base) | 0 problemas | 530 passed, 1 failed (instável por carga; ver verification.md) | ok |
+| 1 (tokens e fontes) | 0 problemas | 40 arquivos, **634 passed** | ok; 9 `woff2` da Geist Mono no `dist/` |
+| 2 (componentes) | 0 problemas | 45 arquivos, **668 passed** | ok |
+| 3 (catálogo) | 0 problemas | 47 arquivos, **673 passed** | `build:check` ok, sem vestígios |
+
+## F6 — Button (AC05)
+
+- **Red:** `npx vitest run src/components/ui/button.test.tsx` → **6 failed | 8 passed (14)**:
+  alturas antigas (`h-9`, `h-8`, `h-10`, `size-9`), sem `rounded-full`, sem prop `loading`
+  (`aria-busy`, `data-loading`, spinner) e sem o brilho da ação.
+- **Green:** → **14 passed**. `loading` desabilita, anuncia `aria-busy` e mostra
+  `Loader2` decorativo sem trocar o rótulo; com `asChild`, só os atributos.
+- **Achado:** o `tailwind-merge` padrão descartava `text-button-m` ao lado de
+  `text-action-foreground` (`node -e` → `"text-action-foreground"`). `src/lib/utils.ts` passou a
+  declarar os 22 estilos como tamanho de fonte; `src/lib/utils.test.ts` → 1 passed.
+- **CSS global:** a regra sem camada `button, input { font: inherit; }` anulava o peso do Button
+  (observado na captura do catálogo); removida, porque o preflight do Tailwind já a aplica na
+  camada base. `[data-slot="button"]` deixou de fixar raio e peso.
+
+## F7 — Badge
+
+- **Red:** `npx vitest run src/components/ui/badge.test.tsx` → **6 failed | 4 passed (10)**
+  (variantes de status inexistentes). **Green:** → **10 passed**.
+- Nomes em inglês (regra `naming.md`): queda → `down`, alta → `up`, estável → `stable`,
+  alvo → `target`, desatualizado → `stale`, não verificado → `unverified` (desvio de nomenclatura
+  do plano, que citava os nomes em português).
+
+## F8 — Input e Field
+
+- **Red:** `npx vitest run src/components/ui/field.test.tsx` → falha de importação
+  (`./field` inexistente). **Green:** → **7 passed** (rótulo, descrição, erro com `aria-invalid` e
+  `data-invalid`, preservação de `id`/`aria-describedby` próprios, contador a partir de 80% do
+  limite). Textarea e Label dependem da F5 (bloqueada).
+
+## F11 — Composições
+
+`src/components/composites.test.tsx` → 2 passed (EmptyState com mascote decorativo; PriceChartCard
+com preço recebido já formatado).
+
+## F12 — Rota do catálogo
+
+- **Red:** `npx vitest run src/dev` → **1 failed | 1 passed (2)**: com `DEV=true` a rota caía em
+  "Este endereço saiu do radar." (motivo esperado: rota inexistente).
+- **Green:** → **2 passed**.
+
+## F14 — Verificação do build
+
+`npx vitest run scripts` → 1º Red acidental no Windows (caminho com `\`), corrigido com
+normalização para `/`; → **3 passed**. `npm run build:check` → "Sem vestígios do catálogo em
+dist (5 marcadores conferidos)".
+
+## F15 — Gráfico de histórico (AC10)
+
+- **Teste:** 5 casos novos em `src/dashboard/PriceHistoryChart.test.tsx` (degraus com área e um
+  único ponto atual na última leitura; sem alvo, sem linha; alvo tracejado `var(--chart-3)`; alvo
+  inválido sem linha; uma leitura, só o ponto). O jsdom não mede layout e o `ResponsiveContainer`
+  ficava com 0 px (sondagem: `<div style="width: 0px; height: 0px">`); o arquivo passou a usar
+  um dublê que só entrega 800 × 400 ao gráfico, mantendo o Recharts real.
+- **Red** (implementação anterior restaurada de `HEAD`, com o dublê): `npx vitest run
+  src/dashboard/PriceHistoryChart.test.tsx` → **3 failed | 11 passed (14)** — sem área, sem
+  ponto atual marcado e sem linha de alvo.
+- **Green:** → **14 passed**. `ComposedChart` com `Area` + `Line` `stepAfter` só com 2+ leituras,
+  `ReferenceDot` no último registro e `ReferenceLine` só com preço-alvo decimal válido. O detalhe
+  passa `alert?.target_price` (dado já carregado; nenhuma chamada nova).
+
+## F22 — Ação principal única (AC07)
+
+- **Teste:** `src/primaryAction.test.tsx` renderiza a App em 9 telas/estados da lista A (Entrar,
+  Criar conta, Assistente início/conversa/indisponível, Histórico, Monitoramento vazio/com
+  produtos/indisponível) e conta `[data-slot="button"][data-variant="default"]` fora de
+  `[hidden]`/`[aria-hidden]`.
+- **Red:** → **5 failed | 4 passed (9)**: Entrar 2, Criar conta 3, Monitoramento 3 (vazio, com
+  produtos, indisponível). Causa: controles com aparência própria (alternar senha, conta,
+  notificações, menu da linha, "Tentar novamente" em texto) usavam o `Button` sem variante,
+  herdando `default` (verde) e sendo repintados pelo CSS da classe.
+- **Green:** variante explícita conforme o papel visual (`password-toggle`, `account-button`,
+  `panel-item`, `icon-button`, `text-button` → `ghost`; `secondary-button` → `outline`;
+  `danger-button` → `destructive`; `link-button` → `link`), 21 botões em 10 arquivos. Textos,
+  rótulos e handlers inalterados. → **9 passed**.
+- **Limite:** o jsdom não aplica CSS de visibilidade; a contagem no navegador fica para a Fase 5.
+
+## Gates da Fase 4
+
+`npm run lint` → 0 problemas; `npm test` → 48 arquivos, **687 passed**; `npm run build:check` →
+ok, sem vestígios do catálogo.
+
+## F8–F11 — Componentes da CLI (após a decisão da F5)
+
+- **Teste:** `src/components/ui/controls.test.tsx` (10 casos): Checkbox alterna com Espaço e fica
+  rosa; Switch liga com Espaço e Enter, verde de ação, 24 px de altura; Radio muda com as setas;
+  Select abre com Enter e escolhe com setas e Enter, gatilho de 44 px; Alert `default`,
+  `destructive`, `warning` e `success` com `data-variant`, token e papel (`alert`/`status`); Tabs em
+  pílula trocam com as setas; Textarea com raio e anel do Input.
+- **Red** (componentes do registry, só com o `cn` corrigido): `npx vitest run
+  src/components/ui/controls.test.tsx` → **10 failed (10)**. Motivos: classes do registry (anel
+  `ring-[3px]`, Switch `bg-primary`, Select `h-9`, Tabs `rounded-lg`, Textarea `rounded-md`), Alert
+  sem `data-variant`/`warning`/`success` e sempre `role="alert"`, e o Radio (no jsdom o Radix move
+  o foco com a seta, mas só marca com Espaço; o teste passou a conferir foco + Espaço).
+- **Green:** → **10 passed**. O comportamento de teclado vem do Radix; o que o Red pegou foi a
+  aparência por token e o contrato do Alert.
+- `src/dev/catalogRoute.test.tsx`: `matchMedia` simulado (a Sidebar do catálogo consulta a
+  largura); espera de 14 s para o chunk do catálogo sob a suíte paralela (falhou uma vez por tempo
+  na suíte completa e passou isolado).
+- `tests/visual/catalog.spec.ts` → **15 passed** (3 testes × 5 larguras): seções, estados abertos
+  por teclado, axe no catálogo e no diálogo aberto, Button `sm` com 36 px visíveis e alvo de 44 px.
+  O axe acusou contraste da aba inativa (`text-foreground/60` sobre `--muted`); corrigido para
+  `--muted-foreground`.
+
+## Correções da revisão (I2)
+
+Red/Green de cada item em verification.md ("Correções da revisão independente"): fontes
+(`check-fonts`, 13 problemas no build antigo → 0), tokens com literal (1 failed → 105 passed),
+espera do AC07 (10 passed, com caso negativo), `no-raw-colors` (2 passed), botões pequenos
+(catálogo), alvo só com alerta ativo (`chartTargetPrice is not a function` → 2 passed).
+
+## Gates finais
+
+`npm run lint` → 0 problemas; `npm test` → 50 arquivos, **706 passed**; `npm run build:check` →
+build ok, "Sem vestígios do catálogo em dist (5 marcadores conferidos)" e "Fontes conforme em dist".
+CSS principal 146,69 kB (gzip 26,28 kB).

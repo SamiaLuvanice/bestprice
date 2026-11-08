@@ -1,11 +1,18 @@
 .assistant-page { position:relative; display:block; max-width:none; padding:24px 32px; }
-.assistant-stage { display:flex; flex-direction:column; gap:24px; min-height:calc(100dvh - 128px); padding:96px clamp(32px,8vw,128px) 48px; border-radius:24px; background:var(--color-bg); }
+.assistant-stage { display:flex; flex-direction:column; gap:24px; overflow:clip; min-height:calc(100dvh - 128px); padding:96px clamp(32px,8vw,128px) 48px; border-radius:24px; background:var(--color-bg); }
 .assistant-stage > * { width:100%; max-width:880px; margin-inline:auto; }
 .assistant-welcome { position:relative; min-height:116px; }
 .assistant-greeting { padding-right:160px; }
 .assistant-page .assistant-greeting h1 { font-size:32px; line-height:1.2; letter-spacing:-.02em; margin:0; }
 .assistant-greeting p { margin:16px 0 0; font-size:16px; }
-.assistant-robot { position:absolute; right:0; top:-28px; display:block; width:144px; height:auto; object-fit:contain; }
+/* Mascote e halo (Figma 132:27/132:361): o halo é centrado no mascote pelas mesmas variáveis, sem
+   tirar o mascote do canto superior direito; o título reserva o espaço dele (padding-right). */
+.assistant-welcome { --robot-size:144px; --robot-top:-28px; --halo-size:320px; }
+.assistant-robot { position:absolute; z-index:1; right:0; top:var(--robot-top); display:block; width:var(--robot-size); height:auto; object-fit:contain; }
+.assistant-welcome::after { content:""; position:absolute; z-index:0; width:var(--halo-size); height:var(--halo-size);
+  right:calc(var(--robot-size) / 2 - var(--halo-size) / 2); top:calc(var(--robot-top) + var(--robot-size) * .513 - var(--halo-size) / 2);
+  border-radius:50%; background:radial-gradient(circle, color-mix(in srgb, var(--chart-5) 16%, transparent), transparent 68%); pointer-events:none; }
+.assistant-greeting { position:relative; z-index:1; }
 .assistant-page .assistant-composer { border-color:var(--color-brand); border-radius:20px; padding:20px 24px; gap:16px; background:var(--color-bg); }
 .assistant-page .assistant-composer label { color:var(--color-text); font-size:14px; }
 .assistant-page .assistant-composer textarea { min-height:56px; font-size:20px; line-height:1.5; }
@@ -13,10 +20,11 @@
 .assistant-page .assistant-essential-notice { font-size:13px; line-height:1.6; max-width:74ch; margin:0; }
 .assistant-composer-footer { display:flex; justify-content:space-between; gap:12px; align-items:center; }
 .assistant-composer-footer p { font-size:12px; margin:0; }
+.assistant-message-hint { font-family:var(--font-mono); font-variant-numeric:tabular-nums; } /* contador/limite como dado (Mono/Data) */
 .assistant-composer-footer .assistant-character-count { color:var(--color-text); }
 .assistant-page .assistant-composer-footer button { width:48px; height:48px; border-radius:50%; flex-shrink:0; }
 .assistant-recents-disclosure { position:absolute; top:40px; right:clamp(48px,10%,144px); z-index:5; }
-.assistant-page .assistant-recents-toggle { min-width:240px; justify-content:flex-start; gap:10px; background:var(--color-bg); }
+.assistant-page .assistant-recents-toggle { min-width:240px; min-height:48px; justify-content:flex-start; gap:10px; border-radius:var(--radius-md); background:var(--color-bg); font-size:14px; line-height:18px; } /* Figma 132:27: 240 × 48, raio 12, Button/S */
 .assistant-recents-toggle svg:last-child { margin-left:auto; }
 .assistant-recents-toggle[aria-expanded=true] svg:last-child { transform:rotate(180deg); }
 .assistant-recents-disclosure > div { position:absolute; top:calc(100% + 8px); right:0; width:360px; max-width:calc(100vw - 32px); max-height:calc(100dvh - 200px); overflow:auto; border:1px solid var(--color-border); border-radius:20px; background:var(--color-bg); box-shadow:0 12px 32px var(--color-brand-soft); }
@@ -24,16 +32,21 @@
 .assistant-recent-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .assistant-page .assistant-recent h2 { font-size:18px; letter-spacing:-.01em; }
 .assistant-recent-heading > a { display:inline-flex; align-items:center; min-width:44px; min-height:44px; font-size:13px; font-weight:700; text-decoration:none; white-space:nowrap; }
-.assistant-page .assistant-recent > a[data-slot=button] { border-color:var(--color-brand); color:var(--color-brand); justify-content:flex-start; }
+.assistant-page .assistant-recent > a[data-slot=button] { border-color:var(--color-brand); color:var(--color-brand); justify-content:flex-start; border-radius:var(--radius-md); font-size:14px; } /* Figma 184:200: Nova conversa com raio 12 e Button/S */
 .assistant-recent ul { list-style:none; padding:0; margin:0; }
 .assistant-recent li > a { min-height:72px; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:16px 0; text-decoration:none; color:var(--color-text); }
 .assistant-recent li > a:hover strong { text-decoration:underline; text-underline-offset:4px; }
 .assistant-recent li span { display:flex; flex-direction:column; gap:8px; min-width:0; }
 .assistant-recent li strong { font-size:14px; overflow-wrap:anywhere; }
-.assistant-recent li time { font-size:12px; color:var(--color-text-muted); }
+.assistant-recent li time { font-size:12px; color:var(--color-text-muted); font-family:var(--font-mono); font-variant-numeric:tabular-nums; } /* data em Mono (Figma 184:200) */
 .assistant-recent li svg { width:16px; height:16px; flex-shrink:0; margin-top:3px; color:var(--color-text-muted); }
 .assistant-recent-empty { font-size:14px; padding-block:16px; }
 .assistant-page .assistant-conversation-heading h1 { font-size:28px; line-height:1.3; letter-spacing:-.02em; overflow-wrap:anywhere; }
+/* Figma 133:169: na conversa, o título fica na linha de "Conversas recentes" e a resposta da IA usa Display S. */
+.assistant-stage:not(.assistant-stage-welcome) { padding-top:40px; }
+.assistant-page .assistant-conversation-heading { padding-right:280px; }
+.assistant-page .assistant-conversation-heading h1 { font-size:32px; line-height:40px; }
+.assistant-stage .assistant-messages .ai-message > p, .assistant-stage .assistant-messages .ai-message .assistant-answer { font-family:var(--font-display); font-stretch:expanded; font-size:22px; line-height:32px; font-weight:600; letter-spacing:-.01em; }
 .assistant-stage .assistant-messages { gap:32px; }
 .assistant-stage .assistant-messages article { border:0; padding:0; border-radius:0; background:transparent; }
 .assistant-stage .assistant-messages .user-message { padding:20px 24px; margin-left:24%; border-radius:20px; background:var(--color-brand-soft); }
@@ -50,20 +63,31 @@
 .message-grounding-sources a svg { width:14px; height:14px; flex-shrink:0; }
 .message-grounding-suggestions { display:block; width:100%; max-width:100%; height:72px; border:0; border-radius:var(--radius-sm); background:var(--color-bg); }
 @media (max-width:959px) {
+  .assistant-welcome { --robot-size:88px; --robot-top:0px; --halo-size:200px; }
+  .assistant-stage { overflow:hidden; }
   .assistant-page { padding:16px; }
   .assistant-stage { min-height:0; padding:72px 0 16px; border-radius:0; gap:24px; }
   .assistant-welcome { min-height:0; }
-  .assistant-greeting { padding-right:0; }
-  .assistant-page .assistant-greeting h1 { padding-right:96px; font-size:26px; line-height:1.2; }
+  .assistant-greeting { padding-right:calc(var(--robot-size) + 8px); }
+  .assistant-page .assistant-greeting h1 { font-size:26px; line-height:1.2; }
   .assistant-greeting p { font-size:15px; margin-top:16px; }
-  .assistant-robot { top:0; width:88px; }
   .assistant-page .assistant-composer { padding:16px; }
   .assistant-page .assistant-composer textarea { font-size:17px; }
   .assistant-page .assistant-essential-notice { font-size:12px; }
   .assistant-recents-disclosure { top:16px; right:16px; }
   .assistant-recents-disclosure > div { max-height:calc(100dvh - 250px); }
   .assistant-page .assistant-conversation-heading h1 { font-size:26px; }
+  .assistant-stage:not(.assistant-stage-welcome) { padding-top:72px; }
+  .assistant-page .assistant-conversation-heading { padding-right:0; }
+  .assistant-stage .assistant-messages .ai-message > p { font-size:17px; line-height:25px; }
+  .assistant-stage .assistant-messages .user-message > p { font-size:15px; line-height:24px; } /* Figma 132:468 */
   .assistant-stage .assistant-messages .user-message { margin-left:16px; padding:16px; }
   .assistant-stage .assistant-messages p { font-size:16px; }
   .message-grounding { padding:12px 14px; }
 }
+/* Estados do assistente (Figma 137:43): tentar novamente em contorno rosa com raio 12; envio em andamento com o
+   campo esmaecido e o aviso em destaque. */
+.assistant-page .research-error [data-slot=button] { border-color:var(--color-brand); color:var(--color-brand); border-radius:var(--radius-md); font-size:14px; }
+.assistant-page .assistant-stage > p[role=status]:not(.research-notice) { color:var(--color-text); font-weight:600; }
+.assistant-page .assistant-composer:has(textarea:disabled) { background:var(--surface); border-color:var(--border); }
+.assistant-page .research-notice { background:var(--status-warning-soft); color:var(--status-warning); border:1px solid color-mix(in srgb, var(--status-warning) 25%, var(--background)); } /* IA indisponível (137:43) */

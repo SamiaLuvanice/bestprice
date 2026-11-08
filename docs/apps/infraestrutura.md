@@ -21,7 +21,7 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `frontend/public/_routes.json` | Invoca a Pages Function somente para `/api/*` |
 | `scripts/compose-worktree.ps1` | Isola nome Compose, volume e portas por worktree no Windows |
 | `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
-| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test/build React, testes Node gerais e actionlint |
+| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test React e `npm run build:check` (build com checagens de catálogo e fontes, spec 0049), testes Node gerais e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
 | `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
@@ -224,7 +224,7 @@ graph LR
   Images --> Release[Release GitHub com digests]
 ```
 
-Quality usa Python 3.13 e PostgreSQL 17 para testes do backend; Node 22 para lint, testes e build do frontend; testes `node --test .github/scripts/*.test.cjs`; e actionlint. O workflow `CI` é o check agregado exigido e falha se algum gate necessário falhar ou for cancelado.
+Quality usa Python 3.13 e PostgreSQL 17 para testes do backend; Node 22 para lint, testes e `npm run build:check` do frontend (build seguido de `scripts/check-no-catalog.mjs` e `scripts/check-fonts.mjs`, spec 0049); testes `node --test .github/scripts/*.test.cjs`; e actionlint. O workflow `CI` é o check agregado exigido e falha se algum gate necessário falhar ou for cancelado.
 
 Em tags `vMAJOR.MINOR.PATCH`, `release.yml` exige que a tag existente aponte para o SHA da ponta atual de `stage`, valida health da API Render e do Pages, executa Quality e publica as duas imagens no GHCR com tags da versão e SHA. Tags `build-*` não disparam releases. Gera SBOM/proveniência e cria release contendo os digests das imagens. Imagens Linux são montadas para o ambiente padrão do workflow. Uma falha parcial pode deixar uma imagem publicada sem release completa.
 

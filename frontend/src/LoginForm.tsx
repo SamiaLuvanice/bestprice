@@ -109,7 +109,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref 
                 type={passwordVisible ? 'text' : 'password'} value={password}
                 onChange={(event) => changePassword(event.target.value)} required autoComplete="current-password"
                 aria-invalid={errors.password ? true : undefined} aria-describedby={errors.password ? 'login-password-error' : undefined} />
-              <Button type="button" className="password-toggle" aria-label="Mostrar senha" aria-pressed={passwordVisible}
+              <Button variant="ghost" type="button" className="password-toggle" aria-label="Mostrar senha" aria-pressed={passwordVisible}
                 onClick={() => setPasswordVisible((visible) => !visible)}>
                 {passwordVisible ? <EyeOffIcon /> : <EyeIcon />}
               </Button>

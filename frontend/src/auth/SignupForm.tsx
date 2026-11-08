@@ -84,7 +84,7 @@ function PasswordField({ id, label, toggleLabel, value, error, hint, inputRef, o
       <Input id={id} ref={inputRef} className="login-input login-input--password" type={visible ? 'text' : 'password'}
         value={value} onChange={(event) => onChange(event.target.value)} required autoComplete="new-password"
         aria-invalid={error ? true : undefined} aria-describedby={describedBy} />
-      <Button type="button" className="password-toggle" aria-label={toggleLabel} aria-pressed={visible}
+      <Button variant="ghost" type="button" className="password-toggle" aria-label={toggleLabel} aria-pressed={visible}
         onClick={() => setVisible((current) => !current)}>
         {visible ? <EyeOffIcon /> : <EyeIcon />}
       </Button>

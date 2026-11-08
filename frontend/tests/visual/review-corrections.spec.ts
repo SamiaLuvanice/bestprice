@@ -31,7 +31,8 @@ test('rodapé da landing tem fundo preto e texto claro', async ({ page }) => {
     background: getComputedStyle(element).backgroundColor,
     text: getComputedStyle(element).color,
   }))
-  expect(colors).toEqual({ background: 'rgb(0, 0, 0)', text: 'rgb(255, 255, 255)' })
+  // 0049/AC01: o preto do rodapé passou ao token Noite --night-950 (#0a0a0f) do Figma 2026.
+  expect(colors).toEqual({ background: 'rgb(10, 10, 15)', text: 'rgb(255, 255, 255)' })
   await expect(footer.getByRole('link', { name: 'Entrar na sua conta' })).toBeVisible()
 })
 

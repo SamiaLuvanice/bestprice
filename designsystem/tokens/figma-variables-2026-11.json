@@ -1,0 +1,711 @@
+{
+  "source": {
+    "file": "Figma BestPrice IA (LZVtUEAycEzfbwL0H5YL3r), página 00 · Design system",
+    "collection": "shadcn/ui · BestPrice",
+    "version": "Design system 2026 · shadcn/ui",
+    "exportedAt": "2026-11-07",
+    "spec": "specs/0049-design-system-2026-no-codigo",
+    "note": "night = valores documentados para superfícies escuras fixas (plano Starter permite um modo por coleção); o produto mantém tema claro fixo (spec 0016). color/brand-strong foi criada no Figma em 2026-11-07 (#271), sem valor night documentado."
+  },
+  "counts": {
+    "variables": 68,
+    "textStyles": 22,
+    "effectStyles": 7
+  },
+  "variables": [
+    {
+      "name": "color/background",
+      "type": "COLOR",
+      "css": "--background",
+      "light": "#ffffff",
+      "night": "#0a0a0f"
+    },
+    {
+      "name": "color/foreground",
+      "type": "COLOR",
+      "css": "--foreground",
+      "light": "#1d1d1f",
+      "night": "#f5f5f7"
+    },
+    {
+      "name": "color/card",
+      "type": "COLOR",
+      "css": "--card",
+      "light": "#ffffff",
+      "night": "#13131a"
+    },
+    {
+      "name": "color/card-foreground",
+      "type": "COLOR",
+      "css": "--card-foreground",
+      "light": "#1d1d1f",
+      "night": "#f5f5f7"
+    },
+    {
+      "name": "color/popover",
+      "type": "COLOR",
+      "css": "--popover",
+      "light": "#ffffff",
+      "night": "#13131a"
+    },
+    {
+      "name": "color/popover-foreground",
+      "type": "COLOR",
+      "css": "--popover-foreground",
+      "light": "#1d1d1f",
+      "night": "#f5f5f7"
+    },
+    {
+      "name": "color/primary",
+      "type": "COLOR",
+      "css": "--primary",
+      "light": "#c7005e",
+      "night": "#ff3ea5"
+    },
+    {
+      "name": "color/primary-foreground",
+      "type": "COLOR",
+      "css": "--primary-foreground",
+      "light": "#ffffff",
+      "night": "#0a0a0f"
+    },
+    {
+      "name": "color/secondary",
+      "type": "COLOR",
+      "css": "--secondary",
+      "light": "#f5f5f7",
+      "night": "#1e1e28"
+    },
+    {
+      "name": "color/secondary-foreground",
+      "type": "COLOR",
+      "css": "--secondary-foreground",
+      "light": "#1d1d1f",
+      "night": "#f5f5f7"
+    },
+    {
+      "name": "color/muted",
+      "type": "COLOR",
+      "css": "--muted",
+      "light": "#f5f5f7",
+      "night": "#1e1e28"
+    },
+    {
+      "name": "color/muted-foreground",
+      "type": "COLOR",
+      "css": "--muted-foreground",
+      "light": "#626267",
+      "night": "#a1a1aa"
+    },
+    {
+      "name": "color/accent",
+      "type": "COLOR",
+      "css": "--accent",
+      "light": "#fce9f2",
+      "night": "#2a1622"
+    },
+    {
+      "name": "color/accent-foreground",
+      "type": "COLOR",
+      "css": "--accent-foreground",
+      "light": "#1d1d1f",
+      "night": "#ffd3e8"
+    },
+    {
+      "name": "color/destructive",
+      "type": "COLOR",
+      "css": "--destructive",
+      "light": "#b42318",
+      "night": "#ff6b5e"
+    },
+    {
+      "name": "color/destructive-foreground",
+      "type": "COLOR",
+      "css": "--destructive-foreground",
+      "light": "#ffffff",
+      "night": "#0a0a0f"
+    },
+    {
+      "name": "color/border",
+      "type": "COLOR",
+      "css": "--border",
+      "light": "#d2d2d7",
+      "night": "#2a2a36"
+    },
+    {
+      "name": "color/input",
+      "type": "COLOR",
+      "css": "--input",
+      "light": "#86868b",
+      "night": "#4a4a58"
+    },
+    {
+      "name": "color/ring",
+      "type": "COLOR",
+      "css": "--ring",
+      "light": "#c7005e",
+      "night": "#ff3ea5"
+    },
+    {
+      "name": "color/action",
+      "type": "COLOR",
+      "css": "--action",
+      "light": "#39ff14",
+      "night": "#39ff14"
+    },
+    {
+      "name": "color/action-foreground",
+      "type": "COLOR",
+      "css": "--action-foreground",
+      "light": "#000000",
+      "night": "#000000"
+    },
+    {
+      "name": "color/action-hover",
+      "type": "COLOR",
+      "css": "--action-hover",
+      "light": "#2fe80c",
+      "night": "#65ff48"
+    },
+    {
+      "name": "color/surface",
+      "type": "COLOR",
+      "css": "--surface",
+      "light": "#f5f5f7",
+      "night": "#13131a"
+    },
+    {
+      "name": "color/surface-raised",
+      "type": "COLOR",
+      "css": "--surface-raised",
+      "light": "#fbfbfd",
+      "night": "#1e1e28"
+    },
+    {
+      "name": "color/chart-1",
+      "type": "COLOR",
+      "css": "--chart-1",
+      "light": "#1d1d1f",
+      "night": "#39ff14"
+    },
+    {
+      "name": "color/chart-2",
+      "type": "COLOR",
+      "css": "--chart-2",
+      "light": "#39ff14",
+      "night": "#39ff14"
+    },
+    {
+      "name": "color/chart-3",
+      "type": "COLOR",
+      "css": "--chart-3",
+      "light": "#c7005e",
+      "night": "#ff3ea5"
+    },
+    {
+      "name": "color/chart-4",
+      "type": "COLOR",
+      "css": "--chart-4",
+      "light": "#86868b",
+      "night": "#a1a1aa"
+    },
+    {
+      "name": "color/chart-5",
+      "type": "COLOR",
+      "css": "--chart-5",
+      "light": "#ff3ea5",
+      "night": "#ffd3e8"
+    },
+    {
+      "name": "color/sidebar",
+      "type": "COLOR",
+      "css": "--sidebar",
+      "light": "#0a0a0f",
+      "night": "#0a0a0f"
+    },
+    {
+      "name": "color/sidebar-foreground",
+      "type": "COLOR",
+      "css": "--sidebar-foreground",
+      "light": "#f5f5f7",
+      "night": "#f5f5f7"
+    },
+    {
+      "name": "color/sidebar-primary",
+      "type": "COLOR",
+      "css": "--sidebar-primary",
+      "light": "#ff3ea5",
+      "night": "#ff3ea5"
+    },
+    {
+      "name": "color/sidebar-primary-foreground",
+      "type": "COLOR",
+      "css": "--sidebar-primary-foreground",
+      "light": "#0a0a0f",
+      "night": "#0a0a0f"
+    },
+    {
+      "name": "color/sidebar-accent",
+      "type": "COLOR",
+      "css": "--sidebar-accent",
+      "light": "#1e1e28",
+      "night": "#1e1e28"
+    },
+    {
+      "name": "color/sidebar-accent-foreground",
+      "type": "COLOR",
+      "css": "--sidebar-accent-foreground",
+      "light": "#ff3ea5",
+      "night": "#ff3ea5"
+    },
+    {
+      "name": "color/sidebar-border",
+      "type": "COLOR",
+      "css": "--sidebar-border",
+      "light": "#2a2a36",
+      "night": "#2a2a36"
+    },
+    {
+      "name": "color/sidebar-ring",
+      "type": "COLOR",
+      "css": "--sidebar-ring",
+      "light": "#ff3ea5",
+      "night": "#ff3ea5"
+    },
+    {
+      "name": "color/status/down",
+      "type": "COLOR",
+      "css": "--status-down",
+      "light": "#146c38",
+      "night": "#5bff3d"
+    },
+    {
+      "name": "color/status/down-soft",
+      "type": "COLOR",
+      "css": "--status-down-soft",
+      "light": "#e9fbe8",
+      "night": "#0f2a12"
+    },
+    {
+      "name": "color/status/up",
+      "type": "COLOR",
+      "css": "--status-up",
+      "light": "#b42318",
+      "night": "#ff6b5e"
+    },
+    {
+      "name": "color/status/up-soft",
+      "type": "COLOR",
+      "css": "--status-up-soft",
+      "light": "#fff0ee",
+      "night": "#2a1210"
+    },
+    {
+      "name": "color/status/warning",
+      "type": "COLOR",
+      "css": "--status-warning",
+      "light": "#925400",
+      "night": "#ffc24d"
+    },
+    {
+      "name": "color/status/warning-soft",
+      "type": "COLOR",
+      "css": "--status-warning-soft",
+      "light": "#fff4dd",
+      "night": "#2a2010"
+    },
+    {
+      "name": "color/status/target",
+      "type": "COLOR",
+      "css": "--status-target",
+      "light": "#39ff14",
+      "night": "#39ff14"
+    },
+    {
+      "name": "color/night/950",
+      "type": "COLOR",
+      "css": "--night-950",
+      "light": "#0a0a0f",
+      "night": "#0a0a0f"
+    },
+    {
+      "name": "color/night/900",
+      "type": "COLOR",
+      "css": "--night-900",
+      "light": "#13131a",
+      "night": "#13131a"
+    },
+    {
+      "name": "color/night/800",
+      "type": "COLOR",
+      "css": "--night-800",
+      "light": "#1e1e28",
+      "night": "#1e1e28"
+    },
+    {
+      "name": "color/night/line",
+      "type": "COLOR",
+      "css": "--night-line",
+      "light": "#2a2a36",
+      "night": "#2a2a36"
+    },
+    {
+      "name": "color/night/muted",
+      "type": "COLOR",
+      "css": "--night-muted",
+      "light": "#a1a1aa",
+      "night": "#a1a1aa"
+    },
+    {
+      "name": "radius/sm",
+      "type": "FLOAT",
+      "css": "--radius-sm",
+      "value": 8
+    },
+    {
+      "name": "radius/md",
+      "type": "FLOAT",
+      "css": "--radius-md",
+      "value": 12
+    },
+    {
+      "name": "radius/lg",
+      "type": "FLOAT",
+      "css": "--radius-lg",
+      "value": 18
+    },
+    {
+      "name": "radius/xl",
+      "type": "FLOAT",
+      "css": "--radius-xl",
+      "value": 24
+    },
+    {
+      "name": "radius/2xl",
+      "type": "FLOAT",
+      "css": "--radius-2xl",
+      "value": 32
+    },
+    {
+      "name": "radius/pill",
+      "type": "FLOAT",
+      "css": "--radius-pill",
+      "value": 980
+    },
+    {
+      "name": "space/1",
+      "type": "FLOAT",
+      "css": "--space-1",
+      "value": 4
+    },
+    {
+      "name": "space/2",
+      "type": "FLOAT",
+      "css": "--space-2",
+      "value": 8
+    },
+    {
+      "name": "space/3",
+      "type": "FLOAT",
+      "css": "--space-3",
+      "value": 12
+    },
+    {
+      "name": "space/4",
+      "type": "FLOAT",
+      "css": "--space-4",
+      "value": 16
+    },
+    {
+      "name": "space/5",
+      "type": "FLOAT",
+      "css": "--space-5",
+      "value": 20
+    },
+    {
+      "name": "space/6",
+      "type": "FLOAT",
+      "css": "--space-6",
+      "value": 24
+    },
+    {
+      "name": "space/8",
+      "type": "FLOAT",
+      "css": "--space-8",
+      "value": 32
+    },
+    {
+      "name": "space/10",
+      "type": "FLOAT",
+      "css": "--space-10",
+      "value": 40
+    },
+    {
+      "name": "space/12",
+      "type": "FLOAT",
+      "css": "--space-12",
+      "value": 48
+    },
+    {
+      "name": "space/16",
+      "type": "FLOAT",
+      "css": "--space-16",
+      "value": 64
+    },
+    {
+      "name": "space/20",
+      "type": "FLOAT",
+      "css": "--space-20",
+      "value": 80
+    },
+    {
+      "name": "space/30",
+      "type": "FLOAT",
+      "css": "--space-30",
+      "value": 120
+    },
+    {
+      "name": "color/brand-strong",
+      "type": "COLOR",
+      "css": "--color-brand-strong",
+      "light": "#a0004c"
+    }
+  ],
+  "textStyles": [
+    {
+      "name": "Display/XL",
+      "family": "SF Pro",
+      "style": "Expanded Bold",
+      "fontSize": 76,
+      "lineHeight": 80,
+      "letterSpacingPercent": -3,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Display/L",
+      "family": "SF Pro",
+      "style": "Expanded Bold",
+      "fontSize": 56,
+      "lineHeight": 62,
+      "letterSpacingPercent": -2.5,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Display/M",
+      "family": "SF Pro",
+      "style": "Expanded Bold",
+      "fontSize": 42,
+      "lineHeight": 48,
+      "letterSpacingPercent": -2,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Display/S",
+      "family": "SF Pro",
+      "style": "Expanded Semibold",
+      "fontSize": 30,
+      "lineHeight": 36,
+      "letterSpacingPercent": -1.5,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Mobile/Display XL",
+      "family": "SF Pro",
+      "style": "Expanded Bold",
+      "fontSize": 42,
+      "lineHeight": 46,
+      "letterSpacingPercent": -3,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Mobile/Display M",
+      "family": "SF Pro",
+      "style": "Expanded Bold",
+      "fontSize": 30,
+      "lineHeight": 34,
+      "letterSpacingPercent": -2,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Mobile/Display S",
+      "family": "SF Pro",
+      "style": "Expanded Semibold",
+      "fontSize": 21,
+      "lineHeight": 27,
+      "letterSpacingPercent": -1,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Heading/H3",
+      "family": "SF Pro",
+      "style": "Semibold",
+      "fontSize": 22,
+      "lineHeight": 28,
+      "letterSpacingPercent": -0.5,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Heading/H4",
+      "family": "SF Pro",
+      "style": "Semibold",
+      "fontSize": 17,
+      "lineHeight": 22,
+      "letterSpacingPercent": -0.2,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Body/L",
+      "family": "SF Pro",
+      "style": "Regular",
+      "fontSize": 20,
+      "lineHeight": 30,
+      "letterSpacingPercent": -0.2,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Body/M",
+      "family": "SF Pro",
+      "style": "Regular",
+      "fontSize": 17,
+      "lineHeight": 25,
+      "letterSpacingPercent": -0.2,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Body/S",
+      "family": "SF Pro",
+      "style": "Regular",
+      "fontSize": 14,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Body/S Medium",
+      "family": "SF Pro",
+      "style": "Medium",
+      "fontSize": 14,
+      "lineHeight": 20,
+      "letterSpacingPercent": 0,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Body/XS",
+      "family": "SF Pro",
+      "style": "Regular",
+      "fontSize": 12,
+      "lineHeight": 16,
+      "letterSpacingPercent": 0,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Button/M",
+      "family": "SF Pro",
+      "style": "Semibold",
+      "fontSize": 16,
+      "lineHeight": 20,
+      "letterSpacingPercent": -0.1,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Button/S",
+      "family": "SF Pro",
+      "style": "Semibold",
+      "fontSize": 14,
+      "lineHeight": 18,
+      "letterSpacingPercent": 0,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Label/M",
+      "family": "SF Pro",
+      "style": "Medium",
+      "fontSize": 14,
+      "lineHeight": 18,
+      "letterSpacingPercent": 0,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Data/Price XL",
+      "family": "SF Pro",
+      "style": "Expanded Bold",
+      "fontSize": 40,
+      "lineHeight": 44,
+      "letterSpacingPercent": -2,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Data/Price M",
+      "family": "SF Pro",
+      "style": "Expanded Semibold",
+      "fontSize": 22,
+      "lineHeight": 26,
+      "letterSpacingPercent": -1,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Mono/Label",
+      "family": "Geist Mono",
+      "style": "Medium",
+      "fontSize": 12,
+      "lineHeight": 16,
+      "letterSpacingPercent": 6,
+      "textCase": "UPPER"
+    },
+    {
+      "name": "Mono/Data",
+      "family": "Geist Mono",
+      "style": "Regular",
+      "fontSize": 13,
+      "lineHeight": 18,
+      "letterSpacingPercent": 0,
+      "textCase": "ORIGINAL"
+    },
+    {
+      "name": "Mono/Data Strong",
+      "family": "Geist Mono",
+      "style": "SemiBold",
+      "fontSize": 13,
+      "lineHeight": 18,
+      "letterSpacingPercent": 0,
+      "textCase": "ORIGINAL"
+    }
+  ],
+  "effectStyles": [
+    {
+      "name": "Elevação/0 · plano",
+      "css": "--shadow-0",
+      "value": "none"
+    },
+    {
+      "name": "Elevação/1 · card",
+      "css": "--shadow-1",
+      "value": "0 1px 2px rgb(0 0 0 / .04), 0 8px 24px rgb(0 0 0 / .06)"
+    },
+    {
+      "name": "Elevação/2 · flutuante",
+      "css": "--shadow-2",
+      "value": "0 12px 32px rgb(0 0 0 / .10)"
+    },
+    {
+      "name": "Elevação/3 · destaque",
+      "css": "--shadow-3",
+      "value": "0 30px 60px rgb(0 0 0 / .14)"
+    },
+    {
+      "name": "Elevação/Brilho ação",
+      "css": "--shadow-action-glow",
+      "value": "0 8px 24px rgb(56 255 20 / .45)"
+    },
+    {
+      "name": "Foco/Anel rosa",
+      "css": "--ring-width",
+      "value": "3px (spread, cor --ring)"
+    },
+    {
+      "name": "Vidro/Desfoque 20",
+      "css": "--blur-glass",
+      "value": "20px (backdrop-filter)"
+    }
+  ]
+}

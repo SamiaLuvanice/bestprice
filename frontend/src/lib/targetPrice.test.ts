@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeTargetPrice, targetPriceInput } from './targetPrice'
+import { chartTargetPrice, normalizeTargetPrice, targetPriceInput } from './targetPrice'
 
 describe('normalizeTargetPrice (0028/AC02)', () => {
   it.each([
@@ -31,5 +31,16 @@ describe('targetPriceInput', () => {
   it('exibe o alvo da API com vírgula, sem separador de milhar', () => {
     expect(targetPriceInput('1899.90')).toBe('1899,90')
     expect(targetPriceInput('99.90')).toBe('99,90')
+  })
+})
+
+// 0049/AC10: o gráfico só desenha o alvo de um alerta ativo.
+describe('chartTargetPrice', () => {
+  it('alerta ativo: devolve o preço-alvo', () => {
+    expect(chartTargetPrice({ id: 'a', target_price: '279.90', enabled: true, condition: 'at_or_below' })).toBe('279.90')
+  })
+  it('alerta pausado ou ausente: sem linha de alvo', () => {
+    expect(chartTargetPrice({ id: 'a', target_price: '279.90', enabled: false, condition: 'at_or_below' })).toBeNull()
+    expect(chartTargetPrice(null)).toBeNull()
   })
 })
