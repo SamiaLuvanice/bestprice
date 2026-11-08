@@ -80,18 +80,27 @@ export function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(subscribeReduced, readReduced, () => false)
 }
 
-function useMediaQuery(query: string): boolean {
-  return useSyncExternalStore((onChange) => {
-    if (typeof window.matchMedia !== 'function') return () => {}
-    const list = window.matchMedia(query)
-    list.addEventListener?.('change', onChange)
-    return () => list.removeEventListener?.('change', onChange)
-  }, () => typeof window.matchMedia === 'function' && window.matchMedia(query).matches, () => false)
+/**
+ * Uma assinatura estável por consulta (criada fora do componente): o useSyncExternalStore não
+ * desfaz e refaz o listener a cada render.
+ */
+function mediaQueryStore(query: string) {
+  return {
+    subscribe(onChange: () => void) {
+      if (typeof window.matchMedia !== 'function') return () => {}
+      const list = window.matchMedia(query)
+      list.addEventListener?.('change', onChange)
+      return () => list.removeEventListener?.('change', onChange)
+    },
+    read: () => typeof window.matchMedia === 'function' && window.matchMedia(query).matches,
+  }
 }
+
+const mobileLayout = mediaQueryStore('(max-width: 767.98px)')
 
 /** Largura do quadro mobile (239:180): abaixo de 768 px. */
 export function useIsMobileLayout(): boolean {
-  return useMediaQuery('(max-width: 767.98px)')
+  return useSyncExternalStore(mobileLayout.subscribe, mobileLayout.read, () => false)
 }
 
 /**

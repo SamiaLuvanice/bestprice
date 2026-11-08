@@ -38,12 +38,18 @@ export function ScrollCompanion() {
       return band
     }
     let band = observeBand()
-    const onResize = () => { band.disconnect(); band = observeBand() }
+    // Redimensionar dispara muitos eventos: o observador da faixa é refeito uma vez por quadro.
+    let frame = 0
+    const onResize = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(() => { frame = 0; band.disconnect(); band = observeBand() })
+    }
     window.addEventListener('resize', onResize, { passive: true })
     return () => {
       centerLine.disconnect()
       band.disconnect()
       window.removeEventListener('resize', onResize)
+      if (frame) window.cancelAnimationFrame(frame)
     }
   }, [])
 
