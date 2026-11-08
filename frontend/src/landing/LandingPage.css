@@ -377,7 +377,7 @@
 .lp-footer__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-6); flex-wrap: wrap; }
 .lp-footer__inner p { margin-top: var(--space-2); font-size: 13px; line-height: 18px; color: var(--night-muted); }
 .lp-footer__links { display: flex; flex-wrap: wrap; gap: var(--space-6); }
-.lp-footer__links a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; color: var(--sidebar-foreground); text-decoration: none; }
+.lp-footer__links a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; font-size: 14px; color: var(--sidebar-foreground); text-decoration: none; }
 .lp-footer__links a:hover { color: var(--sidebar-primary); text-decoration: underline; }
 .lp-footer .lp-footer__brand .brand-logo { background: transparent; }
 
