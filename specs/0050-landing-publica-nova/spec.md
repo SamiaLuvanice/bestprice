@@ -3,7 +3,7 @@ numero: 0050
 titulo: Landing pública nova conforme o Figma
 tipo: feature
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend, docs]
 depende_de: [0016, 0048, 0049]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/275

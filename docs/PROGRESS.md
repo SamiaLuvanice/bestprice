@@ -2,9 +2,10 @@
 
 ## 0050 — Landing pública nova conforme o Figma
 
-**08/11/2026: implementação entregue; aguarda revisão.** [Issue #275](https://github.com/SamiaLuvanice/bestprice/issues/275);
-branch `feature/0050-issue-275-landing-publica-nova`. A spec está `pronta` e só passa a
-`implementada` depois que a PR for integrada em `develop`.
+**08/11/2026: spec `implementada`.** [Issue #275](https://github.com/SamiaLuvanice/bestprice/issues/275) fechada;
+PR [#276](https://github.com/SamiaLuvanice/bestprice/pull/276) integrada em `develop` (`4d8c51b`) com CI verde,
+depois da revisão independente e da QA. Conclusão registrada pela
+[Issue #277](https://github.com/SamiaLuvanice/bestprice/issues/277).
 
 O que entrou:
 - A landing em `/` segue os quadros 238:294, 239:180 e 239:856 do Figma, com o robô como

@@ -64,4 +64,6 @@ Red e o Green reais vão para `verification.md`.
 - [x] D1 — Documentação: `designsystem/README.md` (landing, robô 237:35, ajuste do selo),
   `docs/apps/frontend.md`, `docs/PROGRESS.md`.
 - [x] I3 — `doc-sync-onboarding` por último.
-- [ ] I4 — PR para `develop` com `Closes #275`, spec, evidências e pendências; CI verde.
+- [x] I4 — PR para `develop` com `Closes #275`, spec, evidências e pendências; CI verde.
+  PR [#276](https://github.com/SamiaLuvanice/bestprice/pull/276) com CI verde, integrada em `develop`
+  em 08/11/2026 (`4d8c51b`). Issue #275 fechada.
