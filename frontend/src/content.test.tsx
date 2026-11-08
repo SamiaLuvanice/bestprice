@@ -30,26 +30,49 @@ const forbidden: [string, RegExp][] = [
   ['preço fixo', /R\$\s*\d/],
 ]
 
+/** Achados proibidos de um arquivo; a regra das exceções fica isolada para ser testada. */
+function findingsFor(file: string, text: string): string[] {
+  return forbidden.filter(([label, pattern]) => {
+    // Orçamento ilustrativo aprovado na 0044; não é preço de oferta/produto.
+    // A exceção exata não libera outros valores nem outras superfícies.
+    const content = label === 'preço fixo' && file === join(sourceRoot, 'features', 'research', 'AssistantPage.tsx')
+      ? text.replace("'Ex.: notebook para estudar, até R$ 3.500'", "''")
+      : label === 'preço fixo' && file === join(sourceRoot, 'landing', 'content.ts')
+        ? withoutApprovedLandingPrices(text)
+        : text
+    return pattern.test(content)
+  }).map(([label]) => `${relative(sourceRoot, file)}: ${label}`)
+}
+
+// 0050: valores ilustrativos da landing, iguais aos dos quadros do Figma (snapshot
+// designsystem/landing/figma-landing-texts-2026-11.json). Lista fechada: cada valor é retirado do
+// texto de landing/content.ts antes da regra; qualquer outro "R$ …" (mesmo nesse arquivo) falha.
+const approvedLandingPrices = [
+  'R$ 1.849,00', 'R$ 1.949,00', 'R$ 2.199,00', 'R$ 1.900,00', 'R$ 2.049,00', 'R$ 100,00',
+  'R$ 1.849', 'R$ 1.900', 'R$ 2.049', 'R$ 1.949', 'R$ 1.999', 'R$ 2.189', 'R$ 2.099',
+  'R$ 4.000', 'R$ 3.599', 'R$ 3.999', 'R$ 300',
+]
+
+function withoutApprovedLandingPrices(text: string): string {
+  // Valores mais longos primeiro, para "R$ 1.849,00" não virar ",00" depois de tirar "R$ 1.849".
+  return [...approvedLandingPrices].sort((a, b) => b.length - a.length)
+    .reduce((content, value) => content.split(value).join(''), text)
+}
+
 describe('conteúdo da interface', () => {
   it('não cita Amazon, prime, estrelas, avaliações nem preços fixos no código da interface', () => {
     const files = sourceFiles(sourceRoot)
     expect(files.length).toBeGreaterThan(10)
-    const findings = files.flatMap((file) => {
-      const text = readFileSync(file, 'utf-8')
-      return forbidden.filter(([label, pattern]) => {
-        // Orçamento ilustrativo aprovado na 0044; não é preço de oferta/produto.
-        // A exceção exata não libera outros valores nem outras superfícies.
-        const content = label === 'preço fixo' && file === join(sourceRoot, 'features', 'research', 'AssistantPage.tsx')
-          ? text.replace("'Ex.: notebook para estudar, até R$ 3.500'", "''")
-          : text
-        // 0050: os valores ilustrativos da landing (quadros do Figma, dados fixos e marcados como
-        // ilustrativos) ficam todos em landing/content.ts. A exceção vale só para esse arquivo e só
-        // para 'preço fixo'; as seções da landing continuam sujeitas à regra.
-        if (label === 'preço fixo' && file === join(sourceRoot, 'landing', 'content.ts')) return false
-        return pattern.test(content)
-      }).map(([label]) => `${relative(sourceRoot, file)}: ${label}`)
-    })
+    const findings = files.flatMap((file) => findingsFor(file, readFileSync(file, 'utf-8')))
     expect(findings).toEqual([])
+  })
+
+  it('a exceção da landing aceita só os valores do Figma: um preço novo em landing/content.ts falha', () => {
+    const file = join(sourceRoot, 'landing', 'content.ts')
+    const text = readFileSync(file, 'utf-8')
+    expect(findingsFor(file, text)).toEqual([])
+    const withNewPrice = [text, "export const extra = 'R$ 9,99'"].join('\n')
+    expect(findingsFor(file, withNewPrice)).toEqual([expect.stringMatching(/content\.ts: preço fixo$/)])
   })
 
   it('não confunde “primeiro” com o termo proibido', () => {
