@@ -63,5 +63,5 @@ Red e o Green reais vão para `verification.md`.
 - [x] I2 — QA dos AC01–AC17 com evidência.
 - [x] D1 — Documentação: `designsystem/README.md` (landing, robô 237:35, ajuste do selo),
   `docs/apps/frontend.md`, `docs/PROGRESS.md`.
-- [ ] I3 — `doc-sync-onboarding` por último.
+- [x] I3 — `doc-sync-onboarding` por último.
 - [ ] I4 — PR para `develop` com `Closes #275`, spec, evidências e pendências; CI verde.
