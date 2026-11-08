@@ -25,7 +25,10 @@
 .lp-down { color: var(--status-down); }
 .lp-target { color: var(--primary); }
 .lp-skip { position: fixed; z-index: 70; top: -100px; left: 16px; padding: 12px 18px; border-radius: var(--radius-pill); background: var(--background); border: 2px solid var(--color-focus); }
-.lp-skip:focus { top: 12px; }
+/* Só aparece focado: a captura de elementos maiores que a janela reposiciona os fixos, e o
+   deslocamento para fora da tela sozinho não bastava (rodada 3 da 0050). */
+.lp-skip:not(:focus) { opacity: 0; pointer-events: none; }
+.lp-skip:focus { top: 12px; opacity: 1; }
 .lp a:focus-visible, .lp-menu a:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; border-radius: var(--radius-sm); }
 
 /* Versões por quadro (Responsive.tsx). */

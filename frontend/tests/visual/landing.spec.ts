@@ -492,3 +492,22 @@ test.describe('AC15 — carregamento estável', () => {
     })
   }
 })
+
+// Regressão (rodada 3): "Pular para o conteúdo" aparecia no meio das capturas por seção, porque a
+// captura de elementos maiores que a janela reposiciona os elementos fixos. O link só pode ser visto
+// quando focado, qualquer que seja a posição de rolagem ou o modo de captura.
+test('o link "Pular para o conteúdo" só aparece quando focado', async ({ page }, info) => {
+  onlyOn1280(info.project.name)
+  await api(page)
+  await page.goto('/')
+  const skip = page.getByRole('link', { name: 'Pular para o conteúdo' })
+  const opacity = () => skip.evaluate((element) => getComputedStyle(element).opacity)
+  expect(await opacity()).toBe('0')
+  await page.locator('#assistente').evaluate((element) => element.scrollIntoView({ behavior: 'instant' }))
+  expect(await opacity()).toBe('0')
+  await skip.focus()
+  expect(await opacity()).toBe('1')
+  await expect(skip).toBeInViewport()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/#lp-content$/)
+})
