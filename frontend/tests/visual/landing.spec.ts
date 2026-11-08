@@ -69,6 +69,9 @@ async function login(page: Page) {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
 }
 
+/** Dois quadros de animação: o rAF da página (progresso, observadores) já rodou depois disso. */
+const frames = (page: Page) => page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+
 function onlyOn1280(projectName: string) {
   test.skip(projectName !== 'viewport-1280', 'comportamento independente da largura: roda num só projeto')
 }
@@ -93,10 +96,15 @@ test.describe('AC03 — destinos das ações', () => {
     test(name, async ({ page }, info) => {
       onlyOn1280(info.project.name)
       await api(page, { session, signup })
+      // Espera as respostas simuladas que existem (as de "carregando" nunca chegam) antes de conferir.
+      const answered = [
+        ...(session === 'loading' ? [] : [page.waitForResponse((response) => response.url().endsWith('/api/auth/me'))]),
+        ...(signup === 'loading' ? [] : [page.waitForResponse((response) => response.url().endsWith('/api/auth/signup'))]),
+      ]
       await page.goto('/')
       await expect(page.getByRole('heading', { level: 1, name: 'Pare de dar F5 no preço.' })).toBeVisible()
-      // Dá tempo para as respostas simuladas virarem estado antes de conferir os destinos.
-      await page.waitForTimeout(300)
+      await Promise.all(answered)
+      await frames(page)
       const monitorLinks = page.getByRole('link', { name: /^(Começar a monitorar|Começar|Monitorar um anúncio)$/ })
       // "Começar" (barra fixa) só existe abaixo de 768 px; o Vitest confere os quatro.
       expect(await monitorLinks.count()).toBeGreaterThanOrEqual(3)
@@ -237,7 +245,7 @@ test.describe('AC08/AC09 — movimento', () => {
           const top = element.getBoundingClientRect().top + scrollY
           scrollTo({ top: top - innerHeight * 0.85 + (element.getBoundingClientRect().height + innerHeight * 0.25) * f, behavior: 'instant' })
         }, fraction)
-        await page.waitForTimeout(150)
+        await frames(page)
         readings.push(await progress(selector))
       }
       expect(readings[1], `${selector} ${readings}`).toBeGreaterThan(readings[0])
@@ -308,7 +316,7 @@ test.describe('AC08/AC09 — movimento', () => {
     }
     for (const y of [0, 2000, 4000, 6000, 99999]) {
       await page.evaluate((top) => scrollTo({ top, behavior: 'instant' }), y)
-      await page.waitForTimeout(100)
+      await frames(page)
       expect(await page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running').length)).toBe(0)
     }
     await context.close()
@@ -334,11 +342,11 @@ test.describe('AC10 — companheiro de rolagem', () => {
       expect(await companion.locator('a, button, input, [tabindex]').count()).toBe(0)
       for (const [section, phrase] of phrases) {
         await page.locator(`#${section}`).evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-        // A troca de frase e o esconder dependem do IntersectionObserver: espera assentar.
-        await page.waitForTimeout(300)
+        // A troca de frase e o esconder dependem do IntersectionObserver: as asserções esperam o estado.
         if (phrase) {
           await expect(companion, section).not.toHaveAttribute('data-hidden', /.*/)
           await expect(companion.locator('.lp-companion__phrase'), section).toHaveText(phrase)
+          await frames(page)
           const box = (await companion.boundingBox())!
           const overlaps = await page.locator('input:visible, [data-slot="button"]:visible').evaluateAll((elements, area) => elements.filter((element) => {
             const rect = element.getBoundingClientRect()
@@ -481,9 +489,11 @@ test.describe('AC15 — carregamento estável', () => {
       const height = await page.evaluate(() => document.documentElement.scrollHeight)
       for (let y = 0; y <= height; y += 400) {
         await page.evaluate((top) => scrollTo({ top, behavior: 'instant' }), y)
-        await page.waitForTimeout(60)
+        await frames(page)
       }
-      await page.waitForTimeout(500)
+      // O conteúdo que entra com atraso (resposta do assistente) precisa ter entrado antes da medida.
+      await expect(page.getByRole('group', { name: 'Conversa ilustrativa com o assistente' })).toHaveAttribute('data-phase', 'done')
+      await frames(page)
       const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls)
       expect(cls).toBeLessThanOrEqual(0.1)
       expect(external).toEqual([])
@@ -529,7 +539,10 @@ test('mobile: cenas do Problema em carrossel rolável pelo teclado, com indicado
   await page.keyboard.press('ArrowRight')
   await expect.poll(() => track.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0)
   await expect(dots.nth(1)).toHaveAttribute('data-active', 'true')
-  for (let step = 0; step < 4; step += 1) { await page.keyboard.press('ArrowRight'); await page.waitForTimeout(400) }
-  await expect(dots.nth(2)).toHaveAttribute('data-active', 'true')
+  // Cada seta rola até a próxima cena (rolagem suave): repete até o indicador chegar à última.
+  await expect(async () => {
+    await page.keyboard.press('ArrowRight')
+    await expect(dots.nth(2)).toHaveAttribute('data-active', 'true', { timeout: 1000 })
+  }).toPass({ timeout: 10_000 })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
