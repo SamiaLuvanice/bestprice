@@ -71,7 +71,8 @@
 .lp-header__bar { display: flex; align-items: center; gap: var(--space-6); width: min(100% - 2 * var(--lp-gutter), 1200px); margin: 16px auto 0; min-height: 68px; padding: 10px 10px 10px 20px; border: 1px solid color-mix(in srgb, var(--background) 90%, transparent); border-radius: var(--radius-pill); background: color-mix(in srgb, var(--background) 72%, transparent); box-shadow: var(--shadow-1); -webkit-backdrop-filter: blur(var(--blur-glass)); backdrop-filter: blur(var(--blur-glass)); }
 .lp-header__brand { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; }
 .lp-header__brand .brand { font-size: 22px; }
-.lp-header__brand .brand-logo, .lp-menu__brand .brand-logo, .lp-footer__brand .brand-logo { width: 32px; height: 32px; background: transparent; }
+/* Figma: logo de 32 px; a SPA mantém o mínimo de 34 px da marca (brand.spec.ts, spec 0029). */
+.lp-header__brand .brand-logo, .lp-menu__brand .brand-logo, .lp-footer__brand .brand-logo { width: 34px; height: 34px; background: transparent; }
 .lp-header__nav { display: flex; gap: var(--space-8); margin-inline: auto; }
 .lp-header__nav a { display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--muted-foreground); text-decoration: none; }
 .lp-header__nav a:hover { color: var(--color-text); }
@@ -462,8 +463,10 @@
   .lp-chat__side { display: none; }
 }
 
+/* Sem espaço para as âncoras, elas vão para o menu (o botão aparece junto). */
 @media (max-width: 860px) {
   .lp-header__nav { display: none; }
+  .lp-header .lp-header__menu { display: inline-flex; }
 }
 
 @media (max-width: 767.98px) {
@@ -473,9 +476,7 @@
   .lp-header__bar { margin-top: 10px; min-height: 56px; padding: 6px 6px 6px 14px; gap: var(--space-2); }
   .lp-header__brand { margin-right: auto; }
   .lp-header__brand .brand { font-size: 18px; }
-  .lp-header__brand .brand-logo { width: 26px; height: 26px; }
   .lp-header .lp-header__cta { display: none; }
-  .lp-header .lp-header__menu { display: inline-flex; }
 
   .lp-hero { padding: 104px 0 var(--space-10); }
   .lp-hero__copy { gap: var(--space-4); }
