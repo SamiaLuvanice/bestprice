@@ -227,6 +227,7 @@
 .lp-demo__product { display: flex; gap: 14px; align-items: center; }
 .lp-demo__product > span:last-child { display: grid; gap: 2px; font-size: 15px; line-height: 20px; }
 .lp-demo__id { color: var(--night-muted); }
+.lp-demo__product .lp-desktop { display: grid; gap: 2px; }
 .lp-demo__available { font-size: 12px; line-height: 16px; color: var(--action); }
 .lp-demo .lp-label { color: var(--night-muted); margin-top: var(--space-2); }
 .lp-demo__price { font-family: var(--font-display); font-stretch: expanded; font-size: 40px; line-height: 44px; letter-spacing: -.02em; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -245,8 +246,9 @@
 .lp-demo .lp-chart__line { stroke: var(--action); stroke-dashoffset: calc(1 - var(--progress)); }
 .lp-demo .lp-chart__area { clip-path: inset(0 calc((1 - var(--progress)) * 100%) 0 0); }
 .lp-chart__target-label { position: absolute; left: 0; top: var(--target-y); transform: translateY(-50%); padding: 2px 8px; border-radius: 6px; background: var(--sidebar-primary); color: var(--night-950); font-weight: 600; }
-.lp-demo__lander { position: absolute; left: var(--last-x); top: var(--last-y); transform: translate(-100%, -85%); z-index: 2; opacity: clamp(0, (var(--progress) - .85) * 8, 1); }
-.lp-demo__lander .lp-robot__found { margin: -34% 0 0 0; place-self: start center; font-size: 10px; padding: 2px 6px; }
+/* O último ponto fica na borda direita do gráfico: o robô pousa logo à esquerda dele. */
+.lp-demo__lander { position: absolute; right: 12px; top: var(--last-y); transform: translateY(-90%); z-index: 2; opacity: clamp(0, (var(--progress) - .85) * 8, 1); }
+.lp-demo__lander .lp-robot__found { margin: -34% 0 0 0; place-self: start end; font-size: 10px; padding: 2px 6px; }
 .lp-demo__tip { position: absolute; right: 12%; top: calc(var(--target-y) - 6px); z-index: 2; display: grid; padding: 10px 14px; border-radius: 12px; background: var(--background); color: var(--color-text); box-shadow: var(--shadow-2); font-size: 14px; line-height: 18px; opacity: clamp(0, (var(--progress) - .85) * 8, 1); }
 .lp-demo__tip .lp-mono { color: var(--muted-foreground); font-size: 11px; }
 .lp-demo__months { display: flex; justify-content: space-between; margin-top: var(--space-3) !important; color: var(--night-muted); }
@@ -320,11 +322,12 @@
 .lp-typing__dots span:nth-child(2) { animation-delay: .15s; }
 .lp-typing__dots span:nth-child(3) { animation-delay: .3s; }
 /* Etapas da conversa (data-phase): o texto completo está sempre no DOM; antes da hora fica oculto. */
+.lp-msg-slot { position: relative; min-width: 0; }
+.lp-msg-slot .lp-typing { position: absolute; top: 0; left: 0; }
 .lp-chat[data-phase="idle"] .lp-msg--user, .lp-chat[data-phase="idle"] .lp-msg-row--reply,
-.lp-chat[data-phase="typing"] .lp-msg-row--reply { visibility: hidden; opacity: 0; }
+.lp-chat[data-phase="typing"] .lp-msg--ai { visibility: hidden; opacity: 0; }
 .lp-chat[data-phase="idle"] .lp-msg--user { transform: translateY(var(--lp-enter-offset)); }
-.lp-chat .lp-msg--user, .lp-chat .lp-msg-row--reply { transition: opacity var(--lp-enter) var(--lp-enter-easing), transform var(--lp-enter) var(--lp-enter-easing), visibility var(--lp-enter); }
-.lp-chat[data-phase="typing"] .lp-msg-row--reply { position: absolute; }
+.lp-chat .lp-msg--user, .lp-chat .lp-msg-row--reply, .lp-chat .lp-msg--ai { transition: opacity var(--lp-enter) var(--lp-enter-easing), transform var(--lp-enter) var(--lp-enter-easing), visibility var(--lp-enter); }
 
 .lp-features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-8); margin-top: var(--space-12) !important; }
 .lp-features h3 { margin-top: var(--space-3); font-size: 17px; line-height: 22px; font-weight: 600; }
@@ -394,6 +397,7 @@
 
 /* ---------- Movimento (notas 238:745–238:776; tempos em motion.ts) ---------- */
 @keyframes lp-rise { from { opacity: 0; transform: translateY(var(--lp-enter-offset)); } to { opacity: 1; transform: none; } }
+@keyframes lp-lift { from { transform: translateY(var(--lp-enter-offset)); } to { transform: none; } }
 @keyframes lp-toast { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes lp-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(calc(-1 * var(--lp-float-offset))); } }
 @keyframes lp-beam { 0%, 100% { opacity: var(--lp-beam-min); } 50% { opacity: var(--lp-beam-max); } }
@@ -408,7 +412,8 @@
 @media (prefers-reduced-motion: no-preference) {
   /* Hero: o título, o campo e as ações nunca esperam animação para ficar utilizáveis; só o título
      e as peças ilustrativas entram com movimento (o campo e os botões já nascem visíveis). */
-  .lp-hero__title { animation: lp-rise var(--lp-enter) var(--lp-enter-easing) both; }
+  /* AC15: o título sobe 12 px no tempo da nota, mas sem fade — ele nunca espera animação para ser lido. */
+  .lp-hero__title { animation: lp-lift var(--lp-enter) var(--lp-enter-easing) both; }
   .lp-product-card { animation: lp-rise var(--lp-enter) var(--lp-enter-easing) var(--lp-card-delay) both; }
   .lp-hero__robot { animation: lp-rise var(--lp-enter) var(--lp-enter-easing) var(--lp-robot-delay) both; }
   .lp-robot--float .lp-robot__art { animation: lp-float var(--lp-float) var(--lp-float-easing) infinite; }
@@ -511,9 +516,12 @@
   .lp-turn__title { font-size: 30px; line-height: 34px; }
 
   .lp-step__art { height: 170px; }
-  .lp-demo__summary, .lp-demo__history { padding: 20px; }
-  .lp-demo__history { order: -1; }
-  .lp-demo__panel { display: flex; flex-direction: column; }
+  /* Quadro 239:330: cabeçalho, preço e selos, depois o gráfico, depois os registros. */
+  .lp-demo__panel { display: flex; flex-direction: column; gap: var(--space-4); padding: 20px 0; }
+  .lp-demo__summary { display: contents; }
+  .lp-demo__summary > *, .lp-demo__history { padding-inline: 20px; }
+  .lp-demo__history { order: 4; padding-block: 0; }
+  .lp-demo__product { order: 1; } .lp-demo__price { order: 2; } .lp-demo__badges { order: 3; } .lp-demo__stats { order: 5; }
   .lp-demo__price { font-size: 30px; line-height: 34px; }
   .lp-demo__tip { right: 20%; }
 

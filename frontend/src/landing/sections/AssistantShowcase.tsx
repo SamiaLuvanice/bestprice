@@ -13,6 +13,9 @@ type Phase = 'idle' | 'typing' | 'done'
 const featureIcons: Record<(typeof assistantFeatures)[number]['icon'], LucideIcon> = { question: CircleHelp, sparkles: Sparkles, history: History }
 
 /**
+ * O espaço da resposta fica reservado desde o início (só invisível), para a entrada da resposta
+ * não deslocar o resto da página (AC15).
+ *
  * Conversa ilustrativa: ao chegar à área visível, a mensagem da pessoa aparece, o robô mostra
  * "Preparando uma resposta…" e, 1,2 s depois, a resposta entra com as fontes (nota 238:776).
  * Com movimento reduzido, a conversa já aparece completa.
@@ -69,8 +72,8 @@ export function AssistantShowcase() {
           <div className="lp-chat__title"><Avatar /><span><strong>Notebook para estudar e trabalhar</strong><span>Assistente BestPrice IA</span></span></div>
           <div className="lp-chat__messages">
             <p className="lp-msg lp-msg--user">{assistantCopy.question}</p>
-            {phase === 'typing' && <div className="lp-msg-row"><Avatar /><Typing /></div>}
             <div className="lp-msg-row lp-msg-row--reply"><Avatar />
+              <div className="lp-msg-slot">{phase === 'typing' && <Typing />}
               <div className="lp-msg lp-msg--ai">
                 <p>Para estudar e trabalhar, priorize nesta ordem: 16 GB de RAM, SSD de 512 GB e boa autonomia de bateria. Tela Full HD e um teclado confortável fazem diferença no dia a dia.</p>
                 <p>{assistantCopy.webRange}</p>
@@ -83,6 +86,7 @@ export function AssistantShowcase() {
                 <p className="lp-suggest"><WandSparkles aria-hidden="true" />Sugestões de pesquisa do Google: <span>notebook 16gb ssd 512gb</span></p>
                 <p className="lp-msg__meta"><span className="lp-unverified"><CircleAlert aria-hidden="true" />Não verificado</span><span className="lp-mono">Pesquisado em hoje, 14:32</span></p>
               </div>
+              </div>
             </div>
           </div>
           <div className="lp-chat__composer"><span>Ex.: um notebook para estudar e trabalhar…</span><span className="lp-chat__send" aria-hidden="true"><SendHorizontal /></span></div>
@@ -93,12 +97,13 @@ export function AssistantShowcase() {
           <div className="lp-chat__title"><Avatar /><span><strong>Notebook para estudar</strong><span className="lp-chat__history">3 conversas recentes · ver histórico</span></span></div>
           <div className="lp-chat__messages">
             <p className="lp-msg lp-msg--user">{assistantCopy.questionMobile}</p>
-            {phase === 'typing' && <div className="lp-msg-row"><Avatar /><Typing /></div>}
             <div className="lp-msg-row lp-msg-row--reply"><Avatar />
+              <div className="lp-msg-slot">{phase === 'typing' && <Typing />}
               <div className="lp-msg lp-msg--ai">
                 <p>{assistantCopy.answerMobile}</p>
                 <ul className="lp-sources lp-sources--compact"><li>loja-a.com.br</li><li>loja-b.com.br</li><li>+1</li></ul>
                 <p className="lp-msg__meta"><span className="lp-unverified"><CircleAlert aria-hidden="true" />Não verificado</span><span className="lp-mono">hoje, 14:32</span></p>
+              </div>
               </div>
             </div>
           </div>
