@@ -182,7 +182,7 @@
 .lp-checks { position: absolute; top: 572px; left: 340px; z-index: 2; display: grid; gap: 8px; width: 306px; padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: color-mix(in srgb, var(--background) 90%, transparent); box-shadow: var(--shadow-2); }
 .lp-checks .lp-label { color: var(--input); }
 .lp-checks ul { display: grid; gap: 8px; }
-.lp-checks li { display: grid; grid-template-columns: 70px auto 1fr; gap: 14px; color: var(--muted-foreground); }
+.lp-checks li { display: grid; grid-template-columns: 78px auto 1fr; gap: 10px; white-space: nowrap; color: var(--muted-foreground); }
 .lp-checks li strong { color: var(--color-text); }
 
 /* Gráfico em degraus. */
@@ -544,7 +544,7 @@
   .lp-link-form__input:focus-visible { border-color: var(--color-focus); outline: var(--ring-width) solid color-mix(in srgb, var(--color-focus) 30%, transparent); }
   .lp-link-form__field[data-invalid] .lp-link-form__input { border-color: var(--destructive); }
   .lp-link-form .lp-link-form__submit { flex-basis: 100%; height: 52px; }
-  .lp-link-form__help, .lp-link-form__error { padding-inline: 0; }
+  .lp-link-form__help, .lp-link-form__error { padding-inline: 0; text-align: center; }
   .lp-proofs { flex-direction: column; gap: 10px; }
   /* composição 358×450: cartão 344 em (10,120) a 0,82×; robô 149 em (-6,-8); balão (150,44); aviso 286×60 em (40,372). */
   .lp-hero__stage { position: relative; width: 100%; max-width: 358px; height: 450px; margin: 0 auto; top: auto; left: auto; }
@@ -558,7 +558,7 @@
   .lp-product-card .lp-pill { font-size: 11.48px; line-height: 14.76px; }
   .lp-product-card__price strong { font-size: 32.8px; line-height: 36.08px; }
   .lp-phone { width: 36px; height: 42px; }
-  .lp-toast { top: 372px; left: 40px; width: 286px; gap: 10px; padding: 10px 14px 10px 10px; border-radius: 18px; }
+  .lp-toast { top: 372px; left: 40px; width: max-content; min-width: 286px; gap: 10px; padding: 10px 14px 10px 10px; border-radius: 18px; }
 
   /* Problema: V28, p72/16/0/16; carrossel de cards 290×164 (V10, p20, r24); indicador 44×6. */
   .lp-problem { padding-top: 72px; }
