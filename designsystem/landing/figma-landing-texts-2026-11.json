@@ -1,0 +1,132 @@
+{
+  "source": {
+    "file": "LZVtUEAycEzfbwL0H5YL3r",
+    "fileName": "BestPrice IA",
+    "readAt": "2026-11-08",
+    "method": "Figma Plugin API (console) via Chrome; textos visíveis por seção, na ordem da árvore de camadas. As respostas fechadas da FAQ vêm de faqAnswers (camadas ocultas no quadro)."
+  },
+  "approvedChanges": [
+    {
+      "figma": "Só o link, nenhum cadastro",
+      "product": "Só o link, nada para preencher",
+      "approvedAt": "2026-11-08",
+      "reason": "spec 0050: o selo não pode sugerir que monitorar dispensa conta"
+    }
+  ],
+  "faqAnswers": {
+    "De onde vêm os preços?": "Da API oficial do Mercado Livre, consultada pelo BestPrice. Não lemos páginas da loja nem usamos scraping. O preço considerado é o de uma unidade, sem frete, cupom ou benefício pessoal.",
+    "Preciso preencher os dados do produto?": "Não. Você cola o link do anúncio e o BestPrice busca título, imagem, preço e disponibilidade sozinho.",
+    "Como fico sabendo que o preço caiu?": "Defina um preço-alvo. Quando o preço atual ficar igual ou abaixo dele, uma notificação aparece no sino do BestPrice.",
+    "O BestPrice compra por mim?": "Não. Ele acompanha e avisa. A decisão e a compra continuam com você, direto no Mercado Livre.",
+    "Funciona com outras lojas?": "Nesta fase, apenas anúncios do Mercado Livre Brasil."
+  },
+  "desktop": {
+    "nodeId": "238:294",
+    "sections": [
+      {
+        "section": "01 · Hero",
+        "nodeId": "238:295",
+        "texts": ["BestPrice", "Como funciona", "Demonstração", "Assistente", "Perguntas", "Entrar", "Começar a monitorar", "Monitorando anúncios do Mercado Livre", "Pare de dar F5 no preço.", "O BestPrice acompanha por você — e avisa na hora certa.", "Cole o link de um anúncio do Mercado Livre uma única vez. O BestPrice consulta o preço automaticamente, guarda o histórico e te avisa quando ele chega ao valor que você quer pagar.", "Cole o link do anúncio do Mercado Livre", "Monitorar preço", "Um link por produto. Você não precisa preencher mais nada.", "API oficial do Mercado Livre", "Só o link, nenhum cadastro", "Histórico desde o 1º registro", "Smartphone Exemplo", "MLB4012345678", "5,1%", "R$ 1.849,00", "R$ 1.949,00", "Última consulta · há 12 min", "Alvo R$ 1.900", "Tô de olho nesse aqui.", "Chegou no seu preço-alvo", "Smartphone Exemplo · R$ 1.849,00", "Consultas recentes", "há 3 h", "R$ 1.949,00", "sem mudança", "há 1 h", "R$ 1.949,00", "sem mudança", "há 12 min", "R$ 1.849,00", "↓ R$ 100,00"]
+      },
+      {
+        "section": "02 · Problema → virada",
+        "nodeId": "238:353",
+        "texts": ["O jeito antigo", "Acompanhar preço na mão é um trabalho que nunca termina.", "Smartphone Exemplo 128…", "×", "Smartphone Exemplo 128…", "×", "Fone Bluetooth X…", "×", "Smartphone Exemplo 128…", "×", "12 abas abertas", "As abas se acumulam", "Você abre o mesmo anúncio todo dia só para ver se algo mudou.", "Ontem estava mais barato?", "Esse desconto é de verdade?", "A memória não ajuda", "Sem histórico, fica difícil saber se o preço caiu ou só voltou ao normal.", "Terça, 10:42", "R$ 1.849,00", "Quinta, quando você viu", "R$ 2.049,00", "10,8%", "O momento passa", "Quando você finalmente confere, a queda já pode ter acabado.", "Deixa comigo.", "Eu confiro o preço por você. Você só aparece na hora de decidir."]
+      },
+      {
+        "section": "03 · Como funciona",
+        "nodeId": "238:422",
+        "texts": ["Como funciona", "Você cola o link. O robô cuida do resto.", "Um passo é seu. Os outros acontecem em segundo plano, todos os dias.", "mercadolivre.com.br/…/MLB4012345678", "título ✓\nimagem ✓\npreço ✓", "01", "você", "Cole o link do anúncio", "Copie o endereço no Mercado Livre e cole no BestPrice. Título, imagem e preço chegam sozinhos — nada para preencher.", "↓ mudança registrada", "02", "automático", "O BestPrice acompanha", "Consultas automáticas e periódicas registram cada mudança de preço e de disponibilidade. Mesmo enquanto você dorme.", "Preço-alvo atingido", "R$ 1.849,00 ≤ alvo R$ 1.900,00", "03", "automático", "Você decide na hora certa", "Defina um preço-alvo. Quando o anúncio chegar lá, o aviso aparece no seu BestPrice."]
+      },
+      {
+        "section": "04 · Demonstração",
+        "nodeId": "238:485",
+        "texts": ["Demonstração", "Um anúncio. Todo o histórico. Nenhuma planilha.", "É assim que um produto aparece depois que o BestPrice começa a acompanhar.", "Smartphone Exemplo 128 GB", "MLB4012345678", "Disponível", "Preço atual", "R$ 1.849,00", "5,1% vs. anterior", "no seu alvo", "Anterior", "R$ 1.949,00", "Menor registrado", "R$ 1.849,00", "Maior registrado", "R$ 2.199,00", "Seu preço-alvo", "R$ 1.900,00", "Última consulta", "há 12 min", "Última mudança", "hoje, 10:42", "Ver anúncio no Mercado Livre", "Histórico de preço", "Desde o 1º registro", "alvo R$ 1.900", "menor preço", "Menor preço desde o 1º registro", "hoje, 10:42 · R$ 1.849,00", "ago", "set", "out", "nov", "hoje, 10:42", "R$ 1.949 → R$ 1.849", "seg, 08:15", "R$ 1.999 → R$ 1.949", "qui, 21:03", "R$ 2.189 → R$ 2.099", "Dados ilustrativos. O BestPrice considera o preço de uma unidade, sem frete, cupom ou benefício pessoal."]
+      },
+      {
+        "section": "05 · Por que BestPrice",
+        "nodeId": "238:575",
+        "texts": ["Por que BestPrice", "Menos tempo vigiando. Mais certeza na compra.", "Não compro nada por você.\nSó aviso na hora certa.", "Seu tempo de volta", "Nada de abrir o mesmo anúncio todos os dias. As consultas acontecem sem você precisar lembrar.", "Desconto com contexto", "Compare o preço de hoje com o menor e o maior já registrados e veja se a oferta é boa de verdade.", "Dados da fonte oficial", "Os preços vêm da API oficial do Mercado Livre. Sem scraping e sem leitura de páginas.", "Aviso só quando importa", "Você define o preço-alvo. O BestPrice só chama sua atenção quando ele é atingido."]
+      },
+      {
+        "section": "06 · BestPrice IA — Assistente de compras",
+        "nodeId": "238:618",
+        "texts": ["BestPrice IA · Assistente de compras", "Não sabe o que comprar? Comece por uma conversa.", "Conte como vai usar, o que é importante e quanto quer gastar. O robô ajuda a organizar as opções e, quando a pesquisa na web está disponível, traz referências de preço com as fontes.", "Nova conversa", "Buscar pelo título", "Conversas recentes", "Notebook para estudar e trabalhar", "Atualizada agora", "Fone para academia até R$ 300", "Atualizada há 2 dias", "Air fryer para 2 pessoas", "Atualizada há 5 dias", "Presente de aniversário — gamer", "Atualizada há 2 semanas", "Guardadas por até 90 dias da criação.", "Notebook para estudar e trabalhar", "Assistente BestPrice IA", "Quero um notebook para estudar e trabalhar, até R$ 4.000. O que devo priorizar?", "Para estudar e trabalhar, priorize nesta ordem: 16 GB de RAM, SSD de 512 GB e boa autonomia de bateria. Tela Full HD e um teclado confortável fazem diferença no dia a dia.", "Na web, encontrei modelos nessa faixa entre R$ 3.599 e R$ 3.999.", "Fontes da pesquisa na web", "1", "loja-a.com.br", "2", "loja-b.com.br", "3", "revista-tech.com", "Sugestões de pesquisa do Google:", "notebook 16gb ssd 512gb", "Não verificado", "Pesquisado em hoje, 14:32", "Ex.: um notebook para estudar e trabalhar…", "Processado pelo Google. Não inclua dados pessoais ou confidenciais. Até 2.000 caracteres.", "Pergunte do seu jeito", "Uso, prioridades e orçamento. Você não precisa chegar sabendo o modelo ideal.", "Preços da web, com fontes", "Quando a pesquisa está disponível, cada referência mostra de onde veio e quando foi consultada.", "Retome de onde parou", "Conversas salvas por até 90 dias, com busca pelo título no histórico.", "menor preço", "Decidiu qual anúncio? Agora é comigo.", "Cole o link do Mercado Livre e eu acompanho o preço até chegar no seu alvo.", "Monitorar um anúncio", "Respostas da IA não são verificadas e dependem de disponibilidade e limites de uso. Preços da web são referência: não criam monitoramento nem alerta. A decisão é sempre sua."]
+      },
+      {
+        "section": "07 · Perguntas",
+        "nodeId": "238:712",
+        "texts": ["Perguntas frequentes", "O que você precisa saber antes de colar o primeiro link.", "De onde vêm os preços?", "Da API oficial do Mercado Livre, consultada pelo BestPrice. Não lemos páginas da loja nem usamos scraping. O preço considerado é o de uma unidade, sem frete, cupom ou benefício pessoal.", "Preciso preencher os dados do produto?", "Como fico sabendo que o preço caiu?", "O BestPrice compra por mim?", "Funciona com outras lojas?"]
+      },
+      {
+        "section": "08 · CTA final",
+        "nodeId": "238:722",
+        "texts": ["Cole o primeiro link.\nO resto é com o robô.", "Comece com um único link. Depois disso, quem confere é ele.", "Começar a monitorar", "Já tenho conta"]
+      },
+      {
+        "section": "09 · Rodapé",
+        "nodeId": "238:736",
+        "texts": ["BestPrice", "Monitoramento automático de preços do Mercado Livre Brasil.", "Como funciona", "Assistente", "Perguntas", "Entrar"]
+      }
+    ]
+  },
+  "mobile": {
+    "nodeId": "239:180",
+    "sections": [
+      {
+        "section": "01 · Hero",
+        "nodeId": "239:181",
+        "texts": ["BestPrice", "Entrar", "Monitorando o Mercado Livre", "Pare de dar F5 no preço.", "O BestPrice acompanha por você — e avisa na hora certa.", "Cole o link de um anúncio do Mercado Livre uma única vez. O BestPrice consulta o preço automaticamente, guarda o histórico e te avisa quando ele chega ao valor que você quer pagar.", "Cole o link do anúncio", "Monitorar preço", "Um link por produto. Você não precisa preencher mais nada.", "API oficial do Mercado Livre", "Só o link, nenhum cadastro", "Histórico desde o 1º registro", "Smartphone Exemplo", "MLB4012345678", "5,1%", "R$ 1.849,00", "R$ 1.949,00", "Última consulta · há 12 min", "Alvo R$ 1.900", "Tô de olho nesse aqui.", "Chegou no seu preço-alvo", "R$ 1.849,00"]
+      },
+      {
+        "section": "02 · Problema → virada",
+        "nodeId": "239:229",
+        "texts": ["O jeito antigo", "Acompanhar preço na mão é um trabalho que nunca termina.", "12 abas abertas", "As abas se acumulam", "Você abre o mesmo anúncio todo dia só para ver se algo mudou.", "Ontem estava mais barato?", "A memória não ajuda", "Sem histórico, fica difícil saber se o preço caiu ou só voltou ao normal.", "R$ 1.849 → R$ 2.049", "O momento passa", "Quando você finalmente confere, a queda já pode ter acabado.", "Deixa comigo.", "Eu confiro o preço. Você só decide."]
+      },
+      {
+        "section": "03 · Como funciona",
+        "nodeId": "239:269",
+        "texts": ["Como funciona", "Você cola o link. O robô cuida do resto.", "Um passo é seu. Os outros acontecem em segundo plano.", "mercadolivre.com.br/…/MLB4012345678", "título ✓\nimagem ✓\npreço ✓", "01", "você", "Cole o link do anúncio", "Copie o endereço no Mercado Livre e cole no BestPrice. Título, imagem e preço chegam sozinhos — nada para preencher.", "↓ mudança registrada", "02", "automático", "O BestPrice acompanha", "Consultas automáticas e periódicas registram cada mudança de preço e de disponibilidade. Mesmo enquanto você dorme.", "Preço-alvo atingido", "R$ 1.849,00 ≤ alvo R$ 1.900,00", "03", "automático", "Você decide na hora certa", "Defina um preço-alvo. Quando o anúncio chegar lá, o aviso aparece no seu BestPrice."]
+      },
+      {
+        "section": "04 · Demonstração",
+        "nodeId": "239:330",
+        "texts": ["Demonstração", "Um anúncio. Todo o histórico. Nenhuma planilha.", "Smartphone Exemplo 128 GB", "MLB4012345678 · Disponível", "R$ 1.849,00", "5,1%", "no seu alvo", "menor preço", "Menor preço registrado", "hoje, 10:42", "Anterior", "R$ 1.949,00", "Menor registrado", "R$ 1.849,00", "Maior registrado", "R$ 2.199,00", "Seu preço-alvo", "R$ 1.900,00", "Dados ilustrativos. Preço de uma unidade, sem frete, cupom ou benefício pessoal."]
+      },
+      {
+        "section": "05 · Por que BestPrice",
+        "nodeId": "239:377",
+        "texts": ["Por que BestPrice", "Menos tempo vigiando. Mais certeza na compra.", "Seu tempo de volta", "Nada de abrir o mesmo anúncio todos os dias.", "Desconto com contexto", "Compare o preço de hoje com o menor e o maior já registrados.", "Dados da fonte oficial", "Preços da API oficial do Mercado Livre. Sem scraping.", "Aviso só quando importa", "O aviso aparece quando seu preço-alvo é atingido.", "Não compro nada por você.\nSó aviso na hora certa."]
+      },
+      {
+        "section": "06 · BestPrice IA — Assistente de compras",
+        "nodeId": "239:419",
+        "texts": ["BestPrice IA", "Não sabe o que comprar? Comece por uma conversa.", "Conte como vai usar, o que é importante e quanto quer gastar. O robô ajuda a organizar as opções, com fontes quando pesquisa na web.", "Notebook para estudar", "3 conversas recentes · ver histórico", "Notebook para estudar e trabalhar, até R$ 4.000. O que priorizar?", "Priorize 16 GB de RAM, SSD de 512 GB e boa bateria. Na web, achei modelos entre R$ 3.599 e R$ 3.999.", "loja-a.com.br", "loja-b.com.br", "+1", "Não verificado", "hoje, 14:32", "Pergunte o que precisa…", "Processado pelo Google. Não inclua dados pessoais ou confidenciais.", "Pergunte do seu jeito", "Uso, prioridades e orçamento.", "Preços da web, com fontes", "Cada referência mostra de onde veio e quando.", "Retome de onde parou", "Conversas salvas por até 90 dias.", "menor preço", "Decidiu qual anúncio?\nAgora é comigo.", "Monitorar um anúncio", "Respostas da IA não são verificadas e dependem de disponibilidade e limites de uso."]
+      },
+      {
+        "section": "07 · Perguntas",
+        "nodeId": "239:499",
+        "texts": ["Perguntas frequentes", "Antes de colar o primeiro link.", "De onde vêm os preços?", "Da API oficial do Mercado Livre, consultada pelo BestPrice. Não lemos páginas da loja nem usamos scraping. O preço considerado é o de uma unidade, sem frete, cupom ou benefício pessoal.", "Preciso preencher os dados do produto?", "Como fico sabendo que o preço caiu?", "O BestPrice compra por mim?", "Funciona com outras lojas?"]
+      },
+      {
+        "section": "08 · CTA final",
+        "nodeId": "239:508",
+        "texts": ["Cole o primeiro link. O resto é com o robô.", "Comece com um único link. Depois disso, quem confere é ele.", "Começar a monitorar", "Já tenho conta"]
+      },
+      {
+        "section": "09 · Rodapé",
+        "nodeId": "239:516",
+        "texts": ["BestPrice", "Monitoramento automático de preços do Mercado Livre Brasil.", "Como funciona", "Assistente", "Entrar"]
+      },
+      {
+        "section": "Barra fixa — CTA mobile",
+        "nodeId": "239:523",
+        "texts": ["Pronto para parar de conferir?", "Começar"]
+      }
+    ]
+  },
+  "mobileMenu": {
+    "nodeId": "239:856",
+    "texts": ["BestPrice", "Como funciona", "Demonstração", "Assistente", "Perguntas", "Começar a monitorar", "Entrar", "Cole um link e eu confiro por você."]
+  }
+}
