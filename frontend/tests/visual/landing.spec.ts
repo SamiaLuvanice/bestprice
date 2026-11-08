@@ -456,6 +456,98 @@ test('AC13 — axe WCAG 2.2 AA, alvos de 44 px e sem rolagem lateral', async ({ 
   }
 })
 
+// AC13: foco visível. Percorre a landing só com Tab, do início ao fim, e confere que cada elemento
+// focado casa com :focus-visible, tem contorno ou anel desenhado e está na área visível.
+test.describe('AC13 — percurso só com teclado', () => {
+  for (const width of [390, 1280]) {
+    test(`em ${width} px cada foco é visível e está na tela`, async ({ page }, info) => {
+      onlyOn1280(info.project.name)
+      test.setTimeout(90_000)
+      await page.setViewportSize({ width, height: 800 })
+      await api(page)
+      await page.goto('/')
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      const seen: string[] = []
+      let visitedFooter = false
+      for (let step = 0; step < 150; step += 1) {
+        await page.keyboard.press('Tab')
+        const focused = page.locator(':focus')
+        if (!(await focused.count())) break
+        const state = await focused.evaluate((element) => {
+          // O anel pode estar no próprio elemento ou no contorno que o envolve (campo do hero, em
+          // que a pílula inteira acende com :focus-within, como no quadro).
+          const drawsRing = (node: Element) => {
+            const style = getComputedStyle(node)
+            return (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) || style.boxShadow !== 'none'
+          }
+          const wrappers = [element.parentElement, element.parentElement?.parentElement].filter((node): node is HTMLElement => Boolean(node?.matches(':focus-within')))
+          const name = `${element.tagName.toLowerCase()} "${(element.getAttribute('aria-label') || element.textContent || '').trim().slice(0, 40)}"`
+          return {
+            name, inLanding: Boolean(element.closest('.lp')), inFooter: Boolean(element.closest('footer')),
+            focusVisible: element.matches(':focus-visible'),
+            ring: drawsRing(element) || wrappers.some((wrapper) => wrapper.tagName !== 'FORM' && wrapper.tagName !== 'SECTION' && drawsRing(wrapper)),
+          }
+        })
+        // Saiu da página (a ordem volta ao navegador ou recomeça): o percurso chegou ao fim.
+        if (!state.inLanding || state.name === seen[0]) break
+        seen.push(state.name)
+        visitedFooter ||= state.inFooter
+        expect(state.focusVisible, state.name).toBe(true)
+        expect(state.ring, `${state.name} sem contorno de foco`).toBe(true)
+        await expect(focused, state.name).toBeInViewport()
+      }
+      // Percorreu a página inteira: passou pelos links do rodapé antes de sair da página.
+      expect(seen.length, seen.join(' · ')).toBeGreaterThan(10)
+      expect(visitedFooter, seen.join(' · ')).toBe(true)
+    })
+
+    test(`em ${width} px o campo do hero leva a "Monitorar preço" só com teclado`, async ({ page }, info) => {
+      onlyOn1280(info.project.name)
+      await page.setViewportSize({ width, height: 800 })
+      const requests = await api(page)
+      await page.goto('/')
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+      for (let step = 0; step < 30 && !(await heroField(page).evaluate((element) => element === document.activeElement)); step += 1) await page.keyboard.press('Tab')
+      await expect(heroField(page)).toBeFocused()
+      await page.keyboard.type(LINK)
+      await page.keyboard.press('Tab')
+      const submit = page.getByRole('button', { name: 'Monitorar preço' })
+      await expect(submit).toBeFocused()
+      expect(await submit.evaluate((element) => element.matches(':focus-visible'))).toBe(true)
+      await page.keyboard.press('Enter')
+      await expect(page).toHaveURL(new RegExp(`${loginMonitoring.replace(/[?]/g, '\\?')}$`))
+      expectNoLink(page, requests)
+      expect(await page.evaluate((key) => sessionStorage.getItem(key), STORAGE_KEY)).toBe(LINK)
+    })
+  }
+})
+
+// A1 (QA): o selo "menor preço" do robô pousado na Demonstração não pode ser cortado pelo painel,
+// que recorta o conteúdo. Vale nos dois modos de movimento; aqui no estado final (reduzido).
+test('A1 — selo "menor preço" da Demonstração inteiro dentro do painel', async ({ page }, info) => {
+  onlyOn1280(info.project.name)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await api(page)
+  for (const width of [320, 390, 768, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto('/')
+    await page.locator('.lp-demo__chart').evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    await frames(page)
+    const { badge, panel } = await page.evaluate(() => {
+      const rect = (selector: string) => {
+        const box = document.querySelector(selector)!.getBoundingClientRect()
+        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }
+      }
+      return { badge: rect('.lp-demo__lander .lp-robot__found'), panel: rect('.lp-demo__panel') }
+    })
+    const where = `${width} px: selo ${JSON.stringify(badge)} painel ${JSON.stringify(panel)}`
+    expect(badge.left, where).toBeGreaterThanOrEqual(panel.left)
+    expect(badge.right, where).toBeLessThanOrEqual(panel.right)
+    expect(badge.top, where).toBeGreaterThanOrEqual(panel.top)
+    expect(badge.bottom, where).toBeLessThanOrEqual(panel.bottom)
+  }
+})
+
 // ---------- AC15: carregamento estável ----------
 test.describe('AC15 — carregamento estável', () => {
   for (const width of [1440, 390]) {
