@@ -69,6 +69,43 @@ system", versão de histórico "Design system 2026 · shadcn/ui" (07/11/2026).
   - `npm run build:check` confere que o catálogo não vai para `dist/` e que as fontes só incluem
     latin e latin-ext, sem base64.
 
+## Landing pública — spec 0050
+
+Referência: Figma BestPrice IA, quadros "01 · Landing · Desktop" (238:294), "Mobile"
+(239:180) e "Menu aberto" (239:856), com as notas de movimento 238:745 a 238:776, lidos em
+08/11/2026.
+
+- **Snapshots versionados:**
+  - `landing/figma-landing-texts-2026-11.json`: textos por seção, desktop, mobile e menu,
+    com as respostas da FAQ.
+  - `landing/figma-landing-metrics-2026-11.json`: tamanho, entrelinha, peso e
+    espaçamento de cada texto e contêiner.
+  - Os dois foram conferidos por hash contra o Figma. Os testes da landing comparam a
+    página com eles, então uma mudança de texto ou medida no Figma exige atualizar o
+    snapshot.
+- **Robô BestPrice (componente 237:35):** tem quatro estados:
+  - Neutro (ler);
+  - Escaneando (vigiar);
+  - Alerta (avisar);
+  - Encontrou (selo "menor preço").
+
+  Os quatro usam a mesma arte original do assistente; só as decorações mudam (brilho, anéis,
+  feixe, pulso e selos, em CSS). Na landing, a arte é um WebP de 480 × 480 px
+  (`assistant-robot-480.webp`, 22 KB), recodificado sem redesenho. O assistente continua
+  com o PNG original.
+- **Cores:** assistente em rosa (leitura) e monitoramento em verde (ação). As faixas escuras
+  usam os valores Noite, e o tema continua claro fixo (0016).
+- **Divergências aprovadas pela responsável em 08/11/2026:**
+
+  | Figma | Produto | Motivo |
+  |---|---|---|
+  | Selo "Só o link, nenhum cadastro" | "Só o link, nada para preencher" | Não sugerir que monitorar dispensa conta |
+  | Logo de 32 px | 34 px | Mínimo da marca (0029) |
+  | Título do hero com fade | Só sobe 12 px em 400 ms, sempre visível | Título, campo e ações nunca esperam animação (AC15) |
+  | Cabeçalho (não especificado) | Rola com a página | O quadro só mostra a navegação no topo do hero |
+  | Textos `#424245` e amarelo das abas | `--muted-foreground` e o token de atenção | Sem cor solta: só tokens |
+  | SF Pro Expanded nos títulos | Fonte do sistema quando ela não existe | Fonte substituta, já aceita na 0049 |
+
 ## Histórico de conversas (spec 0045)
 
 Referência: BestPrice IA no Figma, frames 59:204 e 59:716, exportações identificadas
@@ -190,7 +227,7 @@ as superfícies afetadas e a spec responsável.
 | Extensão da spec 0024 | Motivo | Superfícies |
 |---|---|---|
 | Fundo branco, superfície `#f8fafc`, texto `#0b172b`, apoio `#64748b`, verde de ação `#39ff14` com texto escuro, verde de leitura `#087c1e` e rosa de destaque `#c7005e`; tipografia sans do sistema | Reaproveitar a identidade oficial e manter texto e ações legíveis nas artes fornecidas; correção de contraste da revisão independente (5,37:1 sobre branco e 5,11:1 no selo, conforme cálculo local) | Landing pública em `/` |
-| Hero em duas colunas com recorte CSS do lado ilustrado de `hero.webp` (histórico: `assets/landing/` foi removida na 0028; a landing atual usa `assets/redesign/hero-person.webp`); texto, CTA e navegação em React | Evitar duplicar o texto incorporado à arte e preservar conteúdo selecionável e acessível | Hero desktop e versão empilhada móvel |
+| Hero em duas colunas com recorte CSS do lado ilustrado de `hero.webp` (histórico: `assets/landing/` foi removida na 0028 e `assets/redesign/hero-person.webp` na 0050, que substituiu esta landing); texto, CTA e navegação em React | Evitar duplicar o texto incorporado à arte e preservar conteúdo selecionável e acessível | Hero desktop e versão empilhada móvel |
 | Faixa de benefícios com `scroll-margin-top: 94px`, sequência de quatro passos, sete cartões de categorias e banner panorâmico com arte WebP | Traduzir a referência visual fornecida para superfícies responsivas sem dados fictícios de produto da API e manter a âncora `#funcionalidades` visível sob o cabeçalho fixo | Seções públicas da landing |
 | Menu móvel com estado expandido, link para pular ao conteúdo, foco visível e movimento reduzido | Manter navegação operável em teclado e telas estreitas | Cabeçalho e toda a landing |
 
@@ -224,7 +261,7 @@ fonte do sistema e logo original continuam preservados na identidade existente.
 | Tokens shadcn `background/foreground/card/primary/secondary/muted/accent/destructive/border/input/ring` mapeados à identidade existente | Reutilizar código oficial dos controles sem adotar outra marca | Button, Input, Card, Badge, Table, Skeleton, Separator e Chart |
 | Conteúdo de até 1248 px, superfícies planas, linhas de produtos e navegação inferior até 700 px | Seguir os quadros desktop/mobile e manter o foco na tarefa | Área autenticada |
 | Recharts com série em degraus, pontos reais, tooltip decimal exato e tabela textual expansível | Não sugerir preços intermediários ou completude de histórico paginado | Detalhe; mais registros ampliam o período |
-| Artes fornecidas `hero-person`, `footer-phone`, `login-left` (originais PNG em `prototypes/2026-10-21-bestprice-figma/assets/`; na SPA, WebP redimensionado pela spec 0028); prévias de preço e do painel identificadas como ilustração (SVG rasterizado em WebP pela 0028, para a captura não variar com o esquema de cor) | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
+| Artes fornecidas `hero-person`, `footer-phone` (ambas removidas da SPA na 0050), `login-left` (originais PNG em `prototypes/2026-10-21-bestprice-figma/assets/`; na SPA, WebP redimensionado pela spec 0028); prévias de preço e do painel identificadas como ilustração (SVG rasterizado em WebP pela 0028, para a captura não variar com o esquema de cor) | Reproduzir as peças aprovadas sem preencher a conta com dados de demonstração | Landing e login |
 
 A landing da 0027 substitui a composição da 0024: os CTAs levam a `/login`;
 nenhum botão promete cadastro público. Os sete cartões de categorias e o aviso
