@@ -511,3 +511,25 @@ test('o link "Pular para o conteúdo" só aparece quando focado', async ({ page 
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/#lp-content$/)
 })
+
+// Rodada 3 (quadro 239:229): no mobile as cenas do Problema são um carrossel horizontal acessível.
+test('mobile: cenas do Problema em carrossel rolável pelo teclado, com indicadores e sem rolagem da página', async ({ page }, info) => {
+  onlyOn1280(info.project.name)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await api(page)
+  await page.goto('/')
+  const track = page.getByRole('region', { name: 'Cenas do jeito antigo' })
+  await expect(track.getByRole('listitem')).toHaveCount(3)
+  await expect(track.getByRole('heading', { level: 3 })).toHaveText(['As abas se acumulam', 'A memória não ajuda', 'O momento passa'])
+  const dots = page.locator('.lp-carousel__dots span')
+  await expect(dots.nth(0)).toHaveAttribute('data-active', 'true')
+  await track.focus()
+  await expect(track).toBeFocused()
+  // Setas rolam a faixa focada; o scroll-snap leva de cena em cena.
+  await page.keyboard.press('ArrowRight')
+  await expect.poll(() => track.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0)
+  await expect(dots.nth(1)).toHaveAttribute('data-active', 'true')
+  for (let step = 0; step < 4; step += 1) { await page.keyboard.press('ArrowRight'); await page.waitForTimeout(400) }
+  await expect(dots.nth(2)).toHaveAttribute('data-active', 'true')
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+})

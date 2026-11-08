@@ -31,7 +31,9 @@ function SceneCarousel() {
         const track = event.currentTarget
         const card = track.firstElementChild?.firstElementChild as HTMLElement | null
         const step = (card?.offsetWidth ?? track.clientWidth) + 12
-        setActive(Math.min(scenes.length - 1, Math.max(0, Math.round(track.scrollLeft / step))))
+        // No fim da faixa a última cena pode não alinhar ao início: o indicador vai para ela.
+        const atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 2
+        setActive(atEnd ? scenes.length - 1 : Math.min(scenes.length - 1, Math.max(0, Math.round(track.scrollLeft / step))))
       }}>
       <ul>{scenes.map((scene, index) => <li key={scene.title} className="lp-carousel__card">
         <span className="lp-chip"><span className="lp-chip__icon" aria-hidden="true">{chips[index].icon}</span><span>{chips[index].label}</span></span>
