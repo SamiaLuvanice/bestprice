@@ -1,6 +1,8 @@
 import { ArrowDown, Bell } from 'lucide-react'
 import type { CSSProperties } from 'react'
-import robotArt from '../assets/research/assistant-robot.png'
+// 0050: a mesma arte original do assistente, só recodificada em WebP 480 × 480 (22 KB contra
+// 1,1 MB do PNG), porque a landing a carrega já no hero. Aprovado pela responsável em 08/11/2026.
+import robotArt from '../assets/research/assistant-robot-480.webp'
 
 /**
  * Componente "Robô BestPrice" do Figma (237:35). Os quatro estados usam a mesma arte original
