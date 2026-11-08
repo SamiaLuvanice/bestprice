@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { HeroTrackForm } from './HeroTrackForm'
@@ -19,12 +19,12 @@ function field() {
 }
 
 describe('formulário de link com valor inicial', () => {
-  it('abre o compacto já preenchido e com foco, sem enviar', () => {
+  it('abre o compacto já preenchido e com foco, sem enviar', async () => {
     const { onSubmit } = renderForm({ initialValue: link })
     expect(screen.getByRole('button', { name: /Adicionar anúncio/ })).toHaveAttribute('aria-expanded', 'true')
     expect(field()).toBeVisible()
     expect(field()).toHaveValue(link)
-    expect(field()).toHaveFocus()
+    await waitFor(() => expect(field()).toHaveFocus())
     expect(onSubmit).not.toHaveBeenCalled()
   })
 
@@ -35,10 +35,10 @@ describe('formulário de link com valor inicial', () => {
     expect(field()).not.toHaveFocus()
   })
 
-  it('aberto (sem lista), preenche e foca o campo', () => {
+  it('aberto (sem lista), preenche e foca o campo', async () => {
     const { onSubmit } = renderForm({ initialValue: link, compact: false })
     expect(field()).toHaveValue(link)
-    expect(field()).toHaveFocus()
+    await waitFor(() => expect(field()).toHaveFocus())
     expect(onSubmit).not.toHaveBeenCalled()
   })
 })

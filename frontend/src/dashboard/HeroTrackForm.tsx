@@ -47,7 +47,7 @@ type Props = {
 export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, embedded = false, onDismissFeedback, children, initialValue }: Props) {
   const panelId = useId()
   const [expanded, setExpanded] = useState(Boolean(initialValue))
-  const focusOnOpen = useRef(Boolean(initialValue))
+  const focusOnOpen = useRef(false)
   const fieldRef = useRef<HTMLInputElement | null>(null)
   // Fonte única do painel: no modo compacto só `expanded` decide; recolher fecha e limpa o retorno.
   const open = !compact || expanded
@@ -57,8 +57,15 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
     setExpanded(!expanded)
   }
   useEffect(() => {
-    if (open && focusOnOpen.current) { focusOnOpen.current = false; fieldRef.current?.focus() }
-  }, [open])
+    if (expanded && focusOnOpen.current) { focusOnOpen.current = false; fieldRef.current?.focus() }
+  }, [expanded])
+  // Valor trazido da landing: foco no próximo quadro, depois do foco de título da página.
+  const focusInitial = useRef(Boolean(initialValue))
+  useEffect(() => {
+    if (!focusInitial.current) return
+    const frame = window.requestAnimationFrame(() => { focusInitial.current = false; fieldRef.current?.focus() })
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
   function setField(element: HTMLInputElement | null) {
     fieldRef.current = element
     if (typeof inputRef === 'function') inputRef(element)

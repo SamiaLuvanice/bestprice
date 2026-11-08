@@ -10,6 +10,7 @@ import { ConfirmStopDialog } from './ConfirmStopDialog'
 import { ConfiguredAlerts } from './ConfiguredAlerts'
 import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
 import { attemptResult } from './labels'
+import { takePendingTrackLink } from '../navigation/pendingTrackLink'
 import { initialTrackedList, trackedListReducer } from './trackedList'
 import { NotificationBell } from './NotificationBell'
 import { ProductDetailDialog, type DetailMode } from './ProductDetailDialog'
@@ -69,6 +70,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
   const detailId = canonicalPath.startsWith('/produtos/') ? canonicalPath.slice('/produtos/'.length) : null
   const currentSection: SectionKey = canonicalPath === '/alertas' ? 'alerts' : canonicalPath.startsWith('/produtos') ? 'products' : 'home'
   const [list, dispatchList] = useReducer(trackedListReducer, initialTrackedList)
+  // 0050: link colado no hero da landing, consumido uma vez no inicializador (seguro no StrictMode).
+  // Vale só para a primeira visita a Produtos: ao mudar de endereço some, e o título volta a ter o foco.
+  const [pending, setPending] = useState(() => ({
+    link: currentSection === 'products' && !detailId ? takePendingTrackLink() : null, path: location.pathname,
+  }))
+  if (pending.link !== null && pending.path !== location.pathname) setPending({ link: null, path: location.pathname })
+  const initialLink = pending.path === location.pathname ? pending.link : null
   const mounted = useRef(true)
   useEffect(() => {
     mounted.current = true
@@ -588,10 +596,10 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     const frame = window.requestAnimationFrame(() => {
       if (detailId) document.getElementById('detail-title')?.focus()
       else if (currentSection === 'alerts') document.getElementById('alerts-page-title')?.focus()
-      else pageHeading.current?.focus()
+      else if (!initialLink) pageHeading.current?.focus()
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [location.pathname, currentSection, detailId])
+  }, [location.pathname, currentSection, detailId, initialLink])
 
   const selectedId = selected?.id
   const selectedTitle = selected?.id === detailId ? selected.product.title : null
@@ -622,6 +630,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     return <HeroTrackForm onSubmit={track} submitting={submitting}
       error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={embedded ? undefined : pageHeading}
       inputRef={linkInput} priority={isEmpty} embedded={embedded} compact={embedded && !isEmpty}
+      initialValue={embedded ? initialLink ?? undefined : undefined}
       onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
       {isEmpty && <div className="empty-state">
         <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>

@@ -1,0 +1,82 @@
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { StrictMode } from 'react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { App } from '../App'
+import { savePendingTrackLink } from '../navigation/pendingTrackLink'
+import { dashboardWith, fakeApi, trackedFixture } from '../test/fakeApi'
+
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+  window.sessionStorage.clear()
+})
+
+const clock = () => new Date('2026-10-11T18:00:00Z')
+const link = 'https://produto.mercadolivre.com.br/MLB-3333333333-liquidificador-_JM'
+
+function field() {
+  return screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre', hidden: true })
+}
+
+async function openMonitoring(strict = false, dashboard: unknown = dashboardWith([trackedFixture()])) {
+  window.history.replaceState(null, '', '/app/monitoring')
+  const mockFetch = fakeApi(() => undefined, dashboard)
+  const app = <App clock={clock} />
+  render(strict ? <StrictMode>{app}</StrictMode> : app)
+  await screen.findByRole('heading', { level: 1, name: 'Seus produtos' })
+  await waitFor(() => expect(screen.getByRole('region', { name: 'Seus produtos' })).toHaveAttribute('aria-busy', 'false'))
+  return mockFetch
+}
+
+describe('link trazido da landing no monitoramento', () => {
+  it.each([false, true])('abre preenchido, com foco e sem enviar (StrictMode: %s)', async (strict) => {
+    savePendingTrackLink(link)
+    const mockFetch = await openMonitoring(strict)
+    expect(field()).toBeVisible()
+    expect(field()).toHaveValue(link)
+    await waitFor(() => expect(field()).toHaveFocus())
+    // Espera os quadros de foco da página; o campo continua com o foco.
+    await new Promise((resolve) => window.setTimeout(resolve, 50))
+    expect(field()).toHaveFocus()
+    expect(mockFetch.mock.calls.some(([, init]) => (init?.method ?? 'GET') !== 'GET')).toBe(false)
+    expect(mockFetch.mock.calls.some(([url, init]) => String(url).includes('MLB-3333333333') || String(init?.body ?? '').includes('MLB-3333333333'))).toBe(false)
+  })
+
+  it('sem produtos, o convite aberto também vem preenchido', async () => {
+    savePendingTrackLink(link)
+    await openMonitoring(false, dashboardWith([]))
+    expect(field()).toHaveValue(link)
+    await waitFor(() => expect(field()).toHaveFocus())
+  })
+
+  it('um segundo acesso ao monitoramento vem vazio', async () => {
+    savePendingTrackLink(link)
+    await openMonitoring()
+    expect(field()).toHaveValue(link)
+    cleanup()
+    vi.unstubAllGlobals()
+    await openMonitoring()
+    expect(field()).toHaveValue('')
+    expect(screen.getByRole('button', { name: /Adicionar anúncio/ })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('ao sair e voltar para Produtos na mesma sessão, o campo vem vazio e o título recebe o foco', async () => {
+    savePendingTrackLink(link)
+    await openMonitoring()
+    expect(field()).toHaveValue(link)
+    const user = userEvent.setup()
+    await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: /Alertas/ }))
+    await screen.findByRole('heading', { level: 1, name: 'Alertas' })
+    await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: /Produtos/ }))
+    await screen.findByRole('heading', { level: 1, name: 'Seus produtos' })
+    expect(field()).toHaveValue('')
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
+  })
+
+  it('sem link pendente, nada muda', async () => {
+    await openMonitoring()
+    expect(field()).toHaveValue('')
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
+  })
+})
