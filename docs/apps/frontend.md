@@ -291,9 +291,10 @@ físico, leitor de tela ou disponibilidade do provider externo.
 `useSignupAvailability` (`src/auth/`) consulta `GET /api/auth/signup` uma vez por
 carregamento do `App` e devolve `loading`, `enabled`, `disabled` ou `error`. O
 interruptor é decidido pela API, não por variável `VITE_*`, para ligar ou desligar
-sem novo build do Pages. Só `enabled` mostra os links: “Criar conta” no cabeçalho da
-landing (à esquerda de “Entrar” no desktop, abaixo dele no menu móvel) e “Ainda não
-tem conta? Criar conta” abaixo do botão do login, que leva o `returnTo` quando ele é
+sem novo build do Pages. Só `enabled` mostra “Ainda não tem conta? Criar conta”
+abaixo do botão do login e, desde a 0050, faz os CTAs de monitoramento da landing
+levarem a `/cadastro` (o link “Criar conta” do cabeçalho da landing saiu na 0050). O
+link do login leva o `returnTo` quando ele é
 um destino interno válido. Em `/cadastro`, `loading` mostra “Carregando…” e `error`
 mostra alerta com “Tentar novamente”; `disabled` redireciona a `/login` sem
 formulário. `/cadastro` não tem rodapé, como o login, e tem o título “Criar conta ·
@@ -657,6 +658,10 @@ Com a integração Mercado Livre desligada, o backend ainda valida a URL, inform
   `specs/0049-design-system-2026-no-codigo/evidence/app/`. É pulado sem a variável; para regravar:
   `EVIDENCE_0049=1 npx playwright test tests/visual/evidence-0049.spec.ts --project=viewport-1440`.
   O projeto `viewport-1440` roda só `catalog.spec.ts` e esse spec.
+- **Evidência da 0050:** `tests/visual/evidence-0050.spec.ts` grava as capturas da landing por
+  seção (1440 e 390 px) e o menu aberto em `specs/0050-landing-publica-nova/evidence/app/`. É
+  pulado sem a variável e fora do projeto `viewport-1280`; para regravar:
+  `EVIDENCE_0050=1 npx playwright test tests/visual/evidence-0050.spec.ts --project=viewport-1280`.
 - **Outros specs da 0049:**
   - `catalog.spec.ts` captura as seções do catálogo;
   - `ds-measures.spec.ts` mede estilos calculados, cor do destino ativo, contraste 3:1 e axe/44 px

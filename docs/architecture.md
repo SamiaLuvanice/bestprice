@@ -68,8 +68,8 @@ virtual real, backend/banco reais, disponibilidade do fornecedor ou deploy.
 A spec 0027 aplica o redesign aprovado às telas públicas e autenticadas usando
 Tailwind CSS v4 e componentes shadcn/ui locais em `frontend/src/components/ui/`.
 `components.json`, o alias `@/` e `src/lib/utils.ts` mantêm a geração e combinação
-das classes; os tokens continuam sendo da identidade BestPrice. A landing atual da 0034 comunica assistência e comparação sem prometer ofertas;
-a arte local é ilustrativa e os CTAs protegidos passam pelo login quando necessário. O detalhe carrega
+das classes; os tokens continuam sendo da identidade BestPrice. A landing atual, da 0050, é centrada no monitoramento e usa só dados ilustrativos;
+os CTAs protegidos passam pelo cadastro ou pelo login quando necessário. O detalhe carrega
 Recharts e Chart do shadcn sob demanda, desenha apenas histórico já carregado e
 oferece tooltip decimal exato e tabela textual. Na 0027, nenhuma regra monetária,
 rota HTTP ou persistência foi alterada. A [verificação da 0027](../specs/0027-redesign-figma-shadcn/verification.md)
