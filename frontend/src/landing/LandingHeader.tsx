@@ -47,7 +47,7 @@ export function LandingHeader() {
               <Button asChild size="lg" variant="outline" className="lp-btn-night"><Link to={login}>Entrar</Link></Button>
             </div>
             <SheetDescription className="lp-menu__note">
-              <BestPriceRobot size={32} />Cole um link e eu confiro por você.
+              <BestPriceRobot size={44} />Cole um link e eu confiro por você.
             </SheetDescription>
           </SheetContent>
         </Sheet>

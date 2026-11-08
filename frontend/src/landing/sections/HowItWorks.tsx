@@ -6,9 +6,9 @@ import { sample } from '../content'
 import { useInView, useScrollProgress } from '../motion'
 
 /**
- * 03 · Como funciona (238:422; mobile 239:269). O traço verde percorre 01 → 02 → 03 conforme a
- * rolagem (`--progress`); cada passo mostra seus detalhes ao entrar na área visível, e o robô
- * assume uma pose por passo: ler (neutro), vigiar (escaneando), avisar (alerta).
+ * 03 · Como funciona (238:422; mobile 239:269). Os traços curtos de 01, 02 e 03 se preenchem em
+ * sequência conforme a rolagem (`--progress`), como pede a nota 238:757; cada passo mostra seus
+ * detalhes ao entrar na área visível, e o robô assume uma pose por passo: ler (neutro), vigiar (escaneando), avisar (alerta).
  */
 export function HowItWorks() {
   const steps = useRef<HTMLDivElement>(null)
@@ -22,7 +22,6 @@ export function HowItWorks() {
       <p className="lp-lead"><Responsive desktop="Um passo é seu. Os outros acontecem em segundo plano, todos os dias." mobile="Um passo é seu. Os outros acontecem em segundo plano." /></p>
       </header>
       <div ref={steps} className="lp-steps" data-shown={shown || undefined}>
-        <span className="lp-steps__trace" aria-hidden="true"><span /></span>
         <ol className="lp-steps__list">
         <li className="lp-step" style={{ '--at': 0 } as CSSProperties}>
           <div className="lp-step__art" aria-hidden="true">

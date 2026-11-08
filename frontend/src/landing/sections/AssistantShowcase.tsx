@@ -39,7 +39,7 @@ function Typing() {
 }
 
 function Avatar() {
-  return <span className="lp-chat__avatar"><BestPriceRobot size={28} /></span>
+  return <span className="lp-chat__avatar"><BestPriceRobot size={42} /></span>
 }
 
 /** 06 · BestPrice IA — Assistente de compras (238:618; mobile 239:419). */

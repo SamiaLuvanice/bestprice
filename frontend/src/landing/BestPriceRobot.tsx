@@ -30,8 +30,12 @@ export function BestPriceRobot({ state = 'neutral', size = 120, alt, className =
     data-state={state} aria-hidden={decorative || undefined}>
     <span className="lp-robot__glow" />
     {state === 'scanning' && <>
-      <span className="lp-robot__ring lp-robot__ring--outer" />
-      <span className="lp-robot__ring lp-robot__ring--inner" />
+      {/* Anéis de varredura do componente 237:39 (quadro de 240, arte de 176): traço 1,5 e tracejado
+          6/8 nas unidades do quadro, que crescem com o robô como as instâncias do Figma. */}
+      <svg className="lp-robot__rings" viewBox="0 0 240 240">
+        <circle className="lp-robot__ring lp-robot__ring--outer" cx="120" cy="122" r="117.25" />
+        <circle className="lp-robot__ring lp-robot__ring--inner" cx="120" cy="122" r="102.25" />
+      </svg>
       <span className="lp-robot__beam" />
     </>}
     <img className="lp-robot__art" src={robotArt} alt={alt ?? ''} width={size} height={size}

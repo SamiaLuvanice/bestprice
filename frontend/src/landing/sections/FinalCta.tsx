@@ -8,7 +8,9 @@ import { useDestinations } from '../destinations'
 export function FinalCta() {
   const { monitor, login } = useDestinations()
   return <section id="comecar" className="lp-final lp-night" aria-labelledby="lp-final-title" data-figma-desktop="238:722" data-figma-mobile="239:508" data-companion="comecar">
-    <div className="lp-final__orbits" aria-hidden="true"><span /><span /><span /></div>
+    <div className="lp-final__orbits lp-desktop" aria-hidden="true">
+      <span /><span><svg viewBox="0 0 760 760"><circle cx="380" cy="380" r="379.5" /></svg></span><span />
+    </div>
     <div className="lp-container lp-final__content">
       <BestPriceRobot state="scanning" size={220} className="lp-final__robot" />
       <h2 id="lp-final-title" className="lp-title lp-final__title"><span>Cole o primeiro link.</span> <span>O resto é com o robô.</span></h2>

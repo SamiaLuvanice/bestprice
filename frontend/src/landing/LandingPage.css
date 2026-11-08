@@ -93,9 +93,10 @@
 .lp-robot__art { position: relative; z-index: 2; width: 100%; height: 100%; object-fit: contain; user-select: none; }
 .lp-robot__glow { width: 115%; height: 115%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--chart-5) 45%, transparent), transparent); }
 .lp-robot--alert .lp-robot__glow, .lp-robot--found .lp-robot__glow { background: radial-gradient(closest-side, color-mix(in srgb, var(--action) 45%, transparent), transparent); }
-.lp-robot__ring { border-radius: 50%; border: 1.5px dashed color-mix(in srgb, var(--action) 55%, transparent); }
-.lp-robot__ring--outer { width: 134%; height: 134%; border-color: color-mix(in srgb, var(--action) 30%, transparent); }
-.lp-robot__ring--inner { width: 117%; height: 117%; }
+/* P6: o SVG cobre o quadro do componente (240/176 da arte), cujo centro fica 4/240 abaixo do da arte. */
+.lp-robot__rings { position: absolute; left: 50%; top: 50%; width: calc(100% * 240 / 176); height: calc(100% * 240 / 176); overflow: visible; transform: translate(-50%, calc(-50% + 100% * 4 / 240)); pointer-events: none; }
+.lp-robot__ring { fill: none; stroke: color-mix(in srgb, var(--action) 55%, transparent); stroke-width: 1.5; stroke-dasharray: 6 8; }
+.lp-robot__ring--outer { stroke: color-mix(in srgb, var(--action) 30%, transparent); }
 .lp-robot__beam { align-self: start; width: 80%; height: 62%; margin-top: 88%; clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); background: linear-gradient(color-mix(in srgb, var(--action) 80%, transparent), transparent); opacity: var(--lp-beam-max, .6); }
 .lp-robot__bell { z-index: 3; place-self: start end; display: grid; place-items: center; width: 34%; height: 34%; margin: -6% -6% 0 0; border-radius: 50%; background: var(--action); color: var(--action-foreground); box-shadow: 0 0 0 4px color-mix(in srgb, var(--action) 30%, transparent); }
 .lp-robot__bell svg { width: 50%; height: 50%; }
@@ -116,15 +117,20 @@
 .lp-header .lp-header__menu { display: none; background: var(--night-950); color: var(--sidebar-foreground); }
 .lp-header .lp-header__menu:hover { background: var(--night-800); color: var(--sidebar-foreground); }
 
-/* Menu aberto (239:856): cartão escuro flutuante. */
-.lp-menu[data-slot="sheet-content"] { inset: 12px 12px auto; width: auto; gap: 0; padding: 16px; border: 1px solid var(--night-line); border-radius: var(--radius-xl); background: var(--night-950); color: var(--sidebar-foreground); }
-.lp-menu__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+/* P8 (239:906): painel 358 a 16 px das bordas, p20/20/24/20, filhos a 8 px; topo de 56 (p-bottom 12);
+   links de 59 (p14, texto 24/30 largo, seta 20); 28 px até os botões (52 e 54); robô de 44 com a nota. */
+.lp-menu[data-slot="sheet-content"] { inset: 16px 16px auto; width: auto; gap: 8px; padding: 20px 20px 24px; border: 1px solid var(--night-line); border-radius: 28px; background: var(--night-950); color: var(--sidebar-foreground); }
+.lp-menu__top { display: flex; align-items: center; justify-content: space-between; min-height: 56px; padding-bottom: 12px; }
 .lp-menu__brand, .lp-menu__brand .brand-name, .lp-footer__brand, .lp-footer__brand .brand-name { color: var(--sidebar-foreground); }
 .lp-menu [data-slot="button"].lp-menu__close { background: var(--night-800); color: var(--sidebar-foreground); }
-.lp-menu__nav a { display: flex; align-items: center; justify-content: space-between; min-height: 56px; border-bottom: 1px solid var(--night-line); font-family: var(--lp-display); font-stretch: expanded; font-size: 21px; line-height: 27px; font-weight: 700; color: var(--sidebar-foreground); text-decoration: none; }
-.lp-menu__nav a svg { width: 18px; height: 18px; color: var(--night-muted); }
-.lp-menu__actions { display: grid; gap: var(--space-2); margin-top: var(--space-5); }
-.lp-menu__note { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); color: var(--night-muted); }
+.lp-menu__nav { display: grid; gap: 8px; }
+.lp-menu__nav a { display: flex; align-items: center; justify-content: space-between; min-height: 59px; padding: 14px 0; border-bottom: 1px solid var(--night-line); font-family: var(--lp-display); font-stretch: expanded; font-size: 24px; line-height: 30px; font-weight: 700; color: var(--sidebar-foreground); text-decoration: none; }
+.lp-menu__nav a svg { width: 20px; height: 20px; stroke-width: 1.67; color: var(--night-muted); flex-shrink: 0; }
+.lp-menu__actions { display: grid; gap: 8px; margin-top: 20px; }
+.lp-menu [data-slot="button"][data-size="lg"] { height: 52px; padding: 16px 26px; }
+.lp-menu [data-slot="button"][data-size="lg"].lp-btn-night { height: 54px; }
+.lp-menu__note { display: flex; align-items: center; gap: 4px; padding-top: 8px; color: var(--night-muted); }
+.lp-menu__note .lp-robot { margin: 8px; }
 
 /* ---------- 01 · Hero (1440×900; texto 700 px em x120 y200, gap 24) ---------- */
 .lp-hero { position: relative; min-height: 900px; padding: 200px 0 70px; overflow: hidden; background: var(--background); }
@@ -211,9 +217,11 @@
 .lp-doubt { display: inline-flex; align-items: center; gap: 8px; width: max-content; max-width: 100%; padding: 10px 14px; border-radius: var(--radius-pill); background: var(--surface); }
 .lp-doubt svg { width: 16px; height: 16px; color: var(--primary); flex-shrink: 0; }
 .lp-doubt--second { margin-left: auto; }
-.lp-moment__card { display: grid; gap: 2px; width: max-content; padding: 10px 14px; border-radius: 14px; background: var(--surface); }
+/* P1 (238:400): posições do quadro. O cartão de quinta (298 px) passa da borda direita da cena, que
+   o recorta, como no Figma. As coordenadas descontam a borda de 1 px da cena. */
+.lp-moment__card { position: absolute; left: 27px; top: 29px; display: grid; gap: 6px; width: max-content; padding: 16px 20px; border-radius: 18px; background: var(--surface); }
 .lp-moment__card .lp-mono { color: var(--muted-foreground); }
-.lp-moment__card--late { position: relative; margin: -6px -10px 0 auto; background: var(--background); border: 1px solid var(--border); box-shadow: var(--shadow-2); grid-template-columns: auto auto; column-gap: 12px; align-items: end; }
+.lp-moment__card--late { left: 109px; top: 99px; width: 298px; background: var(--background); border: 1px solid var(--border); box-shadow: var(--shadow-2); grid-template-columns: max-content max-content; column-gap: 10px; align-items: center; justify-content: start; }
 .lp-moment__card--late .lp-mono { grid-column: 1 / -1; }
 /* virada 1200×229: H24, p40/48, robô 149, fala 560 (V8), seta 56. */
 .lp-turn { position: relative; display: flex; align-items: center; gap: 24px; padding: 40px 48px; overflow: hidden; border-radius: var(--radius-2xl) var(--radius-2xl) 0 0; background:
@@ -235,8 +243,6 @@
 .lp-how .lp-lead { max-width: 600px; }
 .lp-steps { position: relative; --progress: 0; }
 .lp-steps__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px; }
-.lp-steps__trace { position: absolute; left: 0; right: 0; top: 274px; height: 2px; background: var(--night-line); }
-.lp-steps__trace > span { display: block; height: 100%; background: var(--action); box-shadow: 0 0 12px var(--action); transform-origin: left; transform: scaleX(var(--progress)); }
 .lp-step { display: flex; flex-direction: column; gap: 24px; }
 .lp-step__art { position: relative; display: grid; justify-items: center; align-items: start; padding-top: 28px; height: 260px; border: 1px solid var(--night-line); border-radius: var(--radius-xl); background: var(--night-900); overflow: hidden; }
 .lp-step__checks { position: absolute; top: 22px; right: 22px; display: grid; padding: 8px 10px; border: 1px solid var(--night-line); border-radius: 10px; background: var(--night-800); color: var(--action); }
@@ -252,11 +258,14 @@
 .lp-step__reached > svg { width: 18px; height: 18px; color: var(--primary); flex-shrink: 0; }
 .lp-step__reached > span { display: grid; }
 .lp-step__reached .lp-mono { color: var(--muted-foreground); }
-.lp-step__meta { display: flex; align-items: center; gap: 10px; color: var(--night-muted); }
+.lp-step__meta { display: flex; align-items: center; gap: 12px; color: var(--night-muted); }
 .lp-step__number { color: var(--action); }
 .lp-step__number--pink { color: var(--sidebar-primary); }
-.lp-step__rule { width: 40px; height: 1px; background: var(--action); }
-.lp-step__rule--pink { background: var(--sidebar-primary); }
+/* P2 (238:442, nota 238:757): o traço 01 → 03 são os três traços curtos do quadro (40 × 1, cor a 60%).
+   A rolagem (--progress) os preenche em sequência, um terço cada; no estado final, os três cheios. */
+.lp-step__rule { --rule: var(--action); position: relative; width: 40px; height: 1px; background: var(--night-line); }
+.lp-step__rule::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--rule) 60%, transparent); transform-origin: left; transform: scaleX(clamp(0, var(--progress) * 3 - var(--at) * 2, 1)); }
+.lp-step__rule--pink { --rule: var(--sidebar-primary); }
 .lp-step > p:last-child { color: var(--night-muted); }
 .lp-how .lp-target { color: var(--sidebar-primary); }
 
@@ -291,7 +300,9 @@
 .lp-chart__target-label { position: absolute; left: 0; top: var(--target-y); transform: translateY(-50%); padding: 2px 8px; border-radius: 6px; background: var(--sidebar-primary); color: var(--night-950); }
 /* O último ponto fica na borda direita do gráfico: o robô pousa logo à esquerda dele. */
 .lp-demo__lander { position: absolute; right: 12px; top: var(--last-y); transform: translateY(-90%); z-index: 2; opacity: clamp(0, (var(--progress) - .85) * 8, 1); }
-.lp-demo__lander .lp-robot__found { margin: -34% 0 0 0; place-self: start end; font-size: 10px; line-height: 12px; padding: 2px 6px; }
+/* A1: o selo é mais largo que o robô; ancorado pela direita do robô, ele cresce para a esquerda e
+   não passa da borda do painel (que recorta o conteúdo) em nenhuma largura. */
+.lp-demo__lander .lp-robot__found { position: absolute; top: 0; right: 0; margin: -34% 0 0 0; font-size: 10px; line-height: 12px; padding: 2px 6px; }
 .lp-demo__tip { position: absolute; right: 12%; top: calc(var(--target-y) - 6px); z-index: 2; display: grid; padding: 10px 14px; border-radius: 12px; background: var(--background); color: var(--color-text); box-shadow: var(--shadow-2); opacity: clamp(0, (var(--progress) - .85) * 8, 1); }
 .lp-demo__tip .lp-mono { color: var(--muted-foreground); }
 .lp-demo__months { display: flex; justify-content: space-between; margin-top: var(--space-3) !important; color: var(--night-muted); }
@@ -337,7 +348,9 @@
 .lp-chat__title > span:last-child > span { color: var(--muted-foreground); }
 .lp-chat__title > span:last-child > .lp-chat__history { color: var(--primary); }
 .lp-chat__avatar { display: grid; place-items: center; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: var(--night-950); overflow: hidden; }
-.lp-chat__avatar .lp-robot__glow { display: none; }
+/* P4 (238:659): disco de 40 px que recorta o robô (arte de 42 px, 1 px acima do centro) com o brilho rosa. */
+.lp-chat__avatar .lp-robot { margin-top: -2px; }
+.lp-chat__avatar .lp-robot__glow { background: radial-gradient(closest-side, color-mix(in srgb, var(--chart-5) 35%, transparent), transparent); }
 .lp-chat__messages { display: grid; gap: 20px; align-content: start; flex: 1; }
 .lp-msg--user { justify-self: end; max-width: 460px; padding: 14px 18px; border-radius: 18px 18px 4px 18px; background: var(--night-950); color: var(--sidebar-foreground); }
 .lp-msg-row { display: flex; gap: 12px; align-items: flex-start; }
@@ -373,8 +386,9 @@
 .lp-features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px; }
 .lp-features li { display: flex; flex-direction: column; gap: 10px; }
 .lp-features p { color: var(--muted-foreground); }
-.lp-features__icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: var(--accent); color: var(--primary); }
-.lp-features__icon svg { width: 16px; height: 16px; }
+/* P3 (238:682; mobile 239:468): ícone num quadrado branco com borda rosa clara. */
+.lp-features__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); background: var(--background); color: var(--primary); }
+.lp-features__icon svg { width: 20px; height: 20px; }
 /* ponte 1200×141: H20, p20/24/20/20, r28; robô 101; texto 633 (V4); botão lg. */
 .lp-bridge { display: flex; align-items: center; gap: 20px; padding: 20px 24px 20px 20px; border-radius: 28px; background: var(--night-950); color: var(--sidebar-foreground); }
 .lp-bridge__robot { margin: 13px; }
@@ -390,8 +404,9 @@
 .lp-faq__item { border-color: var(--border); }
 .lp-faq [data-slot="accordion-trigger"].lp-faq__trigger { align-items: center; min-height: 44px; padding: 24px 0; color: var(--color-text); }
 .lp-faq [data-slot="accordion-trigger"].lp-faq__trigger:hover { text-decoration: none; color: var(--primary); }
-.lp-faq__icon { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: var(--surface); color: var(--color-text); transition: background-color var(--lp-faq) ease-out, color var(--lp-faq) ease-out; }
-.lp-faq__icon svg { width: 16px; height: 16px; }
+/* P5 (237:232/237:240): círculo de 36 px com ícone de 18 px, traço 2. */
+.lp-faq__icon { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--surface); color: var(--color-text); transition: background-color var(--lp-faq) ease-out, color var(--lp-faq) ease-out; }
+.lp-faq__icon svg { width: 18px; height: 18px; stroke-width: 2; }
 .lp-faq__minus { display: none; }
 [data-state="open"] > .lp-faq__icon { background: var(--night-950); color: var(--sidebar-foreground); }
 [data-state="open"] > .lp-faq__icon .lp-faq__plus { display: none; }
@@ -405,13 +420,15 @@
 .lp-final { position: relative; padding: 120px 0 140px; overflow: hidden; text-align: center; background:
   radial-gradient(420px 340px at 50% 25%, color-mix(in srgb, var(--primary) 28%, transparent), transparent),
   radial-gradient(360px 360px at 80% 50%, color-mix(in srgb, var(--action) 12%, transparent), transparent), var(--night-950); }
-.lp-final__orbits { position: absolute; left: 50%; top: 46%; width: 0; height: 0; pointer-events: none; }
-.lp-final__orbits span { position: absolute; left: 50%; top: 50%; border: 1px solid var(--night-line); border-radius: 50%; transform: translate(-50%, -50%); }
-.lp-final__orbits span::after { content: ""; position: absolute; top: -3px; left: 50%; width: 6px; height: 6px; border-radius: 50%; background: var(--action); }
-.lp-final__orbits span:nth-child(1) { width: 340px; height: 340px; }
-.lp-final__orbits span:nth-child(2) { width: 620px; height: 620px; }
-.lp-final__orbits span:nth-child(2)::after { background: var(--sidebar-primary); }
-.lp-final__orbits span:nth-child(3) { width: 900px; height: 900px; }
+/* P6 (238:723): três órbitas brancas finas centradas 230 px abaixo do topo, no eixo do robô: 480 px
+   (6 %), 760 px tracejada 4/10 (4,5 %) e 1080 px (3 %). Sem pontos. O quadro mobile não tem órbitas. */
+.lp-final__orbits { position: absolute; left: 50%; top: 230px; width: 0; height: 0; pointer-events: none; }
+.lp-final__orbits span { position: absolute; left: 50%; top: 50%; border: 1px solid color-mix(in srgb, var(--sidebar-foreground) 6%, transparent); border-radius: 50%; transform: translate(-50%, -50%); }
+.lp-final__orbits span:nth-child(1) { width: 480px; height: 480px; }
+.lp-final__orbits span:nth-child(2) { width: 760px; height: 760px; border: 0; }
+.lp-final__orbits span:nth-child(2) svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lp-final__orbits circle { fill: none; stroke: color-mix(in srgb, var(--sidebar-foreground) 4.5%, transparent); stroke-width: 1; stroke-dasharray: 4 10; }
+.lp-final__orbits span:nth-child(3) { width: 1080px; height: 1080px; border-color: color-mix(in srgb, var(--sidebar-foreground) 3%, transparent); }
 .lp-final__content { position: relative; display: flex; flex-direction: column; align-items: center; gap: 28px; }
 .lp-final__robot { margin: 40px; }
 .lp-final__title span { display: block; }
@@ -502,7 +519,6 @@
 @media (max-width: 1023.98px) {
   .lp-header__nav { gap: var(--space-4); }
   .lp-scenes, .lp-steps__list, .lp-features { grid-template-columns: minmax(0, 1fr); }
-  .lp-steps__trace { display: none; }
   .lp-demo__panel { grid-template-columns: minmax(0, 1fr); }
   .lp-demo__summary { border-right: 0; border-bottom: 1px solid var(--night-line); }
   .lp-why__grid, .lp-faq__grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "intro" "list" "quote"; gap: 32px; }
@@ -639,8 +655,9 @@
   .lp-chat__note { margin-top: 0 !important; }
   /* recursos: V18; linhas H14 com ícone 44 à esquerda. */
   .lp-features { gap: 18px; }
-  .lp-features li { display: grid; grid-template-columns: 44px minmax(0, 1fr); grid-template-areas: "icon title" "icon text"; column-gap: 14px; row-gap: 0; align-items: start; }
-  .lp-features__icon { grid-area: icon; width: 44px; height: 44px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); background: var(--background); }
+  .lp-features li { display: grid; grid-template-columns: 40px minmax(0, 1fr); grid-template-areas: "icon title" "icon text"; column-gap: 14px; row-gap: 0; align-items: start; }
+  .lp-features__icon { grid-area: icon; width: 40px; height: 40px; border-radius: 12px; }
+  .lp-features__icon svg { width: 18px; height: 18px; }
   .lp-features h3 { grid-area: title; font-size: 17px; line-height: 22px; }
   .lp-features p { grid-area: text; font-size: 14px; line-height: 20px; }
   /* ponte 358×178: V14, p20, r24. */
@@ -661,7 +678,9 @@
   .lp-final__robot { --robot-size: 141px !important; margin: 25px; }
   .lp-final__title { font-size: 30px; line-height: 34px; letter-spacing: -.02em; }
   .lp-final__title span { display: inline; }
-  .lp-final__actions { display: grid; width: 100%; gap: 10px; }
+  /* P7 (239:513): os dois botões ocupam a largura toda (358 px em 390); a coluna única estica, em vez
+     de herdar o justify-content: center do desktop. */
+  .lp-final__actions { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; gap: 10px; }
 
   /* Rodapé: V16, p32/16/120/16; links H20. */
   .lp-footer__inner { flex-direction: column; align-items: flex-start; gap: 16px; }
