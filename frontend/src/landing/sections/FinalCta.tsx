@@ -10,7 +10,7 @@ export function FinalCta() {
   return <section id="comecar" className="lp-final lp-night" aria-labelledby="lp-final-title" data-figma-desktop="238:722" data-figma-mobile="239:508" data-companion="comecar">
     <div className="lp-final__orbits" aria-hidden="true"><span /><span /><span /></div>
     <div className="lp-container lp-final__content">
-      <BestPriceRobot state="scanning" size={150} className="lp-final__robot" />
+      <BestPriceRobot state="scanning" size={220} className="lp-final__robot" />
       <h2 id="lp-final-title" className="lp-title lp-final__title"><span>Cole o primeiro link.</span> <span>O resto é com o robô.</span></h2>
       <p className="lp-lead">Comece com um único link. Depois disso, quem confere é ele.</p>
       <div className="lp-final__actions" data-companion-avoid>

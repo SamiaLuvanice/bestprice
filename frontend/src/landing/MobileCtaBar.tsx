@@ -7,7 +7,7 @@ import { useDestinations } from './destinations'
 export function MobileCtaBar() {
   const { monitor } = useDestinations()
   return <aside className="lp-mobile-bar lp-mobile" aria-label="Começar a monitorar" data-figma-mobile="239:523">
-    <BestPriceRobot size={36} />
+    <BestPriceRobot size={35} className="lp-mobile-bar__robot" />
     <p>Pronto para parar de conferir?</p>
     <Button asChild><Link to={monitor}>Começar</Link></Button>
   </aside>

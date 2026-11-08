@@ -15,9 +15,11 @@ export function Demo() {
   useScrollProgress(chart)
   return <section id="demonstracao" className="lp-demo lp-night" aria-labelledby="lp-demo-title" data-figma-desktop="238:485" data-figma-mobile="239:330" data-companion="demonstracao">
     <div className="lp-container">
+      <header className="lp-section-head">
       <p className="lp-eyebrow lp-eyebrow--green">Demonstração</p>
-      <h2 id="lp-demo-title" className="lp-title">Um anúncio. Todo o histórico. Nenhuma planilha.</h2>
+      <h2 id="lp-demo-title" className="lp-title lp-demo__title"><span>Um anúncio. Todo o histórico.</span> <span>Nenhuma planilha.</span></h2>
       <p className="lp-lead lp-desktop">É assim que um produto aparece depois que o BestPrice começa a acompanhar.</p>
+      </header>
       <article className="lp-demo__panel" aria-label="Exemplo ilustrativo de produto acompanhado">
         <div className="lp-demo__summary">
           <div className="lp-demo__product">

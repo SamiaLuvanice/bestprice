@@ -23,7 +23,7 @@ export function WhyBestPrice() {
         })}
       </ul>
       <figure className="lp-why__quote">
-        <BestPriceRobot size={96} />
+        <BestPriceRobot size={123} className="lp-why__robot" />
         <figcaption className="lp-bubble"><span>Não compro nada por você.</span> <span>Só aviso na hora certa.</span></figcaption>
       </figure>
     </div>

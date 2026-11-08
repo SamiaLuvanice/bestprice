@@ -79,11 +79,11 @@ export function AssistantShowcase() {
                 <p>{assistantCopy.webRange}</p>
                 <p className="lp-label">Fontes da pesquisa na web</p>
                 <ol className="lp-sources">
-                  <li><span>1</span>loja-a.com.br</li>
-                  <li><span>2</span>loja-b.com.br</li>
-                  <li><span>3</span>revista-tech.com</li>
+                  <li><span className="lp-sources__n">1</span><span>loja-a.com.br</span></li>
+                  <li><span className="lp-sources__n">2</span><span>loja-b.com.br</span></li>
+                  <li><span className="lp-sources__n">3</span><span>revista-tech.com</span></li>
                 </ol>
-                <p className="lp-suggest"><WandSparkles aria-hidden="true" />Sugestões de pesquisa do Google: <span>notebook 16gb ssd 512gb</span></p>
+                <p className="lp-suggest"><WandSparkles aria-hidden="true" /><span>Sugestões de pesquisa do Google:</span> <span className="lp-suggest__query">notebook 16gb ssd 512gb</span></p>
                 <p className="lp-msg__meta"><span className="lp-unverified"><CircleAlert aria-hidden="true" />Não verificado</span><span className="lp-mono">Pesquisado em hoje, 14:32</span></p>
               </div>
               </div>
@@ -119,7 +119,7 @@ export function AssistantShowcase() {
       })}</ul>
 
       <div className="lp-bridge" data-companion-avoid>
-        <BestPriceRobot state="found" size={56} />
+        <BestPriceRobot state="found" size={74} className="lp-bridge__robot" />
         <div className="lp-bridge__text">
           <p className="lp-bridge__title"><span>Decidiu qual anúncio?</span> <span>Agora é comigo.</span></p>
           <p className="lp-desktop">Cole o link do Mercado Livre e eu acompanho o preço até chegar no seu alvo.</p>

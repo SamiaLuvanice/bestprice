@@ -10,7 +10,7 @@ import { faq } from '../content'
 export function Faq() {
   return <section id="perguntas" className="lp-faq" aria-labelledby="lp-faq-title" data-figma-desktop="238:712" data-figma-mobile="239:499" data-companion="perguntas">
     <div className="lp-container lp-faq__grid">
-      <div>
+      <div className="lp-section-head">
         <p className="lp-eyebrow">Perguntas frequentes</p>
         <h2 id="lp-faq-title" className="lp-title"><Responsive desktop="O que você precisa saber antes de colar o primeiro link." mobile="Antes de colar o primeiro link." /></h2>
       </div>
