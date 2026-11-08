@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -36,8 +36,9 @@ describe('link trazido da landing no monitoramento', () => {
     expect(field()).toBeVisible()
     expect(field()).toHaveValue(link)
     await waitFor(() => expect(field()).toHaveFocus())
-    // Espera os quadros de foco da página; o campo continua com o foco.
-    await new Promise((resolve) => window.setTimeout(resolve, 50))
+    // Espera os quadros de foco já agendados pela página (rAF do jsdom em ordem de chegada): dois
+    // quadros depois deles, o campo continua com o foco. Sem relógio real, o teste não depende da carga.
+    await act(() => new Promise<void>((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve()))))
     expect(field()).toHaveFocus()
     expect(mockFetch.mock.calls.some(([, init]) => (init?.method ?? 'GET') !== 'GET')).toBe(false)
     expect(mockFetch.mock.calls.some(([url, init]) => String(url).includes('MLB-3333333333') || String(init?.body ?? '').includes('MLB-3333333333'))).toBe(false)
@@ -72,6 +73,18 @@ describe('link trazido da landing no monitoramento', () => {
     await screen.findByRole('heading', { level: 1, name: 'Seus produtos' })
     expect(field()).toHaveValue('')
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
+  })
+
+  // Revisão (rodada 4): no endereço legado /produtos (área não embutida no shell) o link também é
+  // mostrado, preenchido e com foco — ele não é consumido sem aparecer.
+  it('no endereço legado /produtos o link também aparece preenchido', async () => {
+    savePendingTrackLink(link)
+    window.history.replaceState(null, '', '/produtos')
+    fakeApi(() => undefined, dashboardWith([trackedFixture()]))
+    render(<App clock={clock} />)
+    await screen.findByRole('heading', { level: 1, name: 'Seus produtos' })
+    await waitFor(() => expect(field()).toHaveValue(link))
+    await waitFor(() => expect(field()).toHaveFocus())
   })
 
   it('sem link pendente, nada muda', async () => {

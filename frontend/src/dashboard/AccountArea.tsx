@@ -626,11 +626,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
   }, [focusAfterStop, location.pathname, list.loaded, list.items.length, loading])
 
   // Campo de link: hero do Início ou, em Produtos, ação abaixo do título único "Seus produtos".
-  function trackForm(embedded: boolean) {
+  // `inToolbar`: o formulário compacto da seção Produtos (não confundir com a prop `embedded` da área).
+  // É nele que o link trazido da landing aparece, tanto em /app/monitoring quanto em /produtos.
+  function trackForm(inToolbar: boolean) {
     return <HeroTrackForm onSubmit={track} submitting={submitting}
-      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={embedded ? undefined : pageHeading}
-      inputRef={linkInput} priority={isEmpty} embedded={embedded} compact={embedded && !isEmpty}
-      initialValue={embedded ? initialLink ?? undefined : undefined}
+      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={inToolbar ? undefined : pageHeading}
+      inputRef={linkInput} priority={isEmpty} embedded={inToolbar} compact={inToolbar && !isEmpty}
+      initialValue={inToolbar ? initialLink ?? undefined : undefined}
       onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
       {isEmpty && <div className="empty-state">
         <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
