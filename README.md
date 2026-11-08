@@ -15,8 +15,9 @@ Pré-requisitos: Python 3.13, uv, Node.js 22, npm e Docker Compose.
 `/` é a landing pública, inclusive com sessão válida. O login leva a `/app/dashboard`, ou retorna à rota protegida solicitada. A área usa `/app/assistant`, `/app/compare` e `/app/history`; conversas e comparações salvas têm o ID no caminho. O monitoramento continua em `/app/monitoring`, com painel em `/app/monitoring/overview` e alertas em `/app/monitoring/alerts`; `/produtos`, `/produtos/:id` e `/alertas` permanecem funcionais. As telas podem ser abertas por URL, recarregadas e percorridas com voltar/avançar. Nginx entrega `index.html` aos caminhos da SPA e mantém `/api/*` no proxy. A revisão 0034 foi verificada localmente, sem promoção ou validação em Stage.
 
 A spec 0027 aplica o redesign aprovado com componentes locais shadcn/ui, Tailwind
-CSS v4 e Recharts/shadcn Chart no detalhe. A landing pública em `/` usa ilustrações
-identificadas; os CTAs da 0034 levam à área protegida, com login quando necessário. A conta mantém os dados e
+CSS v4 e Recharts/shadcn Chart no detalhe. A landing pública em `/` (spec 0050) segue os quadros
+do Figma com dados apenas ilustrativos; os CTAs de monitoramento levam ao cadastro ou
+ao login e, com sessão, direto a `/app/monitoring`. A conta mantém os dados e
 operações da API. O gráfico informa histórico parcial e permite consultar os
 valores exatos. Veja o [guia frontend](docs/apps/frontend.md) para componentes,
 referências visuais e limites.

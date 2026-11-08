@@ -176,7 +176,7 @@ it('login ignora retorno externo e não entra em ciclo com /login', async () => 
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
   await waitFor(() => expect(window.location.pathname).toBe('/'))
-  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/ })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Pare de dar F5 no preço.', level: 1 })).toBeInTheDocument()
 })
 
 it('abrir notificação navega ao monitoramento sem marcá-la como lida', async () => {

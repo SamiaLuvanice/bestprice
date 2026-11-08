@@ -44,7 +44,8 @@ test('inicial: composição, imagem original, navegação e acessibilidade', asy
   await expect(page.getByText('Sobre a IA e seus dados', { exact: true })).toHaveCount(0)
   const robot = page.getByRole('img', { name: 'Robô do assistente BestPrice IA' })
   await expect(robot).toBeVisible()
-  expect(await robot.evaluate((element: HTMLImageElement) => ({ loaded: element.complete && element.naturalWidth > 0, proportion: element.clientWidth / element.clientHeight, original: element.naturalWidth / element.naturalHeight }))).toMatchObject({ loaded: true })
+  // Visível não garante decodificada: sob carga a imagem de 1,1 MB ainda carrega após o toBeVisible.
+  await expect.poll(() => robot.evaluate((element: HTMLImageElement) => element.complete && element.naturalWidth > 0)).toBe(true)
   const geometry = await robot.evaluate((element: HTMLImageElement) => ({ width: element.clientWidth, height: element.clientHeight, originalWidth: element.naturalWidth, originalHeight: element.naturalHeight }))
   expect(Math.abs(geometry.width / geometry.height - geometry.originalWidth / geometry.originalHeight)).toBeLessThan(0.01)
   await fit(page)

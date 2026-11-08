@@ -149,18 +149,24 @@ test.describe('quadros do cadastro (1440 e 390 px)', () => {
     }
   })
 
-  test('landing com Criar conta · desktop e menu mobile', async ({ page }, info) => {
+  // 0050: "Criar conta" saiu do cabeçalho da landing (spec 0050, Figma 238:295); com o cadastro
+  // ligado, "Começar a monitorar" leva ao cadastro com retorno ao monitoramento.
+  test('landing com cadastro ligado · desktop e menu mobile', async ({ page }, info) => {
     onlyOnce(info.project.name)
     await page.setViewportSize({ width: 1440, height: 1040 })
     await mockApi(page)
     await page.goto('/')
-    const header = page.locator('.research-public-header')
-    await expect(header.getByRole('link', { name: 'Criar conta' })).toBeVisible()
+    const header = page.locator('.lp-header')
+    const start = header.getByRole('link', { name: 'Começar a monitorar' })
+    await expect(start).toBeVisible()
+    await expect(start).toHaveAttribute('href', '/cadastro?returnTo=%2Fapp%2Fmonitoring')
     await expect(header).toHaveScreenshot('landing-header-desktop.png')
     await page.setViewportSize({ width: 390, height: 844 })
     await page.getByRole('button', { name: 'Abrir menu' }).click()
-    await expect(header.getByRole('link', { name: 'Criar conta' })).toBeVisible()
-    await expect(header).toHaveScreenshot('landing-menu-mobile.png')
+    const menu = page.getByRole('dialog', { name: 'Menu' })
+    await expect(menu.getByRole('link', { name: /^Começar a monitorar/ })).toHaveAttribute('href', '/cadastro?returnTo=%2Fapp%2Fmonitoring')
+    await menu.evaluate((dialog) => Promise.all(dialog.getAnimations({ subtree: true }).map((animation) => animation.finished)))
+    await expect(menu).toHaveScreenshot('landing-menu-mobile.png')
   })
 })
 
@@ -215,10 +221,14 @@ test.describe('Criar conta no login e na landing em todas as larguras', () => {
     await mockApi(page)
     for (const path of ['/login', '/']) {
       await page.goto(path)
-      const link = page.getByRole('link', { name: 'Criar conta' })
+      // 0050: na landing, o caminho para o cadastro é "Começar a monitorar" (cabeçalho ou menu).
       const menu = page.getByRole('button', { name: 'Abrir menu' })
       if (path === '/' && await menu.isVisible()) await menu.click()
+      const link = path === '/'
+        ? page.getByRole('link', { name: /^Começar a monitorar/ }).filter({ visible: true }).first()
+        : page.getByRole('link', { name: 'Criar conta' })
       await expect(link).toBeVisible()
+      if (path === '/') await expect(link).toHaveAttribute('href', '/cadastro?returnTo=%2Fapp%2Fmonitoring')
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), path).toBe(true)
       expect((await link.boundingBox())!.height, path).toBeGreaterThanOrEqual(44)
       expect((await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations).toEqual([])

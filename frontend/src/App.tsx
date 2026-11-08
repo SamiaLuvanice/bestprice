@@ -7,6 +7,7 @@ import { NotFoundPage } from './NotFoundPage'
 import { LandingPage } from './landing/LandingPage'
 import { AccountArea } from './dashboard/AccountArea'
 import { safeReturnTo } from './navigation/returnTo'
+import { discardPendingTrackLink } from './navigation/pendingTrackLink'
 import { Brand } from './components/Brand'
 import { ResearchArea } from './features/research/ResearchArea'
 import { useSignupAvailability } from './auth/useSignupAvailability'
@@ -96,6 +97,8 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   }, [])
 
   const endSession = useCallback((text: string | null) => {
+    // 0050: o link do hero não sobrevive ao fim da sessão (outra conta pode entrar nesta aba).
+    discardPendingTrackLink()
     setUser(null)
     setGuestMessage(text)
     setSessionState('guest')
@@ -104,6 +107,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   }, [navigate])
 
   const loggedOut = useCallback(() => {
+    discardPendingTrackLink()
     setLogoutRedirect(true)
     setUser(null)
     setGuestMessage(null)
@@ -138,7 +142,9 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   if (import.meta.env.DEV && DesignSystemCatalog && location.pathname === catalogPath) {
     return <Suspense fallback={<p role="status">Carregando catálogo…</p>}><DesignSystemCatalog /></Suspense>
   }
-  if (location.pathname === '/') return <LandingPage signupAvailable={signup.availability === 'enabled'} />
+  // 0050: "com sessão" só depois da confirmação; carregando ou com falha, a landing age como sem sessão.
+  if (location.pathname === '/') return <LandingPage authenticated={sessionState === 'ready' && user !== null}
+    signupAvailable={signup.availability === 'enabled'} />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
     <header className="masthead"><Brand /></header>
@@ -175,9 +181,11 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   const researchArea = user ? <ResearchArea key={user.id} user={user} clock={clock} onUnauthenticated={endSession} onLoggedOut={loggedOut} />
     : <Navigate to={logoutRedirect ? '/login' : `/login?returnTo=${encodeURIComponent(location.pathname)}`} replace />
 
+  // 0050: quem já tem sessão em Entrar ou Criar conta segue ao returnTo seguro, ou ao destino padrão.
+  const signedInTarget = postLoginTarget ?? (requestedReturnTo === '/' ? '/app/dashboard' : requestedReturnTo)
   return <Routes>
-    <Route path="/login" element={user ? <Navigate to={postLoginTarget ?? '/app/dashboard'} replace /> : loginPage} />
-    <Route path="/cadastro" element={user ? <Navigate to={postLoginTarget ?? '/app/dashboard'} replace /> : signupPage} />
+    <Route path="/login" element={user ? <Navigate to={signedInTarget} replace /> : loginPage} />
+    <Route path="/cadastro" element={user ? <Navigate to={signedInTarget} replace /> : signupPage} />
     <Route path="/app" element={user ? <Navigate to="/app/dashboard" replace /> : researchArea} />
     <Route path="/app/*" element={researchArea} />
     <Route path="/" element={protectedArea} />
