@@ -58,7 +58,7 @@ it.each(['HTTP 503', 'falha de rede'])('mantém o login sem rodapé durante a se
 })
 
 it.each([
-  { path: '/', title: /Compre com.*mais clareza/i },
+  { path: '/', title: 'Pare de dar F5 no preço.' },
   { path: '/endereco-inexistente', title: 'Este endereço saiu do radar.' },
 ])('preserva o rodapé público em $path', async ({ path, title }) => {
   guestApi()

@@ -42,6 +42,10 @@ describe('conteúdo da interface', () => {
         const content = label === 'preço fixo' && file === join(sourceRoot, 'features', 'research', 'AssistantPage.tsx')
           ? text.replace("'Ex.: notebook para estudar, até R$ 3.500'", "''")
           : text
+        // 0050: os valores ilustrativos da landing (quadros do Figma, dados fixos e marcados como
+        // ilustrativos) ficam todos em landing/content.ts. A exceção vale só para esse arquivo e só
+        // para 'preço fixo'; as seções da landing continuam sujeitas à regra.
+        if (label === 'preço fixo' && file === join(sourceRoot, 'landing', 'content.ts')) return false
         return pattern.test(content)
       }).map(([label]) => `${relative(sourceRoot, file)}: ${label}`)
     })
