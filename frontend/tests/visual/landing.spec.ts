@@ -405,6 +405,8 @@ test('AC12 — menu mobile: itens do quadro, foco preso, Esc, fechar e âncora d
     await toggle.focus()
     await page.keyboard.press('Enter')
     await expect(menu).toBeVisible()
+    // O menu desliza do topo: interage depois que a entrada termina (sob carga ela demora mais).
+    await menu.evaluate((dialog) => Promise.all(dialog.getAnimations({ subtree: true }).map((animation) => animation.finished)))
     await expect(menu.getByRole('navigation', { name: 'Menu' }).getByRole('link')).toHaveText(['Como funciona', 'Demonstração', 'Assistente', 'Perguntas'])
     await expect(menu.getByRole('link', { name: /^Começar a monitorar/ })).toBeVisible()
     await expect(menu.getByRole('link', { name: 'Entrar' })).toBeVisible()
