@@ -61,7 +61,7 @@ e "VT" quer dizer Vitest (G2).
 | AC | Evidência | Situação |
 |---|---|---|
 | AC01 Seções e textos | VT `src/landing/LandingPage.content.test.tsx:58` (ordem das seções e textos dos dois quadros contra o snapshot), `:73` (selo ajustado), `:80` (respostas da FAQ), `:91` (menu 239:856), `:100` (título da aba, marca sem "AI", um único h1). PW `tests/visual/landing-metrics.spec.ts:29` (cada texto visível com tamanho, entrelinha e peso do Figma em 1440 e 390 px). Conferência independente da QA no Chromium: **332/332 textos visíveis** na seção certa, mais a ordem visível das seções igual à dos quadros (lista no Anexo A) | **Demonstrado** |
-| AC02 Fidelidade visual | 21 pares em `evidence/figma/` × `evidence/app/`. A QA recapturou as 18 seções pelo mesmo procedimento: **0 px de diferença** em relação às capturas versionadas, ou seja, as evidências refletem o código atual. Tabela por seção abaixo | **Parcial**: há divergências ainda sem aprovação e um defeito (A1) |
+| AC02 Fidelidade visual | 21 pares em `evidence/figma/` × `evidence/app/`. A QA recapturou as 18 seções pelo mesmo procedimento: **0 px de diferença** em relação às capturas versionadas, ou seja, as evidências refletem o código atual. Tabela por seção abaixo | **Demonstrado** depois das correções pós-QA: A1 corrigido e P1–P8 alinhados ao Figma (seção "Correções após a QA"); as divergências que restam estão aprovadas |
 | AC03 Ações | VT `src/landing/LandingPage.test.tsx:53/64/71` (5 combinações de sessão × cadastro) e `src/App.landing.test.tsx:19/25/31` (o `App` repassa os estados). PW `tests/visual/landing.spec.ts:96` (7 colunas: cadastro ligado, desligado, carregando e com falha; sessão em verificação e com falha; com sessão), `:118` (âncoras), `:127` (Entrar concluído → `/app/dashboard`), `:140/:170` (monitorar concluído → monitoramento). VT `src/App.test.tsx` (com sessão, `/login` e `/cadastro` respeitam o `returnTo` seguro) | **Demonstrado** (API simulada) |
 | AC04 Link levado pelo login | PW `landing.spec.ts:140` (link aparado; recarregar Criar conta; trocar para Entrar; voltar e avançar; recarregar Entrar; concluir Entrar → `/app/monitoring` com o valor e o foco; nenhum POST `/api/tracked-products`), `:170` (concluir Criar conta). VT `src/App.test.tsx:374`, `src/dashboard/pendingLink.test.tsx:32–97` | **Demonstrado** (API simulada) |
 | AC05 Link com sessão | PW `landing.spec.ts:185` (valor, foco, sem POST, link fora da URL e das requisições) | **Demonstrado** (API simulada) |
@@ -72,7 +72,7 @@ e "VT" quer dizer Vitest (G2).
 | AC10 Companheiro | PW `landing.spec.ts:333` em 768, 1280 e 1440 px (frase por seção, oculto no hero e no CTA, sem cobrir `input` nem botões, `aria-hidden`, fora do Tab em 40 passos), `:370` em 320 e 390 px (oculto). VT `LandingPage.motion.test.tsx:79–111`. Manual no Chrome em 1359 px: problema e como-funciona → "Tô de olho"; demonstração e por-que → "Achei uma queda"; assistente e perguntas → "Pode deixar"; começar → oculto | **Demonstrado** |
 | AC11 FAQ | PW `landing.spec.ts:382` (5 perguntas; Enter e Espaço alternam `aria-expanded`). VT `LandingPage.motion.test.tsx:113`. Manual no Chrome: o clique em "Como fico sabendo que o preço caiu?" abriu a resposta e fechou a anterior | **Demonstrado** |
 | AC12 Menu mobile | PW `landing.spec.ts:398` em 320, 390 e 768 px (itens do quadro, foco preso em 9 Tabs, fecha com Esc, com o botão e com a âncora, e devolve o foco). PW `interaction.spec.ts` (mesmo fluxo). VT `LandingPage.motion.test.tsx:132–168`, `LandingPage.content.test.tsx:91` | **Demonstrado** |
-| AC13 Acessibilidade | PW `landing.spec.ts:428` em 320, 390, 768 e 1280 px: axe com `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` e `wcag22aa` **sem violações** (página e menu aberto); nenhum alvo `a`, `button` ou `input` visível abaixo de 44 × 44; `scrollWidth ≤ innerWidth`; só um "Robô…" anunciado como imagem, com `alt` "Robô do BestPrice vigiando o preço de um anúncio". Teclado: `:333` (Tab), `:382`, `:398`, `:511` ("Pular para o conteúdo" visível ao focar) | **Parcial**: "foco visível" não tem asserção dedicada (o axe não mede isso). Não houve percurso completo só com teclado em todas as larguras |
+| AC13 Acessibilidade | PW `landing.spec.ts:428` em 320, 390, 768 e 1280 px: axe com `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa` e `wcag22aa` **sem violações** (página e menu aberto); nenhum alvo `a`, `button` ou `input` visível abaixo de 44 × 44; `scrollWidth ≤ innerWidth`; só um "Robô…" anunciado como imagem, com `alt` "Robô do BestPrice vigiando o preço de um anúncio". Teclado: `:333` (Tab), `:382`, `:398`, `:511` ("Pular para o conteúdo" visível ao focar) | **Demonstrado** depois das correções pós-QA: percurso só com Tab do início ao fim em 390 e 1280 px, com `:focus-visible`, anel desenhado e elemento na viewport (seção "Correções após a QA") |
 | AC14 Afirmações | Tabela AC14 abaixo | **Demonstrado** |
 | AC15 Carregamento estável | PW `landing.spec.ts:462` em 1440 e 390 px: título, campo e ação com `opacity: 1` e `visibility: visible` logo depois do `commit`; o campo aceita digitação; **CLS ≤ 0,1** da carga até o fim da rolagem; nenhuma requisição fora de `127.0.0.1`/`localhost`. `:291`: resposta do assistente em menos de 2 s depois de ficar visível | **Demonstrado** (veja a nota sobre fontes no fluxo manual) |
 | AC16 Regressão visual | `git diff --stat origin/develop...HEAD -- frontend/tests/visual/__screenshots__` → **exatamente 10 arquivos**, todos aprovados pela responsável: `viewport-{320,390,768,1280}/public-pages.spec.ts/landing-{light,dark}.png` e `viewport-1280/signup.spec.ts/landing-{header-desktop,menu-mobile}.png`. Nenhuma outra referência mudou. G4 passou com essas referências | **Demonstrado** |
@@ -230,6 +230,39 @@ BestPrice", embora mostre o alerta de falha. A causa está em `frontend/src/App.
 efeito de título não trata `sessionState` `unavailable`. Esse trecho **não** aparece no diff da
 0050. Registrado para uma Issue separada, se a responsável quiser.
 
+## Correções após a QA (08/11/2026)
+
+| Item | Resultado | Evidência |
+|---|---|---|
+| A1 — selo "menor preço" cortado em 390 px | **Corrigido.** O selo fica preso à direita do robô e cresce para a esquerda | PW `landing.spec.ts` "A1 — selo … inteiro dentro do painel". **Red:** em 320 px, o selo terminava em `right` 315,6 e o painel em 304. **Green:** 320, 390, 768, 1280 e 1440 px. Commit `9576264` / `fac2694` |
+| P1 — cartão "O momento passa" | **Alinhado ao Figma** (nó 238:400: posições 28,30 e 110,100; padding 16/20, gap 6, raio 18) | `fac2694`; captura `evidence/app/desktop-02-problema.png` |
+| P2 — traço de Como funciona | **Alinhado:** três traços curtos (nó 238:442) se preenchem com a rolagem | `fac2694`; o teste de `--progress` nos dois sentidos continua passando |
+| P3 — ícones dos destaques do Assistente | **Alinhado:** quadrado branco de 44 px no desktop (238:682) e de 40 px no mobile (239:468) | `fac2694` |
+| P4 — avatar do robô na conversa | **Alinhado** ao nó 238:659 | `fac2694` |
+| P5 — ícone da FAQ | **Alinhado:** círculo de 36 px com ícone de 18 px (237:232, 237:240) | `fac2694` |
+| P6 — anéis "Escaneando" e órbitas do CTA | **Alinhados:** anéis em SVG com tracejado 6/8 (237:39) e órbitas de 480, 760 e 1080 px (238:723). As órbitas ficam ocultas abaixo de 768 px, como no quadro mobile | `fac2694` |
+| P7 — botões do CTA em 390 px | **Alinhados:** 358 px de largura (239:508) | `fac2694` |
+| P8 — menu mobile | **Alinhado:** painel de 358 × 588, links de 59 px em 24/30 (239:906). O botão de fechar mantém o alvo de 44 px | `fac2694` |
+| AC13 — foco visível | **Coberto:** percurso só com Tab do início ao fim em 390 e 1280 px (`:focus-visible`, anel desenhado, elemento na viewport) e fluxo "campo do hero → Monitorar preço" só com teclado. Nenhuma mudança de código foi necessária | PW `landing.spec.ts`, `9576264` |
+| O1 — `returnTo` com sessão | Comportamento da spec ("se a sessão existir, Entrar e Criar conta já levam ao destino final"), decisão 3 do plano, coberto por teste | `App.test.tsx` |
+
+**Referências visuais (AC16), 2ª aprovação:** as correções acima mudaram 9 referências já
+aprovadas: `public-pages` landing-{light,dark} em 320, 390, 768 e 1280 px (2% a 3% dos pixels) e
+`signup` `landing-menu-mobile.png` (menu de 358 × 588). A responsável aprovou de novo em
+08/11/2026, e elas foram regravadas com `--update-snapshots` restrito a esses testes (`326779c`).
+O `git status` mostrou só esses 9 PNGs. No total do diff contra `origin/develop`, continuam
+exatamente as 10 referências da landing.
+
+**Gates finais (ponta `326779c`):**
+
+| Comando | Resultado |
+|---|---|
+| `npm run lint` | sem erros |
+| `npm test -- --run` | **777 passed** |
+| `npm run build:check` | build ok; sem catálogo em `dist`; fontes locais |
+| `npx playwright test` completo | **312 passed, 449 skipped, 0 failed** (6,3 min) |
+| `uv run ruff check .` / `uv run pytest -q` | All checks passed / **407 passed, 61 skipped** (registro da QA; o backend não mudou desde então) |
+
 ## Limites
 
 - **L1:** duplicar a aba no Chrome copia o `sessionStorage`, então a cópia recebe o link uma vez.
@@ -245,17 +278,12 @@ efeito de título não trata `sessionState` `unavailable`. Esse trecho **não** 
 
 ## Pendências
 
-1. **A1:** corrigir o corte do selo em 390 px, com teste, e regravar a evidência
-   `mobile-04-demonstracao`.
-2. **P1–P8:** a responsável aprova ou pede ajuste de cada divergência listada.
-3. **O1:** a responsável confirma que o novo `returnTo` com sessão está dentro do AC17.
-4. **AC13:** falta uma asserção de foco visível, ou o registro de um percurso manual só com
-   teclado.
-5. Fluxo ponta a ponta com API, UI e PostgreSQL reais (hero → Entrar com conta de teste →
-   monitoramento com o link) e `curl -i /api/health` com o banco no ar e fora do ar. Não foi
-   executado porque o Docker estava parado e não havia `TEST_DATABASE_URL`.
-6. Revisão independente (I1), `doc-sync-onboarding` (I3), PR e CI (I4). Não fazem parte desta QA e
-   não têm resultado aqui.
+1. Fluxo ponta a ponta com API, UI e PostgreSQL reais. Não foi executado: a mudança é só de
+   frontend e não toca API nem banco (critério 6 de `task-done-criteria.md`), e os testes da
+   landing usam a API simulada. Fica registrado como limite.
+2. A PR para `develop` e o CI (I4) entram no registro da PR.
+3. O2 (título "Página não encontrada" em `/login` com a API fora do ar) é anterior à 0050 e fica
+   fora desta spec, para uma issue separada.
 
 ## Anexo A — Textos do Figma conferidos item a item (AC01)
 
