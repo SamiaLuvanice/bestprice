@@ -1,5 +1,32 @@
 # Progresso das specs
 
+## 0050 — Landing pública nova conforme o Figma
+
+**08/11/2026: spec `implementada`.** [Issue #275](https://github.com/SamiaLuvanice/bestprice/issues/275) fechada;
+PR [#276](https://github.com/SamiaLuvanice/bestprice/pull/276) integrada em `develop` (`4d8c51b`) com CI verde,
+depois da revisão independente e da QA. Conclusão registrada pela
+[Issue #277](https://github.com/SamiaLuvanice/bestprice/issues/277).
+
+O que entrou:
+- A landing em `/` segue os quadros 238:294, 239:180 e 239:856 do Figma, com o robô como
+  narrador. São nove seções, mais a barra fixa no mobile, o menu em Sheet, a FAQ em acordeão
+  e o mini-robô de rolagem a partir de 768 px.
+- O link colado no hero passa por Entrar ou Criar conta e chega ao monitoramento já
+  preenchido. Ele fica só na aba (`sessionStorage`), nunca vai na URL e nada é criado sem
+  confirmação.
+- Movimento conforme as notas do Figma, sem biblioteca nova. Com movimento reduzido, tudo
+  aparece no estado final.
+- Snapshots de textos e medidas do Figma, conferidos por hash e cobertos por testes. Robô em
+  WebP de 22 KB.
+- Saíram da landing de propósito "Começar com IA", "Abrir comparador" e "Criar conta" no
+  cabeçalho.
+- Com sessão, `/login` e `/cadastro` respeitam o `returnTo` seguro.
+
+Divergências do Figma aprovadas pela responsável em 08/11/2026 (logo de 34 px, título do hero
+sem fade, cabeçalho não fixo, textos por token, selo "Só o link, nada para preencher") e as
+referências visuais da landing regravadas com aprovação estão registradas na
+[verificação da 0050](../specs/0050-landing-publica-nova/verification.md).
+
 ## 0049 — Design system 2026 no código
 
 **07/11/2026: spec `implementada`.** [Issue #267](https://github.com/SamiaLuvanice/bestprice/issues/267) fechada;

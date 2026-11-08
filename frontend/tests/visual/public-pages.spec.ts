@@ -32,9 +32,13 @@ for (const colorScheme of themes) {
     test.use({ colorScheme })
 
     test('landing pública', async ({ page }) => {
+      // 0050: a landing tem movimento contínuo (flutuação, feixe, órbitas) e conteúdo que entra pela
+      // rolagem; com movimento reduzido a captura mostra o estado final e não varia entre execuções.
+      await page.emulateMedia({ reducedMotion: 'reduce' })
       await replyGuestSession(page)
       await page.goto('/')
-      const title = page.getByRole('heading', { name: /Compre com.*mais clareza/i, level: 1 })
+      // 0050: landing nova.
+      const title = page.getByRole('heading', { name: 'Pare de dar F5 no preço.', level: 1 })
       await expect(title).toBeVisible()
       await waitForStableImages(page)
       await expect(page).toHaveScreenshot(`landing-${colorScheme}.png`, { fullPage: true })

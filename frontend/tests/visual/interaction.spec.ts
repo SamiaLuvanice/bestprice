@@ -7,11 +7,13 @@ test.beforeEach(async ({ page }) => {
   }))
 })
 
+// 0050/AC12: no mobile o menu é um diálogo (sheet) — abre por teclado, prende o foco, fecha com Esc,
+// com o botão de fechar e ao escolher uma âncora, e devolve o foco ao botão que o abriu.
 test('navegação pública recupera o foco por teclado', async ({ page }) => {
   await page.goto('/')
   const toggle = page.getByRole('button', { name: 'Abrir menu' })
   const navigation = page.getByRole('navigation', { name: 'Navegação principal' })
-  if ((page.viewportSize()?.width ?? 0) > 760) {
+  if (await navigation.isVisible()) {
     await expect(toggle).toBeHidden()
     await navigation.getByRole('link', { name: 'Como funciona' }).focus()
     await expect(navigation.getByRole('link', { name: 'Como funciona' })).toBeFocused()
@@ -19,18 +21,31 @@ test('navegação pública recupera o foco por teclado', async ({ page }) => {
   }
   await toggle.focus()
   await page.keyboard.press('Enter')
-  await expect(page.getByRole('button', { name: 'Fechar menu' })).toHaveAttribute('aria-expanded', 'true')
-  await page.keyboard.press('Tab')
-  await expect(navigation.getByRole('link', { name: 'Como funciona', exact: true })).toBeFocused()
+  const menu = page.getByRole('dialog', { name: 'Menu' })
+  await expect(menu).toBeVisible()
+  // Com o diálogo aberto, o resto da página sai da árvore de acessibilidade; o botão é lido pelo seletor.
+  await expect(page.locator('.lp-header__menu')).toHaveAttribute('aria-expanded', 'true')
+  for (let step = 0; step < 10; step += 1) {
+    await page.keyboard.press('Tab')
+    expect(await menu.evaluate((element) => element.contains(document.activeElement))).toBe(true)
+  }
   await page.keyboard.press('Escape')
+  await expect(menu).toBeHidden()
   await expect(toggle).toBeFocused()
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
-  await expect(navigation).toBeHidden()
+
   await page.keyboard.press('Enter')
-  await navigation.getByRole('link', { name: 'Começar com IA' }).focus()
-  await page.keyboard.press('Tab')
-  await expect(navigation).toBeHidden()
-  await expect(page.locator('main').getByRole('link', { name: 'Começar com IA' }).first()).toBeFocused()
+  await expect(menu).toBeVisible()
+  await menu.getByRole('button', { name: 'Fechar menu' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(menu).toBeHidden()
+  await expect(toggle).toBeFocused()
+
+  await page.keyboard.press('Enter')
+  await menu.getByRole('link', { name: 'Como funciona' }).focus()
+  await page.keyboard.press('Enter')
+  await expect(menu).toBeHidden()
+  await expect(page).toHaveURL(/#como-funciona$/)
 })
 
 test('movimento reduzido mantém o controle de senha e foco visível', async ({ page }) => {

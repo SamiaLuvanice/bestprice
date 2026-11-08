@@ -44,9 +44,10 @@ it('abre dashboard A e transporta o rascunho sem incluir a mensagem na URL', asy
 it('mantém landing pública para uma pessoa autenticada', async () => {
   researchApi()
   visit('/')
-  expect(await screen.findByRole('heading', { name: /Compre com mais clareza/ })).toBeInTheDocument()
-  expect(screen.getByRole('link', { name: 'BestPrice AI — Início' })).toHaveTextContent('BestPrice AI')
-  expect(screen.getAllByRole('link', { name: 'Começar com IA' })[0]).toHaveAttribute('href', '/app/assistant')
+  expect(await screen.findByRole('heading', { name: 'Pare de dar F5 no preço.', level: 1 })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'BestPrice — Início' })).toHaveTextContent('BestPrice')
+  // 0050: com a sessão confirmada, a ação principal da landing leva direto ao monitoramento.
+  await waitFor(() => expect(screen.getAllByRole('link', { name: /^Começar a monitorar/ })[0]).toHaveAttribute('href', '/app/monitoring'))
 })
 
 it('mostra indisponibilidade do histórico sem declarar que não há pesquisas', async () => {

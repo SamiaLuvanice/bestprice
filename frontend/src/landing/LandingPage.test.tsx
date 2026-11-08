@@ -1,122 +1,123 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, expect, it, vi } from 'vitest'
-import { App } from '../App'
-import { apiError, deferred, fakeApi, reply } from '../test/fakeApi'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { LandingPage } from './LandingPage'
+import { takePendingTrackLink } from '../navigation/pendingTrackLink'
+import { stubLandingEnvironment } from './landingTestEnv'
+
+function Where() {
+  const location = useLocation()
+  return <p data-testid="where">{location.pathname + location.search}</p>
+}
+
+type Props = { authenticated?: boolean; signupAvailable?: boolean }
+
+function renderLanding(props: Props = {}) {
+  return render(<MemoryRouter initialEntries={['/']}>
+    <Routes>
+      <Route path="/" element={<><LandingPage {...props} /><Where /></>} />
+      <Route path="*" element={<Where />} />
+    </Routes>
+  </MemoryRouter>)
+}
+
+const fetchSpy = vi.fn()
+
+beforeEach(() => {
+  stubLandingEnvironment()
+  vi.stubGlobal('fetch', fetchSpy)
+  fetchSpy.mockReset()
+  window.sessionStorage.clear()
+})
 
 afterEach(() => {
   cleanup()
-  window.history.replaceState({}, '', '/')
   vi.unstubAllGlobals()
+  window.sessionStorage.clear()
 })
 
-function visit(path: string) {
-  fakeApi((url) => url === '/api/auth/me' ? reply(401, apiError('unauthenticated', 'Entre para continuar.')) : undefined)
-  window.history.replaceState({}, '', path)
-  render(<App />)
-}
+// 0050/AC03: matriz "Para onde cada ação leva". Sessão e cadastro indeterminados (carregando ou
+// com falha) chegam à landing como false (decisão da spec), por isso viram a linha "desligado".
+const signupMonitoring = '/cadastro?returnTo=%2Fapp%2Fmonitoring'
+const loginMonitoring = '/login?returnTo=%2Fapp%2Fmonitoring'
+const matrix: [string, Props, string, string][] = [
+  ['sem sessão, cadastro ligado', { authenticated: false, signupAvailable: true }, signupMonitoring, '/login'],
+  ['sem sessão, cadastro desligado', { authenticated: false, signupAvailable: false }, loginMonitoring, '/login'],
+  ['sem sessão, cadastro carregando ou com falha (props omitidas)', {}, loginMonitoring, '/login'],
+  ['com sessão, cadastro ligado', { authenticated: true, signupAvailable: true }, '/app/monitoring', '/app/dashboard'],
+  ['com sessão, cadastro desligado', { authenticated: true, signupAvailable: false }, '/app/monitoring', '/app/dashboard'],
+]
 
-it('mostra a landing pública e permite entrar no login existente', async () => {
-  document.title = 'BestPrice'
-  visit('/')
-  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/i, level: 1 })).toBeInTheDocument()
-  expect(document.title).toContain('Compre com mais clareza')
-  expect(screen.getByRole('navigation', { name: 'Navegação principal' })).toBeInTheDocument()
-  expect(screen.getByRole('heading', { name: 'O que muda entre as opções?' })).toBeInTheDocument()
-  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
-  await userEvent.setup().click(within(screen.getByRole('banner')).getByRole('link', { name: 'Entrar' }))
-  expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
-  expect(window.location.pathname).toBe('/login')
-  expect(document.title).toBe('Entrar · BestPrice')
-})
-
-it('preserva a landing pública mesmo quando a sessão é válida', async () => {
-  document.title = 'BestPrice'
-  fakeApi((url) => url === '/api/auth/me' ? reply(200, { id: 'user-1', email: 'pessoa@example.com' }) : undefined)
-  window.history.replaceState({}, '', '/')
-  render(<App />)
-  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/i, level: 1 })).toBeInTheDocument()
-  expect(screen.queryByRole('heading', { name: /Seu painel de preços/i })).not.toBeInTheDocument()
-  await waitFor(() => expect(document.title).toContain('Compre com mais clareza'))
-})
-
-it('mostra a entrada pública mesmo enquanto a consulta de sessão está pendente ou falha', async () => {
-  const session = deferred()
-  fakeApi((url) => url === '/api/auth/me' ? session.promise : undefined)
-  window.history.replaceState({}, '', '/')
-  render(<App />)
-  expect(screen.getByRole('heading', { name: /Compre com.*mais clareza/i })).toBeInTheDocument()
-  session.reject(new TypeError('Failed to fetch'))
-  expect(await screen.findByRole('heading', { name: /Compre com.*mais clareza/i })).toBeInTheDocument()
-})
-
-it('encaminha o CTA principal ao login sem prometer cadastro disponível', async () => {
-  visit('/')
-  const hero = await screen.findByRole('region', { name: /Compre com.*mais clareza/i })
-  await userEvent.setup().click(within(hero).getByRole('link', { name: 'Começar com IA' }))
-  expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
-  expect(window.location.pathname).toBe('/login')
-})
-
-it('abre o menu por teclado e fecha ao seguir uma seção', async () => {
-  visit('/')
-  const toggle = await screen.findByRole('button', { name: 'Abrir menu' })
-  const user = userEvent.setup()
-  toggle.focus()
-  await user.keyboard('{Enter}')
-  expect(screen.getByRole('button', { name: 'Fechar menu' })).toHaveAttribute('aria-expanded', 'true')
-  await user.click(within(screen.getByRole('navigation', { name: 'Navegação principal' })).getByRole('link', { name: 'Como funciona' }))
-  expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
-})
-
-it('fecha o menu com Escape e devolve o foco ao botão de abertura', async () => {
-  visit('/')
-  const user = userEvent.setup()
-  await user.click(await screen.findByRole('button', { name: 'Abrir menu' }))
-  within(screen.getByRole('navigation', { name: 'Navegação principal' })).getByRole('link', { name: 'Como funciona' }).focus()
-  await user.keyboard('{Escape}')
-  expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
-  expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveFocus()
-})
-
-it('recolhe o menu quando o foco sai do cabeçalho', async () => {
-  visit('/')
-  const user = userEvent.setup()
-  await user.click(await screen.findByRole('button', { name: 'Abrir menu' }))
-  within(screen.getByRole('region', { name: /Compre com.*mais clareza/i })).getByRole('link', { name: 'Começar com IA' }).focus()
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false'))
-})
-
-function visitWithSignup(path: string, signup: () => unknown) {
-  fakeApi((url, init) => {
-    if (url === '/api/auth/me') return reply(401, apiError('unauthenticated', 'Entre para continuar.'))
-    if (url === '/api/auth/signup' && (init?.method ?? 'GET') === 'GET') return signup()
-    return undefined
+describe.each(matrix)('destinos — %s', (_case, props, monitorTarget, loginTarget) => {
+  it('as ações de monitorar levam ao destino da tabela', () => {
+    renderLanding(props)
+    const monitorLinks = [
+      ...screen.getAllByRole('link', { name: /^Começar a monitorar/ }),
+      ...screen.getAllByRole('link', { name: /^Começar$/ }),
+      ...screen.getAllByRole('link', { name: /^Monitorar um anúncio/ }),
+    ]
+    expect(monitorLinks.length).toBeGreaterThanOrEqual(4)
+    for (const link of monitorLinks) expect(link).toHaveAttribute('href', monitorTarget)
   })
-  window.history.replaceState({}, '', path)
-  render(<App />)
-}
 
-// 0048/F4 (AC01/AC14): Criar conta acompanha Entrar só com o cadastro ligado.
-it('mostra Criar conta junto de Entrar quando o cadastro está ligado e leva ao cadastro', async () => {
-  visitWithSignup('/', () => reply(200, { enabled: true }))
-  const nav = screen.getByRole('navigation', { name: 'Navegação principal' })
-  const link = await within(nav).findByRole('link', { name: 'Criar conta' })
-  expect(link).toHaveAttribute('href', '/cadastro')
-  // Revisão R2: ordem do DOM = ordem visual do desktop (Criar conta antes de Entrar), também no Tab.
-  expect(within(nav).getByRole('link', { name: 'Entrar' }).compareDocumentPosition(link)).toBe(Node.DOCUMENT_POSITION_PRECEDING)
+  it('Entrar e Já tenho conta levam ao destino da tabela, sem returnTo', () => {
+    renderLanding(props)
+    const loginLinks = [...screen.getAllByRole('link', { name: /^Entrar$/ }), ...screen.getAllByRole('link', { name: /^Já tenho conta$/ })]
+    expect(loginLinks.length).toBeGreaterThanOrEqual(3)
+    for (const link of loginLinks) expect(link).toHaveAttribute('href', loginTarget)
+  })
+
+  it('Monitorar preço com link guarda o link aparado e navega para o destino da tabela', async () => {
+    renderLanding(props)
+    const user = userEvent.setup()
+    await user.type(screen.getByRole('textbox', { name: /link do anúncio/i }), '  https://produto.mercadolivre.com.br/MLB-123  ')
+    await user.click(screen.getByRole('button', { name: /Monitorar preço/ }))
+    expect(screen.getByTestId('where')).toHaveTextContent(monitorTarget)
+    expect(takePendingTrackLink()).toBe('https://produto.mercadolivre.com.br/MLB-123')
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
 })
 
-it.each([
-  ['desligado', () => reply(200, { enabled: false })],
-  ['com erro', () => reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))],
-  ['com falha de rede', () => Promise.reject(new TypeError('Failed to fetch'))],
-])('não mostra Criar conta com o cadastro %s', async (_case, signup) => {
-  const answered = deferred()
-  visitWithSignup('/', () => { answered.resolve(undefined); return signup() })
-  await answered.promise
-  // Dá tempo para a resposta virar estado antes de afirmar a ausência.
-  await new Promise((resolve) => setTimeout(resolve, 20))
-  expect(screen.getByRole('link', { name: 'Entrar' })).toBeInTheDocument()
-  expect(screen.queryByRole('link', { name: 'Criar conta' })).not.toBeInTheDocument()
+it('âncoras do cabeçalho e do rodapé rolam até a seção, sem sair da página', () => {
+  renderLanding()
+  const nav = screen.getByRole('navigation', { name: 'Navegação principal' })
+  const anchors: [string, string][] = [['Como funciona', '#como-funciona'], ['Demonstração', '#demonstracao'], ['Assistente', '#assistente'], ['Perguntas', '#perguntas']]
+  for (const [name, href] of anchors) {
+    expect(within(nav).getByRole('link', { name })).toHaveAttribute('href', href)
+    expect(document.querySelector(href)).not.toBeNull()
+  }
+  const footer = screen.getByRole('contentinfo')
+  for (const [name, href] of [['Como funciona', '#como-funciona'], ['Assistente', '#assistente'], ['Perguntas', '#perguntas']]) {
+    expect(within(footer).getByRole('link', { name })).toHaveAttribute('href', href)
+  }
+})
+
+// 0050/AC06: vazio ou só espaços mostra a mensagem associada ao campo e não sai da página.
+it.each([['vazio', ''], ['só com espaços', '    ']])('campo %s mostra a mensagem junto ao campo e não navega', async (_case, typed) => {
+  renderLanding({ authenticated: true })
+  const user = userEvent.setup()
+  const field = screen.getByRole('textbox', { name: /link do anúncio/i })
+  if (typed) await user.type(field, typed)
+  await user.click(screen.getByRole('button', { name: /Monitorar preço/ }))
+  expect(field).toHaveAttribute('aria-invalid', 'true')
+  expect(field).toHaveAccessibleDescription(/Informe o link completo de um anúncio do Mercado Livre Brasil\./)
+  expect(screen.getByTestId('where')).toHaveTextContent(/^\/$/)
+  expect(takePendingTrackLink()).toBeNull()
+  // Corrigir o campo e enviar de novo segue normalmente.
+  await user.type(field, 'https://produto.mercadolivre.com.br/MLB-9')
+  await user.click(screen.getByRole('button', { name: /Monitorar preço/ }))
+  expect(screen.getByTestId('where')).toHaveTextContent('/app/monitoring')
+})
+
+it('um novo envio no hero substitui o link anterior', async () => {
+  const user = userEvent.setup()
+  const first = renderLanding({ authenticated: true })
+  await user.type(screen.getByRole('textbox', { name: /link do anúncio/i }), 'https://a.mercadolivre.com.br/MLB-1')
+  await user.click(screen.getByRole('button', { name: /Monitorar preço/ }))
+  first.unmount()
+  renderLanding({ authenticated: true })
+  await user.type(screen.getByRole('textbox', { name: /link do anúncio/i }), 'https://b.mercadolivre.com.br/MLB-2')
+  await user.click(screen.getByRole('button', { name: /Monitorar preço/ }))
+  expect(takePendingTrackLink()).toBe('https://b.mercadolivre.com.br/MLB-2')
 })

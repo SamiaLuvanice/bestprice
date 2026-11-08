@@ -33,15 +33,20 @@ type Props = {
   onDismissFeedback?: () => void
   /** Conteúdo extra abaixo do formulário (ex.: estado vazio). */
   children?: ReactNode
+  /**
+   * Link trazido da landing (0050): abre o formulário já preenchido e com foco, sem enviar;
+   * a pessoa confirma com "Monitorar preço".
+   */
+  initialValue?: string
 }
 
 /**
  * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
-export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, embedded = false, onDismissFeedback, children }: Props) {
+export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, embedded = false, onDismissFeedback, children, initialValue }: Props) {
   const panelId = useId()
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(Boolean(initialValue))
   const focusOnOpen = useRef(false)
   const fieldRef = useRef<HTMLInputElement | null>(null)
   // Fonte única do painel: no modo compacto só `expanded` decide; recolher fecha e limpa o retorno.
@@ -54,6 +59,13 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
   useEffect(() => {
     if (expanded && focusOnOpen.current) { focusOnOpen.current = false; fieldRef.current?.focus() }
   }, [expanded])
+  // Valor trazido da landing: foco no próximo quadro, depois do foco de título da página.
+  const focusInitial = useRef(Boolean(initialValue))
+  useEffect(() => {
+    if (!focusInitial.current) return
+    const frame = window.requestAnimationFrame(() => { focusInitial.current = false; fieldRef.current?.focus() })
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
   function setField(element: HTMLInputElement | null) {
     fieldRef.current = element
     if (typeof inputRef === 'function') inputRef(element)
@@ -62,7 +74,7 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
   const hintId = useId()
   const errorId = useId()
   // O valor do campo fica aqui: digitar não re-renderiza a área inteira (tabela, linha do tempo…).
-  const [value, setValue] = useState('')
+  const [value, setValue] = useState(initialValue ?? '')
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (submitting) return

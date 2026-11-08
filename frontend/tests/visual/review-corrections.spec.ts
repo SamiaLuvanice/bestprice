@@ -7,9 +7,13 @@ test.beforeEach(async ({ page }) => {
   }))
 })
 
+// 0050: a arte da landing nova é o robô original do Figma (237:35), no hero.
 test('imagem da landing preserva a arte original sem recorte', async ({ page }) => {
+  // A flutuação contínua do robô nunca deixa o elemento "estável" para o Playwright; com movimento
+  // reduzido a arte fica parada e a geometria medida é a final.
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
-  const banner = page.locator('.research-public-visual img')
+  const banner = page.getByRole('img', { name: 'Robô do BestPrice vigiando o preço de um anúncio' })
   await banner.scrollIntoViewIfNeeded()
   await expect(banner).toBeVisible()
   await expect.poll(() => banner.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true)
@@ -32,8 +36,10 @@ test('rodapé da landing tem fundo preto e texto claro', async ({ page }) => {
     text: getComputedStyle(element).color,
   }))
   // 0049/AC01: o preto do rodapé passou ao token Noite --night-950 (#0a0a0f) do Figma 2026.
-  expect(colors).toEqual({ background: 'rgb(10, 10, 15)', text: 'rgb(255, 255, 255)' })
-  await expect(footer.getByRole('link', { name: 'Entrar na sua conta' })).toBeVisible()
+  // 0050: o rodapé novo (238:736) usa o texto claro da superfície Noite (--sidebar-foreground #f5f5f7)
+  // e o link "Entrar" do quadro.
+  expect(colors).toEqual({ background: 'rgb(10, 10, 15)', text: 'rgb(245, 245, 247)' })
+  await expect(footer.getByRole('link', { name: 'Entrar', exact: true })).toBeVisible()
 })
 
 test('marca do login fica no formulário à direita, com fundo transparente', async ({ page }) => {

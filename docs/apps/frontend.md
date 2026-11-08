@@ -142,7 +142,7 @@ sem atualizar baselines na confirmação. Os testes usam API simulada e não com
 dispositivo físico, leitor de tela manual ou outros motores de navegador.
 
 As prévias históricas de monitoramento contêm dados demonstrativos identificados
-como exemplo; a landing atual da 0034 não apresenta catálogo de ofertas. Produtos, preços e métricas da conta continuam vindo apenas da API.
+como exemplo; a landing atual (0050) não apresenta catálogo de ofertas. Produtos, preços e métricas da conta continuam vindo apenas da API.
 A composição da 0027 usa conteúdo de até 1248 px, oportunidades em linhas e
 navegação inferior da conta até 700 px. Os quatro indicadores existentes foram
 preservados; desde a 0028 o Início sem produtos mostra só o convite do campo de
@@ -228,25 +228,56 @@ A composição atual e seus estados em 320, 768 e 1280 px estão na
 A consistência da marca em 320, 390, 768 e 1280 px está na
 [verificação da 0029](../../specs/0029-identidade-bestprice-consistente/verification.md).
 
-## Landing pública — spec 0034
+## Landing pública — spec 0050
 
 `/` apresenta `LandingPage` em qualquer estado de sessão, inclusive autenticada.
-A composição atual comunica assistência de compras: hero “Compre com mais
-clareza.”, conversa por necessidade, comparação manual e continuidade por 90 dias.
-A landing é estática e não consulta ofertas ou métricas pessoais. “Começar com IA”
-aponta para `/app/assistant`, “Abrir comparador” para `/app/compare` e o acesso ao
-monitoramento para `/app/monitoring`; o guard encaminha visitantes ao login com
-retorno seguro. Desde a spec 0048, o cabeçalho mostra “Criar conta” (para
-`/cadastro`) só quando o cadastro self-service está disponível; não há recuperação
-de senha.
+Desde a [spec 0050](../../specs/0050-landing-publica-nova/spec.md), a landing segue os
+quadros do Figma "01 · Landing · Desktop" (238:294), "Mobile" (239:180) e "Menu aberto"
+(239:856). Ela é centrada no monitoramento, com o robô do BestPrice como narrador:
 
-A marca usa `Brand` com complemento visual AI e um nome acessível completo no link.
-A imagem `assets/redesign/hero-person.webp` é ilustrativa. As prévias de preço/painel
-e o banner da composição 0027 não são respostas de IA nem fazem parte da landing
-atual. O cabeçalho tem âncoras `#como-funciona` e `#comparar`, botão móvel com
-`aria-expanded`, fechamento por Escape e saída de foco. O link para pular ao
-conteúdo, foco visível e redução de movimento permanecem.
+- **Seções, nesta ordem:** Hero ("Pare de dar F5 no preço."), Problema → virada, Como
+  funciona, Demonstração, Por que BestPrice, Assistente, Perguntas, CTA final e rodapé.
+  No mobile, há também a barra fixa "Pronto para parar de conferir?".
+- **Dados:** todo dado de anúncio, preço e conversa é ilustrativo e fixo, e os valores
+  "R$" ficam só em `landing/content.ts`. `content.test.tsx` libera apenas uma lista fechada
+  desses valores. A landing não consulta preços, anúncios nem o assistente.
+- **Destinos:** a tabela fica em `landing/destinations.ts`.
+  - "Começar a monitorar", "Começar", "Monitorar um anúncio" e o envio com link levam a
+    `/cadastro?returnTo=/app/monitoring` se o cadastro estiver ligado, ou a
+    `/login?returnTo=/app/monitoring` se não estiver.
+  - Com sessão confirmada, essas ações levam direto a `/app/monitoring`.
+  - "Entrar" e "Já tenho conta" levam a `/login`, ou a `/app/dashboard` com sessão.
+  - Sessão ou cadastro ainda em verificação, ou com falha, valem como "sem sessão" e
+    "cadastro desligado". O `App` passa `authenticated` e `signupAvailable`.
+- **Link do hero:** `navigation/pendingTrackLink.ts` guarda o link aparado em
+  `sessionStorage`, só naquela aba e nunca na URL. O `AccountArea` consome o link uma vez
+  na seção de produtos e o `HeroTrackForm` abre preenchido e com foco (`initialValue`),
+  sem enviar nada.
+  - Sair da conta descarta o link.
+  - `/login` e `/cadastro` com sessão já confirmada respeitam o `returnTo` seguro.
+  - Limite: duplicar a aba copia o `sessionStorage`.
+- **Robô:** `landing/BestPriceRobot.tsx` reproduz o componente "Robô BestPrice" (237:35)
+  nos estados neutral, scanning, alert e found. A arte é a mesma do assistente, em WebP
+  de 480 px (`assets/research/assistant-robot-480.webp`). Só o robô do hero tem texto
+  alternativo.
+- **Movimento:** `landing/motion.ts` concentra os tempos das notas do Figma, com os hooks
+  `useInView`, `useScrollProgress` (rAF e `--progress`) e `usePrefersReducedMotion`. Não
+  há biblioteca de animação. Com movimento reduzido, tudo aparece no estado final.
+  - O mini-robô (`ScrollCompanion`) aparece só a partir de 768 px, com `aria-hidden`.
+  - O título, o campo e as ações do hero nunca esperam animação.
+- **Fidelidade:** `designsystem/landing/figma-landing-texts-2026-11.json` e
+  `figma-landing-metrics-2026-11.json` são snapshots do Figma, conferidos por hash.
+  - `LandingPage.content.test.tsx` compara os textos com o snapshot.
+  - `tests/visual/landing-metrics.spec.ts` compara tamanho, entrelinha e peso calculados.
+  - `tests/visual/landing.spec.ts` cobre destinos, link, movimento, acessibilidade e CLS.
+  - Divergências aprovadas: logo com 34 px, título sem fade, cabeçalho não fixo e cor de
+    texto por token. O selo passou a "Só o link, nada para preencher". O registro está em
+    `designsystem/README.md`.
 
+Saíram de propósito "Começar com IA", "Abrir comparador" e "Criar conta" no cabeçalho.
+O assistente e o comparador seguem na área logada.
+
+Histórico: a landing da spec 0034 ("Compre com mais clareza.") foi substituída pela 0050.
 A [verificação 0034](../../specs/0034-assistencia-compras-bestprice-ai/verification.md)
 separa a rodada visual ampla anterior (129/132) dos oito casos afetados aprovados
 após correção da marca. Somente oito baselines landing foram revisados e
@@ -260,9 +291,10 @@ físico, leitor de tela ou disponibilidade do provider externo.
 `useSignupAvailability` (`src/auth/`) consulta `GET /api/auth/signup` uma vez por
 carregamento do `App` e devolve `loading`, `enabled`, `disabled` ou `error`. O
 interruptor é decidido pela API, não por variável `VITE_*`, para ligar ou desligar
-sem novo build do Pages. Só `enabled` mostra os links: “Criar conta” no cabeçalho da
-landing (à esquerda de “Entrar” no desktop, abaixo dele no menu móvel) e “Ainda não
-tem conta? Criar conta” abaixo do botão do login, que leva o `returnTo` quando ele é
+sem novo build do Pages. Só `enabled` mostra “Ainda não tem conta? Criar conta”
+abaixo do botão do login e, desde a 0050, faz os CTAs de monitoramento da landing
+levarem a `/cadastro` (o link “Criar conta” do cabeçalho da landing saiu na 0050). O
+link do login leva o `returnTo` quando ele é
 um destino interno válido. Em `/cadastro`, `loading` mostra “Carregando…” e `error`
 mostra alerta com “Tentar novamente”; `disabled` redireciona a `/login` sem
 formulário. `/cadastro` não tem rodapé, como o login, e tem o título “Criar conta ·
@@ -550,8 +582,9 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | Arquivo | Responsabilidade |
 |---|---|
 | `frontend/src/App.tsx` | `BrowserRouter`, rotas, consulta e revalidação de sessão, login, retorno seguro e títulos; recebe o relógio injetável (`clock`) |
-| `frontend/src/landing/LandingPage.tsx`, `LandingPage.css` | Landing pública da 0027, âncoras, menu móvel e CTAs para login |
-| `frontend/src/assets/redesign/` | Artes fornecidas e prévias em WebP identificadas como ilustração |
+| `frontend/src/landing/` | Landing pública da 0050: seções, robô, gráfico em degraus, menu móvel (Sheet), mini-robô, barra fixa, destinos e movimento |
+| `frontend/src/navigation/pendingTrackLink.ts` | Link do hero guardado na aba até o primeiro uso no monitoramento (0050) |
+| `frontend/src/assets/redesign/` | Arte do login (`login-left.webp`); as artes da landing antiga foram removidas na 0050 |
 | `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único e foco em Senha após falha |
 | `frontend/src/NotFoundPage.tsx` | Recuperação de rota inexistente, CTA por sessão e ação de voltar |
 | `frontend/src/components/ui/`, `frontend/src/lib/utils.ts`, `frontend/components.json` | Componentes oficiais shadcn/ui, combinação de classes e configuração de geração |
@@ -625,6 +658,10 @@ Com a integração Mercado Livre desligada, o backend ainda valida a URL, inform
   `specs/0049-design-system-2026-no-codigo/evidence/app/`. É pulado sem a variável; para regravar:
   `EVIDENCE_0049=1 npx playwright test tests/visual/evidence-0049.spec.ts --project=viewport-1440`.
   O projeto `viewport-1440` roda só `catalog.spec.ts` e esse spec.
+- **Evidência da 0050:** `tests/visual/evidence-0050.spec.ts` grava as capturas da landing por
+  seção (1440 e 390 px) e o menu aberto em `specs/0050-landing-publica-nova/evidence/app/`. É
+  pulado sem a variável e fora do projeto `viewport-1280`; para regravar:
+  `EVIDENCE_0050=1 npx playwright test tests/visual/evidence-0050.spec.ts --project=viewport-1280`.
 - **Outros specs da 0049:**
   - `catalog.spec.ts` captura as seções do catálogo;
   - `ds-measures.spec.ts` mede estilos calculados, cor do destino ativo, contraste 3:1 e axe/44 px
