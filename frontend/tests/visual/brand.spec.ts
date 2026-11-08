@@ -17,8 +17,10 @@ async function session(page: Page, state: 'guest' | 'ready' | 'loading' | 'error
   })
 }
 
-async function observe(page: Page) {
-  return page.locator('.brand, .masthead:not(:has(.brand))').evaluateAll((elements) => elements
+// 0050: a landing nova também tem a marca no rodapé (quadro 238:736) e no menu aberto (239:856);
+// a identidade observada é a do cabeçalho ou, com o menu aberto, a do menu que cobre a página.
+async function observe(page: Page, selector = '.brand, .masthead:not(:has(.brand))') {
+  return page.locator(selector).evaluateAll((elements) => elements
     .filter((element) => element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0)
     .map((element) => {
       const text = element.querySelector('span') ?? element
@@ -42,6 +44,7 @@ const scenarios = [
 
 for (const [name, path, state] of scenarios) {
   test(`marca ${name}: identidade e logo persistem`, async ({ page, context }, testInfo) => {
+    const scope = name === 'landing' ? '.lp-header .brand' : undefined
     const errors: string[] = []
     const consoleErrors: string[] = []
     const imageResponses: { url: string; status: number }[] = []
@@ -55,7 +58,7 @@ for (const [name, path, state] of scenarios) {
     else await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     await page.locator('img[src*="logo-bestprice"]').first().waitFor({ state: 'attached' })
     await page.waitForFunction(() => Array.from(document.images).filter((image) => image.src.includes('logo-bestprice')).every((image) => image.complete))
-    const observations = [await observe(page)]
+    const observations = [await observe(page, scope)]
     const steps = ['abertura']
     if ((page.viewportSize()?.width ?? 0) <= 390) {
       await page.reload({ waitUntil: 'domcontentloaded' })
@@ -63,28 +66,32 @@ for (const [name, path, state] of scenarios) {
       else if (state === 'error') await expect(page.getByRole('alert')).toBeVisible()
       else await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
       await page.waitForFunction(() => Array.from(document.images).filter((image) => image.src.includes('logo-bestprice')).every((image) => image.complete))
-      observations.push(await observe(page))
+      observations.push(await observe(page, scope))
       steps.push('recarregamento')
       if (state === 'ready') {
         await page.getByRole('navigation', { name: 'Principal', exact: true }).getByRole('link', { name: path === '/alertas' ? 'Produtos' : 'Alertas' }).click()
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-        observations.push(await observe(page))
+        observations.push(await observe(page, scope))
         steps.push('navegacao')
         await page.goBack()
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-        observations.push(await observe(page))
+        observations.push(await observe(page, scope))
         steps.push('retorno')
       } else if (name === 'landing') {
         await page.getByRole('button', { name: 'Abrir menu' }).click()
-        observations.push(await observe(page))
+        await expect(page.getByRole('dialog')).toBeVisible()
+        // O menu desliza do topo (sheet); a observação espera a entrada terminar.
+        await page.getByRole('dialog').evaluate((dialog) => Promise.all(dialog.getAnimations({ subtree: true }).map((animation) => animation.finished)))
+        observations.push(await observe(page, '[role="dialog"] .brand'))
         steps.push('menu-aberto')
-        await page.getByRole('link', { name: 'Começar com IA', exact: true }).first().click()
+        // 0050: a ação principal do menu leva ao login (cadastro indisponível nesta simulação).
+        await page.getByRole('dialog').getByRole('link', { name: /^Começar a monitorar/ }).click()
         await expect(page.getByRole('heading', { name: 'Entrar na sua conta' })).toBeVisible()
         observations.push(await observe(page))
         steps.push('login')
         await page.goBack()
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-        observations.push(await observe(page))
+        observations.push(await observe(page, scope))
         steps.push('retorno')
       }
       const other = await context.newPage()
@@ -92,7 +99,7 @@ for (const [name, path, state] of scenarios) {
       await other.bringToFront()
       await page.bringToFront()
       await other.close()
-      observations.push(await observe(page))
+      observations.push(await observe(page, scope))
       steps.push('troca-de-aba')
     }
     await page.screenshot({ path: testInfo.outputPath(`${name}.png`), fullPage: true, animations: 'disabled' })
@@ -113,12 +120,14 @@ for (const [name, path, state] of scenarios) {
       expect(brand.x).toBeGreaterThanOrEqual(0)
       expect(brand.x + brand.width).toBeLessThanOrEqual(page.viewportSize()!.width)
     }
-    const brand = page.getByRole('img', { name: 'BestPrice', exact: true })
-      .or(page.getByRole('link', { name: 'BestPrice — Início', exact: true }))
-      .or(page.getByRole('link', { name: 'BestPrice AI — Início', exact: true }))
-      .or(page.getByRole('link', { name: 'BestPrice AI — Dashboard', exact: true }))
+    // 0050: na landing a marca do rodapé é outra apresentação; a conferida aqui é a do cabeçalho.
+    const brandRoot = name === 'landing' ? page.getByRole('banner') : page
+    const brand = brandRoot.getByRole('img', { name: 'BestPrice', exact: true })
+      .or(brandRoot.getByRole('link', { name: 'BestPrice — Início', exact: true }))
+      .or(brandRoot.getByRole('link', { name: 'BestPrice AI — Início', exact: true }))
+      .or(brandRoot.getByRole('link', { name: 'BestPrice AI — Dashboard', exact: true }))
       // Shell interno (ResearchArea, desde fb46498): a marca leva ao assistente.
-      .or(page.getByRole('link', { name: 'BestPrice IA — Assistente', exact: true })).filter({ visible: true })
+      .or(brandRoot.getByRole('link', { name: 'BestPrice IA — Assistente', exact: true })).filter({ visible: true })
     await expect(brand).toHaveCount(1)
     await expect(brand).toBeVisible()
     expect(await brand.evaluate((element) => {
