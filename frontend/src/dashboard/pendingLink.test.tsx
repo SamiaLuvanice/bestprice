@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
-import { savePendingTrackLink } from '../navigation/pendingTrackLink'
-import { dashboardWith, fakeApi, trackedFixture } from '../test/fakeApi'
+import { savePendingTrackLink, takePendingTrackLink } from '../navigation/pendingTrackLink'
+import { dashboardWith, fakeApi, reply, trackedFixture } from '../test/fakeApi'
 
 afterEach(() => {
   cleanup()
@@ -91,5 +91,19 @@ describe('link trazido da landing no monitoramento', () => {
     await openMonitoring()
     expect(field()).toHaveValue('')
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
+  })
+
+  // Revisão (rodada 4): Sair descarta o link pendente; outra conta na mesma aba não o recebe.
+  it('Sair descarta o link pendente da aba', async () => {
+    window.history.replaceState(null, '', '/app/monitoring/alerts')
+    fakeApi((url) => url === '/api/auth/logout' ? reply(204, null) : undefined, dashboardWith([trackedFixture()]))
+    render(<App clock={clock} />)
+    await screen.findByRole('heading', { level: 1, name: 'Alertas' })
+    savePendingTrackLink(link)
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /Conta:/ }))
+    await user.click(screen.getByRole('button', { name: 'Sair' }))
+    await screen.findByRole('heading', { name: 'Entrar na sua conta' })
+    expect(takePendingTrackLink()).toBeNull()
   })
 })

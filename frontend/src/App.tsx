@@ -7,6 +7,7 @@ import { NotFoundPage } from './NotFoundPage'
 import { LandingPage } from './landing/LandingPage'
 import { AccountArea } from './dashboard/AccountArea'
 import { safeReturnTo } from './navigation/returnTo'
+import { discardPendingTrackLink } from './navigation/pendingTrackLink'
 import { Brand } from './components/Brand'
 import { ResearchArea } from './features/research/ResearchArea'
 import { useSignupAvailability } from './auth/useSignupAvailability'
@@ -96,6 +97,8 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   }, [])
 
   const endSession = useCallback((text: string | null) => {
+    // 0050: o link do hero não sobrevive ao fim da sessão (outra conta pode entrar nesta aba).
+    discardPendingTrackLink()
     setUser(null)
     setGuestMessage(text)
     setSessionState('guest')
@@ -104,6 +107,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   }, [navigate])
 
   const loggedOut = useCallback(() => {
+    discardPendingTrackLink()
     setLogoutRedirect(true)
     setUser(null)
     setGuestMessage(null)

@@ -21,3 +21,8 @@ export function takePendingTrackLink(): string | null {
     return null
   }
 }
+
+/** Ao sair (ou quando a sessão acaba), o link não pode passar para outra conta na mesma aba. */
+export function discardPendingTrackLink(): void {
+  takePendingTrackLink()
+}
