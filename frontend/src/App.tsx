@@ -138,7 +138,9 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   if (import.meta.env.DEV && DesignSystemCatalog && location.pathname === catalogPath) {
     return <Suspense fallback={<p role="status">Carregando catálogo…</p>}><DesignSystemCatalog /></Suspense>
   }
-  if (location.pathname === '/') return <LandingPage signupAvailable={signup.availability === 'enabled'} />
+  // 0050: "com sessão" só depois da confirmação; carregando ou com falha, a landing age como sem sessão.
+  if (location.pathname === '/') return <LandingPage authenticated={sessionState === 'ready' && user !== null}
+    signupAvailable={signup.availability === 'enabled'} />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
   if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
     <header className="masthead"><Brand /></header>
@@ -175,9 +177,11 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   const researchArea = user ? <ResearchArea key={user.id} user={user} clock={clock} onUnauthenticated={endSession} onLoggedOut={loggedOut} />
     : <Navigate to={logoutRedirect ? '/login' : `/login?returnTo=${encodeURIComponent(location.pathname)}`} replace />
 
+  // 0050: quem já tem sessão em Entrar ou Criar conta segue ao returnTo seguro, ou ao destino padrão.
+  const signedInTarget = postLoginTarget ?? (requestedReturnTo === '/' ? '/app/dashboard' : requestedReturnTo)
   return <Routes>
-    <Route path="/login" element={user ? <Navigate to={postLoginTarget ?? '/app/dashboard'} replace /> : loginPage} />
-    <Route path="/cadastro" element={user ? <Navigate to={postLoginTarget ?? '/app/dashboard'} replace /> : signupPage} />
+    <Route path="/login" element={user ? <Navigate to={signedInTarget} replace /> : loginPage} />
+    <Route path="/cadastro" element={user ? <Navigate to={signedInTarget} replace /> : signupPage} />
     <Route path="/app" element={user ? <Navigate to="/app/dashboard" replace /> : researchArea} />
     <Route path="/app/*" element={researchArea} />
     <Route path="/" element={protectedArea} />

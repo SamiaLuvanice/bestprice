@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { App } from './App'
+import { savePendingTrackLink } from './navigation/pendingTrackLink'
 import { apiError, callsTo, dashboardFixture, deferred, fakeApi, reply, sessionUser, trackedFixture } from './test/fakeApi'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
@@ -271,10 +272,15 @@ it.each([
 })
 
 // 0048/F5: rota do cadastro.
-it('leva quem já tem sessão de /cadastro ao painel', async () => {
+// 0050: com sessão confirmada, Entrar e Criar conta já levam ao destino final (returnTo seguro).
+it.each([
+  ['/cadastro?returnTo=%2Fapp%2Fassistant', '/app/assistant'],
+  ['/cadastro', '/app/dashboard'],
+  ['/cadastro?returnTo=%2F%2Fevil.example', '/app/dashboard'],
+])('leva quem já tem sessão de %s a %s', async (path, destination) => {
   signupApi(() => reply(200, { enabled: true }), (url) => url === '/api/auth/me' ? reply(200, sessionUser) : undefined)
-  visit('/cadastro?returnTo=%2Fapp%2Fassistant')
-  await waitFor(() => expect(window.location.pathname).toBe('/app/dashboard'))
+  visit(path)
+  await waitFor(() => expect(window.location.pathname).toBe(destination))
   expect(screen.queryByRole('heading', { name: 'Criar sua conta' })).not.toBeInTheDocument()
 })
 
@@ -350,4 +356,38 @@ it('do login com returnTo, o atalho Criar conta leva ao cadastro e volta com Ent
   fireEvent.click(screen.getByRole('link', { name: 'Entrar' }))
   expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
   expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/app/assistant')
+})
+
+it.each([
+  ['/login?returnTo=%2Fapp%2Fmonitoring', '/app/monitoring'],
+  ['/login', '/app/dashboard'],
+  ['/login?returnTo=https%3A%2F%2Fevil.example', '/app/dashboard'],
+])('leva quem já tem sessão de %s a %s', async (path, destination) => {
+  fakeApi()
+  visit(path)
+  await waitFor(() => expect(window.location.pathname).toBe(destination))
+  expect(window.location.search).toBe('')
+  expect(screen.queryByRole('heading', { name: 'Entrar na sua conta' })).not.toBeInTheDocument()
+})
+
+// 0050/AC05: o link do hero atravessa o login sem ir à URL nem ao servidor antes da confirmação.
+it('leva o link guardado na landing pelo login até o monitoramento, preenchido e com foco, sem enviá-lo', async () => {
+  const link = 'https://produto.mercadolivre.com.br/MLB-4444444444-batedeira-_JM'
+  savePendingTrackLink(link)
+  const mockFetch = guestApi(() => reply(200, sessionUser))
+  visit('/login?returnTo=%2Fapp%2Fmonitoring')
+  await screen.findByRole('button', { name: 'Entrar' })
+  fillLogin('pessoa@example.com', 'certa')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring'))
+  const field = await screen.findByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })
+  expect(field).toHaveValue(link)
+  await waitFor(() => expect(field).toHaveFocus())
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  expect(field).toHaveFocus()
+  expect(window.location.href).not.toContain('MLB-4444444444')
+  expect(mockFetch.mock.calls.filter(([url, init]) => String(url).includes('MLB-4444444444')
+    || String(init?.body ?? '').includes('MLB-4444444444'))).toHaveLength(0)
+  expect(callsTo(mockFetch, '/api/tracked-products', 'POST')).toHaveLength(0)
+  window.sessionStorage.clear()
 })
