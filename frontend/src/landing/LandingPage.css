@@ -35,7 +35,7 @@
 /* A marca mantém o tracking do componente Brand (spec 0029, brand.spec.ts); o tamanho é o do quadro. */
 .lp-header__brand .brand, .lp-footer .lp-footer__brand, .lp-menu .lp-menu__brand { letter-spacing: -.011em; }
 /* Body/L 20/30 · Body/M 17/25 · Body/S 14/20 · Body/S Medium. */
-.lp-hero__lead, .lp-lead, .lp-turn__lead { font-size: 20px; line-height: 30px; letter-spacing: -.002em; font-weight: 400; }
+.lp-lead, .lp-turn__lead { font-size: 20px; line-height: 30px; letter-spacing: -.002em; font-weight: 400; }
 .lp-link-form__input, .lp-scene p, .lp-step > p:last-child, .lp-why__list p, .lp-msg, .lp-chat__composer > span:first-child,
 .lp-features p, .lp-bridge__text p:not(.lp-bridge__title), .lp-faq__answer { font-size: 17px; line-height: 25px; letter-spacing: -.002em; font-weight: 400; }
 .lp-link-form__help, .lp-link-form__error, .lp-tab, .lp-demo__available, .lp-demo__stats dt, .lp-footnote, .lp-chat__search,
@@ -148,7 +148,6 @@
 .lp-live__dot { position: relative; width: 8px; height: 8px; margin: 5px; border-radius: 50%; background: var(--action); box-shadow: 0 0 0 5px color-mix(in srgb, var(--action) 25%, transparent); }
 .lp-hero__title { max-width: 13.5ch; text-wrap: wrap; }
 .lp-hero__kicker { max-width: 600px; color: var(--primary); }
-.lp-hero__lead { max-width: 560px; color: var(--muted-foreground); }
 /* Campo de link: V12; campo 600×70, H12, p8/8/8/22. */
 .lp-link-form { display: grid; gap: var(--space-3); max-width: 600px; }
 .lp-link-form__field { position: relative; display: flex; align-items: center; gap: var(--space-3); min-height: 70px; padding: 8px 8px 8px 22px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--background); box-shadow: var(--shadow-2); }
@@ -550,7 +549,6 @@
   .lp-live { gap: 8px; padding: 7px 12px 7px 10px; }
   .lp-hero__title { font-size: 42px; line-height: 46px; letter-spacing: -.03em; }
   .lp-hero__kicker { font-size: 21px; line-height: 27px; letter-spacing: -.01em; }
-  .lp-hero__lead { font-size: 17px; line-height: 25px; }
   /* campo de link — mobile: V10; campo 56 (p0/18), botão 52. */
   .lp-link-form { gap: 10px; }
   .lp-link-form__field { flex-wrap: wrap; min-height: 0; padding: 0; border: 0; background: transparent; box-shadow: none; gap: 10px; }
