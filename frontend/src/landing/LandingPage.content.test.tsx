@@ -19,6 +19,7 @@ type Snapshot = {
 }
 const snapshot = JSON.parse(readFileSync(join(process.cwd(), '../designsystem/landing/figma-landing-texts-2026-11.json'), 'utf-8')) as Snapshot
 const approved = new Map(snapshot.approvedChanges.map((change) => [change.figma, change.product]))
+const removedHeroLead = 'Cole o link de um anúncio do Mercado Livre uma única vez.'
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
@@ -44,6 +45,7 @@ function missingTexts(sections: Section[], attribute: 'data-figma-desktop' | 'da
     const text = renderedText(attribute, section.nodeId, hide)
     const expected = new Map<string, number>()
     for (const raw of section.texts) {
+      if (raw.startsWith(removedHeroLead)) continue
       const value = normalize(approved.get(raw) ?? raw)
       expected.set(value, (expected.get(value) ?? 0) + 1)
     }
@@ -61,13 +63,14 @@ function renderLanding() {
 it.each([
   ['desktop (238:294)', false, 'data-figma-desktop', '.lp-mobile'],
   ['mobile (239:180)', true, 'data-figma-mobile', '.lp-desktop'],
-] as const)('a landing %s tem as seções na ordem do quadro e todos os textos do Figma', (_frame, mobile, attribute, hide) => {
+] as const)('a landing %s segue a ordem do quadro e os textos aprovados', (_frame, mobile, attribute, hide) => {
   stubLandingEnvironment({ mobile })
   renderLanding()
   const sections = mobile ? snapshot.mobile.sections : snapshot.desktop.sections
   const order = [...new Set(Array.from(document.querySelectorAll(`[${attribute}]`), (element) => element.getAttribute(attribute)))]
   expect(order).toEqual(sections.map((section) => section.nodeId))
   expect(missingTexts(sections, attribute, hide)).toEqual([])
+  expect(screen.queryByText(removedHeroLead, { exact: false })).not.toBeInTheDocument()
 })
 
 it('o selo do hero usa o texto ajustado, não o do Figma', () => {
