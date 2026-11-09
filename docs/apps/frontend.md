@@ -249,7 +249,8 @@ quadros do Figma "01 · Landing · Desktop" (238:294), "Mobile" (239:180) e "Men
   - "Entrar" e "Já tenho conta" levam a `/login`, ou a `/app/dashboard` com sessão.
   - Sessão ou cadastro ainda em verificação, ou com falha, valem como "sem sessão" e
     "cadastro desligado". O `App` passa `authenticated` e `signupAvailable`.
-- **Link do hero:** `navigation/pendingTrackLink.ts` guarda o link aparado em
+- **Link do hero:** o formulário vem logo após o subtítulo em desktop e mobile.
+  `navigation/pendingTrackLink.ts` guarda o link aparado em
   `sessionStorage`, só naquela aba e nunca na URL. O `AccountArea` consome o link uma vez
   na seção de produtos e o `HeroTrackForm` abre preenchido e com foco (`initialValue`),
   sem enviar nada.
@@ -266,8 +267,11 @@ quadros do Figma "01 · Landing · Desktop" (238:294), "Mobile" (239:180) e "Men
   - O mini-robô (`ScrollCompanion`) aparece só a partir de 768 px, com `aria-hidden`.
   - O título, o campo e as ações do hero nunca esperam animação.
 - **Fidelidade:** `designsystem/landing/figma-landing-texts-2026-11.json` e
-  `figma-landing-metrics-2026-11.json` são snapshots do Figma, conferidos por hash.
-  - `LandingPage.content.test.tsx` compara os textos com o snapshot.
+  `figma-landing-metrics-2026-11.json` são snapshots históricos do Figma, conferidos por hash.
+  - O parágrafo “Cole o link de um anúncio do Mercado Livre uma única vez.” foi removido da
+    SPA e dos heróis desktop (238:295) e mobile (239:181) no Figma. Os testes de conteúdo e
+    tipografia consideram essa alteração ao comparar com os snapshots.
+  - `LandingPage.content.test.tsx` compara os textos com o snapshot e verifica a ausência do parágrafo.
   - `tests/visual/landing-metrics.spec.ts` compara tamanho, entrelinha e peso calculados.
   - `tests/visual/landing.spec.ts` cobre destinos, link, movimento, acessibilidade e CLS.
   - Divergências aprovadas: logo com 34 px, título sem fade, cabeçalho não fixo e cor de

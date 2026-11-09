@@ -19,6 +19,7 @@ const metrics = read('figma-landing-metrics-2026-11.json') as Metrics
 // O selo ajustado pela spec 0050 ("Ajuste de texto aprovado") troca só o texto; as medidas são as do quadro.
 const approved = new Map((read('figma-landing-texts-2026-11.json') as { approvedChanges: { figma: string; product: string }[] })
   .approvedChanges.map((change) => [change.figma, change.product]))
+const removedHeroLead = 'Cole o link de um anúncio do Mercado Livre uma única vez.'
 
 const frames = [
   { frame: 'desktop', width: 1440, height: 900, attribute: 'data-figma-desktop' },
@@ -36,7 +37,8 @@ for (const { frame, width, height, attribute } of frames) {
     await page.goto('/')
     await page.getByRole('heading', { level: 1 }).waitFor()
     await page.evaluate(() => document.fonts.ready)
-    const entries = metrics.texts[frame].filter((entry) => entry.check !== false)
+    const entries = metrics.texts[frame]
+      .filter((entry) => entry.check !== false && !entry.characters.startsWith(removedHeroLead))
       .map((entry) => ({ ...entry, characters: approved.get(entry.characters) ?? entry.characters }))
     const failures = await page.evaluate(({ entries, attribute }) => {
       const normalize = (text: string) => text.replace(/\s+/g, ' ').trim()

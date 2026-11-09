@@ -42,7 +42,6 @@ export function Hero() {
           <Responsive desktop="Monitorando anúncios do Mercado Livre" mobile="Monitorando o Mercado Livre" /></p>
         <h1 id="lp-hero-title" className="lp-hero__title">Pare de dar F5 no preço.</h1>
         <p className="lp-hero__kicker">O BestPrice acompanha por você — e avisa na hora certa.</p>
-        <p className="lp-hero__lead">Cole o link de um anúncio do Mercado Livre uma única vez. O BestPrice consulta o preço automaticamente, guarda o histórico e te avisa quando ele chega ao valor que você quer pagar.</p>
         <form className="lp-link-form" onSubmit={submit} noValidate>
           <div className="lp-link-form__field" data-invalid={invalid || undefined}>
             <Link2 className="lp-link-form__icon" aria-hidden="true" />
