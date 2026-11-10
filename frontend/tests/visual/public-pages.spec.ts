@@ -31,17 +31,20 @@ for (const colorScheme of themes) {
   test.describe(`tema ${colorScheme}`, () => {
     test.use({ colorScheme })
 
-    test('landing pública', async ({ page }) => {
+    test('landing pública', async ({ page }, { project }) => {
       // 0050: a landing tem movimento contínuo (flutuação, feixe, órbitas) e conteúdo que entra pela
       // rolagem; com movimento reduzido a captura mostra o estado final e não varia entre execuções.
       await page.emulateMedia({ reducedMotion: 'reduce' })
       await replyGuestSession(page)
+      await page.route('**/api/auth/signup', (route) => route.fulfill({ json: { enabled: false } }))
       await page.goto('/')
       // 0050: landing nova.
       const title = page.getByRole('heading', { name: 'Pare de dar F5 no preço.', level: 1 })
       await expect(title).toBeVisible()
       await waitForStableImages(page)
-      await expect(page).toHaveScreenshot(`landing-${colorScheme}.png`, { fullPage: true })
+      // O Chromium diverge em até 12 pixels isolados de antisserrilhamento em mobile.
+      const maxDiffPixels = ['viewport-320', 'viewport-390'].includes(project.name) ? 12 : 0
+      await expect(page).toHaveScreenshot(`landing-${colorScheme}.png`, { fullPage: true, maxDiffPixels })
     })
 
     test('login', async ({ page }) => {
