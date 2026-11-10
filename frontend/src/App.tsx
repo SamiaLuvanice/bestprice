@@ -12,6 +12,7 @@ import { Brand } from './components/Brand'
 import { ResearchArea } from './features/research/ResearchArea'
 import { useSignupAvailability } from './auth/useSignupAvailability'
 import { SignupForm } from './auth/SignupForm'
+import { usePageMeta } from './seo/pageMeta'
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
@@ -81,6 +82,8 @@ function AppRoutes({ clock }: { clock: () => Date }) {
 
   // 0048: consultado uma vez por carregamento, depois da sessão (a ordem das chamadas é estável).
   const signup = useSignupAvailability()
+  // 0051/AC06: canonical e descrição por rota, independentes do estado da sessão.
+  usePageMeta(location.pathname, signup.availability === 'enabled')
   const requestedReturnTo = safeReturnTo(new URLSearchParams(location.search).get('returnTo'))
   const returnToQuery = requestedReturnTo === '/' ? '' : `?returnTo=${encodeURIComponent(requestedReturnTo)}`
 
