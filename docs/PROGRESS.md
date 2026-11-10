@@ -2,10 +2,11 @@
 
 ## 0051 — SEO técnico das páginas públicas
 
-**10/11/2026: implementação entregue; aguarda revisão e merge do
-[PR #288](https://github.com/SamiaLuvanice/bestprice/pull/288) para develop.**
-Spec `pronta`, [Issue #287](https://github.com/SamiaLuvanice/bestprice/issues/287),
-branch/worktree `feature/0051-issue-287-seo-tecnico-landing`, base origin/develop `4da00c3`.
+**10/11/2026: spec `implementada`.** [Issue #287](https://github.com/SamiaLuvanice/bestprice/issues/287) fechada;
+PR [#288](https://github.com/SamiaLuvanice/bestprice/pull/288) integrada em `develop` (`0f0d154`) com CI verde,
+depois da revisão independente e da QA. Conclusão registrada pela
+[Issue #291](https://github.com/SamiaLuvanice/bestprice/issues/291).
+Branch `feature/0051-issue-287-seo-tecnico-landing`, base origin/develop `4da00c3`.
 
 O que entrou (só frontend, configuração estática do Cloudflare Pages e documentação):
 - `robots.txt` (bloqueia `/app$`, `/app/`, `/produtos` e `/alertas`) e `sitemap.xml` com `/`
