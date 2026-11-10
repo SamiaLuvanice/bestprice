@@ -23,9 +23,19 @@ Esta seção prevalece sobre o restante da skill, que é cópia do upstream
   seção de SEO internacional/hreflang só se aplica se isso mudar.
 - **Superfície indexável:** a SPA Vite renderiza no cliente. Só a landing (`/`),
   `/login` e `/cadastro` são públicas; áreas autenticadas (`/app/*`, `/produtos`,
-  `/alertas`) não devem ser indexadas. `frontend/index.html` concentra `<title>` e
-  meta description; `frontend/public/` guarda arquivos estáticos servidos pelo
-  Cloudflare Pages em stage.
+  `/produtos/:id`, `/alertas`) não deveriam ser indexadas, mas hoje não há
+  `noindex`, `robots.txt` nem `sitemap.xml` (`frontend/public/` só tem `_routes.json`
+  e `favicon.png`); reporte a ausência como achado, não presuma proteção.
+- **Títulos e metadados:** `frontend/index.html` tem o `<title>` padrão e a única
+  meta description, igual em todas as rotas. Cada tela troca o título via
+  `document.title` (landing em `frontend/src/landing/LandingPage.tsx`, login,
+  cadastro e 404 em `frontend/src/App.tsx`, área logada em
+  `frontend/src/dashboard/AccountArea.tsx` e `/app/*` em
+  `frontend/src/features/research/ResearchArea.tsx`); por isso audite o HTML renderizado,
+  não só o `index.html`.
+- **Soft 404:** a rota `*` renderiza `NotFoundPage` no cliente; com o fallback de
+  SPA do Cloudflare Pages em stage, o status HTTP tende a ser 200. Confirme com
+  `curl -I` antes de reportar.
 - **Evidência:** para HTML renderizado, JSON-LD e Core Web Vitals, use o MCP
   `chrome-devtools` do projeto ou PageSpeed Insights, não apenas `curl`. Separe
   observação de inferência (`.agents/rules/evidencia.md`) e não invente métricas de
