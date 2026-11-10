@@ -118,9 +118,9 @@ describe('_redirects (AC04)', () => {
     expect(appRoutes).toEqual(expect.arrayContaining(['/login', '/cadastro', '/app', '/app/*', '/produtos', '/produtos/:id', '/alertas']))
   })
 
-  it('só tem reescritas 200 para /index.html, nunca redirecionamentos', () => {
+  it('só tem reescritas 200 para /, nunca redirecionamentos', () => {
     expect(rules.length).toBeGreaterThan(0)
-    expect(rules.filter(([, target, status]) => target !== '/index.html' || status !== '200')).toEqual([])
+    expect(rules.filter(([, target, status]) => target !== '/' || status !== '200')).toEqual([])
   })
 
   it('cobre cada rota do App.tsx, com e sem barra final', () => {

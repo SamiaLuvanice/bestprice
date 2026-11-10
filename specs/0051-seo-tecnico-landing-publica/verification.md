@@ -96,7 +96,34 @@ em `--foreground` com a pilha `--font-display`.
 
 **Aprovação da responsável (AC08, AC09): pendente.**
 
+## Correção da T7: destino das reescritas (`_redirects`)
+
+**Red de borda** (preview `https://812bc030.bestprice-stage.pages.dev`, commit `582bf44`, `curl`
+feito pela coordenação e repassado a este registro):
+
+- `/login`, `/cadastro`, `/produtos`, `/alertas` e `/app` → **308** com `Location: /`: o Pages
+  normaliza o destino `/index.html` para `/` e redireciona em vez de reescrever.
+- `/login/`, `/cadastro/`, `/produtos/`, `/produtos/abc123`, `/alertas/`, `/app/` e
+  `/app/dashboard` → **404** com o `404.html`.
+- Corretos, sem mudança: `/` 200; `/pagina-que-nao-existe` e `/assets/naoexiste.js` 404;
+  `robots.txt` `text/plain`; `sitemap.xml` `application/xml`; cache imutável em `/assets/*` e
+  `max-age=0` no HTML e no favicon.
+
+Aplicada a alternativa prevista no plan.md (Riscos): destino `/` em todas as reescritas.
+
+| Etapa | Comando (`frontend/`) · resultado |
+|---|---|
+| Red | teste "só tem reescritas 200 para /, nunca redirecionamentos" atualizado; `npx vitest run src/seo/staticSeo.test.ts` · **1 failed, 21 passed (22)**: `expected [ …(12) ] to deeply equal []` (as 12 regras ainda apontavam para `/index.html`) |
+| Green | `public/_redirects` com destino `/`; mesmo comando · **22 passed (22)** |
+| Lint | `npm run lint` · saída 0 |
+| Testes | `npm test -- --run` · **61 arquivos; 819 passed (819)**; 68,5 s; saída 0 |
+
+Verificação do novo preview: pendente (coordenação).
+
 ## Desvios do plano
+
+- **Reescritas do `_redirects` com destino `/`** em vez de `/index.html` (alternativa já prevista
+  no plano), pela evidência de borda acima.
 
 - **Plugin do `404.html` em módulo próprio.** O plano previa o plugin dentro do `vite.config.ts`.
   Ele continua registrado ali, mas a lógica fica em `frontend/scripts/not-found-page.mjs` (com
@@ -117,6 +144,6 @@ em `--foreground` com a pilha `--font-display`.
 - AC11: suíte visual completa verde (falhas preexistentes acima).
 - AC08/AC09: aprovação da responsável das evidências em `evidence/`.
 - T7 (preview do PR): `curl -i` de AC01–AC04, AC07, AC09 e AC10; Lighthouse 12 mobile para peso
-  transferido e Acessibilidade 100; comportamento real do `_redirects` com destino `/index.html` e
+  transferido e Acessibilidade 100; comportamento real do `_redirects` com destino `/` e
   barra final.
 - T8 (revisão e QA), T9 (documentação e `doc-sync-onboarding`), T10 (pós-promoção em stage).
