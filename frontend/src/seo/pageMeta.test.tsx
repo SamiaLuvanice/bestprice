@@ -1,4 +1,4 @@
-import { cleanup, render, renderHook, screen } from '@testing-library/react'
+import { act, cleanup, render, renderHook, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { App } from '../App'
 import { apiError, deferred, fakeApi, reply } from '../test/fakeApi'
@@ -80,8 +80,11 @@ it.each(['pendente', 'HTTP 503', 'falha de rede'])('o App em /login declara cano
   if (state === 'falha de rede') session.reject(new TypeError('Failed to fetch'))
   if (state === 'pendente') expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
   else expect(await screen.findByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
-  expect(canonicalHref()).toBe('https://bestprice-stage.pages.dev/login')
-  expect(descriptionContent()).toBe(loginDescription)
+  // O efeito do usePageMeta é passivo: pode rodar depois de o findBy* resolver.
+  await waitFor(() => {
+    expect(canonicalHref()).toBe('https://bestprice-stage.pages.dev/login')
+    expect(descriptionContent()).toBe(loginDescription)
+  })
 })
 
 it('o App em /cadastro com o cadastro ligado declara o canonical de Criar conta', async () => {
@@ -93,15 +96,27 @@ it('o App em /cadastro com o cadastro ligado declara o canonical de Criar conta'
   window.history.replaceState({}, '', '/cadastro')
   render(<App />)
   expect(await screen.findByRole('heading', { level: 1, name: 'Criar sua conta' })).toBeInTheDocument()
-  expect(canonicalHref()).toBe('https://bestprice-stage.pages.dev/cadastro')
-  expect(descriptionContent()).toBe(signupDescription)
+  await waitFor(() => {
+    expect(canonicalHref()).toBe('https://bestprice-stage.pages.dev/cadastro')
+    expect(descriptionContent()).toBe(signupDescription)
+  })
 })
 
-it('o App na página não encontrada não declara canonical', async () => {
+// Navegação dentro da SPA: o canonical de Entrar existe e some ao chegar à página não encontrada.
+it('o App remove o canonical ao navegar de /login para uma rota desconhecida', async () => {
   fakeApi((url) => url === '/api/auth/me' ? reply(401, apiError('unauthenticated', 'Entre para continuar.'))
     : url === '/api/auth/signup' ? reply(200, { enabled: false }) : undefined)
-  window.history.replaceState({}, '', '/pagina-que-nao-existe')
+  window.history.replaceState({}, '', '/login')
   render(<App />)
+  expect(await screen.findByRole('heading', { level: 1, name: 'Entrar na sua conta' })).toBeInTheDocument()
+  await waitFor(() => expect(canonicalHref()).toBe('https://bestprice-stage.pages.dev/login'))
+  act(() => {
+    window.history.pushState({}, '', '/pagina-que-nao-existe')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
   expect(await screen.findByRole('heading', { level: 1, name: 'Este endereço saiu do radar.' })).toBeInTheDocument()
-  expect(canonicalHref()).toBeNull()
+  await waitFor(() => {
+    expect(canonicalHref()).toBeNull()
+    expect(descriptionContent()).toBe(landingDescription)
+  })
 })
