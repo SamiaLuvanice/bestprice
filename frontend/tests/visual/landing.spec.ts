@@ -528,23 +528,27 @@ test('A1 — selo "menor preço" da Demonstração inteiro dentro do painel', as
   onlyOn1280(info.project.name)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await api(page)
+  // A geometria responsiva pode ser medida na mesma página, sem recarregar a cada largura.
+  await page.goto('/', { waitUntil: 'commit' })
+  const lander = page.locator('.lp-demo__lander')
+  await expect(lander).toHaveCSS('opacity', '1')
   for (const width of [320, 390, 768, 1280, 1440]) {
-    await page.setViewportSize({ width, height: 844 })
-    await page.goto('/')
-    await page.locator('.lp-demo__chart').evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'instant' }))
-    await frames(page)
-    const { badge, panel } = await page.evaluate(() => {
-      const rect = (selector: string) => {
-        const box = document.querySelector(selector)!.getBoundingClientRect()
-        return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }
-      }
-      return { badge: rect('.lp-demo__lander .lp-robot__found'), panel: rect('.lp-demo__panel') }
+    await test.step(`${width} px`, async () => {
+      await page.setViewportSize({ width, height: 844 })
+      const { badge, panel } = await page.evaluate(async () => {
+        await document.fonts.ready
+        const rect = (selector: string) => {
+          const box = document.querySelector(selector)!.getBoundingClientRect()
+          return { left: box.left, right: box.right, top: box.top, bottom: box.bottom }
+        }
+        return { badge: rect('.lp-demo__lander .lp-robot__found'), panel: rect('.lp-demo__panel') }
+      })
+      const where = `selo ${JSON.stringify(badge)} painel ${JSON.stringify(panel)}`
+      expect(badge.left, where).toBeGreaterThanOrEqual(panel.left)
+      expect(badge.right, where).toBeLessThanOrEqual(panel.right)
+      expect(badge.top, where).toBeGreaterThanOrEqual(panel.top)
+      expect(badge.bottom, where).toBeLessThanOrEqual(panel.bottom)
     })
-    const where = `${width} px: selo ${JSON.stringify(badge)} painel ${JSON.stringify(panel)}`
-    expect(badge.left, where).toBeGreaterThanOrEqual(panel.left)
-    expect(badge.right, where).toBeLessThanOrEqual(panel.right)
-    expect(badge.top, where).toBeGreaterThanOrEqual(panel.top)
-    expect(badge.bottom, where).toBeLessThanOrEqual(panel.bottom)
   }
 })
 

@@ -758,6 +758,18 @@ Playwright (a SPA permanece no tema claro fixo descrito acima). Os baselines fic
 A suíte é local: não roda no CI e os baselines dependem das fontes da máquina.
 A evidência inicial está na [verificação da spec 0025](../../specs/0025-harness-design-tooling/verification.md).
 
+Com a spec 0052, as capturas da landing emulam movimento reduzido e também
+simulam `GET /api/auth/signup` com `{ enabled: false }`.
+O limite de 12 pixels divergentes vale para as capturas da landing em 320 e
+390 px nos dois temas e cobre a variação de rasterização observada nos PNGs
+de referência. Em `landing.spec.ts`, o cenário A1 abre a página uma vez,
+espera o estado final do robô e mede os quatro limites do selo “menor preço”
+no painel da Demonstração em 320, 390, 768, 1280 e 1440 px.
+
+Para reproduzir a rodada completa da 0052, execute `npm run test:visual -- --workers=4`
+em `frontend/`, separadamente do Vitest. As exclusões por projeto correspondem
+aos cenários que usam larguras específicas. [Verificação da spec 0052](../../specs/0052-suite-visual-estavel/verification.md).
+
 `redesign.spec.ts` acrescentou inicialmente 30 cenários: dez rotas/estados em três viewports,
 com fixtures de API interceptadas, axe (`@axe-core/playwright`, tags WCAG A/AA),
 ausência de overflow e controles de pelo menos 44 px. Também verifica nome acessível
