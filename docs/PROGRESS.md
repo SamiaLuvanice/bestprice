@@ -27,13 +27,15 @@ e desvios do plano na [verificação da 0051](../specs/0051-seo-tecnico-landing-
 Pendências:
 - AC11: a suíte visual tem 5 falhas que já existiam (também na base); estabilização na
   [Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289), com merge aceito pela responsável;
-- verificação em stage após a promoção (`curl -i` de `robots.txt`, `sitemap.xml`, rota
-  inexistente e `og-image.png`; Lighthouse 12 mobile com SEO 100).
 
 Imagem de compartilhamento e ícone aprovados pela responsável (AC08/AC09). Achados da QA
 anteriores à spec na [Issue #290](https://github.com/SamiaLuvanice/bestprice/issues/290).
 Borda conferida no preview do PR: rotas da SPA com e sem barra final em 200, inexistentes em
 404, cache imutável só em `/assets/*`. Na QA, Acessibilidade 100 e peso de 757 para 280 KiB.
+Promovida para stage pelo [PR #293](https://github.com/SamiaLuvanice/bestprice/pull/293) (`a59e912`). Em stage,
+o 404 real, `robots.txt`, `sitemap.xml` e `og-image.png` foram conferidos. O Lighthouse mobile deu
+SEO **100** (antes 92), Acessibilidade 100, LCP 3,9 s (antes 6,0 s) e 279 KiB. Registro da T10 pela
+[Issue #294](https://github.com/SamiaLuvanice/bestprice/issues/294).
 
 ## 0050 — Landing pública nova conforme o Figma
 

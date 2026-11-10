@@ -13,6 +13,8 @@ implementação; registre Red e Green em verification.md.
 - [x] **T7 — Preview do PR.** Comandos `curl -i` e Lighthouse 12 mobile da seção "Verificação por ambiente"; ajustar o `_redirects` se o preview divergir.
 - [x] **T8 — Revisão e QA.** `arch-reviewer` no diff; QA dos AC no preview.
 - [x] **T9 — Documentação.** `docs/apps/frontend.md`, `docs/apps/infraestrutura.md`, verification.md, `docs/PROGRESS.md`; `doc-sync-onboarding` por último.
-- [ ] **T10 — Pós-promoção (pendência; aguarda a próxima promoção para stage).** Em stage, `curl -i` de `robots.txt`, `sitemap.xml` e rota inexistente, mais Lighthouse 12 mobile com SEO 100.
+- [x] **T10 — Pós-promoção.** Em stage, `curl -i` de `robots.txt`, `sitemap.xml` e rota inexistente, mais Lighthouse 12 mobile com SEO 100.
 
 PR [#288](https://github.com/SamiaLuvanice/bestprice/pull/288) com CI verde, integrada em `develop` em 10/11/2026 (`0f0d154`). Issue #287 fechada; conclusão registrada pela [Issue #291](https://github.com/SamiaLuvanice/bestprice/issues/291).
+
+T10 verificada em stage em 10/11/2026, após a promoção [#293](https://github.com/SamiaLuvanice/bestprice/pull/293) (`a59e912`). Registro pela [Issue #294](https://github.com/SamiaLuvanice/bestprice/issues/294).

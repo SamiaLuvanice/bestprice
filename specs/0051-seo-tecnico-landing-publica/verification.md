@@ -227,9 +227,50 @@ Os estados "pendente", "abortada" e "visitante" foram simulados interceptando `/
 - **`robots.txt` bloqueia `/app$` e `/app/`** em vez de `/app` (tabela "Arquivos" do plano), para
   não bloquear `/apple-touch-icon.png` (revisão, R1).
 
+## Verificação pós-promoção em stage (T10)
+
+Em 10/11/2026, a promoção `develop` → `stage` foi feita pelo
+[PR #293](https://github.com/SamiaLuvanice/bestprice/pull/293), com CI verde e `stage` em `a59e912`.
+O Cloudflare Pages publicou a revisão cerca de 45 s após o merge. O sinal usado foi o
+`robots.txt` passar a responder `text/plain`.
+
+**`curl` em `https://bestprice-stage.pages.dev`:**
+
+| Requisição | Resultado |
+|---|---|
+| `/`, `/login`, `/login/`, `/cadastro`, `/produtos`, `/produtos/abc`, `/alertas`, `/app`, `/app/dashboard` | **200**, `text/html`, 1742 B |
+| `/pagina-que-nao-existe`, `/assets/naoexiste.js` | **404**, `text/html`, 1742 B |
+| `/robots.txt` | 200, `text/plain`, 348 B (com `/app$` e `/app/`) |
+| `/sitemap.xml` | 200, `application/xml`, 249 B |
+| `/favicon.png` / `/apple-touch-icon.png` / `/og-image.png` | 200, `image/png`, 1621 / 5298 / 48 565 B |
+| HTML `/` | `Cache-Control: public, max-age=0, must-revalidate`, sem `x-robots-tag` |
+| `/assets/index-*.js` | `Cache-Control: public, max-age=31536000, immutable` |
+| HTML bruto de `/` | `<title>BestPrice`, `og:title` "Monitor de preços do Mercado Livre · BestPrice" |
+
+O `og:image` absoluto, que no preview só existia depois da promoção, agora responde `image/png`.
+
+**Health:** `GET /api/health` no Pages respondeu **429** na primeira tentativa. Em seguida, tanto no
+Render direto (`https://bestprice-stage-api.onrender.com/api/health`) quanto pelo Pages, respondeu
+**200** com `{"status":"ok","database":"ok"}`. Interpretamos o 429 como transitório, causado pelo
+desafio do Cloudflare na origem Render, já visto na QA.
+
+**Lighthouse 12 mobile na landing (local, Chromium headless):**
+
+| Execução | Performance | Acessibilidade | Boas práticas | SEO |
+|---|---|---|---|---|
+| Auditoria inicial, antes da 0051 | 42 | 100 | 96 | 92 |
+| 1ª após a promoção | 62 | 100 | 96 | 92 |
+| 2ª e 3ª após a promoção (só SEO) | — | — | — | **100** |
+
+- A 1ª execução reprovou `robots-txt` com "Lighthouse was unable to download a robots.txt file",
+  apesar de o arquivo responder 200 `text/plain` no mesmo momento. As duas execuções seguintes
+  deram `robots-txt` 1 e `is-crawlable` 1, com SEO 100. Interpretamos a falha como transitória
+  da coleta.
+- Na 1ª execução: LCP 3,9 s (antes 6,0 s), TBT 880 ms, CLS 0 e peso transferido de 279 KiB
+  (antes 757 KiB).
+- A falha restante em boas práticas é `errors-in-console`, fora do escopo da 0051.
+
 ## Pendências
 
 - AC11: suíte visual completa verde. As falhas são anteriores a esta spec e estão na Issue #289.
-- T10 (pós-promoção em stage): `curl -i` de `robots.txt`, `sitemap.xml`, de uma rota inexistente e
-  de `og-image.png`, e Lighthouse 12 mobile com SEO 100.
-- T7, T8 e T9 concluídas (seção "Borda no preview do PR" e commits de documentação).
+- T7 a T10 concluídas.
