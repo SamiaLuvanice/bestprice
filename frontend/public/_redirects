@@ -1,0 +1,17 @@
+# Cloudflare Pages (spec 0051, AC03/AC04): com dist/404.html, rota sem arquivo responde 404.
+# Cada rota da SPA declarada em src/App.tsx precisa de uma reescrita 200 aqui
+# (src/seo/staticSeo.test.ts cruza as duas listas). `/` é o próprio index.html.
+# Destino `/`, não `/index.html`: o Pages normaliza `/index.html` para `/` e respondia 308
+# em vez de reescrever (preview do PR #288, 10/11/2026).
+/login       / 200
+/login/      / 200
+/cadastro    / 200
+/cadastro/   / 200
+/produtos    / 200
+/produtos/   / 200
+/produtos/*  / 200
+/alertas     / 200
+/alertas/    / 200
+/app         / 200
+/app/        / 200
+/app/*       / 200

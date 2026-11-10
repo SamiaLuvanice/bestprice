@@ -1,0 +1,10 @@
+# BestPrice (spec 0051): páginas públicas indexáveis; áreas autenticadas fora do rastreamento.
+# `/app$` e `/app/` em vez de `/app`: a regra casa por prefixo e bloquearia /apple-touch-icon.png.
+User-agent: *
+Allow: /
+Disallow: /app$
+Disallow: /app/
+Disallow: /produtos
+Disallow: /alertas
+
+Sitemap: https://bestprice-stage.pages.dev/sitemap.xml
