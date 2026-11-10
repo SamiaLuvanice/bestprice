@@ -100,11 +100,11 @@ it('o menu aberto do mobile mostra os itens do quadro 239:856', async () => {
   expect(snapshot.mobileMenu.texts.filter((value) => !text.includes(value))).toEqual([])
 })
 
-it('o título da aba é o da spec e a marca é "BestPrice", sem "AI"', () => {
+it('o título da aba é o da spec 0051 e a marca é "BestPrice", sem "AI"', () => {
   document.title = 'BestPrice'
   stubLandingEnvironment()
   renderLanding()
-  expect(document.title).toBe('BestPrice · Pare de dar F5 no preço.')
+  expect(document.title).toBe('Monitor de preços do Mercado Livre · BestPrice')
   expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Pare de dar F5 no preço.')
   expect(screen.getByRole('link', { name: 'BestPrice — Início' })).toBeInTheDocument()
