@@ -3,7 +3,7 @@ numero: 0051
 titulo: SEO técnico das páginas públicas
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend, docs]
 depende_de: [0048, 0050]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/287
