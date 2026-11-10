@@ -3,9 +3,11 @@ import { searchForWorkspaceRoot } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { fileURLToPath, URL } from 'node:url'
+import { notFoundPage } from './scripts/not-found-page.mjs'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  // 0051/AC03: dist/404.html (cópia do index.html) faz o Pages responder 404 em rota sem arquivo.
+  plugins: [react(), tailwindcss(), notFoundPage()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   build: {
     // 0049: fontes nunca viram base64 dentro do CSS (aumentariam o CSS principal e baixariam
