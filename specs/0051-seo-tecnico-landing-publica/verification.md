@@ -120,6 +120,34 @@ Aplicada a alternativa prevista no plan.md (Riscos): destino `/` em todas as ree
 
 Verificação do novo preview: pendente (coordenação).
 
+## Correções da revisão
+
+Achados da revisão independente e da QA, corrigidos em 10/11/2026 na mesma worktree. Comandos em
+`frontend/`. Onde o achado é uma proteção que o código atual já cumpre, o Red foi demonstrado por
+mutação temporária (revertida em seguida, `git status` limpo antes do commit).
+
+| Item | Red | Green |
+|---|---|---|
+| B1 — teste instável (`pageMeta.test.tsx`, canonical de `/cadastro` lido logo após `findByRole`) | Relatado pela revisão: **2 falhas em 8** com `expected null to be 'https://bestprice-stage.pages.dev/cadastro'` (o efeito passivo do `usePageMeta` podia rodar depois do `findBy*`). Aqui, antes da correção, 10 execuções isoladas deram 10 verdes: a falha não reproduziu sem carga | Asserções de canonical/descrição depois de `findBy*` dentro de `await waitFor(...)` (casos de `/login` e `/cadastro`). `npx vitest run src/seo/pageMeta.test.tsx` **20 vezes seguidas: 20 verdes, 0 falhas** (18 testes cada) |
+| R1 — `Disallow: /app` bloqueava `/apple-touch-icon.png` | `robotsAllows` do teste passou a tratar `*` e `$` (RFC 9309); casos liberados ganharam `/apple-touch-icon.png`, `/favicon.png`, `/sitemap.xml` (além de `/og-image.png`); bloqueados mantêm `/app`, `/app/`, `/app/dashboard`. `npx vitest run src/seo/staticSeo.test.ts` · **1 failed, 24 passed (25)**: "libera /apple-touch-icon.png", `expected false to be true` | `robots.txt` com `Disallow: /app$` e `Disallow: /app/` · **25 passed (25)** |
+| R3 — cruzamento `_redirects` × rotas frágil | Testes novos: nº de `<Route` no `App.tsx` igual ao nº de paths literais extraídos (aspas simples ou duplas); nenhum `<Route`/`<Routes` em outro arquivo de `src/` fora dos testes. Mutação: `/alertas` como `path={'/alertas'}` e um `src/TmpExtraRoutes.tsx` com `<Routes>` · falharam "extrai um path literal de cada <Route>" (`to have a length of 9 but got 8`), "não declara <Route> nem <Routes> fora do App.tsx" (`expected [ 'src/TmpExtraRoutes.tsx' ] to deeply equal []`) e "encontra as rotas". O teste antigo "cobre cada rota" passava nessa mutação — era o furo apontado | Mutações revertidas · **27 passed (27)** |
+| O1 — plugin copiava sem checar o `index.html` | Teste "sem dist/index.html o plugin não copia nada nem interrompe o build" · **1 failed, 2 passed (3)**: `ENOENT: no such file or directory, copyfile '…\dist\index.html' -> '…\dist\404.html'` | `closeBundle` só copia se `index.html` existir · **3 passed (3)** |
+| O2 — `process.cwd()` e `read()` tolerante | Mutação: `public/sitemap.xml` renomeado · o teste do sitemap passou a falhar com `ENOENT … public\sitemap.xml` (antes, `read()` devolvia `''`) | Raiz por `import.meta.dirname` e `read()` sem fallback · **27 passed (27)**. `new URL('../../', import.meta.url)` + `fileURLToPath` não serve: no jsdom o `URL` global não é o do Node e o Node recusa com "The URL must be of scheme file" (mesmo com `.href`); `import.meta.dirname` é o valor do arquivo, conferido numa sonda temporária |
+| O3 — "não encontrada sem canonical" passava por vacuidade | Substituído por "o App remove o canonical ao navegar de /login para uma rota desconhecida" (canonical de Entrar presente, `pushState` + `popstate`, página não encontrada, canonical ausente e descrição da landing). Mutação: remoção do canonical desligada no `usePageMeta` · **2 failed, 16 passed (18)**, incluindo o teste novo (`expected 'https://bestprice-stage.pages.dev/log…' to be null`) | Mutação revertida (sem diff em `pageMeta.ts`) · **18 passed (18)** |
+
+`_headers` não mudou: a revisão perguntou se o 404 de `/assets/*` herdava o cache imutável; no
+preview ele responde `Cache-Control: no-store` (evidência da coordenação).
+
+### Gates após as correções
+
+| Comando (`frontend/`) | Resultado observado |
+|---|---|
+| `npm run lint` | `eslint .`, saída 0 |
+| `npm test -- --run` | **61 arquivos; 825 passed (825)**; 103,6 s; saída 0 |
+| `npm run build:check` (após `rm -rf dist`) | build ok em 1,47 s; "Sem vestígios do catálogo em dist (5 marcadores conferidos)"; "Fontes conforme em dist: Geist Mono latin/latin-ext 400–600, sem base64"; saída 0; `dist/404.html` igual a `dist/index.html`; `dist/robots.txt` com `/app$` e `/app/` |
+
+A suíte visual não foi reexecutada nesta rodada (as mudanças não alteram nada visível).
+
 ## Desvios do plano
 
 - **Reescritas do `_redirects` com destino `/`** em vez de `/index.html` (alternativa já prevista
@@ -138,6 +166,8 @@ Verificação do novo preview: pendente (coordenação).
   `src/assets/logo-bestprice.png`, em 1254 px), porque a versão de 128 px ficaria borrada no
   tamanho usado.
 - O `<title>` estático do `index.html` continua "BestPrice"; `og:title` usa o título da landing.
+- **`robots.txt` bloqueia `/app$` e `/app/`** em vez de `/app` (tabela "Arquivos" do plano), para
+  não bloquear `/apple-touch-icon.png` (revisão, R1).
 
 ## Pendências
 
