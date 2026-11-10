@@ -24,11 +24,13 @@ Após as correções da revisão: lint verde, Vitest **825/825** em 61 arquivos 
 e desvios do plano na [verificação da 0051](../specs/0051-seo-tecnico-landing-publica/verification.md).
 
 Pendências:
-- aprovação da imagem de compartilhamento e do ícone pela responsável (AC08/AC09);
-- AC11: a suíte visual tem 5 falhas pré-existentes (também na base, sem as mudanças desta spec);
+- AC11: a suíte visual tem 5 falhas que já existiam (também na base); estabilização na
+  [Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289), com merge aceito pela responsável;
 - verificação em stage após a promoção (`curl -i` de `robots.txt`, `sitemap.xml`, rota
   inexistente e `og-image.png`; Lighthouse 12 mobile com SEO 100).
 
+Imagem de compartilhamento e ícone aprovados pela responsável (AC08/AC09). Achados da QA
+anteriores à spec na [Issue #290](https://github.com/SamiaLuvanice/bestprice/issues/290).
 Borda conferida no preview do PR: rotas da SPA com e sem barra final em 200, inexistentes em
 404, cache imutável só em `/assets/*`. Na QA, Acessibilidade 100 e peso de 757 para 280 KiB.
 

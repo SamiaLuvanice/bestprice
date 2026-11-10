@@ -195,6 +195,17 @@ Os estados "pendente", "abortada" e "visitante" foram simulados interceptando `/
 - Com a API inacessível, uma rota desconhecida mostra o erro global em vez da página "não
   encontrada". O status 404 e o título continuam corretos.
 
+## Aprovações e decisões da responsável (10/11/2026)
+
+- **AC08 e AC09 aprovados:** a imagem de compartilhamento (`evidence/og-image.png`) e o ícone
+  novo (`evidence/icon-comparison.png`, atual × novo em 16, 32 e 180 px) foram aprovados como
+  estão.
+- **AC11:** merge aceito com as 5 falhas visuais registradas, porque elas já existem em develop e
+  a branch não altera pixels. A estabilização foi para a
+  [Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289).
+- Achados da QA anteriores à 0051 registrados na
+  [Issue #290](https://github.com/SamiaLuvanice/bestprice/issues/290).
+
 ## Desvios do plano
 
 - **Reescritas do `_redirects` com destino `/`** em vez de `/index.html` (alternativa já prevista
@@ -218,8 +229,7 @@ Os estados "pendente", "abortada" e "visitante" foram simulados interceptando `/
 
 ## Pendências
 
-- AC11: suíte visual completa verde (falhas preexistentes acima).
-- AC08/AC09: aprovação da responsável das evidências em `evidence/`.
+- AC11: suíte visual completa verde. As falhas são anteriores a esta spec e estão na Issue #289.
 - T10 (pós-promoção em stage): `curl -i` de `robots.txt`, `sitemap.xml`, de uma rota inexistente e
   de `og-image.png`, e Lighthouse 12 mobile com SEO 100.
 - T7, T8 e T9 concluídas (seção "Borda no preview do PR" e commits de documentação).
