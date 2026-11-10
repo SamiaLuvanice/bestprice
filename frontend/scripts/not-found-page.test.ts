@@ -37,3 +37,8 @@ it('o build gera dist/404.html igual ao dist/index.html', async () => {
 it('o plugin só roda no build', () => {
   expect(notFoundPage().apply).toBe('build')
 })
+
+it('sem dist/index.html o plugin não copia nada nem interrompe o build', async () => {
+  const dist = await buildInto({ 'other.txt': 'x' })
+  expect(existsSync(join(dist, '404.html'))).toBe(false)
+})
