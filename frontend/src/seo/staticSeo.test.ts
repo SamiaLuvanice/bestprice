@@ -41,15 +41,23 @@ describe('index.html (AC07)', () => {
   })
 })
 
+/** Regra do robots.txt como expressão regular (RFC 9309): prefixo, `*` curinga e `$` final como âncora. */
+function robotsPattern(pattern: string): RegExp {
+  const anchored = pattern.endsWith('$')
+  const body = (anchored ? pattern.slice(0, -1) : pattern).split('*')
+    .map((part) => part.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*')
+  return new RegExp(`^${body}${anchored ? '$' : ''}`)
+}
+
 /** Regra mais longa vence; empate favorece Allow (comportamento do Google e da RFC 9309). */
 function robotsAllows(robots: string, path: string): boolean {
   const rules = robots.split(/\r?\n/).map((line) => line.replace(/#.*/, '').trim())
     .map((line) => /^(allow|disallow):\s*(\S*)$/i.exec(line)).filter((match) => match !== null)
-    .map((match) => ({ allow: match[1].toLowerCase() === 'allow', prefix: match[2] }))
-    .filter((rule) => rule.prefix !== '' && path.startsWith(rule.prefix))
+    .map((match) => ({ allow: match[1].toLowerCase() === 'allow', pattern: match[2] }))
+    .filter((rule) => rule.pattern !== '' && robotsPattern(rule.pattern).test(path))
   if (rules.length === 0) return true
-  const longest = Math.max(...rules.map((rule) => rule.prefix.length))
-  return rules.some((rule) => rule.prefix.length === longest && rule.allow)
+  const longest = Math.max(...rules.map((rule) => rule.pattern.length))
+  return rules.some((rule) => rule.pattern.length === longest && rule.allow)
 }
 
 describe('robots.txt (AC01)', () => {
@@ -60,7 +68,8 @@ describe('robots.txt (AC01)', () => {
     expect(robots).toMatch(new RegExp(`^Sitemap: ${origin}/sitemap\\.xml$`, 'm'))
   })
 
-  it.each(['/', '/login', '/cadastro', '/assets/index-abc.js', '/api/health', '/og-image.png'])('libera %s', (path) => {
+  it.each(['/', '/login', '/cadastro', '/assets/index-abc.js', '/api/health', '/og-image.png', '/apple-touch-icon.png',
+    '/favicon.png', '/sitemap.xml'])('libera %s', (path) => {
     expect(robotsAllows(robots, path)).toBe(true)
   })
 
