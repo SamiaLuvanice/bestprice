@@ -23,19 +23,26 @@ Esta seção prevalece sobre o restante da skill, que é cópia do upstream
   seção de SEO internacional/hreflang só se aplica se isso mudar.
 - **Superfície indexável:** a SPA Vite renderiza no cliente. Só a landing (`/`),
   `/login` e `/cadastro` são públicas; áreas autenticadas (`/app/*`, `/produtos`,
-  `/produtos/:id`, `/alertas`) não deveriam ser indexadas, mas hoje não há
-  `noindex`, `robots.txt` nem `sitemap.xml` (`frontend/public/` só tem `_routes.json`
-  e `favicon.png`); reporte a ausência como achado, não presuma proteção.
-- **Títulos e metadados:** `frontend/index.html` tem o `<title>` padrão e a única
-  meta description, igual em todas as rotas. Cada tela troca o título via
+  `/produtos/:id`, `/alertas`) ficam fora do rastreamento. Desde a spec 0051,
+  `frontend/public/robots.txt` bloqueia `/app$`, `/app/`, `/produtos` e `/alertas` e
+  declara `frontend/public/sitemap.xml`, que lista só `/` e `/login` (`/cadastro` entra
+  quando o cadastro for ligado). Não há `noindex`; `robots.txt` evita o rastreamento,
+  mas não garante a ausência no índice.
+- **Títulos e metadados:** `frontend/index.html` tem só metadados neutros, iguais em
+  todas as rotas (`<title>` padrão, descrição da landing, Open Graph e Twitter), sem
+  canonical nem `og:url`. Canonical autorreferente e descrição por rota das páginas
+  públicas são aplicados no navegador por `frontend/src/seo/pageMeta.ts`
+  (`/cadastro` só com o cadastro ligado). Cada tela troca o título via
   `document.title` (landing em `frontend/src/landing/LandingPage.tsx`, login,
   cadastro e 404 em `frontend/src/App.tsx`, área logada em
   `frontend/src/dashboard/AccountArea.tsx` e `/app/*` em
   `frontend/src/features/research/ResearchArea.tsx`); por isso audite o HTML renderizado,
   não só o `index.html`.
-- **Soft 404:** a rota `*` renderiza `NotFoundPage` no cliente; com o fallback de
-  SPA do Cloudflare Pages em stage, o status HTTP tende a ser 200. Confirme com
-  `curl -I` antes de reportar.
+- **404:** no Cloudflare Pages, o `404.html` gerado no build faz rota desconhecida
+  responder 404 real, e `frontend/public/_redirects` reescreve as rotas da SPA com 200
+  (rota nova sem reescrita vira 404). O Nginx local ainda responde 200 em rota
+  desconhecida (soft 404 só local). Confirme com `curl -I` no ambiente auditado antes
+  de reportar.
 - **Evidência:** para HTML renderizado, JSON-LD e Core Web Vitals, use o MCP
   `chrome-devtools` do projeto ou PageSpeed Insights, não apenas `curl`. Separe
   observação de inferência (`.agents/rules/evidencia.md`) e não invente métricas de
