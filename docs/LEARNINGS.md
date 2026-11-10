@@ -1,5 +1,22 @@
 # Aprendizados
 
+## 2026-11-10 — Isole as entradas de cada captura visual
+
+**Contexto.** A spec 0052 reproduziu diferenças de 10 a 12 pixels em capturas
+estáveis da landing de 320 e 390 px, principalmente nas bordas dos anéis
+do robô. A consulta de cadastro ainda chegava ao proxy durante a captura.
+
+**Princípio.** Simule as respostas de API que definem o estado capturado e
+inspecione os PNGs do diff antes de configurar tolerância. Quando a diferença
+observada vier da rasterização, limite a tolerância ao cenário e às larguras
+afetadas, com um teto em pixels apoiado pela medição.
+
+**Anti-pattern.** Aumentar a tolerância global para compensar uma diferença
+localizada.
+
+**Referências.** [Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289)
+e [verificação da spec 0052](../specs/0052-suite-visual-estavel/verification.md).
+
 ## 2026-11-04 — Condições visuais devem seguir o matcher da rota
 
 **Contexto:** a revisão da spec 0046 encontrou o rodapé em `/login/` e `/LOGIN`:

@@ -1,5 +1,19 @@
 # Progresso das specs
 
+## 0052 — Suíte visual estável para a landing pública
+
+**10/11/2026 — spec `pronta`.** Implementação local da
+[Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289) na branch
+`feature/0052-issue-289-suite-visual-estavel`, com base em `d1da76e`.
+A revisão e a integração em `develop` estão pendentes.
+
+As capturas da landing simulam o cadastro desabilitado e aceitam até 12 pixels
+divergentes em 320 e 390 px. O cenário A1 valida os limites do selo “menor preço”
+em cinco larguras com uma única navegação. A suíte visual completa passou
+em execução isolada, com **312 aprovados**, 449 exclusões por projeto e zero
+falhas. Lint, build, **825 testes Vitest** e **50 testes Node** passaram.
+[Verificação da spec 0052](../specs/0052-suite-visual-estavel/verification.md).
+
 ## 0051 — SEO técnico das páginas públicas
 
 **10/11/2026: spec `implementada`.** [Issue #287](https://github.com/SamiaLuvanice/bestprice/issues/287) fechada;
@@ -24,9 +38,10 @@ Após as correções da revisão: lint verde, Vitest **825/825** em 61 arquivos 
 `npm run build:check` verde, com `dist/404.html` igual a `dist/index.html`. Detalhes, Red/Green
 e desvios do plano na [verificação da 0051](../specs/0051-seo-tecnico-landing-publica/verification.md).
 
-Pendências:
-- AC11: a suíte visual tem 5 falhas que já existiam (também na base); estabilização na
-  [Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289), com merge aceito pela responsável;
+Na entrega da 0051, a responsável aceitou o merge com cinco falhas preexistentes
+no AC11. A estabilização da suíte visual foi encaminhada à
+[Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289) e validada
+localmente na [spec 0052](../specs/0052-suite-visual-estavel/verification.md).
 
 Imagem de compartilhamento e ícone aprovados pela responsável (AC08/AC09). Achados da QA
 anteriores à spec na [Issue #290](https://github.com/SamiaLuvanice/bestprice/issues/290).
