@@ -1,18 +1,21 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join, relative, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 // 0051: arquivos servidos pela borda do Cloudflare Pages (public/ é copiado para a raiz do dist).
 // O servidor de desenvolvimento não os reproduz; aqui conferimos o conteúdo, e o preview do PR
 // confere status e cabeçalhos com curl.
-const root = process.cwd()
+// Raiz do frontend resolvida a partir deste arquivo (import.meta), não do diretório de onde o
+// Vitest roda. `dirname` em vez de `new URL(..., import.meta.url)`: no jsdom o URL global não é o
+// do Node e o fileURLToPath o recusa ("The URL must be of scheme file").
+const root = join(import.meta.dirname, '..', '..')
 const origin = 'https://bestprice-stage.pages.dev'
 const landingTitle = 'Monitor de preços do Mercado Livre · BestPrice'
 const landingDescription = 'Monitore preços de produtos do Mercado Livre com a BestPrice. Acompanhe históricos, receba alertas de queda de preço e encontre o melhor momento para comprar.'
 
+/** Lê um arquivo do frontend; lança se ele não existir, em vez de testar texto vazio. */
 function read(path: string): string {
-  const file = join(root, path)
-  return existsSync(file) ? readFileSync(file, 'utf-8') : ''
+  return readFileSync(join(root, path), 'utf-8')
 }
 
 describe('index.html (AC07)', () => {
@@ -120,8 +123,28 @@ describe('_redirects (AC04)', () => {
     .filter((line) => line !== '').map((line) => line.split(/\s+/))
   const sources = new Set(rules.map(([source]) => source))
   // Rotas declaradas no App.tsx, exceto `/` (servida pelo próprio index.html) e a rota curinga.
-  const appRoutes = [...read('src/App.tsx').matchAll(/<Route path="([^"]+)"/g)].map((match) => match[1])
-    .filter((path) => path !== '/' && path !== '*')
+  const appSource = read('src/App.tsx')
+  // Só paths literais (aspas simples ou duplas); `path={...}` não é extraído e reprova a contagem.
+  const declaredPaths = [...appSource.matchAll(/<Route\s+path=(["'])([^"']+)\1/g)].map((match) => match[2])
+  const appRoutes = declaredPaths.filter((path) => path !== '/' && path !== '*')
+
+  it('extrai um path literal de cada <Route> do App.tsx', () => {
+    const routeTags = appSource.match(/<Route\b(?!s)/g) ?? []
+    expect(routeTags.length).toBeGreaterThan(0)
+    expect(declaredPaths).toHaveLength(routeTags.length)
+  })
+
+  it('não declara <Route> nem <Routes> fora do App.tsx', () => {
+    const files = (directory: string): string[] => readdirSync(directory).flatMap((name) => {
+      const path = join(directory, name)
+      return statSync(path).isDirectory() ? files(path) : [path]
+    })
+    const outside = files(join(root, 'src'))
+      .map((path) => relative(root, path).split(sep).join('/'))
+      .filter((path) => /\.[tj]sx?$/.test(path) && !/\.test\.[tj]sx?$/.test(path) && path !== 'src/App.tsx')
+      .filter((path) => /<Routes?\b/.test(read(path)))
+    expect(outside).toEqual([])
+  })
 
   it('encontra as rotas do App.tsx', () => {
     expect(appRoutes).toEqual(expect.arrayContaining(['/login', '/cadastro', '/app', '/app/*', '/produtos', '/produtos/:id', '/alertas']))
