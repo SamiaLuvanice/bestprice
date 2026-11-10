@@ -94,6 +94,9 @@ contraste AA/AAA, tokens de cor, `prefers-reduced-motion` e ausência de rolagem
 horizontal) e os comandos das skills de design instaladas (`ui-ux-pro-max`,
 `huashu-design`, `impeccable` e `shadcn`); suas sugestões respeitam a referência Figma
 aprovada, a identidade preservada e os requisitos funcionais/de acessibilidade.
+Para auditar SEO das páginas públicas (landing, `/login` e `/cadastro`; `<title>` e
+meta description ficam em `frontend/index.html`), use a skill `seo-audit`: ela só
+diagnostica e recomenda, e as correções seguem o fluxo de spec.
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
