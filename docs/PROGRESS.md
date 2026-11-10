@@ -26,9 +26,11 @@ e desvios do plano na [verificação da 0051](../specs/0051-seo-tecnico-landing-
 Pendências:
 - aprovação da imagem de compartilhamento e do ícone pela responsável (AC08/AC09);
 - AC11: a suíte visual tem 5 falhas pré-existentes (também na base, sem as mudanças desta spec);
-- conferência de borda no preview do novo destino `/` registrada como pendente na verificação;
-- verificação em stage após a promoção (`curl -i` de `robots.txt`, `sitemap.xml` e rota
-  inexistente; Lighthouse 12 mobile com SEO 100).
+- verificação em stage após a promoção (`curl -i` de `robots.txt`, `sitemap.xml`, rota
+  inexistente e `og-image.png`; Lighthouse 12 mobile com SEO 100).
+
+Borda conferida no preview do PR: rotas da SPA com e sem barra final em 200, inexistentes em
+404, cache imutável só em `/assets/*`. Na QA, Acessibilidade 100 e peso de 757 para 280 KiB.
 
 ## 0050 — Landing pública nova conforme o Figma
 

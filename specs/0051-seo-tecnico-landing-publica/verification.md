@@ -8,8 +8,8 @@ Ambiente: Windows 11, Node 22.18.0, Playwright 1.64.1 (Chromium headless), servi
 própria worktree em `127.0.0.1:5173` iniciado pelo Playwright (porta conferida livre antes),
 sem backend nem PostgreSQL. `npm ci` rodado em `frontend/` antes de tudo.
 
-Este registro não afirma resultado de CI, PR, preview do Cloudflare Pages, Lighthouse nem
-revisão independente: nada disso foi executado aqui (ver "Pendências").
+As seções de T1–T6 não afirmam resultado de CI, PR, preview do Cloudflare Pages, Lighthouse
+nem revisão independente. Esses resultados estão em "Borda no preview do PR (T7) e QA (T8)".
 
 ## TDD por tarefa
 
@@ -118,7 +118,7 @@ Aplicada a alternativa prevista no plan.md (Riscos): destino `/` em todas as ree
 | Lint | `npm run lint` · saída 0 |
 | Testes | `npm test -- --run` · **61 arquivos; 819 passed (819)**; 68,5 s; saída 0 |
 
-Verificação do novo preview: pendente (coordenação).
+Verificação do novo preview: ver "Borda no preview do PR (T7)" abaixo.
 
 ## Correções da revisão
 
@@ -148,6 +148,53 @@ preview ele responde `Cache-Control: no-store` (evidência da coordenação).
 
 A suíte visual não foi reexecutada nesta rodada (as mudanças não alteram nada visível).
 
+## Borda no preview do PR (T7) e QA (T8)
+
+Registro da coordenação e da QA independente em 10/11/2026, com `curl` no preview do Cloudflare
+Pages do [PR #288](https://github.com/SamiaLuvanice/bestprice/pull/288). Previews respondem
+`x-robots-tag: noindex`, o que é esperado e não reprova a spec.
+
+**Preview `2277705a` (commit `4884eed`, destino `/`):**
+
+| Requisição | Resultado |
+|---|---|
+| `/`, `/login`, `/login/`, `/cadastro`, `/cadastro/`, `/produtos`, `/produtos/`, `/produtos/abc123`, `/alertas`, `/alertas/`, `/app`, `/app/`, `/app/dashboard` | **200**, 1742 B (o mesmo HTML), sem redirecionamento |
+| `/pagina-que-nao-existe`, `/assets/naoexiste.js` | **404**, com `Cache-Control: no-store` |
+| HTML (`/`, `/login`) | `Cache-Control: public, max-age=0, must-revalidate` |
+| `/assets/index-*.js` e `.css` | `Cache-Control: public, max-age=31536000, immutable` |
+| `favicon.png` (1621 B), `apple-touch-icon.png` (5298 B), `og-image.png` (48 565 B, 1200 × 630), `robots.txt`, `sitemap.xml` | 200, com `max-age=0, must-revalidate`, sem `immutable` |
+| `robots.txt` / `sitemap.xml` | `text/plain` / `application/xml`, com o conteúdo do AC01/AC02 |
+
+**Preview `741639b9` (commit `e48f61a`, após as correções da revisão):** `robots.txt` com
+`Disallow: /app$` e `Disallow: /app/`. `/login`, `/app`, `/app/dashboard` e `/produtos/x`
+respondem 200, `/apple-touch-icon.png` 200 e `/nao-existe` 404. CI do PR #288 verde (CI, PR
+policy, Automation, Backend, Frontend, Cloudflare Pages).
+
+**QA no navegador (Playwright, preview `2277705a`).** A API do preview respondeu `429` (desafio do
+Cloudflare na origem Render) durante todo o teste. Isso exercitou o caminho "verificação falha".
+Os estados "pendente", "abortada" e "visitante" foram simulados interceptando `/api/*`.
+
+- AC05: título de `/` é "Monitor de preços do Mercado Livre · BestPrice" e o H1 é "Pare de dar
+  F5 no preço." em todos os modos.
+- AC06: `/` e `/login` têm canonical autorreferente e as descrições da tabela "Textos" nos quatro
+  modos. `/cadastro` com o cadastro desligado leva a Entrar; com o cadastro ligado (simulado), tem
+  canonical próprio. `/app/dashboard`, `/produtos` e a página não encontrada não têm canonical.
+- AC07: o HTML bruto de `/`, `/login`, `/app/dashboard` e `/produtos/abc123` é idêntico, sem
+  canonical nem `og:url`, com todas as tags `og:*`/`twitter:*` exigidas. **Limite:** a URL
+  declarada em `og:image` (`https://bestprice-stage.pages.dev/og-image.png`) só serve a imagem
+  depois da promoção para o stage.
+- AC09: Lighthouse 12.8.2 mobile `total-byte-weight` = **279,7 KiB** (linha de base 757 KiB,
+  queda de cerca de 477 KiB).
+- AC11 (parcial): Lighthouse com **Acessibilidade 100**. A única falha de SEO é `is-crawlable`,
+  causada pelo `noindex` do preview.
+
+**Achados anteriores à 0051 (fora de escopo):**
+
+- `/login` mostra o título "Página não encontrada · BestPrice" enquanto a sessão está carregando
+  ou indisponível.
+- Com a API inacessível, uma rota desconhecida mostra o erro global em vez da página "não
+  encontrada". O status 404 e o título continuam corretos.
+
 ## Desvios do plano
 
 - **Reescritas do `_redirects` com destino `/`** em vez de `/index.html` (alternativa já prevista
@@ -173,7 +220,6 @@ A suíte visual não foi reexecutada nesta rodada (as mudanças não alteram nad
 
 - AC11: suíte visual completa verde (falhas preexistentes acima).
 - AC08/AC09: aprovação da responsável das evidências em `evidence/`.
-- T7 (preview do PR): `curl -i` de AC01–AC04, AC07, AC09 e AC10; Lighthouse 12 mobile para peso
-  transferido e Acessibilidade 100; comportamento real do `_redirects` com destino `/` e
-  barra final.
-- T8 (revisão e QA), T9 (documentação e `doc-sync-onboarding`), T10 (pós-promoção em stage).
+- T10 (pós-promoção em stage): `curl -i` de `robots.txt`, `sitemap.xml`, de uma rota inexistente e
+  de `og-image.png`, e Lighthouse 12 mobile com SEO 100.
+- T7, T8 e T9 concluídas (seção "Borda no preview do PR" e commits de documentação).
