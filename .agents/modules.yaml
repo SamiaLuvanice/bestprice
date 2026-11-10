@@ -55,6 +55,7 @@ profiles:
       - huashu-design
       - impeccable
       - shadcn
+      - seo-audit
 integrations:
   github:
     documentation: docs/github-workflow.md

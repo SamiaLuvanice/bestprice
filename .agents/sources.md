@@ -20,5 +20,9 @@ Sem segredos, tokens ou senhas.
   `.agents/skills/shadcn/LICENSE.md`); `evals/`, `agents/` e logos não foram copiados.
   O `computedHash` corresponde à pasta upstream; a seção "Uso no BestPrice" do
   `SKILL.md` é customização local e deve ser preservada em qualquer atualização.
+  A skill `seo-audit` vem de `coreyhaines31/marketingskills` (`skills/seo-audit`,
+  commit `9d6d7ce`, versão 2.2.5, licença MIT em `.agents/skills/seo-audit/LICENSE.md`);
+  `evals/` não foi copiado. O `computedHash` corresponde à pasta upstream; a seção
+  "Uso no BestPrice" do `SKILL.md` é customização local e deve ser preservada.
 
 Referências técnicas: https://fastapi.tiangolo.com/ · https://docs.python.org/3/ · https://www.postgresql.org/docs/ · https://react.dev/ · https://vite.dev/ · Context7 (documentação de bibliotecas por MCP)

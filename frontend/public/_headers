@@ -1,0 +1,4 @@
+# Cloudflare Pages (spec 0051, AC10): só os arquivos com hash no nome são imutáveis.
+# O resto (HTML, ícones, og-image, robots, sitemap) mantém a revalidação padrão do Pages.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

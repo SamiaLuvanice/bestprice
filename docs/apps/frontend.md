@@ -65,8 +65,11 @@ restrito à verificação da aplicação.
 A marca compacta da entrada e a área autenticada usam a mesma logo oficial,
 copiada de
 `designsystem/logo-bestprice.png` para `frontend/src/assets/logo-bestprice.png`.
-O favicon do navegador também usa essa logo; sua cópia está em
-`frontend/public/favicon.png` e é declarada em `frontend/index.html`.
+O favicon do navegador também usa essa logo. Desde a spec 0051, `frontend/public/favicon.png`
+é uma versão de 48 × 48 px e `frontend/public/apple-touch-icon.png` (180 × 180 px, fundo
+branco) atende atalhos no iOS; ambos são declarados em `frontend/index.html` e gerados a
+partir da arte original, guardada fora de `public/` (ver
+[SEO técnico](#seo-técnico-das-páginas-públicas--spec-0051)).
 A classe `.brand-logo` exibe a imagem inteira (`object-fit: contain`, sem
 `border-radius` nem outro recorte), com superfície de apoio
 `--color-logo-surface`. Desde a spec 0029, `frontend/src/components/Brand.tsx`
@@ -94,6 +97,13 @@ contraste AA/AAA, tokens de cor, `prefers-reduced-motion` e ausência de rolagem
 horizontal) e os comandos das skills de design instaladas (`ui-ux-pro-max`,
 `huashu-design`, `impeccable` e `shadcn`); suas sugestões respeitam a referência Figma
 aprovada, a identidade preservada e os requisitos funcionais/de acessibilidade.
+Para auditar SEO das páginas públicas (landing, `/login` e `/cadastro`), use a skill
+`seo-audit`: ela só diagnostica e recomenda, e as correções seguem o fluxo de spec.
+`frontend/index.html` traz só metadados neutros, iguais para todas as rotas; o canonical
+e a descrição de cada página pública são aplicados no navegador por
+`frontend/src/seo/pageMeta.ts`, e os títulos por tela via `document.title`. Por isso a
+auditoria usa o HTML renderizado (ver
+[SEO técnico](#seo-técnico-das-páginas-públicas--spec-0051)).
 
 `frontend/src/styles.css` define superfícies, texto, ações, estados semânticos e
 foco no tema claro fixo. A aparência não segue a preferência de cor do sistema
@@ -289,6 +299,63 @@ atualizados, com confirmação posterior 8/8 sem update; login e 404 não tivera
 baselines alterados. A matriz ampliada de UI passou 38/38 em quatro larguras e
 oito rotas, com axe, overflow, alvo de toque e teclado. Não comprova dispositivo
 físico, leitor de tela ou disponibilidade do provider externo.
+
+## SEO técnico das páginas públicas — spec 0051
+
+A [spec 0051](../../specs/0051-seo-tecnico-landing-publica/spec.md) orienta buscadores e
+prévias de link sem mudar o visual nem os textos visíveis. URLs absolutas usam a origem
+pública `https://bestprice-stage.pages.dev` em qualquer ambiente.
+
+- **`PUBLIC_ORIGIN`.** A origem fica na constante `PUBLIC_ORIGIN` de
+  `src/seo/pageMeta.ts`. Ao trocar de domínio, mude-a ali e também em `index.html`
+  (`og:image`), `public/robots.txt` e `public/sitemap.xml`.
+- **`index.html` neutro.** A resposta inicial é a mesma para todas as rotas, então leva só
+  metadados válidos para qualquer página: a descrição da landing, `og:type` `website`,
+  `og:locale` `pt_BR`, `og:site_name`, `og:title` ("Monitor de preços do Mercado Livre ·
+  BestPrice"), `og:description`, `og:image` absoluto (1200 × 630, com `alt`),
+  `twitter:card` `summary_large_image` e o `apple-touch-icon`. **Não tem canonical nem
+  `og:url`**, para não declarar o endereço de outra página. O `<title>` estático continua
+  "BestPrice". Mensageiros não executam JavaScript, então a prévia de qualquer link do site
+  usa esses metadados.
+- **Metadados por rota (`src/seo/pageMeta.ts`).** `pageMetaFor(pathname, signupEnabled)`
+  devolve canonical e descrição; `usePageMeta`, chamado no `AppRoutes` de `App.tsx`, cria
+  ou atualiza `<link rel="canonical">` e `<meta name="description">` no `<head>`.
+  - `/` e `/login` têm canonical autorreferente e descrição própria; `/cadastro` só quando
+    o cadastro está `enabled` (desligado, ele leva ao login, spec 0048).
+  - Áreas autenticadas e a página "não encontrada" ficam sem canonical (o hook remove o
+    existente) e com a descrição da landing.
+  - O hook depende só do caminho e do estado do cadastro, nunca da sessão: os metadados
+    aparecem enquanto a sessão é verificada e quando a verificação falha.
+- **Título da landing.** `pageTitle` em `src/landing/content.ts` passou a ser "Monitor de
+  preços do Mercado Livre · BestPrice"; o H1 continua "Pare de dar F5 no preço.".
+- **`public/robots.txt`.** Libera `/` e bloqueia `/app$`, `/app/`, `/produtos` e
+  `/alertas`, com `Sitemap:` absoluto. `/app$` e `/app/` substituem `/app` porque a regra
+  casa por prefixo e bloquearia `/apple-touch-icon.png`.
+- **`public/sitemap.xml`.** Lista só `/` e `/login`. `/cadastro` entra quando o cadastro for
+  ligado em definitivo (spec futura).
+- **404 real e reescritas.** No Cloudflare Pages, o `404.html` gerado no build e as
+  reescritas de `public/_redirects` fazem rota desconhecida responder 404 e rota da SPA 200;
+  **toda rota nova em `App.tsx` precisa entrar no `_redirects`**. Detalhes e a diferença
+  com o Nginx local estão em
+  [infraestrutura](infraestrutura.md#rotas-da-spa-e-404-no-cloudflare-pages--spec-0051).
+- **Ícones e imagem de compartilhamento.** `public/favicon.png` (48 × 48),
+  `public/apple-touch-icon.png` (180 × 180) e `public/og-image.png` (1200 × 630) são gerados
+  por `node scripts/generate-brand-assets.mjs` (em `frontend/`), **rodado manualmente** e
+  fora do build; as saídas ficam versionadas. A arte-fonte do ícone (1254 × 1254) fica em
+  `scripts/assets/favicon-source.png`, fora de `public/` para não ser publicada. A imagem de
+  compartilhamento é renderizada pelo Playwright com o robô do assistente e os tokens e a
+  fonte de `src/styles.css`, com o único texto "Monitor de preços do Mercado Livre". `sharp`
+  é devDependency só para reduzir a paleta dos PNGs. O script aceita
+  `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, como a suíte visual.
+- **Testes.** `src/seo/pageMeta.test.tsx` cobre `pageMetaFor`, `usePageMeta` e o `App` com
+  sessão pendente e com falha; `src/seo/staticSeo.test.ts` lê `index.html`, `robots.txt`,
+  `sitemap.xml`, `_headers` e `_redirects` (este cruzado com as rotas do `App.tsx`);
+  `scripts/not-found-page.test.ts` exercita o plugin do `404.html` num `dist` temporário.
+
+Status, cabeçalhos e arquivos estáticos da borda não são reproduzidos pelo Vite; a
+conferência deles no preview e em stage, a aprovação da imagem e do ícone e o SEO 100 no
+Lighthouse estão como pendências na
+[verificação da 0051](../../specs/0051-seo-tecnico-landing-publica/verification.md).
 
 ## Cadastro self-service — spec 0048
 

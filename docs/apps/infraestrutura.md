@@ -19,6 +19,9 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `render.yaml` | Blueprint do serviço web gratuito de stage, com branch, migration, variáveis e health check |
 | `frontend/functions/api/[[path]].ts` | Proxy HTTPS de mesma origem para `/api/*` no Cloudflare Pages |
 | `frontend/public/_routes.json` | Invoca a Pages Function somente para `/api/*` |
+| `frontend/public/_redirects` | Reescritas 200 (destino `/`) das rotas da SPA no Cloudflare Pages (spec 0051) |
+| `frontend/public/_headers` | Cache imutável de um ano em `/assets/*` no Cloudflare Pages (spec 0051) |
+| `frontend/scripts/not-found-page.mjs` | Plugin do Vite que copia `dist/index.html` para `dist/404.html` no fim do build (spec 0051) |
 | `scripts/compose-worktree.ps1` | Isola nome Compose, volume e portas por worktree no Windows |
 | `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
 | `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test React e `npm run build:check` (build com checagens de catálogo e fontes, spec 0049), testes Node gerais e actionlint |
@@ -75,6 +78,39 @@ graph TD
 O Compose publica serviços em loopback. As portas padrão são frontend 5173, backend 8000 e DB 5433; internamente, Nginx escuta 80 e PostgreSQL 5432. O healthcheck do banco bloqueia a inicialização do backend até o PostgreSQL responder `pg_isready`. O backend executa `alembic upgrade head` antes de Uvicorn. O worker inicia após o health check HTTP do backend e roda `python -m app.monitoring.worker`; sem a integração autorizada, aguarda sem consultar publicações.
 
 Para as rotas da spec 0021, `frontend/nginx.conf` aplica `try_files $uri $uri/ /index.html` aos caminhos da SPA. `/api/*` permanece no bloco de proxy e não recebe HTML de fallback. Na worktree da feature, `/`, `/login`, `/produtos`, `/produtos/:id`, `/alertas` e uma rota desconhecida responderam HTTP 200 no Nginx local; a aplicação React apresenta a tela ou o estado 404 conforme a URL e a sessão. O health da API retornou 200 com PostgreSQL, 503 durante uma parada controlada do banco local e 200 após restaurá-lo. A abertura direta e a recarga desta revisão no Cloudflare Pages de `stage` ainda precisam de validação após promoção; a configuração de stage existente não demonstra a nova revisão.
+
+### Rotas da SPA e 404 no Cloudflare Pages — spec 0051
+
+O Nginx local continua respondendo **200 em rota desconhecida** (o `try_files` acima não
+mudou); a SPA mostra a página "não encontrada", mas o status é 200. Essa é uma diferença
+conhecida em relação ao Cloudflare Pages, o único ambiente público, onde a
+[spec 0051](../../specs/0051-seo-tecnico-landing-publica/spec.md) passou a responder 404 real:
+
+- **`404.html` gerado no build.** O plugin `notFoundPage()` de
+  `frontend/scripts/not-found-page.mjs`, registrado em `frontend/vite.config.ts`, copia
+  `dist/index.html` para `dist/404.html` no `closeBundle` (só se o `index.html` existir).
+  Com esse arquivo na raiz da saída, o Pages deixa o modo SPA e responde **404** a qualquer
+  caminho sem arquivo e sem reescrita, incluindo assets inexistentes. Como o `404.html` é a
+  mesma SPA, o navegador ainda mostra a página "não encontrada" atual.
+- **Reescritas em `frontend/public/_redirects`.** As rotas legítimas da SPA são reescritas
+  com **200 e destino `/`**: `/login`, `/cadastro`, `/produtos`, `/alertas` e `/app`, cada
+  uma também com barra final, mais `/produtos/*` e `/app/*`, que cobrem qualquer
+  profundidade com 200. `/` é atendido pelo próprio `index.html`. O destino não é
+  `/index.html` porque, no preview do PR #288 (10/11/2026), o Pages normalizou esse destino
+  para `/` e respondeu **308** em vez de reescrever. A verificação do destino `/` no preview
+  seguinte está registrada como pendente na
+  [verificação da 0051](../../specs/0051-seo-tecnico-landing-publica/verification.md).
+- **Toda rota nova da SPA precisa entrar no `_redirects`**; sem isso, o acesso direto e a
+  recarga dela respondem 404 no Pages (localmente, no Vite e no Nginx, continuam abrindo).
+  `frontend/src/seo/staticSeo.test.ts` cruza as rotas declaradas em `frontend/src/App.tsx`
+  com o `_redirects` e falha se faltar alguma, se um `<Route>` não tiver path literal ou se
+  houver `<Route>`/`<Routes>` fora do `App.tsx`.
+- **Cache em `frontend/public/_headers`.** `/assets/*` (arquivos com hash no nome) recebe
+  `Cache-Control: public, max-age=31536000, immutable`. HTML, ícones, `og-image.png`,
+  `robots.txt` e `sitemap.xml` mantêm a revalidação padrão do Pages
+  (`public, max-age=0, must-revalidate`). Um asset inexistente responde 404 com
+  `Cache-Control: no-store`, conforme a evidência de preview registrada na verificação.
+- `_routes.json` e a Pages Function de `/api/*` não mudaram; `/api/*` continua no backend.
 
 ## Variáveis do Compose e worktree
 
@@ -268,6 +304,7 @@ O comportamento **local** da preparação inicial foi verificado: Ruff; 149 test
 - `docker compose down` preserva `db-data`; `down -v` remove o volume e seus dados.
 - O backend espera banco healthy e aplica as migrations antes de iniciar. A stack isolada `bestprice0013verify` foi reconstruída: revisão `20261009safe`, health da API e worker aguardando autorização foram conferidos. Pelo proxy Nginx, login retornou 200, URL inválida 400 e anúncio novo sem integração 503. Esses testes não cobriram OAuth real, consulta ao Mercado Livre nem navegação visual; veja [verification.md](../../specs/0013-monitoramento-mercado-livre-brasil/verification.md).
 - O frontend de container é uma imagem Nginx; o modo de desenvolvimento usa Vite e proxy próprio.
+- Rota da SPA nova sem linha em `frontend/public/_redirects` responde 404 no Cloudflare Pages, embora abra no Vite e no Nginx local; o teste de cruzamento em `src/seo/staticSeo.test.ts` existe para pegar isso antes do merge (spec 0051).
 - O primeiro deploy público da API falhou, mas #67 corrigiu o start e #69 aplicou RLS após os checks. Health, proxy, cookie, falha de banco, recuperação e ação de rollback do Render foram conferidos nos limites da [verificação 0018](../../specs/0018-backend-stage-render-supabase/verification.md). Reversão entre versões e rollback Pages não foram testados. DEV e PROD seguem sem implantação configurada.
 - Sincronização do GitHub Project depende de `PROJECT_TOKEN`, `PROJECT_OWNER` e `PROJECT_NUMBER`, registrados como configurados em [github-workflow.md](../github-workflow.md#configurar-o-project-permissão-adicional); confirme pela execução do workflow antes de afirmar que um evento chegou ao board.
 - O Ready automático da 0014 foi observado no Project real após o merge em `develop`: a V04 registrou a Issue #43 em `Ready` após push da spec `pronta` e novamente após remover o responsável (ver [verification.md](../../specs/0014-project-ready-automatico/verification.md)). Remover a branch não dispara sincronização; o Status é recalculado no próximo evento da Issue.

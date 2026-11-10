@@ -1,5 +1,40 @@
 # Progresso das specs
 
+## 0051 — SEO técnico das páginas públicas
+
+**10/11/2026: spec `implementada`.** [Issue #287](https://github.com/SamiaLuvanice/bestprice/issues/287) fechada;
+PR [#288](https://github.com/SamiaLuvanice/bestprice/pull/288) integrada em `develop` (`0f0d154`) com CI verde,
+depois da revisão independente e da QA. Conclusão registrada pela
+[Issue #291](https://github.com/SamiaLuvanice/bestprice/issues/291).
+Branch `feature/0051-issue-287-seo-tecnico-landing`, base origin/develop `4da00c3`.
+
+O que entrou (só frontend, configuração estática do Cloudflare Pages e documentação):
+- `robots.txt` (bloqueia `/app$`, `/app/`, `/produtos` e `/alertas`) e `sitemap.xml` com `/`
+  e `/login`;
+- 404 real no Pages: `404.html` gerado no build e reescritas 200 com destino `/` em
+  `_redirects` (o destino `/index.html` virava 308 no preview); o Nginx local segue com 200;
+- cache imutável em `/assets/*` (`_headers`);
+- `index.html` com Open Graph/Twitter neutros, sem canonical nem `og:url`; canonical e
+  descrição por rota no navegador (`src/seo/pageMeta.ts`), independentes da sessão;
+- título da landing "Monitor de preços do Mercado Livre · BestPrice";
+- `favicon.png` de 480 KiB para 1.621 bytes, `apple-touch-icon.png` e `og-image.png` gerados
+  por `scripts/generate-brand-assets.mjs` (`sharp` como devDependency).
+
+Após as correções da revisão: lint verde, Vitest **825/825** em 61 arquivos e
+`npm run build:check` verde, com `dist/404.html` igual a `dist/index.html`. Detalhes, Red/Green
+e desvios do plano na [verificação da 0051](../specs/0051-seo-tecnico-landing-publica/verification.md).
+
+Pendências:
+- AC11: a suíte visual tem 5 falhas que já existiam (também na base); estabilização na
+  [Issue #289](https://github.com/SamiaLuvanice/bestprice/issues/289), com merge aceito pela responsável;
+- verificação em stage após a promoção (`curl -i` de `robots.txt`, `sitemap.xml`, rota
+  inexistente e `og-image.png`; Lighthouse 12 mobile com SEO 100).
+
+Imagem de compartilhamento e ícone aprovados pela responsável (AC08/AC09). Achados da QA
+anteriores à spec na [Issue #290](https://github.com/SamiaLuvanice/bestprice/issues/290).
+Borda conferida no preview do PR: rotas da SPA com e sem barra final em 200, inexistentes em
+404, cache imutável só em `/assets/*`. Na QA, Acessibilidade 100 e peso de 757 para 280 KiB.
+
 ## 0050 — Landing pública nova conforme o Figma
 
 **08/11/2026: spec `implementada`.** [Issue #275](https://github.com/SamiaLuvanice/bestprice/issues/275) fechada;

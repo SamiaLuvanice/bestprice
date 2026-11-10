@@ -5,7 +5,8 @@
  * a landing não consulta preços, anúncios nem o assistente.
  */
 
-export const pageTitle = 'BestPrice · Pare de dar F5 no preço.'
+/** Título da aba aprovado pela spec 0051 (termo de busca antes da marca). */
+export const pageTitle = 'Monitor de preços do Mercado Livre · BestPrice'
 
 /** Selo do hero ajustado pela spec 0050 ("Ajuste de texto aprovado"). */
 export const approvedSeal = 'Só o link, nada para preencher'
