@@ -156,10 +156,12 @@ it('preserva preço desconhecido sem criar valor zero no detalhe', async () => {
     if (url === '/api/tracked-products/tracking-1/history') return reply(200, { items: [], next_cursor: null })
     return undefined
   })
-  visit('/produtos/tracking-1')
-  expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
+  // Aguarda o React aplicar as respostas simuladas da sessão e do detalhe.
+  await act(async () => { visit('/produtos/tracking-1') })
+  await act(async () => { await vi.dynamicImportSettled() })
+  expect(screen.getByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
   expect(screen.getByText('Preço indisponível')).toBeInTheDocument()
-  expect(await screen.findByText('O gráfico aparece após o primeiro preço válido registrado.')).toBeInTheDocument()
+  expect(screen.getByText('O gráfico aparece após o primeiro preço válido registrado.')).toBeInTheDocument()
   expect(screen.queryByText(/R\$\s*0,00/)).not.toBeInTheDocument()
 })
 
