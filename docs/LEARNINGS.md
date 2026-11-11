@@ -1,5 +1,21 @@
 # Aprendizados
 
+## 2026-11-11 — Sincronize as respostas simuladas antes de consultar o DOM
+
+**Contexto.** Na spec 0055, uma pausa controlada no dublê do histórico
+reproduziu o timeout que deixava o detalhe em carregamento.
+
+**Princípio.** Quando as respostas simuladas apenas preparam o estado que o
+teste verifica, use `act` para aplicar as atualizações do React antes das
+consultas síncronas. Se a renderização iniciar uma importação dinâmica,
+aguarde sua conclusão dentro de `act` para verificar o conteúdo carregado.
+
+**Anti-pattern.** Aumentar o prazo de uma consulta ao DOM para compensar
+uma etapa assíncrona que o próprio teste pode aguardar.
+
+**Referências.** [Issue #247](https://github.com/SamiaLuvanice/bestprice/issues/247)
+e [verificação da spec 0055](../specs/0055-teste-preco-desconhecido-estavel/verification.md).
+
 ## 2026-11-11 — Preencha credenciais de teste pelo campo
 
 **Contexto.** Ao forçar uma mudança de foco para o título do login, a spec
