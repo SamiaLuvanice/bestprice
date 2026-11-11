@@ -1,5 +1,13 @@
 # Progresso das specs
 
+## 0054 — Teste estável de troca de conta
+
+**11/11/2026 — spec `pronta`.** O teste de isolamento de rascunhos da
+[Issue #296](https://github.com/SamiaLuvanice/bestprice/issues/296) agora
+preenche as credenciais sem depender do foco. Passaram lint, build,
+826 testes Vitest e 50 testes Node. Revisão e integração em `develop` estão pendentes.
+[Verificação da spec 0054](../specs/0054-teste-troca-conta-estavel/verification.md).
+
 ## 0053 — Rotas durante a consulta de sessão
 
 **11/11/2026 — spec `pronta`.** A [Issue #290](https://github.com/SamiaLuvanice/bestprice/issues/290)

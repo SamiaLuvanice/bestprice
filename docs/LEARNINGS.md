@@ -1,5 +1,21 @@
 # Aprendizados
 
+## 2026-11-11 — Preencha credenciais de teste pelo campo
+
+**Contexto.** Ao forçar uma mudança de foco para o título do login, a spec
+0054 reproduziu a falha do CI em que o e-mail chegava vazio ao envio.
+
+**Princípio.** Quando as credenciais só preparam um cenário, use
+`fireEvent.change` nos campos identificados pelos rótulos e mantenha o
+envio pelo botão do formulário. Use digitação simulada para verificar
+interações de teclado e foco.
+
+**Anti-pattern.** Aumentar o tempo de espera pela tela autenticada quando
+a validação do formulário impediu o envio.
+
+**Referências.** [Issue #296](https://github.com/SamiaLuvanice/bestprice/issues/296)
+e [verificação da spec 0054](../specs/0054-teste-troca-conta-estavel/verification.md).
+
 ## 2026-11-10 — Isole as entradas de cada captura visual
 
 **Contexto.** A spec 0052 reproduziu diferenças de 10 a 12 pixels em capturas
