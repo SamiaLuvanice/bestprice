@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { savePendingTrackLink } from './navigation/pendingTrackLink'
@@ -44,17 +44,39 @@ it.each(['HTTP 503', 'falha de rede'])('mantém o login sem rodapé durante a se
     : undefined)
   visit('/login?returnTo=%2Fprodutos')
   expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
+  expect(document.title).toBe('Entrar · BestPrice')
   expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   if (failure === 'HTTP 503') session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
   else session.reject(new TypeError('Failed to fetch'))
   const retry = await screen.findByRole('button', { name: 'Tentar novamente' })
+  expect(document.title).toBe('Entrar · BestPrice')
   expect(screen.getByRole('alert')).toHaveTextContent(failure === 'HTTP 503'
     ? 'Serviço temporariamente indisponível.' : 'Não foi possível conectar ao BestPrice. Tente novamente.')
   expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   fireEvent.click(retry)
   expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
+  expect(document.title).toBe('Entrar · BestPrice')
   expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/produtos')
+})
+
+it('mostra o 404 público durante a consulta de sessão e após falha da API', async () => {
+  const session = deferred()
+  fakeApi((url) => url === '/api/auth/me' ? session.promise : undefined)
+  visit('/pagina-que-nao-existe')
+
+  const heading = screen.getByRole('heading', { name: 'Este endereço saiu do radar.' })
+  expect(document.title).toBe('Página não encontrada · BestPrice')
+  expect(screen.getByRole('link', { name: 'Entrar' })).toHaveAttribute('href', '/login')
+  expect(screen.queryByRole('status')).not.toBeInTheDocument()
+
+  await act(async () => {
+    session.resolve(reply(429, {}))
+  })
+  expect(heading).toBeInTheDocument()
+  await waitFor(() => expect(heading).toHaveFocus())
+  expect(document.title).toBe('Página não encontrada · BestPrice')
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
 })
 
 it.each([
