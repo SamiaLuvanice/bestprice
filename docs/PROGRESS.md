@@ -1,5 +1,13 @@
 # Progresso das specs
 
+## 0053 — Rotas durante a consulta de sessão
+
+**11/11/2026 — spec `pronta`.** A [Issue #290](https://github.com/SamiaLuvanice/bestprice/issues/290)
+tem correção local. O login conserva seu título durante a consulta de sessão e
+o 404 público aparece mesmo com a API pendente ou indisponível. Passaram lint,
+build, 826 testes Vitest e 50 testes Node. Revisão e integração estão pendentes.
+[Verificação da spec 0053](../specs/0053-rotas-durante-consulta-sessao/verification.md).
+
 ## 0052 — Suíte visual estável para a landing pública
 
 **10/11/2026 — spec `pronta`.** Implementação local da

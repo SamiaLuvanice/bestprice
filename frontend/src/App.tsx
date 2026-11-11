@@ -29,6 +29,8 @@ type Props = { clock?: () => Date }
 function AppRoutes({ clock }: { clock: () => Date }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const isLogin = matchPath('/login', location.pathname) !== null
+  const isSignup = matchPath('/cadastro', location.pathname) !== null
   const [user, setUser] = useState<User | null>(null)
   const [sessionState, setSessionState] = useState<'loading' | 'guest' | 'ready' | 'unavailable'>('loading')
   const [sessionError, setSessionError] = useState<string | null>(null)
@@ -44,24 +46,18 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     if (logoutRedirect && location.pathname === '/login') setLogoutRedirect(false)
   }, [logoutRedirect, location.pathname])
   useEffect(() => {
-    if (sessionState === 'guest' && location.pathname === '/login') {
+    if (isLogin) {
       document.title = 'Entrar · BestPrice'
+      if (sessionState !== 'guest') return
       const frame = window.requestAnimationFrame(() => document.getElementById('login-title')?.focus())
       return () => window.cancelAnimationFrame(frame)
     }
-    if (sessionState === 'guest' && location.pathname === '/cadastro') {
+    if (sessionState === 'guest' && isSignup) {
       document.title = 'Criar conta · BestPrice'
       const frame = window.requestAnimationFrame(() => document.getElementById('signup-title')?.focus())
       return () => window.cancelAnimationFrame(frame)
     }
-    if (import.meta.env.DEV && location.pathname === catalogPath) return
-    if (!/^\/app(?:\/|$)/.test(location.pathname) && !['/', '/produtos', '/alertas', '/cadastro'].includes(location.pathname) &&
-      !/^\/produtos\/[^/]+$/.test(location.pathname)) {
-      document.title = 'Página não encontrada · BestPrice'
-      const frame = window.requestAnimationFrame(() => document.querySelector<HTMLElement>('main h1')?.focus())
-      return () => window.cancelAnimationFrame(frame)
-    }
-  }, [location.pathname, sessionState])
+  }, [isLogin, isSignup, sessionState])
 
   useEffect(() => {
     let active = true
@@ -140,7 +136,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     setSessionState('ready')
   }
 
-  const footer = matchPath('/login', location.pathname) || matchPath('/cadastro', location.pathname)
+  const footer = isLogin || isSignup
     ? null : <footer>BestPrice · Acompanhe com clareza</footer>
   if (import.meta.env.DEV && DesignSystemCatalog && location.pathname === catalogPath) {
     return <Suspense fallback={<p role="status">Carregando catálogo…</p>}><DesignSystemCatalog /></Suspense>
@@ -149,7 +145,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   if (location.pathname === '/') return <LandingPage authenticated={sessionState === 'ready' && user !== null}
     signupAvailable={signup.availability === 'enabled'} />
   // 0028/AC14: verificar a sessão não oferece o campo de link; a pessoa ainda não pode monitorar.
-  if (sessionState === 'loading' || sessionState === 'unavailable') return <div className="page">
+  const sessionPage = sessionState === 'loading' || sessionState === 'unavailable' ? <div className="page">
     <header className="masthead"><Brand /></header>
     <main className="page-main session-check">
       <div className="content narrow">{sessionState === 'loading' ? <p role="status">Carregando sua conta…</p> : <div className="panel">
@@ -161,7 +157,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
         }}>Tentar novamente</Button>
       </div>}</div>
     </main>{footer}
-  </div>
+  </div> : null
 
   const loginPage = <div className="page"><main className="page-main">
     <LoginForm busy={busy} error={guestMessage} onSubmit={login} onValidationFail={() => setGuestMessage(null)}
@@ -187,14 +183,14 @@ function AppRoutes({ clock }: { clock: () => Date }) {
   // 0050: quem já tem sessão em Entrar ou Criar conta segue ao returnTo seguro, ou ao destino padrão.
   const signedInTarget = postLoginTarget ?? (requestedReturnTo === '/' ? '/app/dashboard' : requestedReturnTo)
   return <Routes>
-    <Route path="/login" element={user ? <Navigate to={signedInTarget} replace /> : loginPage} />
-    <Route path="/cadastro" element={user ? <Navigate to={signedInTarget} replace /> : signupPage} />
-    <Route path="/app" element={user ? <Navigate to="/app/dashboard" replace /> : researchArea} />
-    <Route path="/app/*" element={researchArea} />
-    <Route path="/" element={protectedArea} />
-    <Route path="/produtos" element={protectedArea} />
-    <Route path="/produtos/:id" element={protectedArea} />
-    <Route path="/alertas" element={protectedArea} />
+    <Route path="/login" element={sessionPage ?? (user ? <Navigate to={signedInTarget} replace /> : loginPage)} />
+    <Route path="/cadastro" element={sessionPage ?? (user ? <Navigate to={signedInTarget} replace /> : signupPage)} />
+    <Route path="/app" element={sessionPage ?? (user ? <Navigate to="/app/dashboard" replace /> : researchArea)} />
+    <Route path="/app/*" element={sessionPage ?? researchArea} />
+    <Route path="/" element={sessionPage ?? protectedArea} />
+    <Route path="/produtos" element={sessionPage ?? protectedArea} />
+    <Route path="/produtos/:id" element={sessionPage ?? protectedArea} />
+    <Route path="/alertas" element={sessionPage ?? protectedArea} />
     <Route path="*" element={notFound} />
   </Routes>
 }
