@@ -122,8 +122,9 @@ it('não restaura rascunho de uma sessão encerrada ao voltar ao histórico do n
   await user.click(within(screen.getByRole('navigation', { name: 'Espaço de compras' })).getByRole('link', { name: 'Histórico' }))
   await user.click(screen.getByRole('button', { name: /Conta:/ }))
   await user.click(screen.getByRole('button', { name: 'Sair' }))
-  await user.type(await screen.findByLabelText('E-mail'), 'outra@example.com')
-  await user.type(screen.getByLabelText('Senha', { exact: true }), 'senha')
+  // O foco inicial no título pode interromper a digitação simulada.
+  fireEvent.change(await screen.findByLabelText('E-mail'), { target: { value: 'outra@example.com' } })
+  fireEvent.change(screen.getByLabelText('Senha', { exact: true }), { target: { value: 'senha' } })
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
   await screen.findByRole('button', { name: /outra@example.com/ })
   await act(async () => {
