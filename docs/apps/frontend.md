@@ -214,6 +214,8 @@ preserva o login aprovado em stage e retira somente seu rodapé. A composição 
 rodapé em `App.tsx` usa `matchPath('/login', location.pathname)`, o mesmo padrão
 do roteador; isso inclui `/login/`, `/LOGIN` e a entrada com `returnTo`. A ausência
 vale também durante carga, HTTP 503, falha de rede e recuperação da sessão.
+Desde a [spec 0053](../../specs/0053-rotas-durante-consulta-sessao/spec.md), a
+aba mostra “Entrar · BestPrice” durante toda a consulta e sua recuperação.
 Landing, páginas autenticadas e rota inexistente conservam seus rodapés; desde a
 spec 0048, `matchPath('/cadastro', …)` também omite o rodapé do cadastro.
 A orientação sobre o link do Mercado Livre e “Voltar para o início” fazem parte
@@ -436,8 +438,10 @@ na árvore acessível. Menus e confirmação mantêm os controles de foco existe
 
 A SPA usa `react-router-dom`, o contrato de monitoramento existente e o novo
 cliente tipado `features/research/api.ts`. `App.tsx` consulta `GET /api/auth/me`
-ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Falha
-de sessão fora de `/` exibe erro e “Tentar novamente”; `/` permanece pública.
+ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Login,
+cadastro e áreas protegidas exibem o estado de carregamento enquanto aguardam a
+sessão e oferecem “Tentar novamente” quando a consulta falha. A landing e o 404
+público são renderizados desde o início.
 A conta é criada pelo cadastro self-service, quando ligado (spec 0048), ou
 provisionada no backend antes do login.
 
@@ -462,8 +466,11 @@ entrar. `safeReturnTo` aceita somente caminhos internos conhecidos, incluindo os
 novos destinos, sem query/fragmento ou escapes. Entrada direta no login leva ao
 dashboard. Logout vai a `/login`; restauração por bfcache revalida a sessão.
 `ResearchArea` e `AccountArea` são isoladas pela chave `user.id`; respostas obsoletas
-são ignoradas após desmontagem. Caminhos desconhecidos mostram estado de página
-não encontrada. A navegação atualiza título e foco, e marca a seção ativa.
+são ignoradas após desmontagem. Quando a rota curinga corresponde ao endereço,
+`NotFoundPage` exibe “Este endereço saiu do radar.” mesmo durante a consulta da
+sessão ou após uma falha. A página define “Página não encontrada · BestPrice”
+na aba e move o foco para seu título. Até a confirmação da sessão, a ação
+principal é “Entrar”. A navegação nas áreas internas marca a seção ativa.
 
 ## Assistente, comparação e histórico — spec 0034
 
@@ -644,7 +651,7 @@ e [verificação](../../specs/0047-chat-pesquisa-precos-web-gemini/verification.
 
 ## Monitoramento preservado
 
-O monitoramento oferece links Início/Produtos/Alertas e sino; o acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040). Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Enquanto a sessão é verificada (ou a verificação falha fora de `/`), a tela mostra só marca, status e “Tentar novamente”, sem campo de link (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
+O monitoramento oferece links Início/Produtos/Alertas e sino; o acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040). Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Nas rotas de monitoramento, a consulta de sessão exibe a marca e o estado de carregamento. Em caso de falha, a tela oferece “Tentar novamente”. O formulário exige sessão confirmada (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
 
 O preço-alvo aceita o formato brasileiro (spec 0028): `src/lib/targetPrice.ts` normaliza `99,90`, `99.90`, `1.899,90`, `1899,9` e o prefixo `R$` para o decimal do contrato (`"99.90"`), só com texto, sem `number`. Valor inválido, zero, acima de 16 dígitos inteiros ou com milhar iniciado por zero (`0.500`) não chama a API: o campo recebe `aria-invalid` e a mensagem “Informe um valor em reais, como 99,90.” em `role="alert"`. O campo de edição mostra o alvo atual com vírgula. O contrato REST `target_price` e o backend não mudaram. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 
@@ -657,7 +664,7 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | `frontend/src/navigation/pendingTrackLink.ts` | Link do hero guardado na aba até o primeiro uso no monitoramento (0050) |
 | `frontend/src/assets/redesign/` | Arte do login (`login-left.webp`); as artes da landing antiga foram removidas na 0050 |
 | `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único e foco em Senha após falha |
-| `frontend/src/NotFoundPage.tsx` | Recuperação de rota inexistente, CTA por sessão e ação de voltar |
+| `frontend/src/NotFoundPage.tsx` | 404 público, título e foco da página, ação principal por sessão e ação de voltar |
 | `frontend/src/components/ui/`, `frontend/src/lib/utils.ts`, `frontend/components.json` | Componentes oficiais shadcn/ui, combinação de classes e configuração de geração |
 | `frontend/src/navigation/returnTo.ts` | Allowlist de destinos internos após login ou expiração de sessão |
 | `frontend/src/dashboard/AccountArea.tsx` | Orquestra as telas autenticadas, dados, ações e foco; componentes de apresentação não chamam `fetch` |
