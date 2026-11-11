@@ -1,5 +1,15 @@
 # Progresso das specs
 
+## 0055 — Teste estável de detalhe com preço desconhecido
+
+**11/11/2026 — spec `pronta`.** O teste da
+[Issue #247](https://github.com/SamiaLuvanice/bestprice/issues/247) aguarda as
+atualizações do React e a importação do gráfico antes de verificar o detalhe.
+A reprodução controlada falhou antes da correção e passou depois. Passaram
+cinco rodadas completas com 826 testes Vitest cada, lint, `build:check` e
+50 testes Node. A revisão do PR e a integração em `develop` estão pendentes.
+[Verificação da spec 0055](../specs/0055-teste-preco-desconhecido-estavel/verification.md).
+
 ## 0054 — Teste estável de troca de conta
 
 **11/11/2026 — spec `pronta`.** O teste de isolamento de rascunhos da
