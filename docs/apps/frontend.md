@@ -715,7 +715,7 @@ Falhas de operação são mostradas em `role="alert"` com a mensagem específica
 
 O detalhe é uma página com URL e título próprios. A confirmação modal prende o foco com Tab e Shift+Tab, fecha com Esc ou clique no fundo e devolve o foco ao controle que a abriu. Respostas atrasadas do detalhe anterior são descartadas ao trocar de produto. Sino, conta e menu da linha seguem o padrão disclosure, sem navegação por setas: Esc fecha e devolve o foco ao botão; foco ou clique fora fecham.
 
-O card e o detalhe mostram “Preço indisponível” sem preço atual e “Desconhecido”/“Desconhecida” para valores ainda sem dado, em vez de zero. A nota do hero informa que os preços vêm das consultas do BestPrice ao Mercado Livre e podem diferir do checkout; não afirma integração oficial autorizada. Imagens e links do anúncio só são usados com `https`.
+O card e o detalhe mostram “Preço indisponível” sem preço atual e “Desconhecido”/“Desconhecida” para valores ainda sem dado, em vez de zero. Imagens e links do anúncio só são usados com `https`.
 
 Com a integração Mercado Livre desligada, o backend ainda valida a URL, informa duplicação e retoma vínculos interrompidos; uma publicação que exige consulta externa retorna indisponibilidade. A UI ainda não expõe filtros de data no histórico. Limites registrados na [evidência da spec 0012](../../specs/0012-area-usuario-monitoramento/verification.md): “Atualizar agora” com sucesso depende de credencial real; `formatMoney` usa `signDisplay: 'negative'`, que lança `RangeError` em navegadores antigos (Chrome < 106, Firefox < 116, Safari < 15.4).
 

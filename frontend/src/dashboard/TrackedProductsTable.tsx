@@ -28,8 +28,6 @@ export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore,
     <div className="section-heading">
       {/* Título único da página Produtos (revisão 0028): h1, sem "Produtos" duplicado. */}
       <h1 id="tracked-title" ref={headingRef} tabIndex={-1}>Seus produtos</h1>
-      <p className="section-subtitle">Todos os produtos que você está monitorando.</p>
-      <p className="section-order">Ordem: mais recentes primeiro</p>
     </div>
     {toolbar}
     <div role="status" data-testid="products-status" className="section-status">{message}</div>
