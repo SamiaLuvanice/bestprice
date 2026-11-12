@@ -42,7 +42,7 @@ async function submit(user: ReturnType<typeof userEvent.setup>, value: string) {
 const validUrl = 'https://produto.mercadolivre.com.br/MLB-2222222222-cafeteira-_JM'
 
 describe('hero', () => {
-  it('exibe exatamente os textos da spec, sem card de produto, preço ou estrelas', async () => {
+  it('exibe a orientação para adicionar um anúncio', async () => {
     await renderHero(() => undefined, () => undefined, '/app/monitoring/overview')
     const hero = within(screen.getByRole('region', { name: 'Seu painel de preços' }))
     expect(hero.getByRole('heading', { level: 1 })).toHaveTextContent('Seu painel de preços')
@@ -50,7 +50,7 @@ describe('hero', () => {
     expect(field()).toHaveAttribute('placeholder', 'https://www.mercadolivre.com.br/...')
     expect(hero.getByRole('button', { name: 'Monitorar preço' })).toBeInTheDocument()
     expect(hero.getByText('Copie o link do anúncio no Mercado Livre e cole aqui.')).toBeInTheDocument()
-    expect(hero.getByText(/vêm das consultas do BestPrice ao Mercado Livre e podem diferir/)).toBeInTheDocument()
+    expect(hero.queryByText(/vêm das consultas do BestPrice ao Mercado Livre e podem diferir/)).not.toBeInTheDocument()
     const region = screen.getByRole('region', { name: 'Seu painel de preços' })
     expect(region).not.toHaveTextContent(/R\$|★|Amazon|prime|Histórico de preço/i)
     expect(hero.queryByRole('img')).not.toBeInTheDocument()

@@ -1,5 +1,15 @@
 # Progresso das specs
 
+## 0056 — Monitoramento com textos enxutos
+
+**12/11/2026 — spec `pronta`.** A
+[Issue #311](https://github.com/SamiaLuvanice/bestprice/issues/311) remove quatro
+frases do formulário e da lista. A busca no arquivo BestPrice IA pelo Chrome
+retornou zero resultados para as frases. Passaram 826 testes Vitest com limite
+de 30 segundos por teste, quatro verificações visuais em desktop e mobile,
+50 testes Node, lint e `build:check`. Revisão e integração em `develop` estão pendentes.
+[Verificação da spec 0056](../specs/0056-monitoramento-com-textos-enxutos/verification.md).
+
 ## 0055 — Teste estável de detalhe com preço desconhecido
 
 **11/11/2026 — spec `pronta`.** O teste da

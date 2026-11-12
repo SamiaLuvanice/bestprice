@@ -98,7 +98,9 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
         </div>
         <div className="hero-entry">
         {/* Sempre no DOM para aria-controls apontar para um id existente; `hidden` quando recolhido. */}
-        <Card className="track-panel" id={panelId} hidden={!open}>{!compact && <><h2>Comece por um link</h2><p className="track-description">Cole a URL do anúncio do Mercado Livre para acompanhar automaticamente.</p></>}<form onSubmit={(event) => void submit(event)} className="track-form">
+        <Card className="track-panel" id={panelId} hidden={!open}>
+          {!compact && <h2>Comece por um link</h2>}
+          <form onSubmit={(event) => void submit(event)} className="track-form">
           <div className="track-field">
             <LinkIcon className="field-icon" />
             <label htmlFor="product-url" className="track-label">Link do anúncio do Mercado Livre</label>
@@ -116,7 +118,6 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
           {error.trackedProductId && <Link className="text-button" to={`/produtos/${error.trackedProductId}`}>Ver produto</Link>}
         </div>}
         </Card>
-        {!compact && <p className="hero-note">Os preços exibidos vêm das consultas do BestPrice ao Mercado Livre e podem diferir do valor no checkout.</p>}
         {children}
         </div>
       </div>

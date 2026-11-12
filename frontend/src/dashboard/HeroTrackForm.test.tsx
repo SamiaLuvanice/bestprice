@@ -38,6 +38,8 @@ describe('formulário de link com valor inicial', () => {
   it('aberto (sem lista), preenche e foca o campo', async () => {
     const { onSubmit } = renderForm({ initialValue: link, compact: false })
     expect(field()).toHaveValue(link)
+    expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeVisible()
+    expect(screen.queryByText('Cole a URL do anúncio do Mercado Livre para acompanhar automaticamente.')).not.toBeInTheDocument()
     await waitFor(() => expect(field()).toHaveFocus())
     expect(onSubmit).not.toHaveBeenCalled()
   })
