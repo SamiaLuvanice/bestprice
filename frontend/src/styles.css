@@ -373,7 +373,6 @@ h1, h2 { text-wrap: balance; }
 .intro { color: var(--color-text-muted); font-size: 17px; line-height: 1.5; max-width: 72ch; margin: 0 0 var(--space-6); }
 .track-panel { display: block; padding: var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius-card); background: var(--card); } /* 0049: card branco com borda (Figma 2026 prevalece sobre a 0039) */
 .track-panel h2 { font-size: 22px; }
-.track-description { margin: 12px 0 24px; font-size: 15px; color: var(--color-text-muted); }
 .track-form { display: flex; align-items: end; gap: 16px; }
 .track-field { flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
 .track-field .field-icon { display: none; }
@@ -389,8 +388,7 @@ h1, h2 { text-wrap: balance; }
 .hero-status:not(:empty) { margin-top: var(--space-3); color: var(--color-brand); font-weight: 600; }
 .hero-error { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); margin-top: var(--space-3); }
 .hero-error .error-box { margin: 0; }
-.hero-note, .muted { color: var(--color-text-muted); font-size: 13px; line-height: 1.5; }
-.hero-note { margin: 16px 0 0; font-size: 14px; }
+.muted { color: var(--color-text-muted); font-size: 13px; line-height: 1.5; }
 .error-box { padding: 12px 16px; border-radius: var(--radius-control); color: var(--color-danger-text); background: var(--color-danger-bg); border: 1px solid var(--color-danger-border); max-width: 640px; }
 .empty-state { margin-top: var(--space-6); padding: var(--space-6) 0 0; background: transparent; border-top: 1px solid var(--color-border-soft); }
 .empty-state p { margin: 0; color: var(--color-text-muted); }
@@ -470,7 +468,6 @@ h1, h2 { text-wrap: balance; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
 /* Produtos */
-.section-order { margin: var(--space-1) 0 0; color: var(--color-text-muted); font-size: 14px; }
 .section-status:not(:empty) { margin-bottom: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-control); background: var(--color-brand-soft); color: var(--color-brand-strong); font-weight: 600; }
 .products-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .products-table th { padding: 16px 10px; border-bottom: 1px solid var(--color-border-soft); background: var(--color-surface); color: var(--color-text-muted); font-family: var(--font-mono); font-size: 12px; line-height: 16px; letter-spacing: .06em; text-transform: uppercase; font-weight: 500; text-align: left; }

@@ -19,8 +19,8 @@ describe('tabela Seus produtos', () => {
       product('2', 'Cafeteira elétrica', { current_price: '105.00', previous_price: '100.00', percentage_change: '5.00', min_price: '90.00', max_price: '120.00' }),
     ] }))
     const section = within(screen.getByRole('region', { name: 'Seus produtos' }))
-    expect(section.getByText('Todos os produtos que você está monitorando.')).toBeInTheDocument()
-    expect(section.getByText('Ordem: mais recentes primeiro')).toBeInTheDocument()
+    expect(section.queryByText('Todos os produtos que você está monitorando.')).not.toBeInTheDocument()
+    expect(section.queryByText('Ordem: mais recentes primeiro')).not.toBeInTheDocument()
     expect(section.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
       'Produto', 'Preço atual', 'Variação', 'Menor preço', 'Disponibilidade', 'Preço observado', 'Ações',
     ])
