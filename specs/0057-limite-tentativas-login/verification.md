@@ -138,3 +138,22 @@ A branch segue `feature/0054-issue-128-limite-tentativas-login`.
 
 Depois da renumeração, os gates foram reexecutados: `ruff` limpo, pytest **547 passed, 2 skipped**
 com PostgreSQL real, `eslint` sem avisos e Vitest **838 passed (61 arquivos)**.
+
+## Stage — 13/11/2026
+
+Promoção pela PR #318 (`0c80a94`), depois de a responsável preencher `TRUSTED_PROXY_SECRET`
+e `SIGNUP_SOURCE_HASH_SECRET` no Render e `API_PROXY_SECRET` (tipo Secret) no Pages. Só os
+nomes das variáveis foram conferidos nos painéis; nenhum valor foi lido nem registrado.
+
+| Verificação | Resultado |
+|---|---|
+| Deploy da nova versão | `/openapi.json` passou a listar `login_rate_limited` cerca de 270 s após o merge |
+| Health | `GET /api/health` 200 `{"status":"ok","database":"ok"}` direto no Render e pelo Pages |
+| AC14 em Stage | A API subiu com `APP_ENV=stage` e os segredos preenchidos |
+| Migration `20261113loginfail` | `POST /api/auth/login` com `text/plain` pelo Pages → `422 json_required`; a falha foi gravada em `login_failures` |
+| Origem real atrás do Pages | 3 falhas pelo Pages com o mesmo `source_hash` (`…559a640`); 2 falhas direto no Render com outro (`…22128f8`). Consulta só de leitura no SQL Editor do Supabase |
+| Blueprint | Sincronização manual criou `SIGNUP_ENABLED` e as três `LOGIN_RATE_LIMIT_*`; nenhuma variável existente foi alterada |
+
+Limites: o teste de origem não estourou o limite (5 falhas só de origem, limite 50), para
+não bloquear ninguém. Não houve teste com duas redes de visitantes diferentes; a
+diferença observada é entre o IP repassado pela Function e o peer interno do Render.

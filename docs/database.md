@@ -69,7 +69,7 @@ cada verificação do limite apaga as tentativas vencidas da origem e a limpeza 
 (na partida e a cada hora) apaga as vencidas de todas as origens, mantendo cerca de
 janela + 1 h. A conta criada pelo cadastro é uma linha comum em `users`; a restrição
 única de `users.email` decide a duplicidade, inclusive em envios simultâneos. A
-revisão não foi aplicada em Stage. Ver [backend](apps/backend.md#cadastro-self-service--spec-0048).
+revisão foi aplicada em Stage junto com `20261113loginfail` (promoção #318). Ver [backend](apps/backend.md#cadastro-self-service--spec-0048).
 
 A migration `20261113_login_failures.py` (revisão `20261113loginfail`, após
 `20261106signup`) cria `login_failures` com `id BIGINT GENERATED ALWAYS AS IDENTITY`,
@@ -79,8 +79,8 @@ A migration `20261113_login_failures.py` (revisão `20261113loginfail`, após
 retenção segue o cadastro: cada reserva apaga as falhas vencidas da própria origem, e a
 limpeza da API (na partida e a cada hora) apaga as vencidas de todas as origens. Um
 login bem-sucedido apaga a própria reserva e anula `account_hash` nas falhas anteriores
-da combinação, que continuam contando para a origem. A revisão não foi aplicada em
-Stage. Ver [backend](apps/backend.md#limite-de-tentativas-de-login--spec-0057).
+da combinação, que continuam contando para a origem. A revisão foi aplicada em Stage
+pelo `start-stage.sh` na promoção #318 (13/11/2026). Ver [backend](apps/backend.md#limite-de-tentativas-de-login--spec-0057).
 
 Valores monetários persistem como `NUMERIC(18,2)`; o cliente Mercado Livre já entrega o preço arredondado a centavos (`ROUND_HALF_UP`), então o valor comparado é o mesmo persistido. Instantes usam colunas com fuso; `backend/app/db.py` executa `SET TIME ZONE 'UTC'` em cada nova conexão SQLAlchemy (em autocommit, para sobreviver a rollbacks), e a API serializa os instantes com `Z` independentemente do fuso padrão do servidor. Há índices para próxima consulta, vínculos ativos por usuário, histórico e eventos por publicação e notificações por usuário. Os detalhes de colunas e constraints estão nos modelos e na migration. Histórico e publicação são compartilhados; vínculo, alerta, sessão e notificação têm escopo individual.
 

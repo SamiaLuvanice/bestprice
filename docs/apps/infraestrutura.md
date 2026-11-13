@@ -189,17 +189,18 @@ da conexão. Localmente, Vite e Nginx não assinam a origem e o limite usa o pee
 Roteiro para ligar em Stage, quando autorizado (pendência I3 da
 [verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md)):
 
-1. Criar `API_PROXY_SECRET` no Pages e `TRUSTED_PROXY_SECRET` (mesmo valor) e
-   `SIGNUP_SOURCE_HASH_SECRET` (outro valor) no Render, sem registrá-los em arquivos,
-   Issue, PR ou logs.
+1. ~~Criar `API_PROXY_SECRET` no Pages e `TRUSTED_PROXY_SECRET` (mesmo valor) e
+   `SIGNUP_SOURCE_HASH_SECRET` (outro valor) no Render.~~ Feito em 13/11/2026 para a
+   spec 0057 (seção seguinte); `API_PROXY_SECRET` é do tipo **Secret** no Pages.
 2. Mudar `SIGNUP_ENABLED` para `true` no Render e conferir o health.
 3. Pelo Pages, enviar 6 cadastros de um mesmo IP (o 6º deve responder `429`) e 1 de
    outro IP (aceito); depois, apagar as contas de teste.
 
 Com a API em `stage`/`production` e o cadastro ligado sem `TRUSTED_PROXY_SECRET`, a
 API não inicia. A migration `20261106signup` cria `signup_attempts` e é aplicada pelo
-`alembic upgrade head` do Compose e do `start-stage.sh`; ainda não foi aplicada em
-Stage. Nada disso foi exercitado em Stage nesta spec.
+`alembic upgrade head` do Compose e do `start-stage.sh`; foi aplicada em Stage na
+promoção #318, junto com `20261113loginfail`. O cadastro em si continua sem
+exercício em Stage.
 
 ## Limite de tentativas de login em Stage — spec 0057
 
@@ -212,24 +213,29 @@ acrescenta `LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS: "10"`,
 a mudança exige a sincronização manual do Blueprint descrita abaixo. Regras em
 [backend](backend.md#limite-de-tentativas-de-login--spec-0057).
 
-**Pré-condição da próxima promoção para Stage:** antes do PR `develop` → `stage` que
-levar esta mudança, confira no painel do Render que `TRUSTED_PROXY_SECRET` e
-`SIGNUP_SOURCE_HASH_SECRET` têm valor (≥ 32 caracteres, diferentes entre si) e, no
-Pages, que `API_PROXY_SECRET` existe com o mesmo valor de `TRUSTED_PROXY_SECRET`.
-Sem os segredos do Render, o deploy falha na partida; sem o do Pages, a API sobe, mas
-todo o tráfego do Pages cai numa única origem, e 50 falhas de qualquer pessoa em 15
-minutos bloqueiam o login de todos. Não há registro de que esses valores estejam
-preenchidos hoje. Depois da promoção, verifique a origem real atrás do Pages (por
-exemplo, falhas de dois IPs distintos contadas separadamente).
+**Estado em Stage (13/11/2026, promoção PR #318):** `TRUSTED_PROXY_SECRET` e
+`SIGNUP_SOURCE_HASH_SECRET` estão preenchidos no Render e `API_PROXY_SECRET` (tipo
+Secret, mesmo valor de `TRUSTED_PROXY_SECRET`) no Pages. O deploy de `0c80a94` subiu
+com health 200 direto e pelo Pages, e a migration `20261113loginfail` foi aplicada pelo
+`start-stage.sh` (um login malformado pelo Pages respondeu `422 json_required` e gravou
+a falha em `login_failures`). O Blueprint foi sincronizado manualmente no mesmo dia,
+criando `SIGNUP_ENABLED=false` e as três `LOGIN_RATE_LIMIT_*` com os padrões (10, 50 e
+15 min), confirmados pela responsável.
+
+**Origem real atrás do Pages, verificada:** três logins malformados enviados pelo Pages
+gravaram o mesmo `source_hash`, e dois enviados direto a `*.onrender.com` gravaram
+outro (consulta só de leitura no SQL Editor do Supabase, agrupando
+`left(source_hash, 8)`). Ou seja, a Function repassa o IP do visitante e a API o aceita
+pelo segredo do proxy. Para repetir, envie falhas de duas redes diferentes pelo Pages e
+confira `select count(distinct source_hash) from login_failures` dentro da janela.
 
 Limite conhecido: como no cadastro, o acesso direto a `*.onrender.com`, sem passar
 pelo Pages, usa o peer da conexão como origem e cai num único balde; esse tráfego
 pode ser bloqueado em conjunto. A SPA sempre passa pelo Pages. A migration
 `20261113loginfail` cria `login_failures` e é aplicada pelo `alembic upgrade head` do
-Compose e do `start-stage.sh`; não foi aplicada em Stage. No Compose local, as
-variáveis `LOGIN_RATE_LIMIT_*` não são repassadas ao serviço `backend`, que usa os
-padrões (10, 50 e 15 min); com o segredo de HMAC vazio, a API gera um valor aleatório
-por processo.
+Compose e do `start-stage.sh`. No Compose local, o serviço `backend` recebe as três
+`LOGIN_RATE_LIMIT_*` do `.env`, com os mesmos padrões do código; com o segredo de HMAC
+vazio, a API gera um valor aleatório por processo.
 
 ## Sonda oficial do Mercado Livre no GitHub Actions
 

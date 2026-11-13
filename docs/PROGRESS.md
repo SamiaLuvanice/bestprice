@@ -18,9 +18,11 @@ Backend: Ruff aprovado e pytest com PostgreSQL 17 descartável **547 passed, 2 s
 SPA e PostgreSQL reais (sem Compose) aprovou AC01–AC17; AC10–AC12 só por teste. A
 revisão independente foi feita (R1).
 
-Pendências: antes da promoção para Stage,
-conferir os dois segredos no Render e `API_PROXY_SECRET` no Pages; depois, verificar a
-origem real atrás do Pages. Ver
+Promovida para Stage pela PR #318 (`0c80a94`), com segredos preenchidos no Render e no
+Pages, migration aplicada, Blueprint sincronizado e health 200. A origem real atrás do
+Pages foi verificada: falhas pelo Pages e direto no Render gravaram `source_hash`
+distintos. Limites padrão confirmados pela responsável. Pendência: quadro do Figma para
+o estado de limite no login (hoje o login reaproveita o alerta do formulário). Ver
 [verificação da spec 0057](../specs/0057-limite-tentativas-login/verification.md).
 
 ## 0056 — Monitoramento com textos enxutos
