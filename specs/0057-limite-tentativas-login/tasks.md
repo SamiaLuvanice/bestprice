@@ -36,4 +36,4 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 - [x] R1 — `arch-reviewer` independente do diff completo; achados voltam ao implementador.
 - [x] R2 — `qa` valida AC01–AC17 com evidência.
 - [x] R3 — `doc-sync-onboarding` por último (backend.md, infraestrutura.md, architecture.md, database.md, PROGRESS.md).
-- [ ] R4 — PR para `develop` com `Closes #128`, resultados e pendências (pré-condição de Stage, origem real atrás do Pages).
+- [x] R4 — PR #315 integrada em `develop` (`df39589`), com `Closes #128`. Validação em Stage (segredos e origem real atrás do Pages) segue pendente.
