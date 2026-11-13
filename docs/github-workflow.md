@@ -98,8 +98,8 @@ precisar ser congelada, crie uma decisão explícita de produto antes de prosseg
 
 | Workflow | Evento | Resultado e permissões |
 |---|---|---|
-| CI | PR aberta, atualizada, reaberta, editada ou pronta para revisão; push em develop/stage | Quality + política de PR; token de leitura; sem secrets |
-| Quality | Chamado por CI e Release | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/`build:check` (build com checagens de catálogo e fontes); testes Node e actionlint |
+| CI | PR aberta, atualizada, reaberta, editada ou pronta para revisão; push em develop/stage | Quality + política de PR + política de commits (Conventional Commits e autoria humana no range do PR) + Secrets (gitleaks só nos commits do evento); token de leitura; sem secrets |
+| Quality | Chamado por CI e Release | Python 3.13/uv locked, Ruff, pytest com PostgreSQL 17; Node 22/npm ci/lint/test/`build:check` (build com checagens de catálogo e fontes); testes Node (incluindo o núcleo do harness), checagem de projeções, diagnóstico do harness e actionlint |
 | Project sync | Issue aberta/reaberta/fechada/atribuída/desatribuída; ciclo de draft/revisão/fechamento de PR; push em `feature/**` que altera `specs/*/spec.md` | Adiciona item e atualiza Status, com PROJECT_TOKEN |
 | Release | Push de tag `v*`; execução manual em `stage` para tag existente | Valida tag, SHA de stage, health, Quality; publica as imagens e cria release |
 | Validate Mercado Livre Stage | Execução manual em `develop` (`workflow_dispatch`) | Usa environment `stage-validation` e secrets para executar a sonda OAuth/API existente contra o banco Stage; somente leitura para anúncios e não altera o gate |

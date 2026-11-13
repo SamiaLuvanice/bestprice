@@ -30,16 +30,16 @@ O harness passa a ter um núcleo agnóstico: uma única implementação multipla
 
 ## Critérios de aceite
 
-- [ ] AC01 — Dado Windows ou Unix com Node, quando a projeção roda, então os arquivos gerados ficam idênticos aos atuais e os links das ferramentas continuam apontando para a fonte única.
-- [ ] AC02 — Dado uma projeção gerada desatualizada, quando a checagem roda, então ela falha nomeando o arquivo.
-- [ ] AC03 — Dado um commit com título fora de Conventional Commits, com atribuição a agente de IA ou feito em branch protegida (sem o token de bootstrap), quando o hook de mensagem roda, então o commit é recusado com o motivo.
-- [ ] AC04 — Dado um PR, quando o CI roda, então a mesma política de commit é aplicada a todos os commits do range e o resultado compõe o check agregador.
-- [ ] AC05 — Dado o CI, quando um PR é aberto, então testes do harness, checagem de projeções, diagnóstico e varredura de segredos do range executam e compõem o check agregador.
-- [ ] AC06 — Dado o diagnóstico, quando ele roda em qualquer sistema, então valida arquivos obrigatórios, itens do perfil ativo, skills travadas, projeções, referências proibidas lidas da configuração e segredos aparentes; worktrees com branch já integrada geram aviso, sem remoção.
-- [ ] AC07 — Dado a configuração do harness, quando os portões rodam, então executam os comandos declarados no diretório de cada escopo; as instruções citam esse comando em vez de repetir a lista.
-- [ ] AC08 — Dado um diff, quando a checagem de impacto roda, então lista os documentos mapeados a revisar; a regra de sincronização de documentação existe em um único arquivo de regra e os demais apenas a referenciam.
-- [ ] AC09 — Os arquivos do núcleo (regras, agentes e skills listados em `core`) não citam specs numeradas, rotas da API nem ferramentas exclusivas da stack.
-- [ ] AC10 — A configuração local do Claude nega leitura de `.env` também por comandos de shell comuns.
+- [x] AC01 — Dado Windows ou Unix com Node, quando a projeção roda, então os arquivos gerados ficam idênticos aos atuais e os links das ferramentas continuam apontando para a fonte única.
+- [x] AC02 — Dado uma projeção gerada desatualizada, quando a checagem roda, então ela falha nomeando o arquivo.
+- [x] AC03 — Dado um commit com título fora de Conventional Commits, com atribuição a agente de IA ou feito em branch protegida (sem o token de bootstrap), quando o hook de mensagem roda, então o commit é recusado com o motivo.
+- [x] AC04 — Dado um PR, quando o CI roda, então a mesma política de commit é aplicada a todos os commits do range e o resultado compõe o check agregador.
+- [x] AC05 — Dado o CI, quando um PR é aberto, então testes do harness, checagem de projeções, diagnóstico e varredura de segredos do range executam e compõem o check agregador.
+- [x] AC06 — Dado o diagnóstico, quando ele roda em qualquer sistema, então valida arquivos obrigatórios, itens do perfil ativo, skills travadas, projeções, referências proibidas lidas da configuração e segredos aparentes; worktrees com branch já integrada geram aviso, sem remoção.
+- [x] AC07 — Dado a configuração do harness, quando os portões rodam, então executam os comandos declarados no diretório de cada escopo; as instruções citam esse comando em vez de repetir a lista.
+- [x] AC08 — Dado um diff, quando a checagem de impacto roda, então lista os documentos mapeados a revisar; a regra de sincronização de documentação existe em um único arquivo de regra e os demais apenas a referenciam.
+- [x] AC09 — Os arquivos do núcleo (regras, agentes e skills listados em `core`) não citam specs numeradas, rotas da API nem ferramentas exclusivas da stack.
+- [x] AC10 — A configuração local do Claude nega leitura de `.env` também por comandos de shell comuns.
 
 ## Fora de escopo
 

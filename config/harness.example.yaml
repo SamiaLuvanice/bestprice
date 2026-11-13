@@ -1,4 +1,4 @@
-version: 0.3.0
+version: 0.4.0
 project:
   name: replace-me
   root: .
@@ -11,6 +11,7 @@ profile:
   name: fastapi-react-postgresql
   backend_dir: backend
   frontend_dir: frontend
+  automation_dir: .
   specs_dir: specs
 modules:
   core: [evidence, spec-driven, quality-gates, agent-orchestration]
@@ -27,5 +28,15 @@ quality:
   frontend_lint_command: npm run lint
   frontend_test_command: npm test -- --run
   frontend_build_command: npm run build
+  automation_test_command: node --test .agents/scripts/*.test.mjs
+  automation_harness_command: node .agents/scripts/sync.mjs --check && node .agents/scripts/diagnose.mjs
+diagnose:
+  forbidden_refs: []
+  ignore_paths: []
+  core_forbidden_terms: [pytest, fastapi, react, postgresql]
+docs_impact:
+  "backend/**": [docs/architecture.md]
+  "frontend/**": [docs/architecture.md]
+  ".agents/**": [AGENTS.md, CLAUDE.md]
 customization:
   project_sources_file: .agents/sources.md
