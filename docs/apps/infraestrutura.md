@@ -198,8 +198,9 @@ Roteiro para ligar em Stage, quando autorizado (pendência I3 da
 
 Com a API em `stage`/`production` e o cadastro ligado sem `TRUSTED_PROXY_SECRET`, a
 API não inicia. A migration `20261106signup` cria `signup_attempts` e é aplicada pelo
-`alembic upgrade head` do Compose e do `start-stage.sh`; ainda não foi aplicada em
-Stage. Nada disso foi exercitado em Stage nesta spec.
+`alembic upgrade head` do Compose e do `start-stage.sh`; foi aplicada em Stage na
+promoção #318, junto com `20261113loginfail`. O cadastro em si continua sem
+exercício em Stage.
 
 ## Limite de tentativas de login em Stage — spec 0057
 
