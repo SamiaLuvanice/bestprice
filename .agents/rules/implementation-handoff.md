@@ -11,11 +11,11 @@ artefatos seguem `docs/github-workflow.md`. Implantação externa não está con
 Ao terminar a implementação:
 
 1. Confirme que o trabalho está na worktree/branch da feature, conforme
-   `git-worktree-required.md`, e rode os gates aplicáveis de `.agents/skills/quality-gates/SKILL.md`.
+   `git-worktree-required.md`, e rode os portões aplicáveis (`node .agents/scripts/gates.mjs`,
+   ver `.agents/skills/quality-gates/SKILL.md`).
 2. Registre comandos e resultados de verificação em `specs/<id>/verification.md` e atualize
    `docs/PROGRESS.md` conforme os comandos do projeto. Não invente resultados que não rodou.
-   Após a última alteração de código, execute o agente `doc-sync-onboarding` como etapa final
-   da tarefa e inclua seu resultado no handoff. Se houver novo ajuste de código, repita a etapa.
+   Sincronize a documentação conforme `task-done-criteria.md` e inclua o resultado no handoff.
 3. Prepare um PR por tema, da branch da feature para `develop`. Inclua `Closes #<issue>`, spec relacionada,
    resumo, como verificar, resultados dos testes e pendências. Não faça merge sem revisão
    independente; incorpore feedback na mesma branch/worktree.

@@ -23,12 +23,14 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `frontend/public/_headers` | Cache imutável de um ano em `/assets/*` no Cloudflare Pages (spec 0051) |
 | `frontend/scripts/not-found-page.mjs` | Plugin do Vite que copia `dist/index.html` para `dist/404.html` no fim do build (spec 0051) |
 | `scripts/compose-worktree.ps1` | Isola nome Compose, volume e portas por worktree no Windows |
-| `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
-| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test React e `npm run build:check` (build com checagens de catálogo e fontes, spec 0049), testes Node gerais e actionlint |
+| `.github/workflows/ci.yml` | Agrega qualidade, política de PR, política de commits (range do PR) e varredura de segredos (gitleaks nos commits do evento) sob check obrigatório `CI` (spec 0058) |
+| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test React e `npm run build:check` (build com checagens de catálogo e fontes, spec 0049), testes Node gerais, testes do núcleo do harness, `sync.mjs --check`, `diagnose.mjs` e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
 | `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
+| `.agents/scripts/*.mjs` | Núcleo do harness (spec 0058): sync das projeções, diagnóstico, portões de `harness.yaml`, impacto em docs e política de commit (hook `commit-msg`) |
+| `scripts/diagnose-harness.ps1` | Wrapper Windows de `node .agents/scripts/diagnose.mjs` |
 
 ## Integração de design
 

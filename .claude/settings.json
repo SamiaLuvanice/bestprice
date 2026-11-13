@@ -10,14 +10,18 @@
       "Bash(npm ci)",
       "Bash(git status*)",
       "Bash(git diff*)",
-      "Bash(git log*)"
+      "Bash(git log*)",
+      "Bash(node .agents/scripts/*)"
     ],
     "deny": [
       "Read(./.env)",
       "Read(./.env.local)",
       "Read(**/.env)",
       "Bash(git push --force*)",
-      "Bash(git commit --no-verify*)"
+      "Bash(git commit --no-verify*)",
+      "Bash(cat *.env*)",
+      "Bash(type *.env*)",
+      "Bash(Get-Content *.env*)"
     ]
   }
 }

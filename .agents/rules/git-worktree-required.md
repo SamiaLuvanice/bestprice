@@ -40,7 +40,7 @@ PROD ainda não estão configurados. Veja `docs/github-workflow.md`.
 ```powershell
 git fetch origin
 git show-ref --verify refs/remotes/origin/develop
-$branch = "feature/0007-issue-123-transferencias"
+$branch = "feature/NNNN-issue-123-slug"  # substitua spec, Issue e slug
 $slug = $branch.Replace('/', '-')
 gh issue develop 123 --base develop --name $branch
 git fetch origin

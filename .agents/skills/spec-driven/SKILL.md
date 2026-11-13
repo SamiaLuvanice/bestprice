@@ -47,13 +47,13 @@ Número não é reaproveitado. Spec abandonada vira `status: descartada` no cabe
 
 ## A ordem da implementação
 
-Numa mudança que atravessa backend e frontend, fixe o contrato antes dos dois lados:
+Numa mudança que atravessa camadas, fixe o contrato antes dos lados:
 
 ```
-1. contrato da API (no plan.md)   rotas, DTOs, erros
-2. backend                       teste → rota FastAPI → regra/persistência necessária
-3. frontend                      teste → cliente tipado → tela React
-4. teste de integração           API, interface e PostgreSQL quando o fluxo atravessar os três
+1. contrato (no plan.md)          rotas/mensagens, formatos, erros
+2. serviço                        teste → ponto de entrada → regra/persistência necessária
+3. interface                      teste → cliente tipado → tela
+4. teste de integração            serviço, interface e dados quando o fluxo atravessar os três
 ```
 
 Começar pela UI produz um backend moldado por acidentes da tela.
