@@ -45,6 +45,23 @@ exato (AC11) sem segurar o lock durante o scrypt, a falha é **reservada antes**
    contra login CSRF com `text/plain`. Corpo malformado grava falha só de origem
    (`account_hash` nulo) e responde 422 como hoje.
 
+### Desvios registrados na implementação
+
+- **Decisão 1 corrigida:** apagar as falhas da combinação no sucesso contradizia o AC05,
+  que exige que a contagem por origem continue com as 18 falhas. Por isso, o sucesso
+  apaga só a própria reserva e faz `account_hash = NULL` nas falhas anteriores da
+  combinação. Isso zera a contagem origem + e-mail e preserva a contagem por origem.
+- **Ordem efetiva:** a rota faz um parse puro só para obter o e-mail, reserva sob o lock e
+  só depois devolve o 422. Para quem chama, o contrato não muda: origem bloqueada recebe
+  429 mesmo com corpo malformado.
+- **Interface do limitador:** `reserve(...) -> int` (id da reserva) e
+  `record_success(...)` no lugar de `clear_account`. `parse_signup_body` virou
+  `parse_json_body(model, ...)`, usado pelo login e pelo cadastro. Surrogate isolado vira
+  422 malformado (antes, 500 no login).
+- **Testes HTTP de outras áreas** usam SQLite e recebem um dublê do limitador de login
+  via `tests/conftest.py`. Os testes `test_login_*` de integração usam o limitador real no
+  PostgreSQL.
+
 ## Contrato REST
 
 ### `POST /api/auth/login`
