@@ -119,7 +119,9 @@ Não foi executada por este QA. A tarefa R1 (`arch-reviewer`) segue pendente em 
 ## Pendências explícitas
 
 - R1: revisão independente (`arch-reviewer`) do diff completo.
-- R3: `doc-sync-onboarding` por último.
+- R3: `doc-sync-onboarding` executado em `c147870`; atualizou `docs/apps/backend.md`,
+  `docs/apps/infraestrutura.md`, `docs/apps/frontend.md`, `docs/architecture.md`,
+  `docs/database.md` e `docs/PROGRESS.md`. Repetir se o código mudar.
 - R4: PR para `develop` com `Closes #128`; CI não foi observado.
 - Stage (fora deste QA): antes da promoção, conferir `TRUSTED_PROXY_SECRET` e
   `SIGNUP_SOURCE_HASH_SECRET` no Render e `API_PROXY_SECRET` no Pages, porque com o AC14 a API não

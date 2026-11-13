@@ -64,10 +64,35 @@ O limitador (`backend/app/auth/limiter.py`) é uma janela deslizante por origem 
 | `SIGNUP_ENABLED` | `false` | Só `true` liga |
 | `SIGNUP_RATE_LIMIT_ATTEMPTS` | `5` | Inteiro de 1 a 1000 |
 | `SIGNUP_RATE_LIMIT_WINDOW_MINUTES` | `60` | Inteiro de 1 a 1440 |
-| `TRUSTED_PROXY_SECRET` | vazio | Se preenchido, ≥ 32 caracteres; obrigatório com o cadastro ligado em `stage`/`production` |
-| `SIGNUP_SOURCE_HASH_SECRET` | vazio | ≥ 32 caracteres; obrigatório com o cadastro ligado em qualquer ambiente |
+| `TRUSTED_PROXY_SECRET` | vazio | Se preenchido, ≥ 32 caracteres; obrigatório em `stage`/`production` mesmo com o cadastro desligado (limite de login, spec 0054) |
+| `SIGNUP_SOURCE_HASH_SECRET` | vazio | ≥ 32 caracteres; obrigatório com o cadastro ligado em qualquer ambiente e, pelo limite de login (spec 0054), sempre em `stage`/`production` |
 
-`signup_settings()` roda no `lifespan`: valor inválido, segredo curto, segredo obrigatório ausente ou `TRUSTED_PROXY_SECRET` igual a `SIGNUP_SOURCE_HASH_SECRET` impedem a API de iniciar, e a mensagem nunca repete o valor. Desligado, nenhum dos segredos é exigido. O cadastro permanece desligado por decisão do responsável até a leitura de anúncios do Mercado Livre funcionar; a operação em Stage está em [infraestrutura](infraestrutura.md#cadastro-self-service-em-stage--spec-0048). A [verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md) registra 456 testes backend aprovados e 2 skips com PostgreSQL real, concorrência (AC08), limite com relógio fixo (AC09) e sigilo (AC10); a origem real atrás do Pages não foi verificada em Stage.
+`signup_settings()` roda no `lifespan`: valor inválido, segredo curto, segredo obrigatório ausente ou `TRUSTED_PROXY_SECRET` igual a `SIGNUP_SOURCE_HASH_SECRET` impedem a API de iniciar, e a mensagem nunca repete o valor. Com o cadastro desligado, `signup_settings()` não exige nenhum dos segredos, mas `login_settings()` passa a exigi-los em `stage`/`production` (seção seguinte). O cadastro permanece desligado por decisão do responsável até a leitura de anúncios do Mercado Livre funcionar; a operação em Stage está em [infraestrutura](infraestrutura.md#cadastro-self-service-em-stage--spec-0048). A [verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md) registra 456 testes backend aprovados e 2 skips com PostgreSQL real, concorrência (AC08), limite com relógio fixo (AC09) e sigilo (AC10); a origem real atrás do Pages não foi verificada em Stage.
+
+## Limite de tentativas de login — spec 0054
+
+`POST /api/auth/login` limita **falhas** em duas contagens de janela deslizante, persistidas em `login_failures` no PostgreSQL e compartilhadas por todas as instâncias da API: por origem + e-mail normalizado (padrão 10) e por origem, para quaisquer e-mails (padrão 50), ambas em 15 minutos. A origem é a mesma do cadastro (`x-bestprice-client-ip` só com `x-bestprice-proxy-secret` válido, senão o peer; IPv6 reduzido ao `/64`). Origem e e-mail ficam guardados só como HMAC-SHA256 com `SIGNUP_SOURCE_HASH_SECRET`; o e-mail recebe o prefixo `login-email:` para não colidir com o domínio da origem. Nada disso é gravado em claro nem logado. O bloqueio vale para a origem, não para a conta: o dono entra de outra origem, e sessões já abertas continuam válidas.
+
+| Status | Corpo | Quando | Conta como falha |
+|---|---|---|---|
+| `200` | `{id,email}` + cookie de sessão | credenciais corretas, origem abaixo dos limites | não: desfaz a própria reserva e anula o `account_hash` das falhas anteriores da combinação |
+| `401` | `invalid_credentials`, "E-mail ou senha inválidos." | e-mail sem conta, senha errada ou campo acima do máximo | origem + e-mail e origem |
+| `422` | `validation_error` com `fields` (`body.code=json_required` para Content-Type diferente de JSON ou JSON inválido) | corpo malformado, campo ausente ou extra | só origem (`account_hash` nulo) |
+| `429` | `login_rate_limited`, "Muitas tentativas de login. Tente novamente mais tarde.", `retry_after_seconds` + `Retry-After` | qualquer das contagens no limite; avaliado antes de tudo, inclusive do formato | não |
+
+A ordem faz parte do contrato (`backend/app/auth/routes.py`): o corpo cru é interpretado só para extrair o e-mail da contagem; em seguida `PostgresLoginLimiter.reserve` (`backend/app/auth/login_limiter.py`), numa sessão própria, toma `pg_advisory_xact_lock(hashtextextended('login:' || source_hash, 0))`, apaga as falhas vencidas da origem, calcula as esperas e, se nenhuma contagem estourou, **grava e confirma uma reserva de falha antes do scrypt**, liberando o lock. Só depois saem o 422 de formato e a verificação de credenciais. No sucesso, `record_success` apaga a reserva e anula o `account_hash` das falhas anteriores daquela origem + e-mail na sessão da requisição, confirmada junto com a sessão do usuário por `issue_session`. Assim a contagem por origem não é zerada por quem entra na própria conta, e envios simultâneos nunca registram mais falhas do que o limite. A espera informada é a maior das duas: `falhas[len − limite].failed_at + janela − agora`, no mínimo 1 s. Recusas por 429 não gravam nada.
+
+Toda falha de credencial executa exatamente uma verificação scrypt de mesmo custo: e-mail sem conta verifica contra `DUMMY_PASSWORD_HASH` (`backend/app/auth/security.py`, gerado na importação com os mesmos parâmetros) e campo acima do máximo verifica uma senha fictícia curta contra ele. Assim o tempo de resposta não revela se a conta existe. O login passou a usar `parse_json_body`, o mesmo do cadastro: exige `Content-Type: application/json` (proteção contra login CSRF por `text/plain`), e um surrogate isolado vira 422 em vez de 500. `purge_database` (`app/research/cleanup.py`) chama `purge_login_failures` na partida e a cada hora, como no cadastro.
+
+| Variável | Padrão | Regra |
+|---|---|---|
+| `LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS` | `10` | Inteiro de 1 a 1000 (origem + e-mail) |
+| `LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS` | `50` | Inteiro de 1 a 10000, nunca menor que o anterior |
+| `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | `15` | Inteiro de 1 a 1440 |
+
+`login_settings()` roda no `lifespan`, depois de `signup_settings()`. Valor fora da faixa, limite por origem menor que o de origem + e-mail, segredos iguais ou, com `APP_ENV` `stage`/`production`, ausência de `TRUSTED_PROXY_SECRET` ou `SIGNUP_SOURCE_HASH_SECRET` impedem a API de iniciar, mesmo com o cadastro desligado. A mensagem nunca repete o valor. O motivo é que o login está sempre ligado: sem os segredos, todo o tráfego do Pages cairia numa única origem, e 50 falhas de qualquer pessoa bloqueariam o login de todos. Fora de `stage`/`production`, sem `SIGNUP_SOURCE_HASH_SECRET`, a API gera um segredo aleatório por processo (`ephemeral_hash_secret`), suficiente para um único processo local; reiniciar zera as contagens. Nos testes HTTP de outras áreas (SQLite), `tests/conftest.py` injeta um dublê do limitador; os testes `test_login_*` de integração usam o PostgreSQL real.
+
+A [verificação 0054](../../specs/0054-limite-tentativas-login/verification.md) registra 547 testes backend aprovados e 2 skips (80 `test_login_*` sem skip) com PostgreSQL 17 real, concorrência com 20 threads (AC11), duas engines simulando instâncias (AC12) e a medição do AC08 com medianas abaixo de 20% de diferença. A origem real atrás do Pages e a partida em Stage com os segredos não foram verificadas. Contrato completo em [plan.md da 0054](../../specs/0054-limite-tentativas-login/plan.md#contrato-rest).
 
 ## Assistência e pesquisas privadas — spec 0034
 

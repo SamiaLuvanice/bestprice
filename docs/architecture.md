@@ -98,8 +98,9 @@ Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o 
 | `APP_ENV` | Cookie Secure quando igual a `stage` ou `production` |
 | `API_ORIGIN` | Origem HTTPS da API Render usada apenas pela Pages Function de stage; não é segredo nem entra na SPA |
 | `SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`, `SIGNUP_RATE_LIMIT_WINDOW_MINUTES` | Cadastro self-service (spec 0048); padrões `false`, 5 tentativas e 60 minutos por origem |
-| `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC da origem gravada em `signup_attempts`; obrigatória com o cadastro ligado |
-| `TRUSTED_PROXY_SECRET` (Render) e `API_PROXY_SECRET` (Pages) | Mesmo segredo, distinto do anterior, que autentica a origem do visitante enviada pela Pages Function; obrigatório com o cadastro ligado em stage/production |
+| `LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS`, `LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS`, `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Limite de falhas de login (spec 0054); padrões 10 por origem + e-mail, 50 por origem e 15 minutos |
+| `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC da origem em `signup_attempts` e da origem e do e-mail em `login_failures`; obrigatória com o cadastro ligado e sempre em stage/production (localmente, vazia gera um segredo aleatório por processo) |
+| `TRUSTED_PROXY_SECRET` (Render) e `API_PROXY_SECRET` (Pages) | Mesmo segredo, distinto do anterior, que autentica a origem do visitante enviada pela Pages Function; obrigatório em stage/production mesmo com o cadastro desligado (spec 0054) |
 | `MONITOR_CHECK_INTERVAL_SECONDS`, `MONITOR_FRESHNESS_SECONDS` | Cadência após sucesso e janela de frescor, ambas com padrão de 3600 segundos e faixa de 60 a 86400 |
 | `MONITOR_BATCH_LIMIT`, `MONITOR_MAX_CONCURRENCY` | Publicações por ciclo (padrão 20, faixa 1 a 100) e tentativas paralelas (padrão 1, faixa 1 a 16) |
 | `MONITOR_POLL_INTERVAL_SECONDS` | Pausa entre ciclos (padrão 60 segundos, faixa 1 a 3600) |
@@ -141,5 +142,14 @@ um segredo compartilhado; sem o segredo, a API usa o peer da conexão e nunca co
 em `X-Forwarded-For`. Só o HMAC da origem é gravado, e a limpeza horária da API
 remove as tentativas vencidas. Detalhes em [backend](apps/backend.md#cadastro-self-service--spec-0048)
 e operação de Stage em [infraestrutura](apps/infraestrutura.md#cadastro-self-service-em-stage--spec-0048).
+
+A spec 0054 limita falhas de login com a mesma origem confiável: duas contagens em
+`login_failures` (origem + e-mail e só origem), com trava advisory por origem e uma
+reserva de falha confirmada antes da verificação de senha, desfeita no sucesso. Acima
+do limite, `POST /api/auth/login` responde 429 `login_rate_limited` com `Retry-After`
+antes de qualquer outra checagem, e a SPA mostra a espera em minutos. Como o login está
+sempre ligado, a API não inicia em stage/production sem os dois segredos. Detalhes em
+[backend](apps/backend.md#limite-de-tentativas-de-login--spec-0054) e pré-condição de
+Stage em [infraestrutura](apps/infraestrutura.md#limite-de-tentativas-de-login-em-stage--spec-0054).
 
 O Compose inicia DB, executa Alembic no backend, aguarda seu health check e inicia worker e frontend. A spec 0018 configura outra topologia: navegador → Cloudflare Pages/Function em `/api/*` → API Render → PostgreSQL Supabase exclusivo de stage. O Blueprint chama um script que executa Alembic antes de Uvicorn e usa `/api/health` como health check. O proxy mantém as chamadas e o cookie na origem da interface. Após a promoção #69, API e proxy públicos responderam health 200 com banco `ok`; login via Pages emitiu cookie `Secure` e `HttpOnly`. A migration `20261014rls` protege as dez tabelas `public` do Supabase de stage sem políticas de acesso direto. Uma pausa controlada do banco fez a API retornar 503; Events do Render registrou health check 503, seguido de 502 na borda. O restore recuperou o serviço. O worker não integra essa topologia. GitHub Actions valida o código e publica imagens após o fluxo de release. Consulte os guias de [backend](apps/backend.md), [frontend](apps/frontend.md), [banco](database.md) e [infraestrutura](apps/infraestrutura.md).
