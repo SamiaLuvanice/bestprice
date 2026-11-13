@@ -1,5 +1,28 @@
 # Progresso das specs
 
+## 0057 — Limite de tentativas repetidas de login
+
+**13/11/2026 — implementação entregue; aguarda PR.** A
+[Issue #128](https://github.com/SamiaLuvanice/bestprice/issues/128) limita falhas de
+login em `login_failures` (migração `20261113loginfail`): 10 por origem + e-mail e 50
+por origem em 15 minutos, ajustáveis por `LOGIN_RATE_LIMIT_*`. Acima do limite, a API
+responde 429 `login_rate_limited` com `Retry-After`, antes de qualquer outra checagem e
+mesmo com a senha correta, e a tela mostra "Muitas tentativas de login. Tente novamente
+em N minutos.", mantendo o e-mail e apagando a senha. Toda falha de credencial custa um
+scrypt, inclusive para e-mail sem conta, e o login passa a exigir JSON. Em
+stage/production, a API não inicia sem `TRUSTED_PROXY_SECRET` e
+`SIGNUP_SOURCE_HASH_SECRET`, mesmo com o cadastro desligado.
+
+Backend: Ruff aprovado e pytest com PostgreSQL 17 descartável **547 passed, 2 skipped**
+(80 `test_login_*`). Frontend: lint, `build:check` e Vitest 838/838. QA local com API,
+SPA e PostgreSQL reais (sem Compose) aprovou AC01–AC17; AC10–AC12 só por teste. A
+revisão independente foi feita (R1).
+
+Pendências: PR para `develop` com `Closes #128` e CI. Antes da promoção para Stage,
+conferir os dois segredos no Render e `API_PROXY_SECRET` no Pages; depois, verificar a
+origem real atrás do Pages. Ver
+[verificação da spec 0057](../specs/0057-limite-tentativas-login/verification.md).
+
 ## 0056 — Monitoramento com textos enxutos
 
 **12/11/2026 — spec `pronta`.** A

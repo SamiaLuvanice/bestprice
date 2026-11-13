@@ -13,9 +13,18 @@ import { ResearchArea } from './features/research/ResearchArea'
 import { useSignupAvailability } from './auth/useSignupAvailability'
 import { SignupForm } from './auth/SignupForm'
 import { usePageMeta } from './seo/pageMeta'
+import { waitText } from './lib/format'
 
 function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
+}
+
+/** 0057/AC16: o limite de login mostra a espera em minutos; sem espera, a mensagem do servidor. */
+function loginMessage(error: unknown): string {
+  if (error instanceof ApiFailure && error.status === 429 && error.code === 'login_rate_limited' && error.retryAfterSeconds !== null) {
+    return waitText('Muitas tentativas de login.', error.retryAfterSeconds)
+  }
+  return message(error)
 }
 
 const systemClock = () => new Date()
@@ -124,7 +133,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
       setPostLoginTarget(target)
       setUser(result)
       setSessionState('ready')
-    } catch (failure) { setGuestMessage(message(failure)) }
+    } catch (failure) { setGuestMessage(loginMessage(failure)) }
     finally { setBusy(false) }
   }
 

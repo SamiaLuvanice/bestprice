@@ -1,0 +1,6 @@
+n=30+30(+30); mediana sem conta=85.1 ms; com conta (senha errada)=88.7 ms; diferenca=4.0%
+mediana campo acima do maximo (senha 1025)=72.5 ms; diferenca vs com conta=18.2%
+min/max sem conta=71.5/138.3; com conta=70.8/109.0
+n=30+30(+30); mediana sem conta=75.8 ms; com conta (senha errada)=84.8 ms; diferenca=10.6%
+mediana campo acima do maximo (senha 1025)=81.2 ms; diferenca vs com conta=4.2%
+min/max sem conta=71.9/103.0; com conta=71.2/124.9

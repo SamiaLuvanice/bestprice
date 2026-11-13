@@ -203,9 +203,17 @@ mantendo os controles e a autenticação existentes:
   outro `POST /api/auth/login`. `App` controla `busy` e chama `api.login`; os valores
   dos campos ficam no `LoginForm`.
 - **Falha e foco:** erro de login ou aviso de sessão encerrada aparece como um único
-  `role="alert"`. Depois de uma tentativa que falhou, os campos são preservados e o
-  foco vai para Senha; o aviso de sessão exibido na montagem não move o foco. No
-  sucesso, o `LoginForm` desmonta e a senha é descartada.
+  `role="alert"`. Depois de uma tentativa que falhou (401, 429 ou falha de rede), o
+  e-mail é preservado, a senha é apagada (spec 0057) e o foco vai para Senha; o aviso
+  de sessão exibido na montagem não apaga nem move o foco. No sucesso, o `LoginForm`
+  desmonta e a senha é descartada.
+- **Limite de tentativas (spec 0057):** para `429 login_rate_limited` com
+  `retry_after_seconds`, `App.tsx` mostra "Muitas tentativas de login. Tente novamente
+  em N minutos.", com N arredondado para cima e no mínimo 1, no singular ou no plural;
+  sem espera, usa a mensagem do servidor. O texto vem de `waitText` em
+  `frontend/src/lib/format.ts`, compartilhado com o 429 do cadastro (cujo texto não
+  mudou). O alerta reutiliza o padrão existente do formulário, sem quadro Figma
+  próprio.
 - **Movimento:** com `prefers-reduced-motion: reduce`, o botão não encolhe ao ser
   pressionado.
 
@@ -663,7 +671,7 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | `frontend/src/landing/` | Landing pública da 0050: seções, robô, gráfico em degraus, menu móvel (Sheet), mini-robô, barra fixa, destinos e movimento |
 | `frontend/src/navigation/pendingTrackLink.ts` | Link do hero guardado na aba até o primeiro uso no monitoramento (0050) |
 | `frontend/src/assets/redesign/` | Arte do login (`login-left.webp`); as artes da landing antiga foram removidas na 0050 |
-| `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único e foco em Senha após falha |
+| `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único e, após falha, senha apagada e foco em Senha (0057) |
 | `frontend/src/NotFoundPage.tsx` | 404 público, título e foco da página, ação principal por sessão e ação de voltar |
 | `frontend/src/components/ui/`, `frontend/src/lib/utils.ts`, `frontend/components.json` | Componentes oficiais shadcn/ui, combinação de classes e configuração de geração |
 | `frontend/src/navigation/returnTo.ts` | Allowlist de destinos internos após login ou expiração de sessão |

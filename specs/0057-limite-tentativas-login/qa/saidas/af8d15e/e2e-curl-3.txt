@@ -1,0 +1,4 @@
+== AC04 apos a janela de 1 min: origem A (bloqueada por combinacao) e C (bloqueada por origem), senha correta
+15:39:06
+203.0.113.10: 200
+203.0.113.30: 200

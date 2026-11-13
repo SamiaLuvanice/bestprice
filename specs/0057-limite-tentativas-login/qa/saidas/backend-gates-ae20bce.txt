@@ -1,0 +1,13 @@
+ae20bce
+All checks passed!
+RUFF_EXIT=0
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+SKIPPED [2] tests\test_stage_start.py:22: POSIX startup script runs in the Linux image
+547 passed, 2 skipped, 1 warning in 56.01s
+PYTEST_EXIT=0
+80 passed, 1 warning in 20.53s
+- Blocos analisados: **207**
+- Complexidade média: **2.81** (rank A)
+## Resultado do gate
+✅ Nenhum bloco com rank >= D.
