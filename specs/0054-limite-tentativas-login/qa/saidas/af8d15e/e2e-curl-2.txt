@@ -1,0 +1,17 @@
+== AC17: sessao aberta (origem F) continua valida enquanto origem A esta bloqueada para o mesmo e-mail
+login F: 200
+erro A2: 401
+erro A2: 401
+erro A2: 401
+A2 bloqueada: 429
+{"id":"c228d828-8bee-4549-8ef0-67a8a9fe8954","email":"qa0054@exemplo.com"}  <- GET /api/auth/me com a sessao aberta: 200
+GET /api/dashboard com a sessao aberta: 200
+== AC15: linhas em login_failures (sem texto em claro)
+ total | com_conta | len_src | src_hex | acc_hex
+-------+-----------+---------+---------+---------
+    19 |        16 |      64 | t       | t
+(1 row)
+
+ocorrencias de e-mail/IP/senha no dump da tabela: 0
+ocorrencias de e-mail/IP/senha/segredo no log do uvicorn: 0
+ocorrencias no log do PostgreSQL: 0

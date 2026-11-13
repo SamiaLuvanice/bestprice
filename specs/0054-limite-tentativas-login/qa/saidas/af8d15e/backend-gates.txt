@@ -1,0 +1,8 @@
+All checks passed!
+RUFF_EXIT=0
+SKIPPED [2] tests\test_stage_start.py:22: POSIX startup script runs in the Linux image
+546 passed, 2 skipped, 1 warning in 149.09s (0:02:29)
+PYTEST_EXIT=0
+79 passed, 1 warning in 34.17s
+LOGIN_EXIT=0
+CC_EXIT=0

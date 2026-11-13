@@ -1,0 +1,15 @@
+== AC14 APP_ENV=stage, SIGNUP_ENABLED=false, sem segredos
+INFO:     Waiting for application startup.
+ERROR:    Traceback (most recent call last):
+ERROR:    Application startup failed. Exiting.
+exit=3
+== AC13 LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS=2 < ACCOUNT=3
+    raise RuntimeError(
+RuntimeError: LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS deve ser maior ou igual a LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS
+ERROR:    Application startup failed. Exiting.
+exit=3
+== AC13 LOGIN_RATE_LIMIT_WINDOW_MINUTES=1441
+    raise RuntimeError(f"{name} deve estar entre {minimum} e {maximum}")
+RuntimeError: LOGIN_RATE_LIMIT_WINDOW_MINUTES deve estar entre 1 e 1440
+ERROR:    Application startup failed. Exiting.
+exit=3
