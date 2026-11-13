@@ -71,6 +71,15 @@ export function retryHint(seconds: number): string {
   return `Tente novamente em ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
 }
 
+/**
+ * Espera de um 429 em minutos inteiros (cadastro 0048, login 0054): arredonda para cima,
+ * no mínimo 1 minuto, singular ou plural. `prefix` é a frase de quem recusou.
+ */
+export function waitText(prefix: string, seconds: number): string {
+  const minutes = Math.max(1, Math.ceil(seconds / 60))
+  return `${prefix} Tente novamente em ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
+}
+
 // signDisplay 'negative': valores que arredondam para zero ("-0.00", "-0.004") não ganham sinal.
 const moneyFormat = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', signDisplay: 'negative' })
 const percentFormat = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'exceptZero' })

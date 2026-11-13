@@ -6,6 +6,7 @@ import { api, ApiFailure, type User } from '../api'
 import { Brand } from '../components/Brand'
 import { EyeIcon, EyeOffIcon } from '../dashboard/Icons'
 import { accountRuleMessage, validateSignup, type SignupErrors } from './accountRules'
+import { waitText } from '../lib/format'
 
 type Props = {
   /** Login com o mesmo `returnTo` válido; usado em "Já tem uma conta?" e no atalho do 409. */
@@ -20,6 +21,7 @@ type Field = keyof SignupErrors
 const FIELD_ORDER: Field[] = ['email', 'password', 'confirmation']
 const GENERIC_FAILURE = 'Não foi possível criar a conta agora. Tente novamente.'
 const UNAVAILABLE = 'Cadastro indisponível no momento.'
+const SIGNUP_RATE_LIMITED = 'Muitas tentativas de cadastro.'
 
 const FIELD_LABELS: Record<Field, string> = { email: 'E-mail', password: 'Senha', confirmation: 'Confirmar senha' }
 
@@ -29,11 +31,6 @@ function fieldSummary(found: SignupErrors): string {
   if (labels.length === 0) return ''
   const list = labels.length === 1 ? labels[0] : `${labels.slice(0, -1).join(', ')} e ${labels[labels.length - 1]}`
   return labels.length === 1 ? `1 campo precisa de correção: ${list}.` : `${labels.length} campos precisam de correção: ${list}.`
-}
-
-function waitText(seconds: number): string {
-  const minutes = Math.max(1, Math.ceil(seconds / 60))
-  return `Muitas tentativas de cadastro. Tente novamente em ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
 }
 
 /** Erros por campo vindos do servidor: texto local pelo `code` estável, senão a mensagem do servidor. */
@@ -58,7 +55,7 @@ function describeFailure(failure: unknown): { errors: SignupErrors; alert: strin
     return { errors, alert: errors.email || errors.password ? null : failure.message, registered: false }
   }
   if (failure.status === 429) {
-    return { errors: {}, alert: failure.retryAfterSeconds === null ? failure.message : waitText(failure.retryAfterSeconds), registered: false }
+    return { errors: {}, alert: failure.retryAfterSeconds === null ? failure.message : waitText(SIGNUP_RATE_LIMITED, failure.retryAfterSeconds), registered: false }
   }
   if (failure.code === 'signup_unavailable') return { errors: {}, alert: UNAVAILABLE, registered: false }
   return { errors: {}, alert: GENERIC_FAILURE, registered: false }

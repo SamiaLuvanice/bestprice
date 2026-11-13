@@ -198,8 +198,8 @@ it('mostra Entrando… ocupado e indisponível, ignora novos envios e mantém o 
   expect(onSubmit).not.toHaveBeenCalled()
 })
 
-// AC06: erro único, campos preservados e foco no campo Senha após falha.
-it('após falha mostra um único alerta, preserva os campos e foca o campo Senha', () => {
+// AC06 + 0054/AC16: erro único, e-mail mantido, senha apagada e foco no campo Senha após falha.
+it('após falha mostra um único alerta, mantém o e-mail, apaga a senha e foca o campo Senha', () => {
   const onSubmit = vi.fn()
   const { rerender } = render(<LoginForm busy={false} error={null} onSubmit={onSubmit} />)
   fill('pessoa@example.com', 'errada')
@@ -209,9 +209,19 @@ it('após falha mostra um único alerta, preserva os campos e foca o campo Senha
   expect(screen.getAllByRole('alert')).toHaveLength(1)
   expect(screen.getByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.')
   expect(emailField()).toHaveValue('pessoa@example.com')
-  expect(passwordField()).toHaveValue('errada')
+  expect(passwordField()).toHaveValue('')
   expect(passwordField()).toHaveFocus()
   expect(screen.getByRole('button', { name: 'Entrar' })).not.toHaveAttribute('aria-disabled', 'true')
+})
+
+// 0054/AC16: só um erro que chega depois de um envio apaga a senha; mudar o alerta sem envio não.
+it('não apaga a senha quando o alerta muda sem um envio em curso', () => {
+  const onSubmit = vi.fn()
+  const { rerender } = render(<LoginForm busy={false} error={null} onSubmit={onSubmit} />)
+  fill('pessoa@example.com', 'segredo')
+  rerender(<LoginForm busy={false} error="Sua sessão expirou. Entre novamente." onSubmit={onSubmit} />)
+  expect(passwordField()).toHaveValue('segredo')
+  expect(passwordField()).not.toHaveFocus()
 })
 
 // AC06: o aviso de sessão encerrada chega na montagem e não move o foco.

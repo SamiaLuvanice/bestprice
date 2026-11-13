@@ -11,7 +11,7 @@ type Props = {
   busy: boolean
   /** Erro de login ou aviso de sessão encerrada; renderizado como o único alerta. */
   error: string | null
-  /** O App chama api.login; os valores ficam aqui para sobreviver a uma falha. */
+  /** O App chama api.login; os valores ficam aqui e o e-mail sobrevive a uma falha (a senha é apagada). */
   onSubmit: (email: string, password: string) => void
   /** Chamado quando a validação local recusa o envio (o App remove o alerta do servidor anterior). */
   onValidationFail?: () => void
@@ -52,10 +52,12 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref 
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
 
-  // Só uma tentativa que falhou devolve o foco à senha; o aviso de sessão na montagem não move o foco.
+  // Só uma tentativa que falhou apaga a senha (0054/AC16) e devolve o foco a ela; o e-mail fica.
+  // O aviso de sessão na montagem não apaga nem move o foco.
   useEffect(() => {
     if (busy || !error || !attempted.current) return
     attempted.current = false
+    setPassword('')
     passwordRef.current?.focus()
   }, [busy, error])
 
