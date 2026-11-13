@@ -71,7 +71,7 @@ Entrada: JSON `{"email": string, "password": string}`, campos extras proibidos,
 
 | Status | Corpo | Quando | Conta falha? |
 |---|---|---|---|
-| 200 | `UserResponse {id, email}` + cookie `bestprice_session` | credenciais corretas, origem abaixo dos limites | apaga as falhas da combinação |
+| 200 | `UserResponse {id, email}` + cookie `bestprice_session` | credenciais corretas, origem abaixo dos limites | apaga a própria reserva; falhas anteriores da combinação deixam de apontar o e-mail e seguem contando para a origem |
 | 401 | `error.code = invalid_credentials`, "E-mail ou senha inválidos." | e-mail sem conta, senha errada, campo acima do máximo | origem + e-mail |
 | 422 | `error.code = validation_error`, `fields` | corpo não JSON, JSON inválido, campo ausente ou extra | só origem |
 | 429 | `error.code = login_rate_limited`, mensagem "Muitas tentativas de login. Tente novamente mais tarde.", `retry_after_seconds` (inteiro ≥ 1) + cabeçalho `Retry-After` | qualquer das duas contagens no limite; avaliado antes de tudo | não |
