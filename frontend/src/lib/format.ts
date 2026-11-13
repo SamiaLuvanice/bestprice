@@ -76,8 +76,8 @@ export function retryHint(seconds: number): string {
  * no mínimo 1 minuto, singular ou plural. `prefix` é a frase de quem recusou.
  */
 export function waitText(prefix: string, seconds: number): string {
-  const minutes = Math.max(1, Math.ceil(seconds / 60))
-  return `${prefix} Tente novamente em ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}.`
+  // A partir de 60 s, retryHint já fala em minutos arredondados para cima.
+  return `${prefix} ${retryHint(Math.max(60, seconds))}`
 }
 
 // signDisplay 'negative': valores que arredondam para zero ("-0.00", "-0.004") não ganham sinal.
