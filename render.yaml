@@ -22,7 +22,15 @@ services:
       # Cadastro self-service desligado até a leitura de anúncios funcionar (spec 0048).
       - key: SIGNUP_ENABLED
         value: "false"
+      # Os dois segredos são obrigatórios em stage desde a spec 0057 (limite de login): sem eles
+      # a API não inicia. Preencha-os no painel antes da promoção.
       - key: TRUSTED_PROXY_SECRET
         sync: false
       - key: SIGNUP_SOURCE_HASH_SECRET
         sync: false
+      - key: LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS
+        value: "10"
+      - key: LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS
+        value: "50"
+      - key: LOGIN_RATE_LIMIT_WINDOW_MINUTES
+        value: "15"

@@ -1,0 +1,65 @@
+== 422 corpo nao JSON (text/plain), origem 198.51.100.1
+HTTP/1.1 422 Unprocessable Content
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"body","code":"json_required","message":"Valor inválido ou ausente."}],"tracked_product_id":null,"retry_after_seconds":null}}
+== 422 JSON invalido, origem 198.51.100.1
+HTTP/1.1 422 Unprocessable Content
+{"error":{"code":"validation_error","message":"Confira os dados informados.","fields":[{"field":"body","code":"json_required","message":"Valor inválido ou ausente."}],"tracked_product_id":null,"retry_after_seconds":null}}
+== AC02 origem A=203.0.113.10: 3 senhas erradas
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+== AC02 4o envio com senha correta (esperado 429, sem cookie)
+HTTP/1.1 429 Too Many Requests
+retry-after: 59
+{"error":{"code":"login_rate_limited","message":"Muitas tentativas de login. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":59}}
+== AC09 continua enviando durante a espera (2s depois): Retry-After nao aumenta
+HTTP/1.1 429 Too Many Requests
+retry-after: 57
+{"error":{"code":"login_rate_limited","message":"Muitas tentativas de login. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":57}}
+HTTP/1.1 429 Too Many Requests
+retry-after: 57
+{"error":{"code":"login_rate_limited","message":"Muitas tentativas de login. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":57}}
+== AC06 outra origem B=203.0.113.20, senha correta
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=<token>; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"c228d828-8bee-4549-8ef0-67a8a9fe8954","email":"qa0054@exemplo.com"}
+== AC07 origem D=203.0.113.40 e-mail COM conta x origem E=203.0.113.50 e-mail SEM conta (3 falhas + 1)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 429 Too Many Requests
+retry-after: 60
+{"error":{"code":"login_rate_limited","message":"Muitas tentativas de login. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":60}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 429 Too Many Requests
+retry-after: 60
+{"error":{"code":"login_rate_limited","message":"Muitas tentativas de login. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":60}}
+== AC03 origem C=203.0.113.30: 5 falhas em e-mails diferentes (2 por e-mail + malformado)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+HTTP/1.1 422 Unprocessable Content
+== AC03 e-mail sem falhas proprias com senha correta (esperado 429)
+HTTP/1.1 429 Too Many Requests
+retry-after: 57
+{"error":{"code":"login_rate_limited","message":"Muitas tentativas de login. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":57}}
+== AC03 corpo malformado na origem bloqueada (esperado 429)
+HTTP/1.1 429 Too Many Requests
+retry-after: 57
+{"error":{"code":"login_rate_limited","message":"Muitas tentativas de login. Tente novamente mais tarde.","fields":[],"tracked_product_id":null,"retry_after_seconds":57}}

@@ -1,0 +1,12 @@
+== health com PostgreSQL no ar
+HTTP/1.1 200 OK
+{"status":"ok","database":"ok"}
+== health com PostgreSQL parado (docker stop bestprice-0054-qa-pg)
+HTTP/1.1 503 Service Unavailable
+{"status":"unavailable","database":"unavailable"}
+== login com PostgreSQL parado
+HTTP/1.1 500 Internal Server Error
+content-type: text/plain; charset=utf-8
+== health apos docker start
+HTTP/1.1 200 OK
+{"status":"ok","database":"ok"}

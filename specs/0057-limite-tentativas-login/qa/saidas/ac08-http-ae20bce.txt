@@ -1,0 +1,8 @@
+HEAD=ae20bce rodada 1
+n=30+30(+30); mediana sem conta=82.5 ms; com conta (senha errada)=92.8 ms; diferenca=11.1%
+mediana campo acima do maximo (senha 1025)=80.0 ms; diferenca vs com conta=13.8%
+min/max sem conta=71.6/103.9; com conta=71.9/130.3
+HEAD=ae20bce rodada 2
+n=30+30(+30); mediana sem conta=84.5 ms; com conta (senha errada)=87.5 ms; diferenca=3.4%
+mediana campo acima do maximo (senha 1025)=76.6 ms; diferenca vs com conta=12.5%
+min/max sem conta=70.7/111.7; com conta=70.6/119.6

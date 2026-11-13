@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatAbsolute, formatMoney, formatPercentage, formatRelative, retryHint } from './format'
+import { formatAbsolute, formatMoney, formatPercentage, formatRelative, retryHint, waitText } from './format'
 
 const timeZone = 'America/Sao_Paulo'
 // São Paulo está em UTC−3 em outubro de 2026 (sem horário de verão).
@@ -100,5 +100,22 @@ describe('formatPercentage', () => {
   it('não inventa percentual para ausente ou inválido', () => {
     expect(formatPercentage(null)).toBeNull()
     expect(formatPercentage('x')).toBeNull()
+  })
+})
+
+// 0057/F1: espera de um 429 em minutos inteiros, com o prefixo de quem recusou.
+describe('waitText', () => {
+  it.each([
+    [1, 'Muitas tentativas de login. Tente novamente em 1 minuto.'],
+    [60, 'Muitas tentativas de login. Tente novamente em 1 minuto.'],
+    [61, 'Muitas tentativas de login. Tente novamente em 2 minutos.'],
+    [900, 'Muitas tentativas de login. Tente novamente em 15 minutos.'],
+    [0, 'Muitas tentativas de login. Tente novamente em 1 minuto.'],
+  ])('com %i s', (seconds, text) => {
+    expect(waitText('Muitas tentativas de login.', seconds)).toBe(text)
+  })
+
+  it('preserva o texto do cadastro', () => {
+    expect(waitText('Muitas tentativas de cadastro.', 1800)).toBe('Muitas tentativas de cadastro. Tente novamente em 30 minutos.')
   })
 })

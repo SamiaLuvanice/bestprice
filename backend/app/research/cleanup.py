@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from app.auth.limiter import purge_signup_attempts
-from app.auth.settings import signup_settings
+from app.auth.login_limiter import purge_login_failures
+from app.auth.settings import login_settings, signup_settings
 from app.db import create_database_engine
 from app.research.repository import purge_expired
 from app.research.service import now_utc
@@ -23,6 +24,8 @@ def purge_database() -> int:
         # enquanto a API está acordada, a retenção fica em ≈ janela + 1 h. Se a instância
         # hiberna (Render Free), a próxima partida apaga o que venceu durante o sono.
         purge_signup_attempts(session, now, signup_settings().rate_limit_window)
+        # Mesma cadência para as falhas de login: os HMACs de origem e e-mail saem com a janela.
+        purge_login_failures(session, now, login_settings().window)
         session.commit()
         return count
 

@@ -165,7 +165,8 @@ O cadastro é desligado por padrão em todos os ambientes (`SIGNUP_ENABLED=false
 até a leitura de anúncios do Mercado Livre funcionar. Compose repassa as cinco
 variáveis (`SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`,
 `SIGNUP_RATE_LIMIT_WINDOW_MINUTES`, `TRUSTED_PROXY_SECRET`,
-`SIGNUP_SOURCE_HASH_SECRET`) apenas ao serviço `backend`. O Blueprint declara
+`SIGNUP_SOURCE_HASH_SECRET`) apenas ao serviço `backend`. Desde a spec 0057, os dois
+segredos também servem ao limite de login, que está sempre ligado (seção seguinte). O Blueprint declara
 `SIGNUP_ENABLED: "false"` e os dois segredos com `sync: false`, que precisam ser
 preenchidos no painel; a alteração do `render.yaml` exige a sincronização manual do
 Blueprint descrita abaixo. Regras e padrões estão no
@@ -175,7 +176,7 @@ Blueprint descrita abaixo. Regras e padrões estão no
 |---|---|---|
 | Cloudflare Pages (produção) | `API_PROXY_SECRET` | Segredo que a Function envia em `x-bestprice-proxy-secret`, junto do `cf-connecting-ip` do visitante em `x-bestprice-client-ip` |
 | Render | `TRUSTED_PROXY_SECRET` | Mesmo valor de `API_PROXY_SECRET`; só com ele a API confia no IP enviado pela Function |
-| Render | `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC-SHA256 da origem; distinta de `TRUSTED_PROXY_SECRET` |
+| Render | `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC-SHA256 da origem (e do e-mail no limite de login); distinta de `TRUSTED_PROXY_SECRET` |
 
 Os dois segredos têm pelo menos 32 caracteres e devem ser diferentes; a API não
 inicia se forem iguais. Gere-os aleatoriamente e guarde-os fora do repositório.
@@ -199,6 +200,36 @@ Com a API em `stage`/`production` e o cadastro ligado sem `TRUSTED_PROXY_SECRET`
 API não inicia. A migration `20261106signup` cria `signup_attempts` e é aplicada pelo
 `alembic upgrade head` do Compose e do `start-stage.sh`; ainda não foi aplicada em
 Stage. Nada disso foi exercitado em Stage nesta spec.
+
+## Limite de tentativas de login em Stage — spec 0057
+
+O limite de login usa a mesma origem confiável e o mesmo segredo de HMAC do cadastro,
+mas não tem interruptor. Por isso, com `APP_ENV=stage` ou `production`, a API **não
+inicia** sem `TRUSTED_PROXY_SECRET` e `SIGNUP_SOURCE_HASH_SECRET`, mesmo com
+`SIGNUP_ENABLED=false`. O `render.yaml` continua declarando os dois com `sync: false` e
+acrescenta `LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS: "10"`,
+`LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS: "50"` e `LOGIN_RATE_LIMIT_WINDOW_MINUTES: "15"`;
+a mudança exige a sincronização manual do Blueprint descrita abaixo. Regras em
+[backend](backend.md#limite-de-tentativas-de-login--spec-0057).
+
+**Pré-condição da próxima promoção para Stage:** antes do PR `develop` → `stage` que
+levar esta mudança, confira no painel do Render que `TRUSTED_PROXY_SECRET` e
+`SIGNUP_SOURCE_HASH_SECRET` têm valor (≥ 32 caracteres, diferentes entre si) e, no
+Pages, que `API_PROXY_SECRET` existe com o mesmo valor de `TRUSTED_PROXY_SECRET`.
+Sem os segredos do Render, o deploy falha na partida; sem o do Pages, a API sobe, mas
+todo o tráfego do Pages cai numa única origem, e 50 falhas de qualquer pessoa em 15
+minutos bloqueiam o login de todos. Não há registro de que esses valores estejam
+preenchidos hoje. Depois da promoção, verifique a origem real atrás do Pages (por
+exemplo, falhas de dois IPs distintos contadas separadamente).
+
+Limite conhecido: como no cadastro, o acesso direto a `*.onrender.com`, sem passar
+pelo Pages, usa o peer da conexão como origem e cai num único balde; esse tráfego
+pode ser bloqueado em conjunto. A SPA sempre passa pelo Pages. A migration
+`20261113loginfail` cria `login_failures` e é aplicada pelo `alembic upgrade head` do
+Compose e do `start-stage.sh`; não foi aplicada em Stage. No Compose local, as
+variáveis `LOGIN_RATE_LIMIT_*` não são repassadas ao serviço `backend`, que usa os
+padrões (10, 50 e 15 min); com o segredo de HMAC vazio, a API gera um valor aleatório
+por processo.
 
 ## Sonda oficial do Mercado Livre no GitHub Actions
 

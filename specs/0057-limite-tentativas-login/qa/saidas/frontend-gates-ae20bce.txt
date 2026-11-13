@@ -1,0 +1,8 @@
+LINT_EXIT=0
+ Test Files  61 passed (61)
+      Tests  838 passed (838)
+TEST_EXIT=0
+[32m✓ built in 1.49s[39m
+Sem vestígios do catálogo em dist (5 marcadores conferidos).
+Fontes conforme em dist: Geist Mono latin/latin-ext 400–600, sem base64.
+BUILD_EXIT=0

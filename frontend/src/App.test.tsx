@@ -206,7 +206,7 @@ it('mostra falha da integração no formulário sem afirmar sucesso', async () =
   expect(screen.queryByText('Produto monitorado com sucesso.')).not.toBeInTheDocument()
 })
 
-it('mostra envio ocupado sem reenviar, preserva campos após 401 e entra na tentativa seguinte', async () => {
+it('mostra envio ocupado sem reenviar, mantém o e-mail e apaga a senha após 401 e entra na tentativa seguinte', async () => {
   const pending = deferred()
   let attempt = 0
   const mockFetch = guestApi(() => ++attempt === 1 ? pending.promise : reply(200, sessionUser))
@@ -223,7 +223,7 @@ it('mostra envio ocupado sem reenviar, preserva campos após 401 e entra na tent
   await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.'))
   expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
-  expect(screen.getByLabelText('Senha')).toHaveValue('errada')
+  await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveValue(''))
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
   fillLogin('pessoa@example.com', 'certa')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
@@ -246,7 +246,7 @@ it('limpa alerta do servidor se novo envio falha na validação', async () => {
   expect(callsTo(mockFetch, '/api/auth/login', 'POST')).toHaveLength(1)
 })
 
-it('mostra falha de conexão no login e mantém os campos', async () => {
+it('mostra falha de conexão no login, mantém o e-mail e apaga a senha', async () => {
   guestApi(() => Promise.reject(new TypeError('Failed to fetch')))
   visit('/login')
   await screen.findByRole('button', { name: 'Entrar' })
@@ -255,8 +255,38 @@ it('mostra falha de conexão no login e mantém os campos', async () => {
   await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível conectar ao BestPrice. Tente novamente.'))
   expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
-  expect(screen.getByLabelText('Senha')).toHaveValue('segredo')
+  await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveValue(''))
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
+})
+
+// 0057/AC16: o limite de login mostra a espera em minutos no alerta único do formulário.
+const LOGIN_LIMITED = 'Muitas tentativas de login. Tente novamente mais tarde.'
+
+it.each([
+  [900, 'Muitas tentativas de login. Tente novamente em 15 minutos.'],
+  [61, 'Muitas tentativas de login. Tente novamente em 2 minutos.'],
+  [60, 'Muitas tentativas de login. Tente novamente em 1 minuto.'],
+  [1, 'Muitas tentativas de login. Tente novamente em 1 minuto.'],
+])('mostra a espera do 429 de login (%i s), mantém o e-mail e apaga a senha', async (seconds, text) => {
+  guestApi(() => reply(429, apiError('login_rate_limited', LOGIN_LIMITED, { retry_after_seconds: seconds })))
+  visit('/login')
+  await screen.findByRole('button', { name: 'Entrar' })
+  fillLogin('pessoa@example.com', 'errada')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(text))
+  expect(screen.getAllByRole('alert')).toHaveLength(1)
+  expect(screen.getByLabelText('E-mail')).toHaveValue('pessoa@example.com')
+  await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveValue(''))
+  await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
+})
+
+it('usa a mensagem do servidor no 429 de login sem tempo de espera', async () => {
+  guestApi(() => reply(429, apiError('login_rate_limited', LOGIN_LIMITED)))
+  visit('/login')
+  await screen.findByRole('button', { name: 'Entrar' })
+  fillLogin('pessoa@example.com', 'errada')
+  fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(LOGIN_LIMITED))
 })
 
 function signupApi(signup: () => unknown, extra: (url: string, init?: RequestInit) => unknown = () => undefined) {

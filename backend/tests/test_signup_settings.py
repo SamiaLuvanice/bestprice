@@ -114,10 +114,23 @@ def test_lifespan_refuses_to_start_with_invalid_signup_configuration(monkeypatch
         pass
 
 
-def test_lifespan_starts_with_signup_off_and_no_secrets(
+def test_lifespan_starts_with_signup_off_and_no_secrets_locally(
     monkeypatch: pytest.MonkeyPatch, startup_cleanups: list[float],
 ) -> None:
+    with TestClient(app) as client:
+        assert client.app is app
+    assert startup_cleanups == [3600]  # o dublê rodou no lugar da limpeza real
+
+
+def test_lifespan_starts_in_stage_with_signup_off(
+    monkeypatch: pytest.MonkeyPatch, startup_cleanups: list[float],
+) -> None:
+    # Desde a 0057 o limite de login exige os dois segredos em stage (AC14), mesmo com o
+    # cadastro desligado; o cadastro em si continua não exigindo nada quando desligado.
     monkeypatch.setenv("APP_ENV", "stage")
+    monkeypatch.setenv("TRUSTED_PROXY_SECRET", "p" * 32)
+    monkeypatch.setenv("SIGNUP_SOURCE_HASH_SECRET", SECRET)
+    assert signup_settings().enabled is False
     with TestClient(app) as client:
         assert client.app is app
     assert startup_cleanups == [3600]  # o dublê rodou no lugar da limpeza real
