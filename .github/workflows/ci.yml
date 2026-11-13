@@ -32,10 +32,55 @@ jobs:
           script: |
             const { checkPullRequest } = require('./.github/scripts/policy.cjs');
             await checkPullRequest({ github, context });
+  commits:
+    name: Commit policy
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+      - name: Conventional Commits e autoria humana no range do PR
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node .agents/scripts/commit-msg.mjs --range "origin/$BASE_REF..$HEAD_SHA"
+  secrets:
+    name: Secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: gitleaks nos commits do evento
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          # Varre só os commits novos; o histórico anterior não é reavaliado a cada evento.
+          if [ "$EVENT_NAME" = pull_request ]; then
+            range="origin/$BASE_REF..$HEAD_SHA"
+          elif [ "$EVENT_NAME" = push ] && [ -n "$BEFORE" ] && [ "$BEFORE" != 0000000000000000000000000000000000000000 ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            range="$BEFORE..$AFTER"
+          else
+            range="-1"
+          fi
+          echo "Range: $range"
+          docker run --rm -v "$PWD:/repo"             -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*'             ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --no-banner --log-opts="$range"
   ci:
     name: CI
     if: always()
-    needs: [quality, policy]
+    needs: [quality, policy, commits, secrets]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -43,9 +88,13 @@ jobs:
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           POLICY_RESULT: ${{ needs.policy.result }}
+          COMMITS_RESULT: ${{ needs.commits.result }}
+          SECRETS_RESULT: ${{ needs.secrets.result }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
           test "$QUALITY_RESULT" = success
+          test "$SECRETS_RESULT" = success
           if [ "$EVENT_NAME" = pull_request ]; then
             test "$POLICY_RESULT" = success
+            test "$COMMITS_RESULT" = success
           fi

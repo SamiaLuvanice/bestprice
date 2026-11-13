@@ -29,4 +29,4 @@ def verify_password(password: str, stored: str) -> bool:
 # resposta não revela se a conta existe.
 DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(32))
 # Senha curta fixa para campos acima do máximo: o trabalho não cresce com o tamanho enviado.
-DUMMY_PASSWORD = "senha-ficticia"
+DUMMY_PASSWORD = "senha-ficticia"  # gitleaks:allow (valor fictício intencional)

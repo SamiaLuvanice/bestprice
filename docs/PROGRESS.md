@@ -1,5 +1,14 @@
 # Progresso das specs
 
+## 0058 — Harness agnóstico e verificável
+
+**13/11/2026 — implementação entregue; aguarda revisão.** [Issue #322](https://github.com/SamiaLuvanice/bestprice/issues/322),
+branch `feature/0058-issue-322-harness-agnostico`. Núcleo Node em `.agents/scripts/` (sync,
+diagnose, gates, docs-impact, commit-msg) configurado por `harness.yaml` 0.4.0; hook
+`commit-msg` e gitleaks; jobs CI `Commit policy` e `Secrets`; núcleo separado do perfil e
+doc-sync condicional em regra única. Testes do harness 15/15, automações 50/50, actionlint
+limpo, diagnóstico válido. Ver [verificação](../specs/0058-harness-agnostico/verification.md).
+
 ## 0057 — Limite de tentativas repetidas de login
 
 **13/11/2026 — spec `implementada`.** A PR #315 foi integrada em `develop` (`df39589`). A
