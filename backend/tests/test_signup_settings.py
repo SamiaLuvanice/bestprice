@@ -125,7 +125,7 @@ def test_lifespan_starts_with_signup_off_and_no_secrets_locally(
 def test_lifespan_starts_in_stage_with_signup_off(
     monkeypatch: pytest.MonkeyPatch, startup_cleanups: list[float],
 ) -> None:
-    # Desde a 0054 o limite de login exige os dois segredos em stage (AC14), mesmo com o
+    # Desde a 0057 o limite de login exige os dois segredos em stage (AC14), mesmo com o
     # cadastro desligado; o cadastro em si continua não exigindo nada quando desligado.
     monkeypatch.setenv("APP_ENV", "stage")
     monkeypatch.setenv("TRUSTED_PROXY_SECRET", "p" * 32)

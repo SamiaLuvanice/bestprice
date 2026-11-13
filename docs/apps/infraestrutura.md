@@ -165,7 +165,7 @@ O cadastro é desligado por padrão em todos os ambientes (`SIGNUP_ENABLED=false
 até a leitura de anúncios do Mercado Livre funcionar. Compose repassa as cinco
 variáveis (`SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`,
 `SIGNUP_RATE_LIMIT_WINDOW_MINUTES`, `TRUSTED_PROXY_SECRET`,
-`SIGNUP_SOURCE_HASH_SECRET`) apenas ao serviço `backend`. Desde a spec 0054, os dois
+`SIGNUP_SOURCE_HASH_SECRET`) apenas ao serviço `backend`. Desde a spec 0057, os dois
 segredos também servem ao limite de login, que está sempre ligado (seção seguinte). O Blueprint declara
 `SIGNUP_ENABLED: "false"` e os dois segredos com `sync: false`, que precisam ser
 preenchidos no painel; a alteração do `render.yaml` exige a sincronização manual do
@@ -201,7 +201,7 @@ API não inicia. A migration `20261106signup` cria `signup_attempts` e é aplica
 `alembic upgrade head` do Compose e do `start-stage.sh`; ainda não foi aplicada em
 Stage. Nada disso foi exercitado em Stage nesta spec.
 
-## Limite de tentativas de login em Stage — spec 0054
+## Limite de tentativas de login em Stage — spec 0057
 
 O limite de login usa a mesma origem confiável e o mesmo segredo de HMAC do cadastro,
 mas não tem interruptor. Por isso, com `APP_ENV=stage` ou `production`, a API **não
@@ -210,7 +210,7 @@ inicia** sem `TRUSTED_PROXY_SECRET` e `SIGNUP_SOURCE_HASH_SECRET`, mesmo com
 acrescenta `LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS: "10"`,
 `LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS: "50"` e `LOGIN_RATE_LIMIT_WINDOW_MINUTES: "15"`;
 a mudança exige a sincronização manual do Blueprint descrita abaixo. Regras em
-[backend](backend.md#limite-de-tentativas-de-login--spec-0054).
+[backend](backend.md#limite-de-tentativas-de-login--spec-0057).
 
 **Pré-condição da próxima promoção para Stage:** antes do PR `develop` → `stage` que
 levar esta mudança, confira no painel do Render que `TRUSTED_PROXY_SECRET` e

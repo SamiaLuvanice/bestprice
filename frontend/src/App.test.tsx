@@ -259,7 +259,7 @@ it('mostra falha de conexão no login, mantém o e-mail e apaga a senha', async 
   await waitFor(() => expect(screen.getByLabelText('Senha')).toHaveFocus())
 })
 
-// 0054/AC16: o limite de login mostra a espera em minutos no alerta único do formulário.
+// 0057/AC16: o limite de login mostra a espera em minutos no alerta único do formulário.
 const LOGIN_LIMITED = 'Muitas tentativas de login. Tente novamente mais tarde.'
 
 it.each([

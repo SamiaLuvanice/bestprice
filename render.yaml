@@ -22,7 +22,7 @@ services:
       # Cadastro self-service desligado até a leitura de anúncios funcionar (spec 0048).
       - key: SIGNUP_ENABLED
         value: "false"
-      # Os dois segredos são obrigatórios em stage desde a spec 0054 (limite de login): sem eles
+      # Os dois segredos são obrigatórios em stage desde a spec 0057 (limite de login): sem eles
       # a API não inicia. Preencha-os no painel antes da promoção.
       - key: TRUSTED_PROXY_SECRET
         sync: false

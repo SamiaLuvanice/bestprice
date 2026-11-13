@@ -52,7 +52,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref 
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
 
-  // Só uma tentativa que falhou apaga a senha (0054/AC16) e devolve o foco a ela; o e-mail fica.
+  // Só uma tentativa que falhou apaga a senha (0057/AC16) e devolve o foco a ela; o e-mail fica.
   // O aviso de sessão na montagem não apaga nem move o foco.
   useEffect(() => {
     if (busy || !error || !attempted.current) return

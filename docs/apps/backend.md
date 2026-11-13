@@ -64,12 +64,12 @@ O limitador (`backend/app/auth/limiter.py`) é uma janela deslizante por origem 
 | `SIGNUP_ENABLED` | `false` | Só `true` liga |
 | `SIGNUP_RATE_LIMIT_ATTEMPTS` | `5` | Inteiro de 1 a 1000 |
 | `SIGNUP_RATE_LIMIT_WINDOW_MINUTES` | `60` | Inteiro de 1 a 1440 |
-| `TRUSTED_PROXY_SECRET` | vazio | Se preenchido, ≥ 32 caracteres; obrigatório em `stage`/`production` mesmo com o cadastro desligado (limite de login, spec 0054) |
-| `SIGNUP_SOURCE_HASH_SECRET` | vazio | ≥ 32 caracteres; obrigatório com o cadastro ligado em qualquer ambiente e, pelo limite de login (spec 0054), sempre em `stage`/`production` |
+| `TRUSTED_PROXY_SECRET` | vazio | Se preenchido, ≥ 32 caracteres; obrigatório em `stage`/`production` mesmo com o cadastro desligado (limite de login, spec 0057) |
+| `SIGNUP_SOURCE_HASH_SECRET` | vazio | ≥ 32 caracteres; obrigatório com o cadastro ligado em qualquer ambiente e, pelo limite de login (spec 0057), sempre em `stage`/`production` |
 
 `signup_settings()` roda no `lifespan`: valor inválido, segredo curto, segredo obrigatório ausente ou `TRUSTED_PROXY_SECRET` igual a `SIGNUP_SOURCE_HASH_SECRET` impedem a API de iniciar, e a mensagem nunca repete o valor. Com o cadastro desligado, `signup_settings()` não exige nenhum dos segredos, mas `login_settings()` passa a exigi-los em `stage`/`production` (seção seguinte). O cadastro permanece desligado por decisão do responsável até a leitura de anúncios do Mercado Livre funcionar; a operação em Stage está em [infraestrutura](infraestrutura.md#cadastro-self-service-em-stage--spec-0048). A [verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md) registra 456 testes backend aprovados e 2 skips com PostgreSQL real, concorrência (AC08), limite com relógio fixo (AC09) e sigilo (AC10); a origem real atrás do Pages não foi verificada em Stage.
 
-## Limite de tentativas de login — spec 0054
+## Limite de tentativas de login — spec 0057
 
 `POST /api/auth/login` limita **falhas** em duas contagens de janela deslizante, persistidas em `login_failures` no PostgreSQL e compartilhadas por todas as instâncias da API: por origem + e-mail normalizado (padrão 10) e por origem, para quaisquer e-mails (padrão 50), ambas em 15 minutos. A origem é a mesma do cadastro (`x-bestprice-client-ip` só com `x-bestprice-proxy-secret` válido, senão o peer; IPv6 reduzido ao `/64`). Origem e e-mail ficam guardados só como HMAC-SHA256 com `SIGNUP_SOURCE_HASH_SECRET`; o e-mail recebe o prefixo `login-email:` para não colidir com o domínio da origem. Nada disso é gravado em claro nem logado. O bloqueio vale para a origem, não para a conta: o dono entra de outra origem, e sessões já abertas continuam válidas.
 
@@ -92,7 +92,7 @@ Toda falha de credencial executa exatamente uma verificação scrypt de mesmo cu
 
 `login_settings()` roda no `lifespan`, depois de `signup_settings()`. Valor fora da faixa, limite por origem menor que o de origem + e-mail, segredos iguais ou, com `APP_ENV` `stage`/`production`, ausência de `TRUSTED_PROXY_SECRET` ou `SIGNUP_SOURCE_HASH_SECRET` impedem a API de iniciar, mesmo com o cadastro desligado. A mensagem nunca repete o valor. O motivo é que o login está sempre ligado: sem os segredos, todo o tráfego do Pages cairia numa única origem, e 50 falhas de qualquer pessoa bloqueariam o login de todos. Fora de `stage`/`production`, sem `SIGNUP_SOURCE_HASH_SECRET`, a API gera um segredo aleatório por processo (`ephemeral_hash_secret`), suficiente para um único processo local; reiniciar zera as contagens. Nos testes HTTP de outras áreas (SQLite), `tests/conftest.py` injeta um dublê do limitador; os testes `test_login_*` de integração usam o PostgreSQL real.
 
-A [verificação 0054](../../specs/0054-limite-tentativas-login/verification.md) registra 547 testes backend aprovados e 2 skips (80 `test_login_*` sem skip) com PostgreSQL 17 real, concorrência com 20 threads (AC11), duas engines simulando instâncias (AC12) e a medição do AC08 com medianas abaixo de 20% de diferença. A origem real atrás do Pages e a partida em Stage com os segredos não foram verificadas. Contrato completo em [plan.md da 0054](../../specs/0054-limite-tentativas-login/plan.md#contrato-rest).
+A [verificação 0057](../../specs/0057-limite-tentativas-login/verification.md) registra 547 testes backend aprovados e 2 skips (80 `test_login_*` sem skip) com PostgreSQL 17 real, concorrência com 20 threads (AC11), duas engines simulando instâncias (AC12) e a medição do AC08 com medianas abaixo de 20% de diferença. A origem real atrás do Pages e a partida em Stage com os segredos não foram verificadas. Contrato completo em [plan.md da 0057](../../specs/0057-limite-tentativas-login/plan.md#contrato-rest).
 
 ## Assistência e pesquisas privadas — spec 0034
 

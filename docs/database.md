@@ -11,7 +11,7 @@ As migrations em `backend/alembic/versions/` criam o esquema SQLAlchemy definido
 | `users` | Conta com e-mail único e hash de senha |
 | `user_sessions` | Sessões por usuário, hash de token único e expiração |
 | `signup_attempts` | Tentativas do cadastro self-service (spec 0048): `source_hash` `CHAR(64)` com o HMAC-SHA256 da origem, nunca o IP, e `attempted_at` `timestamptz`; sem relação com `users` |
-| `login_failures` | Falhas de login e reservas em verificação (spec 0054): `source_hash` `CHAR(64)`, `account_hash` `CHAR(64)` nulo (HMAC do e-mail normalizado; nulo para corpo malformado ou depois de um sucesso da combinação) e `failed_at` `timestamptz`; nunca e-mail nem IP; sem relação com `users` |
+| `login_failures` | Falhas de login e reservas em verificação (spec 0057): `source_hash` `CHAR(64)`, `account_hash` `CHAR(64)` nulo (HMAC do e-mail normalizado; nulo para corpo malformado ou depois de um sucesso da combinação) e `failed_at` `timestamptz`; nunca e-mail nem IP; sem relação com `users` |
 | `operator_credentials` | Registro único (`id = 1`) da conta operadora: tokens cifrados, expiração, bloqueio de refresh e prazo para nova tentativa após 429 |
 | `products` | Publicação MLB compartilhada, `external_id` único, estado da consulta, preços e próximo horário de verificação |
 | `tracked_products` | Vínculo usuário–publicação; combinação `user_id, product_id` única |
@@ -80,7 +80,7 @@ retenção segue o cadastro: cada reserva apaga as falhas vencidas da própria o
 limpeza da API (na partida e a cada hora) apaga as vencidas de todas as origens. Um
 login bem-sucedido apaga a própria reserva e anula `account_hash` nas falhas anteriores
 da combinação, que continuam contando para a origem. A revisão não foi aplicada em
-Stage. Ver [backend](apps/backend.md#limite-de-tentativas-de-login--spec-0054).
+Stage. Ver [backend](apps/backend.md#limite-de-tentativas-de-login--spec-0057).
 
 Valores monetários persistem como `NUMERIC(18,2)`; o cliente Mercado Livre já entrega o preço arredondado a centavos (`ROUND_HALF_UP`), então o valor comparado é o mesmo persistido. Instantes usam colunas com fuso; `backend/app/db.py` executa `SET TIME ZONE 'UTC'` em cada nova conexão SQLAlchemy (em autocommit, para sobreviver a rollbacks), e a API serializa os instantes com `Z` independentemente do fuso padrão do servidor. Há índices para próxima consulta, vínculos ativos por usuário, histórico e eventos por publicação e notificações por usuário. Os detalhes de colunas e constraints estão nos modelos e na migration. Histórico e publicação são compartilhados; vínculo, alerta, sessão e notificação têm escopo individual.
 

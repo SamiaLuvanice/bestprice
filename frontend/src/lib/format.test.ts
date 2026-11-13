@@ -103,7 +103,7 @@ describe('formatPercentage', () => {
   })
 })
 
-// 0054/F1: espera de um 429 em minutos inteiros, com o prefixo de quem recusou.
+// 0057/F1: espera de um 429 em minutos inteiros, com o prefixo de quem recusou.
 describe('waitText', () => {
   it.each([
     [1, 'Muitas tentativas de login. Tente novamente em 1 minuto.'],

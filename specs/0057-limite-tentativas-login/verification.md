@@ -1,4 +1,4 @@
-# Verificação da spec 0054
+# Verificação da spec 0057
 
 Registro do QA em 13/11/2026. Worktree
 `.worktrees/feature-0054-issue-128-limite-tentativas-login`, branch
@@ -20,8 +20,8 @@ porque nenhum deles foi observado.
 
 | Camada | Real | Simulado | Limite |
 |---|---|---|---|
-| pytest | Código, PostgreSQL 17 descartável `bestprice-0054-test-pg` (localhost:55454), migrações, relógio injetado nas integrações | Dublê do limitador e SQLite nos testes HTTP de outras áreas (`tests/conftest.py`) e em `test_login_http.py` | Os 80 testes `test_login_*` rodaram sem skip; os de integração usam o limitador real no PostgreSQL |
-| QA ponta a ponta (I1) | API uvicorn (127.0.0.1:8054), SPA Vite (127.0.0.1:5154, proxy `/api`), PostgreSQL 17 descartável `bestprice-0054-qa-pg` (127.0.0.1:55455), Chrome real | Origens distintas via `x-bestprice-client-ip` com `TRUSTED_PROXY_SECRET` local (o proxy do Pages não rodou); o navegador usou o peer 127.0.0.1 | **Compose não rodou**; usados os três serviços reais locais. Limites baixos por ambiente: 3 por origem + e-mail, 5 por origem, janela de 1 min |
+| pytest | Código, PostgreSQL 17 descartável `bestprice-0057-test-pg` (localhost:55454), migrações, relógio injetado nas integrações | Dublê do limitador e SQLite nos testes HTTP de outras áreas (`tests/conftest.py`) e em `test_login_http.py` | Os 80 testes `test_login_*` rodaram sem skip; os de integração usam o limitador real no PostgreSQL |
+| QA ponta a ponta (I1) | API uvicorn (127.0.0.1:8054), SPA Vite (127.0.0.1:5154, proxy `/api`), PostgreSQL 17 descartável `bestprice-0057-qa-pg` (127.0.0.1:55455), Chrome real | Origens distintas via `x-bestprice-client-ip` com `TRUSTED_PROXY_SECRET` local (o proxy do Pages não rodou); o navegador usou o peer 127.0.0.1 | **Compose não rodou**; usados os três serviços reais locais. Limites baixos por ambiente: 3 por origem + e-mail, 5 por origem, janela de 1 min |
 | Viewport | Chrome real | 1440 px e 390 px por `iframe` de largura fixa, na mesma origem | A janela do navegador só oferece 1359 px de viewport (painel lateral). A tela direta foi observada em 1359 px; 1440 e 390 exatos, via `iframe` |
 | Vitest | Render, jsdom | Respostas HTTP por `fakeApi` | — |
 
@@ -59,14 +59,14 @@ Observações de I1 sobre comportamento esperado (não são falhas):
 | Cenário | Comando | Resultado |
 |---|---|---|
 | Health com PostgreSQL no ar (`ae20bce`) | `curl -i http://127.0.0.1:8054/api/health` | `200 {"status":"ok","database":"ok"}` |
-| Health com PostgreSQL parado (`ae20bce`) | `docker stop bestprice-0054-qa-pg`; mesmo `curl` | `503 {"status":"unavailable","database":"unavailable"}` |
+| Health com PostgreSQL parado (`ae20bce`) | `docker stop bestprice-0057-qa-pg`; mesmo `curl` | `503 {"status":"unavailable","database":"unavailable"}` |
 | Health após `docker start` (`ae20bce`) | mesmo `curl` | `200` |
 | Login com PostgreSQL parado (`af8d15e`) | `curl -i -X POST …/api/auth/login` | `500 text/plain`, comportamento pré-existente igual ao O5 da 0048 |
 | Falha de rede na UI (`af8d15e`) | formulário carregado, Vite encerrado e envio pelo formulário | alerta "Não foi possível conectar ao BestPrice. Tente novamente.", e-mail mantido e senha vazia. Os commits seguintes não tocam esse caminho; `App.test.tsx` cobre o caso em `ae20bce` |
 
 Com a API fora do ar e o Vite no ar, o proxy do Vite responde `502 text/plain`. Nesse caso,
 `/login` mostra "Não foi possível concluir a operação. Tente novamente." com "Tentar novamente"
-(verificação de sessão, comportamento anterior à 0054).
+(verificação de sessão, comportamento anterior à 0057).
 
 ## Gates (`ae20bce`)
 
@@ -94,7 +94,7 @@ do diff. Isolado, passou com 27 testes, e as duas execuções completas seguinte
 
 ## Revisão independente
 
-Não foi executada por este QA. A tarefa R1 (`arch-reviewer`) segue pendente em `tasks.md`.
+Feita pelo `arch-reviewer` sobre `af8d15e`: veredito "mudanças necessárias" por um achado importante. O login correto pedia uma segunda conexão ao pool e, com o pool ocupado, respondia 500 e deixava a senha correta contada como falha. Corrigido em `a2ceece`, com teste de regressão de pool de 1 conexão (Red 500, Green 200). Os achados menores foram tratados em `1dc7285` (`waitText` reutiliza `retryHint`), `ae20bce` (tabela do plano) e no docstring do `conftest.py`. Ficaram como limites conhecidos o acesso direto ao Render como origem única e o segredo local por processo. Esta QA reexecutou tudo em `ae20bce`, depois das correções.
 
 ## Limites conhecidos
 
@@ -118,8 +118,7 @@ Não foi executada por este QA. A tarefa R1 (`arch-reviewer`) segue pendente em 
 
 ## Pendências explícitas
 
-- R1: revisão independente (`arch-reviewer`) do diff completo.
-- R3: `doc-sync-onboarding` executado em `c147870`; atualizou `docs/apps/backend.md`,
+- R3: `doc-sync-onboarding` executado sobre `c147870` (commit `dc8ba2c`); atualizou `docs/apps/backend.md`,
   `docs/apps/infraestrutura.md`, `docs/apps/frontend.md`, `docs/architecture.md`,
   `docs/database.md` e `docs/PROGRESS.md`. Repetir se o código mudar.
 - R4: PR para `develop` com `Closes #128`; CI não foi observado.
@@ -127,4 +126,15 @@ Não foi executada por este QA. A tarefa R1 (`arch-reviewer`) segue pendente em 
   `SIGNUP_SOURCE_HASH_SECRET` no Render e `API_PROXY_SECRET` no Pages, porque com o AC14 a API não
   sobe sem eles. Depois, verificar a origem real atrás do Pages.
 - Decidir se `qa/` (saídas, capturas e scripts) deve ser versionado; nada foi commitado. O
-  contêiner `bestprice-0054-qa-pg` foi parado, mas não removido.
+  contêiner `bestprice-0057-qa-pg` foi parado, mas não removido.
+
+## Renumeração para 0057
+
+A spec nasceu como 0054, mas esse número já pertencia a `specs/0054-teste-troca-conta-estavel/`
+no `develop` de origem. Ela foi renumerada para 0057, o próximo livre, sem mudar comportamento:
+pasta, cabeçalhos, comentários de código e documentos passaram a citar 0057. As saídas e os
+scripts em `qa/` foram mantidos como gravados, então nomes como `qa0054@exemplo.com` continuam ali.
+A branch segue `feature/0054-issue-128-limite-tentativas-login`.
+
+Depois da renumeração, os gates foram reexecutados: `ruff` limpo, pytest **547 passed, 2 skipped**
+com PostgreSQL real, `eslint` sem avisos e Vitest **838 passed (61 arquivos)**.

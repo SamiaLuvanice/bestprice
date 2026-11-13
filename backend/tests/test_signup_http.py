@@ -60,7 +60,7 @@ class Harness:
 
 def build_harness(monkeypatch: pytest.MonkeyPatch, *, enabled: bool, app_env: str = "stage") -> Iterator[Harness]:
     monkeypatch.setenv("APP_ENV", app_env)
-    # Stage real tem os dois segredos (obrigatórios para o limite de login desde a 0054).
+    # Stage real tem os dois segredos (obrigatórios para o limite de login desde a 0057).
     monkeypatch.setenv("TRUSTED_PROXY_SECRET", "p" * 32)
     monkeypatch.setenv("SIGNUP_SOURCE_HASH_SECRET", "h" * 32)
     engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)

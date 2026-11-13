@@ -13,7 +13,7 @@ from app.products.models import User
 
 def test_login_uses_private_cookie_and_rejects_wrong_password(monkeypatch) -> None:
     monkeypatch.setenv("APP_ENV", "stage")
-    # Stage real tem os dois segredos (obrigatórios para o limite de login desde a 0054).
+    # Stage real tem os dois segredos (obrigatórios para o limite de login desde a 0057).
     monkeypatch.setenv("TRUSTED_PROXY_SECRET", "p" * 32)
     monkeypatch.setenv("SIGNUP_SOURCE_HASH_SECRET", "h" * 32)
     engine = create_engine("sqlite+pysqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)

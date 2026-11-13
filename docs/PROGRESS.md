@@ -1,6 +1,6 @@
 # Progresso das specs
 
-## 0054 — Limite de tentativas repetidas de login
+## 0057 — Limite de tentativas repetidas de login
 
 **13/11/2026 — implementação entregue; aguarda PR.** A
 [Issue #128](https://github.com/SamiaLuvanice/bestprice/issues/128) limita falhas de
@@ -20,9 +20,8 @@ revisão independente foi feita (R1).
 
 Pendências: PR para `develop` com `Closes #128` e CI. Antes da promoção para Stage,
 conferir os dois segredos no Render e `API_PROXY_SECRET` no Pages; depois, verificar a
-origem real atrás do Pages. O número 0054 também é usado por
-`specs/0054-teste-troca-conta-estavel/`. Ver
-[verificação da spec 0054](../specs/0054-limite-tentativas-login/verification.md).
+origem real atrás do Pages. Ver
+[verificação da spec 0057](../specs/0057-limite-tentativas-login/verification.md).
 
 ## 0056 — Monitoramento com textos enxutos
 

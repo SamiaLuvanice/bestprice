@@ -72,7 +72,7 @@ export function retryHint(seconds: number): string {
 }
 
 /**
- * Espera de um 429 em minutos inteiros (cadastro 0048, login 0054): arredonda para cima,
+ * Espera de um 429 em minutos inteiros (cadastro 0048, login 0057): arredonda para cima,
  * no mínimo 1 minuto, singular ou plural. `prefix` é a frase de quem recusou.
  */
 export function waitText(prefix: string, seconds: number): string {

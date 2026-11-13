@@ -198,7 +198,7 @@ it('mostra Entrando… ocupado e indisponível, ignora novos envios e mantém o 
   expect(onSubmit).not.toHaveBeenCalled()
 })
 
-// AC06 + 0054/AC16: erro único, e-mail mantido, senha apagada e foco no campo Senha após falha.
+// AC06 + 0057/AC16: erro único, e-mail mantido, senha apagada e foco no campo Senha após falha.
 it('após falha mostra um único alerta, mantém o e-mail, apaga a senha e foca o campo Senha', () => {
   const onSubmit = vi.fn()
   const { rerender } = render(<LoginForm busy={false} error={null} onSubmit={onSubmit} />)
@@ -214,7 +214,7 @@ it('após falha mostra um único alerta, mantém o e-mail, apaga a senha e foca 
   expect(screen.getByRole('button', { name: 'Entrar' })).not.toHaveAttribute('aria-disabled', 'true')
 })
 
-// 0054/AC16: só um erro que chega depois de um envio apaga a senha; mudar o alerta sem envio não.
+// 0057/AC16: só um erro que chega depois de um envio apaga a senha; mudar o alerta sem envio não.
 it('não apaga a senha quando o alerta muda sem um envio em curso', () => {
   const onSubmit = vi.fn()
   const { rerender } = render(<LoginForm busy={false} error={null} onSubmit={onSubmit} />)

@@ -19,7 +19,7 @@ function message(error: unknown): string {
   return error instanceof ApiFailure ? error.message : 'Não foi possível concluir a operação. Tente novamente.'
 }
 
-/** 0054/AC16: o limite de login mostra a espera em minutos; sem espera, a mensagem do servidor. */
+/** 0057/AC16: o limite de login mostra a espera em minutos; sem espera, a mensagem do servidor. */
 function loginMessage(error: unknown): string {
   if (error instanceof ApiFailure && error.status === 429 && error.code === 'login_rate_limited' && error.retryAfterSeconds !== null) {
     return waitText('Muitas tentativas de login.', error.retryAfterSeconds)

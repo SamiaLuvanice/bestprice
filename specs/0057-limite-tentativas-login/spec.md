@@ -1,5 +1,5 @@
 ---
-numero: 0054
+numero: 0057
 titulo: Limite de tentativas repetidas de login
 tipo: melhoria
 prioridade: P1
@@ -9,7 +9,7 @@ depende_de: [0011, 0048]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/128
 ---
 
-# 0054 — Limite de tentativas repetidas de login
+# 0057 — Limite de tentativas repetidas de login
 
 Issue: https://github.com/SamiaLuvanice/bestprice/issues/128
 

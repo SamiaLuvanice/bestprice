@@ -1,6 +1,6 @@
 """Dublê padrão do limitador de login para os testes HTTP.
 
-Desde a spec 0054 o login reserva cada tentativa no PostgreSQL (pg_advisory_xact_lock), o que
+Desde a spec 0057 o login reserva cada tentativa no PostgreSQL (pg_advisory_xact_lock), o que
 não existe no SQLite em memória usado pelos testes HTTP de outras funcionalidades. Esses
 testes só precisam entrar; o limite de login é verificado nos testes test_login_*, que usam
 o dublê abaixo (contrato HTTP) ou o PostgresLoginLimiter real (integração).
