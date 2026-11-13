@@ -2,7 +2,7 @@
 
 ## 0057 — Limite de tentativas repetidas de login
 
-**13/11/2026 — implementação entregue; aguarda PR.** A
+**13/11/2026 — spec `implementada`.** A PR #315 foi integrada em `develop` (`df39589`). A
 [Issue #128](https://github.com/SamiaLuvanice/bestprice/issues/128) limita falhas de
 login em `login_failures` (migração `20261113loginfail`): 10 por origem + e-mail e 50
 por origem em 15 minutos, ajustáveis por `LOGIN_RATE_LIMIT_*`. Acima do limite, a API
@@ -18,7 +18,7 @@ Backend: Ruff aprovado e pytest com PostgreSQL 17 descartável **547 passed, 2 s
 SPA e PostgreSQL reais (sem Compose) aprovou AC01–AC17; AC10–AC12 só por teste. A
 revisão independente foi feita (R1).
 
-Pendências: PR para `develop` com `Closes #128` e CI. Antes da promoção para Stage,
+Pendências: antes da promoção para Stage,
 conferir os dois segredos no Render e `API_PROXY_SECRET` no Pages; depois, verificar a
 origem real atrás do Pages. Ver
 [verificação da spec 0057](../specs/0057-limite-tentativas-login/verification.md).

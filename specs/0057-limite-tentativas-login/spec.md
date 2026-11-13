@@ -3,7 +3,7 @@ numero: 0057
 titulo: Limite de tentativas repetidas de login
 tipo: melhoria
 prioridade: P1
-status: rascunho
+status: implementada
 toca: [backend, frontend, contrato]
 depende_de: [0011, 0048]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/128
