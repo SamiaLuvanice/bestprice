@@ -121,6 +121,9 @@ test("findSecrets detecta formatos comuns sem acusar placeholders", () => {
   assert.ok(findSecrets(`KEY=${jwt}`).includes("JWT"));
   assert.ok(findSecrets(`RESEND_API_KEY=${resend}`).includes("chave Resend"));
   assert.deepEqual(findSecrets("RESEND_API_KEY=\npassword: ${DB_PASSWORD}\ntoken: <seu-token>"), []);
+  assert.deepEqual(findSecrets('const BYPASS_TOKEN = "[bootstrap-guard]";'), []);
+  const literal = ["api_key = \"", "a1B2c3D4e5F6g7H8", "\""].join("");
+  assert.deepEqual(findSecrets(literal), ["segredo literal"]);
 });
 
 test("projectMcp converte remoto e local para Claude e OpenCode", () => {

@@ -84,6 +84,12 @@ jobs:
         with:
           node-version: '22'
       - run: node --test .github/scripts/*.test.cjs
+      - name: Testes do núcleo do harness
+        run: node --test ".agents/scripts/*.test.mjs"
+      - name: Projeções em dia
+        run: node .agents/scripts/sync.mjs --check
+      - name: Diagnóstico do harness
+        run: node .agents/scripts/diagnose.mjs
       - name: Validar workflows
         run: |
           go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12

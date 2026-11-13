@@ -20,7 +20,8 @@ export const SECRET_PATTERNS = [
   { name: "chave privada PEM", regex: /-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/ },
   // Valor literal na mesma linha; placeholders (${VAR}, {env}, <...>, [...]) não contam.
   { name: "senha literal", regex: /(?:password|passwd|senha)\s*[:=]\s*["'][^"'$\s{<[][^"'\n]{5,}["']/i },
-  { name: "segredo literal", regex: /(?:secret|api[_-]?key|token)\s*[:=]\s*["'][^"'$\s{<[][^"'\n]{11,}["']/i },
+  // Valor com cara de token: sem espaços/colchetes, com ao menos um dígito.
+  { name: "segredo literal", regex: /(?:secret|api[_-]?key|token)\s*[:=]\s*["'](?=[^"']*\d)[A-Za-z0-9_\-+/=.]{12,}["']/i },
   { name: "JWT", regex: /\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/ },
   { name: "token GitHub", regex: /\b(gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{60,})\b/ },
   { name: "chave AWS", regex: /\bAKIA[0-9A-Z]{16}\b/ },
