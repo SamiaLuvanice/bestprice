@@ -71,6 +71,7 @@ def succeed(engine, source: str, account: str, now: datetime, config: LoginSetti
     assert reservation > 0, f"recusada com retry_after={-reservation}"
     with Session(engine) as session:
         PostgresLoginLimiter().record_success(session, reservation, source, account)
+        session.commit()  # na rota, quem confirma é issue_session
 
 
 def refused(engine, source: str, account: str | None, now: datetime, config: LoginSettings | None = None) -> int:

@@ -241,7 +241,8 @@ class LoginLimiter(Protocol):
         self, session: Session, source_key: str, account_key: str | None, now: datetime, settings: LoginSettings,
     ) -> int: ...
 
-    def record_success(self, session: Session, reservation_id: int, source_key: str, account_key: str) -> None: ...
+    def record_success(self, session: Session, reservation_id: int, source_key: str, account_key: str) -> None:
+        """Roda na sessão da requisição e não confirma: issue_session confirma junto."""
 
 
 def get_login_limiter() -> LoginLimiter:
@@ -313,7 +314,7 @@ def login(
     user = _authenticate(session, payload)
     if user is None:
         raise ApiError(401, "invalid_credentials", INVALID_CREDENTIALS_MESSAGE)
-    with Session(session.get_bind()) as limiter_session:
-        limiter.record_success(limiter_session, reservation_id, source_key, account_key)
+    # Na sessão da requisição, que já segura a conexão: issue_session confirma tudo junto.
+    limiter.record_success(session, reservation_id, source_key, account_key)
     issue_session(session, response, user, now)
     return UserResponse(id=user.id, email=user.email)

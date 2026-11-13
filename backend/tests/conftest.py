@@ -4,6 +4,11 @@ Desde a spec 0054 o login reserva cada tentativa no PostgreSQL (pg_advisory_xact
 não existe no SQLite em memória usado pelos testes HTTP de outras funcionalidades. Esses
 testes só precisam entrar; o limite de login é verificado nos testes test_login_*, que usam
 o dublê abaixo (contrato HTTP) ou o PostgresLoginLimiter real (integração).
+
+ATENÇÃO: o fixture abaixo é autouse e injeta o dublê em TODOS os testes. Um teste de
+integração em PostgreSQL que deva exercitar o limite de verdade precisa sobrescrever
+`app.dependency_overrides[get_login_limiter] = PostgresLoginLimiter` no próprio fixture ou
+teste; sem isso, ele roda contra o dublê e não verifica reserva, lock nem contagem.
 """
 
 from collections.abc import Iterator

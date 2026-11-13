@@ -98,7 +98,10 @@ class PostgresLoginLimiter:
         return reservation_id
 
     def record_success(self, session: Session, reservation_id: int, source_key: str, account_key: str) -> None:
-        """Desfaz a reserva e zera a contagem origem + e-mail, preservando a contagem por origem.
+        """Desfaz a reserva e zera a contagem origem + e-mail, preservando a contagem por origem. Não confirma.
+
+        Roda na sessão da requisição e é confirmado junto com a sessão do usuário: uma só
+        conexão do pool, e reserva desfeita e sessão aberta entram ou falham juntas.
 
         As falhas anteriores da combinação continuam contando para a origem (um atacante com
         conta própria não pode zerar a origem entrando nela); só deixam de apontar o e-mail.
@@ -109,4 +112,3 @@ class PostgresLoginLimiter:
             .where(LoginFailure.source_hash == source_key, LoginFailure.account_hash == account_key)
             .values(account_hash=None),
         )
-        session.commit()

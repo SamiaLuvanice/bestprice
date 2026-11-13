@@ -220,3 +220,36 @@ def test_parallel_reservations_on_the_limiter_never_exceed_the_limit(engine, set
         results = sorted(pool.map(reserve, range(PARALLEL)))
     assert results == ["refused"] * (PARALLEL - 1) + ["reserved"]
     assert failures(engine, source, account) == 10
+
+
+def test_correct_login_needs_a_single_pool_connection(test_url: str, settings: LoginSettings) -> None:
+    # Regressão: o sucesso não pode pedir uma 2ª conexão enquanto a sessão da requisição segura
+    # a 1ª. Com o pool cheio (logins corretos simultâneos), isso virava 500 e a reserva ficava
+    # contando uma senha correta como falha. Pool de 1 conexão torna o cenário determinístico.
+    engine = create_engine(test_url, pool_size=1, max_overflow=0, pool_timeout=1)
+    email, ip = new_account(engine), "203.0.113.113"
+    source, account = source_of(ip, settings), login_account_key(email, settings.hash_secret)
+
+    def pg_session() -> Iterator[Session]:
+        with Session(engine) as session:
+            yield session
+
+    app.dependency_overrides[get_session] = pg_session
+    app.dependency_overrides[login_settings] = lambda: settings
+    app.dependency_overrides[get_clock] = lambda: (lambda: NOW)
+    app.dependency_overrides[get_login_limiter] = PostgresLoginLimiter
+    try:
+        client = TestClient(app, raise_server_exceptions=False)
+        wrong = client.post("/api/auth/login", json={"email": email, "password": "senha-errada-1234"},
+                            headers=proxied(ip))
+        assert wrong.status_code == 401
+        accepted = client.post("/api/auth/login", json={"email": email, "password": PASSWORD}, headers=proxied(ip))
+        assert accepted.status_code == 200, accepted.text
+        assert accepted.cookies.get("bestprice_session")
+        # O sucesso desfez a reserva e zerou a combinação; a falha anterior fica só na origem.
+        assert failures(engine, source) == 1
+        assert failures(engine, source, account) == 0
+        assert sessions_of(engine, email) == 1
+    finally:
+        app.dependency_overrides.clear()
+        engine.dispose()
