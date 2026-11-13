@@ -107,7 +107,7 @@ Feita pelo `arch-reviewer` sobre `af8d15e`: veredito "mudanças necessárias" po
   posteriores não alteram as configurações.
 - Viewport: 1440 px e 390 px foram observados via `iframe`; a tela direta do navegador chegou a
   1359 px. Não houve comparação com o Figma, porque a spec assume o alerta existente, sem quadro
-  próprio.
+  próprio. Os quadros foram criados depois (ver "Figma — 13/11/2026").
 - Não houve teste com leitor de tela real; o anúncio foi verificado pelo papel `role="alert"` no
   DOM.
 - No AC08, o caso "campo acima do máximo" teve mediana de 4% a 18% menor que a senha errada (não
@@ -157,3 +157,23 @@ nomes das variáveis foram conferidos nos painéis; nenhum valor foi lido nem re
 Limites: o teste de origem não estourou o limite (5 falhas só de origem, limite 50), para
 não bloquear ninguém. Não houve teste com duas redes de visitantes diferentes; a
 diferença observada é entre o IP repassado pela Function e o peer interno do Render.
+
+## Figma — 13/11/2026
+
+Criados pelo Chrome no arquivo BestPrice IA, com autorização da responsável, a partir das
+telas de login `59:44` e `59:602`, que não foram alteradas:
+
+| Quadro | Nó | Tamanho |
+|---|---|---|
+| `02 · Entrar · Erros · Limite de tentativas · Desktop` | `291:514` | 1440×1040 |
+| `02 · Entrar · Erros · Limite de tentativas · Mobile` | `292:442` | 390×844 |
+
+O alerta (fundo `FFF0F0`, raio 12, ícone de erro e texto) foi copiado do estado
+`02b · Criar conta · Erros · Limite de tentativas`. Ele fica entre Senha e Entrar, com 28 px
+de espaço acima e abaixo. O botão e os textos seguintes desceram 86 px. Texto: "Muitas
+tentativas de login. Tente novamente em 15 minutos.", o mesmo que o app mostra com a janela
+padrão.
+
+Limites: os campos aparecem vazios, como na tela de login original. No app, o e-mail se
+mantém depois da falha e só a senha é apagada (AC16). Não houve comparação pixel a pixel
+entre os quadros e a SPA.

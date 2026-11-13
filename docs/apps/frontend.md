@@ -237,6 +237,11 @@ QA com API controlada, revisão dos oito snapshots de login e limites estão na
 [verificação da 0046](../../specs/0046-login-stage-sem-rodape/verification.md).
 Essa validação local não comprova integração nem publicação em stage.
 
+O estado de limite de tentativas do login (spec 0057) tem quadros próprios: desktop
+`291:514` e mobile `292:442`. Eles reaproveitam o alerta do cadastro entre Senha e
+Entrar. Detalhes na
+[verificação da 0057](../../specs/0057-limite-tentativas-login/verification.md).
+
 A verificação (QA em Chrome headless com axe, larguras de 320, 768 e 1280 px, com
 desfoque e em modo sólido simulado) e os limites estão em
 [`verification.md` da 0017](../../specs/0017-redesign-pagina-login/verification.md); a 0020 está em
