@@ -189,3 +189,6 @@ Os números abaixo usam os valores padrão.
   Suposição: o login reutiliza o mesmo padrão visual de alerta do formulário, sem tela
   nova. Se a revisão exigir um quadro próprio, ele deve ser aprovado antes do `/plan` da
   interface.
+  Resolvido em 13/11/2026: os quadros `02 · Entrar · Erros · Limite de tentativas`
+  (desktop `291:514`, mobile `292:442`) confirmam a suposição. O alerta do cadastro foi
+  reaproveitado entre Senha e Entrar, sem tela nova.
