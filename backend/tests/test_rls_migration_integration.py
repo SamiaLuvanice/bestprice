@@ -26,6 +26,7 @@ PUBLIC_TABLES = {
     "research_ai_requests",
     "research_ai_usage",
     "signup_attempts",
+    "login_failures",
 }
 
 
