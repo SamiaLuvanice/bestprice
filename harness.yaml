@@ -53,6 +53,8 @@ diagnose:
     - "frontend/src/**/*.test.tsx"
     - "frontend/tests/**"
     - "specs/*/qa/**"
+  # Termos que os arquivos do núcleo (core em modules.yaml) não podem citar.
+  core_forbidden_terms: [pytest, uvicorn, ruff, vitest, fastapi, postgresql, psql, react, alembic, docker compose, /api/health]
 # Lido por .agents/scripts/docs-impact.mjs: glob alterado → documentos a revisar.
 docs_impact:
   "backend/app/**": [docs/apps/backend.md, docs/architecture.md]

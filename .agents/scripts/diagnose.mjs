@@ -39,14 +39,22 @@ export function findSecrets(content) {
   );
 }
 
+/** Termos como palavra inteira, sem diferenciar maiúsculas (ex.: "react" não casa "reactive"). */
+export function findTerms(content, terms) {
+  return terms.filter((term) => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(^|[^\\p{L}\\p{N}_])${escaped}($|[^\\p{L}\\p{N}_])`, "iu").test(content);
+  });
+}
+
 function claudeImports(root) {
   const text = readFileSync(join(root, "CLAUDE.md"), "utf8");
   return [...text.matchAll(/^@(\S+)\s*$/gm)].map((match) => match[1]);
 }
 
-function profileItems(root, harness) {
+function profileItems(root, harness, { coreOnly = false } = {}) {
   const modules = parseYaml(readFileSync(join(root, ".agents/modules.yaml"), "utf8"));
-  const profile = modules.profiles?.[harness.profile?.name] ?? {};
+  const profile = coreOnly ? {} : (modules.profiles?.[harness.profile?.name] ?? {});
   const pick = (kind) => [...asList(modules.core?.[kind]), ...asList(profile[kind])];
   return [
     ...pick("rules").map((name) => `.agents/rules/${name.endsWith(".md") ? name : `${name}.md`}`),
@@ -140,6 +148,17 @@ export function diagnose(root = ROOT) {
       if (content.includes(value)) errors.push(`referência proibida "${value}" em ${file}`);
     }
     for (const kind of findSecrets(content)) errors.push(`possível segredo (${kind}) em ${file}`);
+  }
+
+  // Núcleo agnóstico: arquivos de `core` em modules.yaml não podem citar termos da stack.
+  const coreTerms = asList(config.core_forbidden_terms).map(String);
+  if (coreTerms.length > 0) {
+    for (const file of profileItems(root, harness, { coreOnly: true })) {
+      if (!existsSync(join(root, file))) continue;
+      const content = readFileSync(join(root, file), "utf8");
+      const hits = findTerms(content, coreTerms);
+      if (hits.length > 0) errors.push(`núcleo cita termo da stack (${hits.join(", ")}) em ${file}`);
+    }
   }
 
   const base = `origin/${harness.git?.default_base ?? "main"}`;

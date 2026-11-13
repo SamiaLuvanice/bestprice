@@ -1,13 +1,10 @@
-version: 0.3.0
+version: 0.4.0
+# Núcleo: agnóstico de stack, reaproveitável em outro projeto sem edição.
 core:
   agents:
     - product-owner
     - spec-reviewer
-    - backend
-    - frontend
-    - fullstack
     - qa
-    - arch-reviewer
     - debugger
     - doc-sync-onboarding
   rules:
@@ -15,11 +12,7 @@ core:
     - git.md
     - git-worktree-required.md
     - implementation-handoff.md
-    - naming.md
-    - security.md
     - task-done-criteria.md
-    - testing.md
-    - workspace.md
   skills:
     - spec-driven
     - quality-gates
@@ -27,12 +20,20 @@ core:
     - learnings
     - po-intake
     - agent-orchestration
-    - solid-principles
-    - task-cleanup
     - tdd
+# Perfil: o que depende da stack ou deste projeto.
 profiles:
   fastapi-react-postgresql:
+    agents:
+      - backend
+      - frontend
+      - fullstack
+      - arch-reviewer
     rules:
+      - workspace.md
+      - naming.md
+      - security.md
+      - testing.md
       - architecture.md
       - backend.md
       - complexity.md
@@ -40,6 +41,8 @@ profiles:
       - frontend.md
       - datetime-pipeline.md
     skills:
+      - solid-principles
+      - task-cleanup
       - fastapi-feature
       - fastapi-persistence
       - fastapi-testing

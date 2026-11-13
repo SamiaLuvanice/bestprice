@@ -1,11 +1,11 @@
 ---
 name: doc-sync-onboarding
-description: Sincronizar obrigatoriamente a documentação de onboarding após qualquer alteração de código no BestPrice.
+description: Sincronizar a documentação de onboarding quando docs-impact apontar documentos afetados por uma mudança no BestPrice.
 ---
 
 # Sincronização da documentação de onboarding
 
-Execute como última etapa de toda tarefa que altere código, mesmo quando a mudança parecer pequena, ou quando houver pedido explícito de sincronização. Inclua modelos, campos, migrations, rotas, processamento assíncrono, middlewares, integrações, variáveis de ambiente e scripts de infraestrutura. Trabalhe na mesma branch e worktree da mudança que motivou a atualização, quando houver uma. Se o código mudar depois, execute a sincronização novamente. Documentação de comportamento planejado deve ser identificada como tal; `docs/product-context.md` descreve a direção do produto, enquanto código, testes e configuração confirmam o que já funciona.
+Execute conforme a regra única em `.agents/rules/task-done-criteria.md`: quando `node .agents/scripts/docs-impact.mjs` listar documentos a revisar, ou quando houver pedido explícito de sincronização. A saída do docs-impact é o ponto de partida; o mapa `docs_impact` de `harness.yaml` espelha a tabela abaixo e deve ser atualizado junto com ela. Inclua modelos, campos, migrations, rotas, processamento assíncrono, middlewares, integrações, variáveis de ambiente e scripts de infraestrutura. Trabalhe na mesma branch e worktree da mudança que motivou a atualização, quando houver uma. Se o código mudar depois, repita a checagem. Documentação de comportamento planejado deve ser identificada como tal; `docs/product-context.md` descreve a direção do produto, enquanto código, testes e configuração confirmam o que já funciona.
 
 ## Apurar a mudança
 
