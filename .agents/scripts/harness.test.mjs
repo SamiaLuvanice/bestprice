@@ -1,6 +1,6 @@
 // Testes do núcleo agnóstico do harness: node --test .agents/scripts/
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -177,4 +177,39 @@ test("findTerms casa palavra inteira sem diferenciar maiúsculas", () => {
   assert.deepEqual(findTerms("Tela React com estado", terms), ["react"]);
   assert.deepEqual(findTerms("interface reactive e reactor", terms), []);
   assert.deepEqual(findTerms("suba com Docker Compose e teste /api/health.", terms), ["docker compose", "/api/health"]);
+});
+
+test("commit-msg aceita coautores humanos com nomes que coincidem com agentes", () => {
+  for (const human of ["Devin Smith <d@example.com>", "Jules Verne <j@example.com>", "Ana Cursor <ana@example.com>"]) {
+    assert.deepEqual(validateMessage(`feat: x\n\nCo-authored-by: ${human}`), [], human);
+  }
+  const bots = ["Devin <devin-ai-integration[bot]@users.noreply.github.com>", "Agent <x@cursor.com>"];
+  for (const bot of bots) {
+    assert.ok(validateMessage(`feat: x\n\nCo-authored-by: ${bot}`).some((error) => /atribuição/.test(error)), bot);
+  }
+});
+
+test("parseYaml aceita lista compacta e apóstrofo em valor sem aspas", () => {
+  const data = parseYaml("list:\n- a\n- b\nnext: it's ok # comentário\nquoted: 'x # y'\n");
+  assert.deepEqual(data.list, ["a", "b"]);
+  assert.equal(data.next, "it's ok");
+  assert.equal(data.quoted, "x # y");
+});
+
+test("sync preserva pasta real em backup e só remove regras do Cursor que gerou", () => {
+  const root = mkdtempSync(join(tmpdir(), "harness-"));
+  for (const dir of ["agents", "skills", "rules"]) mkdirSync(join(root, ".agents", dir), { recursive: true });
+  writeFileSync(join(root, ".agents", "rules", "git.md"), "# git\n");
+  writeFileSync(join(root, "harness.yaml"), "tools:\n  cursor: true\n");
+  mkdirSync(join(root, ".claude", "skills", "pessoal"), { recursive: true });
+  writeFileSync(join(root, ".claude", "skills", "pessoal", "SKILL.md"), "minha skill");
+  mkdirSync(join(root, ".cursor", "rules"), { recursive: true });
+  writeFileSync(join(root, ".cursor", "rules", "minha.mdc"), "pessoal");
+  sync({ root, log: () => {} });
+  sync({ root, log: () => {} });
+  const backups = readdirSync(join(root, ".claude")).filter((name) => name.startsWith("skills.bak-"));
+  assert.equal(backups.length, 1);
+  assert.equal(readFileSync(join(root, ".claude", backups[0], "pessoal", "SKILL.md"), "utf8"), "minha skill");
+  assert.equal(readFileSync(join(root, ".cursor", "rules", "minha.mdc"), "utf8"), "pessoal");
+  assert.equal(readFileSync(join(root, ".cursor", "rules", "git.mdc"), "utf8"), "# git\n");
 });

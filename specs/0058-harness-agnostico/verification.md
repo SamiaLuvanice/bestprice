@@ -35,3 +35,22 @@ Conferidos sem mudança: `CLAUDE.md` (imports válidos), `docs/apps/backend.md` 
 
 - Revisão independente e CI da PR.
 - Limpar manualmente as pastas órfãs em `.worktrees/` após conferir o conteúdo.
+
+## Revisão independente (13/11/2026) — correções nos scripts compartilhados
+
+A revisão independente feita no Personal_Portfolio (mesmo núcleo `.agents/scripts/`) gerou correções
+replicadas aqui, com testes de regressão:
+
+- `commit-msg.mjs`: coautores humanos com nomes como "Devin Smith" ou "Jules Verne" eram recusados.
+  Agora os produtos inequívocos casam por palavra inteira e os nomes ambíguos só pelo e-mail de bot.
+- `lib.mjs` (`parseYaml`): passa a aceitar lista compacta (`chave:\n- item`) e apóstrofo em valor sem
+  aspas (`it's ok # comentário`).
+- `sync.mjs`: uma pasta real em lugar de projeção é movida para `*.bak-<data>` em vez de apagada; no
+  Cursor, só são removidas as regras `.mdc` que o próprio sync gerou (manifesto `.harness-generated`).
+- `ci.yml` (Secrets): em push, quando o `before` não existe no clone (push forçado), cai para `-1`.
+
+| Comando | Resultado |
+|---|---|
+| `node --test ".agents/scripts/*.test.mjs"` | 18 pass, 0 fail |
+| `node .agents/scripts/sync.mjs --check` | Projeções em dia |
+| `node .agents/scripts/diagnose.mjs` | Harness válido; 2 avisos de pastas órfãs em `.worktrees/` (0049, 0050) |

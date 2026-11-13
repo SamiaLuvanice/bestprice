@@ -12,6 +12,7 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  renameSync,
   realpathSync,
   rmSync,
   rmdirSync,
@@ -125,8 +126,10 @@ function link(root, linkPath, target, log) {
     }
     removeLink(path);
   } else if (existsSync(path)) {
-    log(`  ! ${linkPath} era cópia — removendo a projeção`);
-    rmSync(path, { recursive: true, force: true });
+    // Pasta real (cópia antiga ou conteúdo pessoal): preserva em backup, nunca apaga.
+    const backup = `${path}.bak-${new Date().toISOString().replace(/[:.]/g, "-")}`;
+    renameSync(path, backup);
+    log(`  ! ${linkPath} era uma pasta real — movida para ${relative(root, backup)}`);
   }
   mkdirSync(dirname(path), { recursive: true });
   if (process.platform === "win32") {
@@ -190,13 +193,20 @@ export function sync({ root = ROOT, check = false, withOpencode = false, withCur
     log("Cursor:");
     link(root, ".cursor/skills", `../${SRC}/skills`, log);
     if (hasCommands) link(root, ".cursor/commands", `../${SRC}/commands`, log);
-    // Único caso de cópia: Cursor só lê regras com extensão .mdc.
+    // Único caso de cópia: Cursor só lê regras com extensão .mdc. Só os arquivos que o
+    // próprio sync gerou (listados no manifesto) são removidos; regras pessoais ficam.
     const rules = join(root, ".cursor", "rules");
-    rmSync(rules, { recursive: true, force: true });
+    const manifest = join(rules, ".harness-generated");
     mkdirSync(rules, { recursive: true });
+    const previous = existsSync(manifest) ? readFileSync(manifest, "utf8").split(/\r?\n/).filter(Boolean) : [];
+    for (const file of previous) rmSync(join(rules, basename(file)), { force: true });
+    const generated = [];
     for (const file of readdirSync(join(src, "rules")).filter((name) => name.endsWith(".md"))) {
-      writeFileSync(join(rules, `${basename(file, ".md")}.mdc`), readFileSync(join(src, "rules", file)));
+      const name = `${basename(file, ".md")}.mdc`;
+      writeFileSync(join(rules, name), readFileSync(join(src, "rules", file)));
+      generated.push(name);
     }
+    writeFileSync(manifest, `${generated.join("\n")}\n`);
     log("  + .cursor/rules/*.mdc (gerado — não editar)");
   }
 

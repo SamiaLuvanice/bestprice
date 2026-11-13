@@ -13,11 +13,18 @@ import { asList, git, loadHarness } from "./lib.mjs";
 export const TYPES = ["feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert"];
 const HEADER = new RegExp(`^(${TYPES.join("|")})(\\([a-z0-9._/-]+\\))?!?: \\S.*$`);
 const AUTO_GENERATED = [/^Merge (branch|pull request|remote-tracking branch) /, /^Revert ".+"/, /^(fixup|squash|amend)! /];
-const AGENT_NAMES =
-  "claude|anthropic|copilot|cursor|codex|openai|chatgpt|gpt-?\\d|opencode|gemini|devin|aider|windsurf|codeium|tabnine|amazon q|jules";
+// Nomes inequívocos de produto: bastam no nome do coautor (palavra inteira).
+// Nomes que também são de gente (Devin, Jules, Cursor, Aider…) só contam pelo e-mail.
+const AGENT_PRODUCTS = "claude|anthropic|copilot|chatgpt|openai|codex|opencode|gemini|windsurf|codeium|tabnine";
+const BOT_EMAILS = [
+  "noreply@anthropic\\.com",
+  "[^>]*\\[bot\\]@users\\.noreply\\.github\\.com",
+  "copilot@github\\.com",
+  "[^>]*@(?:openai|anthropic|cursor|cognition\\.ai|devin\\.ai|codeium|windsurf)\\.com",
+];
 const ATTRIBUTION = [
-  new RegExp(`^co-authored-by:.*(${AGENT_NAMES})`, "im"),
-  /^co-authored-by:.*noreply@anthropic\.com/im,
+  new RegExp(`^co-authored-by:[^<\\n]*\\b(${AGENT_PRODUCTS})\\b`, "im"),
+  new RegExp(`^co-authored-by:[^\\n]*<(${BOT_EMAILS.join("|")})>`, "im"),
   /generated (with|by) .*(claude|copilot|cursor|codex|opencode|chatgpt|gemini)/i,
   /🤖/u,
 ];

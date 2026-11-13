@@ -47,15 +47,20 @@ function splitInline(text) {
 
 function stripComment(line) {
   let quote = null;
+  let previous = ""; // último caractere não branco fora de aspas
   for (let i = 0; i < line.length; i += 1) {
     const char = line[i];
     if (quote) {
       if (char === quote) quote = null;
-    } else if (char === '"' || char === "'") {
+      continue;
+    }
+    // Aspas só abrem um escalar no início do valor; apóstrofo no meio ("it's") é texto.
+    if ((char === '"' || char === "'") && ["", ":", "[", ",", "-"].includes(previous)) {
       quote = char;
     } else if (char === "#" && (i === 0 || /\s/.test(line[i - 1]))) {
       return line.slice(0, i);
     }
+    if (!/\s/.test(char)) previous = char;
   }
   return line;
 }
@@ -74,10 +79,15 @@ export function parseYaml(text) {
     if (line.trim() === "") continue;
     const indent = line.length - line.trimStart().length;
     const content = line.trim();
-    while (stack.length > 1 && indent <= stack.at(-1).indent) stack.pop();
+    const isItem = content.startsWith("- ");
+    // Lista compacta ("chave:\n- item") fica na mesma indentação da chave.
+    const continuesList = (frame) => isItem && indent === frame.indent && Array.isArray(frame.container);
+    while (stack.length > 1 && (indent < stack.at(-1).indent || (indent === stack.at(-1).indent && !continuesList(stack.at(-1))))) {
+      stack.pop();
+    }
     const parent = stack.at(-1);
 
-    if (content.startsWith("- ")) {
+    if (isItem) {
       if (!Array.isArray(parent.container)) {
         throw new Error(`YAML: item de lista sem chave na linha ${index + 1}`);
       }

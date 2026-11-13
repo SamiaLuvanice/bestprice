@@ -70,7 +70,7 @@ jobs:
           # Varre só os commits novos; o histórico anterior não é reavaliado a cada evento.
           if [ "$EVENT_NAME" = pull_request ]; then
             range="origin/$BASE_REF..$HEAD_SHA"
-          elif [ "$EVENT_NAME" = push ] && [ -n "$BEFORE" ] && [ "$BEFORE" != 0000000000000000000000000000000000000000 ]; then
+          elif [ "$EVENT_NAME" = push ] && [ -n "$BEFORE" ] && [ "$BEFORE" != 0000000000000000000000000000000000000000 ] \n            && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
             range="$BEFORE..$AFTER"
           else
             range="-1"
