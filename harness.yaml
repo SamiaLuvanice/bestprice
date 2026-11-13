@@ -1,4 +1,4 @@
-version: 0.3.0
+version: 0.4.0
 project:
   name: bestprice
   root: .
@@ -11,6 +11,7 @@ profile:
   name: fastapi-react-postgresql
   backend_dir: backend
   frontend_dir: frontend
+  automation_dir: .
   specs_dir: specs
 modules:
   core: [evidence, spec-driven, quality-gates, agent-orchestration]
@@ -19,6 +20,8 @@ modules:
 git:
   protected_branches: [develop, stage, main]
   default_base: develop
+# Portões lidos por .agents/scripts/gates.mjs: chave [<escopo>_]<etapa>_command;
+# o escopo roda em profile.<escopo>_dir. A ordem das chaves é a ordem de execução.
 quality:
   backend_install_command: uv sync --locked --extra dev
   backend_lint_command: uv run ruff check .
@@ -26,6 +29,45 @@ quality:
   frontend_install_command: npm ci
   frontend_lint_command: npm run lint
   frontend_test_command: npm test -- --run
-  frontend_build_command: npm run build
+  frontend_build_command: npm run build:check
+  automation_test_command: node --test .github/scripts/*.test.cjs .agents/scripts/*.test.mjs
+  automation_harness_command: node .agents/scripts/sync.mjs --check && node .agents/scripts/diagnose.mjs
+# Lido por .agents/scripts/diagnose.mjs.
+diagnose:
+  # Identificadores de outros projetos/clientes que não podem vazar para este repositório.
+  forbidden_refs:
+    - "90171508118"
+    - "901716466319"
+    - web-staging-d09e
+    - api-staging-2bbb
+    - bruno@exemplo.com
+    - carla@exemplo.com
+    - diego@exemplo.com
+    - lopestech.dev
+  # ana@exemplo.com saiu da lista: é o e-mail fictício padrão dos testes desde a spec 0048.
+  # Fixtures de teste e saídas de QA usam senhas fictícias por desenho; o gitleaks
+  # continua varrendo esses arquivos no CI.
+  ignore_paths:
+    - "backend/tests/**"
+    - "frontend/src/**/*.test.ts"
+    - "frontend/src/**/*.test.tsx"
+    - "frontend/tests/**"
+    - "specs/*/qa/**"
+# Lido por .agents/scripts/docs-impact.mjs: glob alterado → documentos a revisar.
+docs_impact:
+  "backend/app/**": [docs/apps/backend.md, docs/architecture.md]
+  "backend/alembic/**": [docs/database.md]
+  "backend/pyproject.toml": [README.md, docs/apps/backend.md]
+  "frontend/src/**": [docs/apps/frontend.md]
+  "frontend/package.json": [README.md, docs/apps/frontend.md]
+  "frontend/nginx.conf": [docs/apps/infraestrutura.md]
+  "docker-compose.yml": [README.md, docs/apps/infraestrutura.md]
+  "render.yaml": [docs/apps/infraestrutura.md]
+  "**/Dockerfile": [docs/apps/infraestrutura.md]
+  ".github/**": [docs/github-workflow.md, docs/apps/infraestrutura.md]
+  "scripts/**": [docs/apps/infraestrutura.md]
+  ".env.example": [README.md, docs/apps/backend.md]
+  ".agents/**": [AGENTS.md, CLAUDE.md, docs/harness-modules.md, docs/harness-setup.md, docs/HARNESS-CHANGES.md]
+  "harness.yaml": [docs/harness-setup.md, docs/harness-customization.md]
 customization:
   project_sources_file: .agents/sources.md
