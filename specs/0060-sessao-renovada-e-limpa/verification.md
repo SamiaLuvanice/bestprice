@@ -78,8 +78,9 @@ descartável `bestprice-0060-test-pg` (`-p 55460:5432`, sem volume), removido ao
 
 ## Pendências
 
-- R1 revisão independente, R3 sincronização de `docs/architecture.md` e `docs/database.md`, R4 PR.
-  R2 (QA ponta a ponta) registrada na seção abaixo.
+- R3 sincronização de `docs/architecture.md` e `docs/database.md` (doc-sync-onboarding, pelo
+  orquestrador) e R4 PR. R1 e R2 estão registradas abaixo; as correções pedidas por elas, em
+  "Correções pós-revisão".
 - Sem push nem PR nesta etapa.
 
 ## QA (R2)
@@ -150,3 +151,43 @@ Nenhum bug encontrado nos cenários executados.
 uvicorn e Vite encerrados (um processo filho do Vite em 5160 sobreviveu ao fim da tarefa e foi
 finalizado pelo PID). O container `bestprice-0060-qa-pg` foi removido. As portas 8060, 5160 e 55464
 ficaram livres.
+
+## Revisão independente (R1)
+
+Revisão do `arch-reviewer` sobre o diff até `927c25d`: **aprovada com condições**. O relatório foi
+entregue ao orquestrador (não está versionado). Itens que o orquestrador repassou: I1 (importante,
+reproduzido pelo revisor no PostgreSQL: renovação concorrente com logout ou purge → 500
+`StaleDataError`, 503 nas rotas de pesquisa), S1 (implantação sem parada → `IntegrityError` na
+instância antiga), S2 (AC07 sem conferir outro purge do mesmo ciclo), S3 (sem teste de `Response(204)`
+próprio), S4 (limite do `BaseHTTPMiddleware` em 500 não tratado) e S5 (plano com a fórmula antiga).
+O QA (R2, acima) aprovou AC01–AC09 e deixou as observações O1 e O2 (O2 = I1).
+
+## Correções pós-revisão (R1 e R2)
+
+Feitas na mesma worktree e branch, a partir de `927c25d`, com TDD. Ponta do código avaliada
+**`e88f204`**. PostgreSQL: container descartável `bestprice-0060-test-pg` (`postgres:17`, porta 55460,
+sem volume), recriado para esta rodada e removido ao final.
+
+| Item | Red (antes da correção) | Correção | Green / teste | Commit |
+|---|---|---|---|---|
+| R1-I1 / QA-O2 — sessão encerrada durante a renovação | PostgreSQL: `/api/auth/me` → `assert 500 == 401` (`sqlalchemy.orm.exc.StaleDataError: UPDATE statement on table 'user_sessions' expected to update 1 row(s); 0 were matched`) e `/api/ai/capabilities` → `assert 503 == 401`. SQLite: `assert 500 == 401` (Red obtido rodando o teste novo contra o `routes.py` anterior) | `extend_session` faz um `UPDATE` do Core condicionado a `id` e `absolute_expires_at > now`; `rowcount == 0` → `401 unauthenticated`. `user_id` é lido antes do commit e a linha não é mais acessada depois dele (sem a janela do `ObjectDeletedError`) | `test_session_purge_integration.py::test_session_ended_concurrently_with_the_renewal_is_unauthenticated[/api/auth/me]` e `[/api/ai/capabilities]`; `test_session_lifetime_http.py::test_session_ended_between_read_and_renewal_is_unauthenticated` (401, sem `Set-Cookie`) | `21163da` |
+| R1-S1 — implantação sem parada | `psycopg.errors.NotNullViolation: null value in column "absolute_expires_at"` no INSERT sem a coluna | Migração `20261122sessionabs` aplica `server_default now() + interval '7 days'` junto do `NOT NULL`. O modelo só documenta o padrão, porque o SQLite dos testes não aceita a expressão. A API continua gravando o valor explícito | `test_session_migration_integration.py::test_insert_without_ceiling_from_an_old_instance_gets_seven_days` (`absolute_expires_at - now() == 7 days`) | `e44102a` |
+| R1-S2 — AC07 sem conferir o mesmo ciclo | Reforço de teste, sem Red: o comportamento já estava correto | O teste cria uma pesquisa vencida, que `purge_expired` apaga antes no mesmo ciclo, e confere que ela **permanece** quando o purge de sessões falha. `cleanup.py` documenta que a transação única é intencional | `::test_ac07_session_purge_failure_is_logged_and_does_not_escape` | `71e690f` |
+| R1-S3 — `Response(204)` próprio da rota | Teste novo passou de primeira (middleware já existia). Prova de que ele depende do middleware: com a linha `app.middleware("http")(renewed_session_cookie)` desligada temporariamente, ele e o teste do 404 falharam (`AttributeError: 'NoneType' object has no attribute 'lower'`, sem `Set-Cookie`). Linha restaurada e conferida no `git diff` | — | `test_session_lifetime_http.py::test_ac04_renewal_cookie_reaches_a_route_that_returns_its_own_204_response` (`DELETE /api/ai/conversations/{id}` → 204 com Max-Age de 86400 s) | `0b0e199` |
+| R1-S5 — condição implementada | Documentação | `plan.md` e a docstring de `renewed_expiry` descrevem o ganho mínimo de 1 hora e a consequência: com uso contínuo, a sessão pode terminar até 1 hora antes do teto, dentro da tolerância da spec | — | `e88f204` |
+| R1-S4 — exceção não tratada | Não corrigido de propósito | Registrado como limite conhecido em `plan.md`, na docstring do middleware e em `docs/apps/backend.md`: num 500 não tratado o `Set-Cookie` da renovação não sai e o cookie fica com o término anterior, o que só encurta a sessão no navegador | — | `e88f204` |
+| QA-O1 — saída da limpeza manual | `assert (0 == 1)`: nenhuma linha "Sessões terminadas removidas:" na saída do `python -m app.research.cleanup` | `purge_database` devolve `PurgeCounts(research, sessions)` e o comando imprime as duas contagens | `::test_manual_cleanup_reports_removed_sessions` (subprocesso real com o relógio real; a sessão de 2020 é removida) | `71e690f` |
+
+`docs/apps/backend.md` também descreve o `UPDATE` condicionado, o padrão da coluna, o limite em 500 e
+a saída da limpeza manual (`e88f204`).
+
+### Gates (`e88f204`)
+
+| Comando | Resultado |
+|---|---|
+| `node .agents/scripts/gates.mjs --scope backend` (raiz, `TEST_DATABASE_URL` no container acima) | install ✔, lint ✔ (`All checks passed!`), test ✔: **569 passed, 2 skipped, 0 failed** em 120,41 s (skips: `test_stage_start.py`, POSIX) |
+| `uv run pytest -q -rs tests/test_session_migration_integration.py tests/test_session_purge_integration.py tests/test_session_lifetime_http.py tests/test_login_flow_integration.py` | **30 passed**, 0 skipped |
+| `python .agents/skills/cyclomatic-complexity/scripts/complexity_report.py backend/app --changed origin/develop` | 90 blocos, média 2,14 (A); A 82 · B 8; nenhum bloco ≥ C |
+
+O fluxo ponta a ponta (API + SPA) do QA não foi refeito após as correções. Elas não mudam o contrato
+REST nem o caminho feliz, que segue coberto pelos testes acima.

@@ -18,7 +18,7 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 
 ## Revisão, QA e entrega
 
-- [ ] R1 — `arch-reviewer` independente do diff.
-- [ ] R2 — `qa` valida AC01–AC09 com evidência, incluindo fluxo local API + SPA (sessão continua após renovação; expira com relógio/valores curtos).
+- [x] R1 — `arch-reviewer` independente do diff (aprovada com condições; I1 e S1–S5 tratados em `verification.md`, "Correções pós-revisão").
+- [x] R2 — `qa` valida AC01–AC09 com evidência, incluindo fluxo local API + SPA (sessão continua após renovação; expira com relógio/valores curtos). Aprovada em `fb6f211` (`927c25d`, `verification.md` "QA (R2)"); O1 e O2 corrigidas.
 - [ ] R3 — `docs-impact` / `doc-sync-onboarding`.
 - [ ] R4 — PR para `develop` com `Closes #327`.
