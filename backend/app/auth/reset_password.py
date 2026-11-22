@@ -48,11 +48,15 @@ def reset_password(session: Session, email: str, password: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
+        allow_abbrev=False,
         description="Redefine a senha de uma conta BestPrice e encerra as sessões dela. "
         "Confirme a identidade de quem pede antes de rodar.",
     )
     parser.add_argument("email")
-    args = parser.parse_args()
+    # parse_known_args: o erro padrão do argparse repetiria o argumento extra, que pode ser a senha.
+    args, extra = parser.parse_known_args()
+    if extra:
+        parser.error("Argumentos não reconhecidos; a senha é solicitada no terminal.")
     password = getpass.getpass("Nova senha (12 a 1024 caracteres): ")
     confirmation = getpass.getpass("Confirme a nova senha: ")
     if password != confirmation:

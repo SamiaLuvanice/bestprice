@@ -174,13 +174,16 @@ def test_cli_reports_errors_in_portuguese_without_changes(monkeypatch, engine, c
         assert session.scalars(select(User.email)).all() == ["pessoa@exemplo.com"]
 
 
-def test_ac07_password_is_not_accepted_as_argument(monkeypatch, engine, capsys) -> None:
+@pytest.mark.parametrize("extra", [
+    [NEW], ["--password", NEW], [f"--password={NEW}"],
+], ids=["posicional", "opcao", "opcao-com-igual"])
+def test_ac07_password_is_not_accepted_as_argument_nor_echoed(monkeypatch, engine, capsys, caplog, extra) -> None:
     create_account(engine, "pessoa@exemplo.com")
     original = password_hash(engine, "pessoa@exemplo.com")
     with pytest.raises(SystemExit) as exited:
-        run_cli(monkeypatch, engine, ["pessoa@exemplo.com", NEW], [])
+        run_cli(monkeypatch, engine, ["pessoa@exemplo.com", *extra], [])
     assert exited.value.code == 2
-    assert password_hash(engine, "pessoa@exemplo.com") == original
-    with pytest.raises(SystemExit):
-        run_cli(monkeypatch, engine, ["pessoa@exemplo.com", "--password", NEW], [])
+    captured = capsys.readouterr()
+    assert "Argumentos não reconhecidos; a senha é solicitada no terminal." in captured.err
+    assert_password_hidden(captured, caplog, NEW)
     assert password_hash(engine, "pessoa@exemplo.com") == original
