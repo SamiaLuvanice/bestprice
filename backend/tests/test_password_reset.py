@@ -187,3 +187,20 @@ def test_ac07_password_is_not_accepted_as_argument_nor_echoed(monkeypatch, engin
     assert "Argumentos não reconhecidos; a senha é solicitada no terminal." in captured.err
     assert_password_hidden(captured, caplog, NEW)
     assert password_hash(engine, "pessoa@exemplo.com") == original
+
+
+@pytest.mark.parametrize(("email", "message"), [
+    ("outra@exemplo.com", "Nenhuma conta com este e-mail."),
+    ("pessoa" + chr(0xD800) + "@exemplo.com", "O e-mail contém caracteres inválidos."),
+], ids=["sem-conta", "email-nao-utf8"])
+def test_cli_checks_the_account_before_asking_for_the_password(monkeypatch, engine, capsys, email, message) -> None:
+    create_account(engine, "pessoa@exemplo.com")
+    prompts: list[str] = []
+    monkeypatch.setattr(reset_module.getpass, "getpass", lambda prompt: prompts.append(prompt) or NEW)
+    monkeypatch.setattr(reset_module, "create_database_engine", lambda: engine)
+    monkeypatch.setattr("sys.argv", ["reset_password", email])
+    with pytest.raises(SystemExit) as exited:
+        reset_module.main()
+    assert exited.value.code == 2
+    assert message in capsys.readouterr().err
+    assert prompts == []

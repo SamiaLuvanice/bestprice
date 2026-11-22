@@ -26,11 +26,17 @@ class AccountNotFound(LookupError):
         super().__init__("Nenhuma conta com este e-mail.")
 
 
-def reset_password(session: Session, email: str, password: str) -> None:
-    """Valida, troca o hash e encerra as sessões da conta; confirma tudo numa transação."""
+def find_account(session: Session, email: str) -> User:
+    """Conta pelo e-mail normalizado como no login; AccountNotFound se não houver."""
     user = session.scalar(select(User).where(User.email == normalize_email(email)))
     if user is None:
         raise AccountNotFound()
+    return user
+
+
+def reset_password(session: Session, email: str, password: str) -> None:
+    """Valida, troca o hash e encerra as sessões da conta; confirma tudo numa transação."""
+    user = find_account(session, email)
     # O e-mail guardado já é válido: só a violação de senha pode aparecer.
     violations = account_rule_violations(user.email, password)
     if violations:
@@ -46,6 +52,16 @@ def reset_password(session: Session, email: str, password: str) -> None:
         raise
 
 
+def _read_new_password(parser: argparse.ArgumentParser) -> str:
+    password = getpass.getpass("Nova senha (12 a 1024 caracteres): ")
+    confirmation = getpass.getpass("Confirme a nova senha: ")
+    if password != confirmation:
+        parser.error("As senhas não conferem")
+    if not utf8_encodable(password):
+        parser.error("A senha contém caracteres inválidos.")
+    return password
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         allow_abbrev=False,
@@ -57,15 +73,17 @@ def main() -> None:
     args, extra = parser.parse_known_args()
     if extra:
         parser.error("Argumentos não reconhecidos; a senha é solicitada no terminal.")
-    password = getpass.getpass("Nova senha (12 a 1024 caracteres): ")
-    confirmation = getpass.getpass("Confirme a nova senha: ")
-    if password != confirmation:
-        parser.error("As senhas não conferem")
     if not utf8_encodable(args.email):
         parser.error("O e-mail contém caracteres inválidos.")
-    if not utf8_encodable(password):
-        parser.error("A senha contém caracteres inválidos.")
-    with Session(create_database_engine()) as session:
+    engine = create_database_engine()
+    # Confere a conta antes dos prompts; a transação de leitura termina antes de a operação digitar.
+    with Session(engine) as session:
+        try:
+            find_account(session, args.email)
+        except AccountNotFound as exc:
+            parser.error(str(exc))
+    password = _read_new_password(parser)
+    with Session(engine) as session:
         try:
             reset_password(session, args.email, password)
         except (AccountNotFound, AccountRuleError) as exc:
