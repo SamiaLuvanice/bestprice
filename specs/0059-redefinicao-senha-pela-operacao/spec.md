@@ -3,7 +3,7 @@ numero: 0059
 titulo: Redefinição de senha pela operação
 tipo: bug
 prioridade: P1
-status: pronta
+status: implementada
 toca: [backend]
 depende_de: [0011, 0048, 0057]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/326

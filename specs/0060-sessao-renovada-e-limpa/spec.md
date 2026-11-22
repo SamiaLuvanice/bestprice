@@ -3,7 +3,7 @@ numero: 0060
 titulo: Sessão renovada durante o uso e sessões expiradas removidas
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [backend]
 depende_de: [0011]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/327
