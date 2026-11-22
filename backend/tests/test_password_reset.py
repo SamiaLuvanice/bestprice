@@ -30,9 +30,12 @@ def engine():
 def create_account(engine, email: str, sessions: int = 0) -> uuid.UUID:
     with Session(engine) as session:
         user = add_account(session, email, OLD)
-        expires = datetime.now(UTC) + timedelta(days=1)
+        now = datetime.now(UTC)
+        expires, ceiling = now + timedelta(days=1), now + timedelta(days=7)
         for _ in range(sessions):
-            session.add(UserSession(user_id=user.id, token_hash=uuid.uuid4().hex, expires_at=expires))
+            session.add(UserSession(
+                user_id=user.id, token_hash=uuid.uuid4().hex, expires_at=expires, absolute_expires_at=ceiling,
+            ))
         session.commit()
         return user.id
 
