@@ -5,6 +5,8 @@ import hashlib
 import logging
 import os
 import secrets
+import subprocess
+import sys
 import uuid
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
@@ -22,6 +24,7 @@ from app.auth.routes import get_clock
 from app.db import get_session
 from app.main import app
 from app.products.models import User, UserSession
+from app.research.models import Conversation
 
 NOW = datetime(2031, 3, 10, 8, 0, tzinfo=UTC)
 
@@ -99,7 +102,16 @@ def test_ac07_session_purge_failure_is_logged_and_does_not_escape(engine, monkey
     def broken(_session: Session, _now: datetime) -> int:
         raise OperationalError("DELETE FROM user_sessions", {}, Exception("conexão perdida"))
 
-    expired = _session(engine, _account(engine), NOW - timedelta(hours=1), NOW + timedelta(days=1))
+    owner = _account(engine)
+    expired = _session(engine, owner, NOW - timedelta(hours=1), NOW + timedelta(days=1))
+    with Session(engine) as session:
+        conversation = Conversation(
+            user_id=owner, title="vencida", created_at=NOW - timedelta(days=91),
+            updated_at=NOW - timedelta(days=91), expires_at=NOW - timedelta(days=1),
+        )
+        session.add(conversation)
+        session.commit()
+        conversation_id = conversation.id
     monkeypatch.setattr(cleanup, "purge_expired_sessions", broken, raising=False)
     caplog.set_level(logging.WARNING, logger="app.research.cleanup")
     monkeypatch.setattr(cleanup, "now_utc", lambda: NOW)
@@ -113,7 +125,10 @@ def test_ac07_session_purge_failure_is_logged_and_does_not_escape(engine, monkey
         db.create_database_engine().dispose()
         db.create_database_engine.cache_clear()
     assert "cleanup unavailable" in caplog.text
-    assert _remaining(engine, [expired]) == {expired}  # nada confirmado pela metade
+    # Nada confirmado pela metade: a pesquisa vencida, apagada antes no mesmo ciclo, também fica.
+    assert _remaining(engine, [expired]) == {expired}
+    with Session(engine) as session:
+        assert session.get(Conversation, conversation_id) is not None
 
 
 @pytest.fixture
@@ -183,3 +198,17 @@ def test_session_ended_concurrently_with_the_renewal_is_unauthenticated(engine, 
     assert response.status_code == 401, response.text
     assert response.json()["error"]["code"] == "unauthenticated"
     assert "set-cookie" not in response.headers
+
+
+def test_manual_cleanup_reports_removed_sessions(engine) -> None:
+    # Limpeza manual (`python -m app.research.cleanup`) com o relógio real: sessão de 2020 sai.
+    finished = _session(engine, _account(engine), datetime(2020, 1, 2, tzinfo=UTC), datetime(2020, 1, 8, tzinfo=UTC))
+    result = subprocess.run(
+        [sys.executable, "-m", "app.research.cleanup"], capture_output=True, text=True, timeout=60, check=False,
+        env={**os.environ, "DATABASE_URL": os.environ["TEST_DATABASE_URL"], "APP_ENV": "development"},
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Pesquisas expiradas removidas:" in result.stdout
+    removed = [line for line in result.stdout.splitlines() if line.startswith("Sessões terminadas removidas: ")]
+    assert len(removed) == 1 and int(removed[0].rsplit(" ", 1)[1]) >= 1
+    assert _remaining(engine, [finished]) == set()
