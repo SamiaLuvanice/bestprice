@@ -1,0 +1,42 @@
+## Busca das senhas usadas (antiga, nova, outra, curta, confirmacao divergente) nos logs
+uvicorn.log / senha#fac724: 0 ocorrencias
+uvicorn.log / senha#3764e8: 0 ocorrencias
+uvicorn.log / senha#c5bf3d: 0 ocorrencias
+uvicorn.log / senha#69dc9f: 0 ocorrencias
+uvicorn.log / senha#5c12a5: 0 ocorrencias
+pg.log / senha#fac724: 0 ocorrencias
+pg.log / senha#3764e8: 0 ocorrencias
+pg.log / senha#c5bf3d: 0 ocorrencias
+pg.log / senha#69dc9f: 0 ocorrencias
+pg.log / senha#5c12a5: 0 ocorrencias
+
+## Hash scrypt no log do PostgreSQL (prefixo scrypt/$): 0
+
+## Log do uvicorn (completo)
+INFO:     Started server process [17148]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8059 (Press CTRL+C to quit)
+INFO:     127.0.0.1:62562 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62565 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62655 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62656 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62657 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62658 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62659 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62660 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62661 - "GET /api/products HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:65011 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65014 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65021 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65276 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:65277 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:65278 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65279 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:59927 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59967 - "GET /api/auth/me HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59968 - "GET /api/products HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59969 - "POST /api/auth/login HTTP/1.1" 200 OK
+
+## Log do PostgreSQL (linhas ERROR/STATEMENT)
+(nenhuma)

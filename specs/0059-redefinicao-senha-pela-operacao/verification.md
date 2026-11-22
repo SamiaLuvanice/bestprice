@@ -64,3 +64,65 @@ ou o teste da 0057, fora do escopo exclusivo desta spec (a 0060 altera `routes.p
   (ou na 0060) antes do CI desta PR ficar verde.
 - R1 (revisão independente), R2 (QA com fluxo em terminal real), R3 (`doc-sync-onboarding`), R4 (PR).
 - `docs/PROGRESS.md` fica com o orquestrador.
+
+## QA (R2)
+
+Registro do agente `qa` em 22/11/2026, ponta avaliada **`42e2173`**, sem alteração de código de
+produção. Saídas brutas em [`qa/`](qa/) (senhas descartáveis redigidas como `<SENHA_ANTIGA>`,
+`<SENHA_NOVA>`, `<SENHA_OUTRA>`); o método completo está em `qa/00-como-foi-feito.txt`.
+
+### Fronteiras da evidência
+
+| Camada | Real | Simulado | Limite |
+|---|---|---|---|
+| Banco | PostgreSQL 17.12 descartável `bestprice-0059-qa-pg` (localhost:55462), migrações até `20261113loginfail` | Anúncio monitorado da conta A semeado por SQL (sem Mercado Livre) | Banco Stage (Supabase) não foi tocado |
+| API | `uvicorn app.main:app --port 8059` no host, `APP_ENV=development`, login e `/api/auth/me` por `curl` com três cookie jars | — | Sem navegador real; "dois navegadores" = dois cookie jars |
+| CLI | `app.auth.provision` e `app.auth.reset_password` reais, na imagem de `backend/Dockerfile`, sob pseudo-terminal Linux real (`pty`), lendo o estado `ECHO` do termios no momento de cada resposta | Respostas digitadas por um driver (`ptydrive.py`, fora do repositório) a partir de variáveis de ambiente | Eco no console Windows não observado (ver abaixo) |
+
+Controle negativo do driver: contra um programa com `input()` comum, o mesmo driver registrou
+`ECHO [True, True]` e a resposta na transcrição; logo, a leitura `ECHO [False, False]` das CLIs é
+observação, não artefato do driver.
+
+### Matriz de aceite (R2)
+
+| AC | Veredito | Comando | Resultado observado |
+|---|---|---|---|
+| AC01 | aprovado | `ptydrive.py app.auth.reset_password "  ANA.QA@Exemplo.COM "` e logins por `curl` (`qa/03-e2e.txt` passos 5 e 7; `qa/05-anuncios-api.txt`) | CLI: "Senha redefinida; sessões encerradas", exit 0. Login com a senha antiga → `401 invalid_credentials`; com a nova → 200 e `/api/auth/me` 200. `users.id` igual; `md5(password_hash)` mudou de `35b466fd…` para `f95fadf9…`; o vínculo `22222222-…0001` segue ativo com o mesmo `active_since`; `GET /api/tracked-products` da nova sessão devolve o mesmo anúncio |
+| AC02 | aprovado | o mesmo comando com `"  ANA.QA@Exemplo.COM "` | Encontrou a conta `ana.qa@exemplo.com` (a mesma do login); nenhuma conta nova |
+| AC03 | aprovado | `ptydrive.py app.auth.reset_password ninguem@exemplo.com` (passo 1) | exit 2, `error: Nenhuma conta com este e-mail.`; `count(*) users LIKE 'ninguem%'` = 0; hashes, sessões e anúncios idênticos ao antes |
+| AC04 | aprovado (parcial no E2E) | senha de 11 caracteres (passo 3) | exit 2, `A senha precisa ter pelo menos 12 caracteres.`, estado intacto. 1025 caracteres e não UTF-8 ficam com a evidência automatizada (B2) |
+| AC05 | aprovado | confirmação diferente (passo 2) | exit 2, `As senhas não conferem`; hash e as 2 sessões da conta A intactos (`/api/auth/me` segue 200 nos dois jars) |
+| AC06 | aprovado | `curl -b jar-a1/jar-a2/jar-b /api/auth/me` após a redefinição (passo 6) | jar-a1 e jar-a2 → `401 unauthenticated`; jar-b (conta B) → 200; `user_sessions` da conta A = 0, da conta B = 1 |
+| AC07 | aprovado, com achado Q1 | prompts sob pty; senha como argumento (passo 4); busca nos logs (`qa/04-logs.txt`) | `ECHO [False, False]` em toda leitura de senha; nenhuma senha na transcrição do terminal em sucesso e erros; 0 ocorrências das 5 senhas no log do uvicorn e no log do PostgreSQL; nenhum hash scrypt no log do banco. Senha como argumento é recusada (exit 2, hash intacto), **mas o argparse ecoa o valor**: ver Q1 |
+| AC08 | não reexecutado no R2 | — | Depende de falha injetada; fica com o teste de integração (17 passed nesta rodada) |
+| AC09 | aprovado (documental) | leitura de `README.md` passo 4 e `docs/apps/backend.md` §sessão/CLI, cruzados com `docs/apps/infraestrutura.md` | Comando local correto (`uv run python -m app.auth.reset_password EMAIL` em `backend/`, conferido nesta rodada); lembrete de confirmar a identidade fora do sistema; efeito nas sessões; Stage: rodar com a `DATABASE_URL` do banco Stage só na sessão do terminal, coerente com "Render Free não disponibiliza Shell" (`infraestrutura.md`). O procedimento de Stage **não foi executado** (sem acesso e fora do escopo) |
+
+### Achados
+
+- **Q1 (baixa severidade, AC07):** se a operação digitar a senha por engano como argumento, o
+  comando a recusa sem alterar nada, mas a mensagem de erro do argparse a repete no stderr.
+  Reprodução: `python -m app.auth.reset_password pessoa@exemplo.com SENHA` →
+  `reset_password.py: error: unrecognized arguments: SENHA` (o mesmo com `--password SENHA`).
+  O AC07 diz que a senha "não é escrita em saída, log ou mensagem de erro". O valor já ficou
+  exposto no histórico do shell por erro de quem digitou, então o impacto extra é pequeno, mas
+  `test_ac07_password_is_not_accepted_as_argument` não confere o stderr e não pegaria isso. O
+  `provision` tem o mesmo comportamento (fora do escopo). Decisão de corrigir fica com o
+  orquestrador/revisão.
+- **Limite (AC07, Windows):** no host Windows, `printf … | uv run python -m app.auth.reset_password
+  …` ficou esperando o console (o `getpass` do Windows lê via `msvcrt`, sem fallback para stdin),
+  terminou por `timeout` (exit 124) sem saída e sem alterar a conta (`qa/06-host-windows.txt`). O
+  eco desligado foi observado só no terminal Linux (pty); no console Windows não foi observado.
+
+### Portões nesta rodada
+
+| Comando | Resultado |
+|---|---|
+| `uv run pytest -q -rs tests/test_password_reset.py tests/test_password_reset_integration.py` (com `TEST_DATABASE_URL` no container de QA, banco `bestprice_test`) | **17 passed**, 0 skipped |
+| `node .agents/scripts/gates.mjs --scope backend` (mesma `TEST_DATABASE_URL`) | install ✔, lint ✔ (`All checks passed!`), test ✘: **1 failed, 563 passed, 2 skipped** — a falha é a mesma pré-existente `test_login_flow_integration.py::test_ac17_…` já descrita acima; os 2 skips são os POSIX de `test_stage_start.py` |
+
+CI, PR, Project e release não foram verificados pelo QA.
+
+### Limpeza
+
+Container `bestprice-0059-qa-pg`, imagem `bestprice-0059-qa-api` e o processo uvicorn da porta
+8059 removidos/parados ao final.

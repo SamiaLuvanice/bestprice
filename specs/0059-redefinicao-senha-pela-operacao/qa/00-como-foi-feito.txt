@@ -1,0 +1,20 @@
+QA (R2) da spec 0059 em 22/11/2026, ponta 42e2173 da branch feature/0059-issue-326-redefinicao-senha-pela-operacao.
+
+Ambiente
+- PostgreSQL 17.12 descartavel: container bestprice-0059-qa-pg (postgres:17), porta 55462; removido ao final.
+- Migracoes: `uv run alembic upgrade head` no host (head 20261113loginfail) -> 01-alembic.txt.
+- API real: `uv run uvicorn app.main:app --port 8059` no host Windows, APP_ENV=development.
+- CLIs (`app.auth.provision` e `app.auth.reset_password`): imagem construida de backend/Dockerfile
+  (bestprice-0059-qa-api, a mesma receita da imagem de Stage), rodadas sob um pseudo-terminal real
+  (modulo pty do Python, script ptydrive.py fora do repositorio). O driver espera cada prompt, le o
+  estado termios do terminal (flag ECHO) no momento de responder, escreve a senha e grava a
+  transcricao exata do terminal. As senhas chegam ao driver por variavel de ambiente, nunca como
+  argumento da CLI. Controle negativo: o mesmo driver contra um programa com input() comum mostrou
+  ECHO ativo [True, True] e a senha na transcricao, provando que o detector enxerga eco quando existe.
+- Dois "navegadores" da conta A = dois cookie jars do curl (jar-a1, jar-a2); conta B em jar-b.
+- Anuncio monitorado da conta A semeado por SQL (02-seed.txt), sem passar pelo Mercado Livre.
+- Senhas usadas foram descartaveis e estao redigidas nos arquivos (<SENHA_ANTIGA>, <SENHA_NOVA>...).
+  A senha do banco descartavel (qa0059local) so existiu no container removido.
+
+Arquivos: 01-alembic.txt, 02-seed.txt, 03-e2e.txt (fluxo completo), 04-logs.txt (busca das senhas
+nos logs do uvicorn e do PostgreSQL), 05-anuncios-api.txt, 06-host-windows.txt.

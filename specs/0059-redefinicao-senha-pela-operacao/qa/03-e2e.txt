@@ -1,0 +1,141 @@
+
+##### 0. Login inicial: conta A em dois navegadores (jar-a1, jar-a2), conta B em jar-b
+login A (jar-a1): {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+login A (jar-a2): {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+login B (jar-b):  {"id":"6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378","email":"bia.qa@exemplo.com"} -> HTTP 200
+GET /api/auth/me [jar-a1.txt]: {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+GET /api/auth/me [jar-a2.txt]: {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+GET /api/auth/me [jar-b.txt]: {"id":"6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378","email":"bia.qa@exemplo.com"} -> HTTP 200
+GET /api/products [jar-a1]: {"detail":"Not Found"} -> HTTP 404
+
+##### estado do banco antes
+       email        |                  id                  |             hash_md5             | sessoes | anuncios_ativos
+--------------------+--------------------------------------+----------------------------------+---------+-----------------
+ ana.qa@exemplo.com | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | 35b466fda812faa5f4abcee8926c86aa |       2 |               1
+ bia.qa@exemplo.com | 6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378 | 6272ccaed8d3c532b6c52964d7c1cded |       1 |               0
+(2 rows)
+
+                  id                  |               user_id                |              product_id              | active |         active_since
+--------------------------------------+--------------------------------------+--------------------------------------+--------+-------------------------------
+ 22222222-0059-4000-8000-000000000001 | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | 11111111-0059-4000-8000-000000000001 | t      | 2026-11-22 19:43:12.777842+00
+(1 row)
+
+
+##### 1. AC03 conta inexistente (ninguem@exemplo.com)
+=== transcricao do terminal ===
+Nova senha (12 a 1024 caracteres):
+Confirme a nova senha:
+usage: reset_password.py [-h] email
+reset_password.py: error: Nenhuma conta com este e-mail.
+
+=== fim ===
+ECHO ativo no momento de cada resposta: [False, False]
+respostas encontradas na transcricao: nenhuma
+exit=2
+contas com ninguem: 0
+
+##### 2. AC05 confirmacao diferente
+=== transcricao do terminal ===
+Nova senha (12 a 1024 caracteres):
+Confirme a nova senha:
+usage: reset_password.py [-h] email
+reset_password.py: error: As senhas não conferem
+
+=== fim ===
+ECHO ativo no momento de cada resposta: [False, False]
+respostas encontradas na transcricao: nenhuma
+exit=2
+
+##### 3. AC04 senha curta (11 caracteres)
+=== transcricao do terminal ===
+Nova senha (12 a 1024 caracteres):
+Confirme a nova senha:
+usage: reset_password.py [-h] email
+reset_password.py: error: A senha precisa ter pelo menos 12 caracteres.
+
+=== fim ===
+ECHO ativo no momento de cada resposta: [False, False]
+respostas encontradas na transcricao: nenhuma
+exit=2
+
+##### 4. AC07 senha como argumento
+=== transcricao do terminal ===
+usage: reset_password.py [-h] email
+reset_password.py: error: unrecognized arguments: <SENHA_NOVA>
+
+=== fim ===
+ECHO ativo no momento de cada resposta: []
+respostas encontradas na transcricao: [1, 2]
+exit=2
+=== transcricao do terminal ===
+usage: reset_password.py [-h] email
+reset_password.py: error: unrecognized arguments: --password <SENHA_NOVA>
+
+=== fim ===
+ECHO ativo no momento de cada resposta: []
+respostas encontradas na transcricao: [1, 2]
+exit=2
+
+##### estado do banco depois das tentativas recusadas (deve ser igual ao anterior)
+       email        |                  id                  |             hash_md5             | sessoes | anuncios_ativos
+--------------------+--------------------------------------+----------------------------------+---------+-----------------
+ ana.qa@exemplo.com | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | 35b466fda812faa5f4abcee8926c86aa |       2 |               1
+ bia.qa@exemplo.com | 6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378 | 6272ccaed8d3c532b6c52964d7c1cded |       1 |               0
+(2 rows)
+
+                  id                  |               user_id                |              product_id              | active |         active_since
+--------------------------------------+--------------------------------------+--------------------------------------+--------+-------------------------------
+ 22222222-0059-4000-8000-000000000001 | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | 11111111-0059-4000-8000-000000000001 | t      | 2026-11-22 19:43:12.777842+00
+(1 row)
+
+GET /api/auth/me [jar-a1.txt]: {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+GET /api/auth/me [jar-a2.txt]: {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+GET /api/auth/me [jar-b.txt]: {"id":"6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378","email":"bia.qa@exemplo.com"} -> HTTP 200
+
+##### 5. AC01/AC02/AC06 redefinicao com e-mail em maiusculas e espacos: '  ANA.QA@Exemplo.COM '
+=== transcricao do terminal ===
+Nova senha (12 a 1024 caracteres):
+Confirme a nova senha:
+Senha redefinida; sessões encerradas
+
+=== fim ===
+ECHO ativo no momento de cada resposta: [False, False]
+respostas encontradas na transcricao: nenhuma
+exit=0
+
+##### estado do banco depois da redefinicao
+       email        |                  id                  |             hash_md5             | sessoes | anuncios_ativos
+--------------------+--------------------------------------+----------------------------------+---------+-----------------
+ ana.qa@exemplo.com | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | f95fadf9fa7f4f3498562c246fa635c0 |       0 |               1
+ bia.qa@exemplo.com | 6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378 | 6272ccaed8d3c532b6c52964d7c1cded |       1 |               0
+(2 rows)
+
+                  id                  |               user_id                |              product_id              | active |         active_since
+--------------------------------------+--------------------------------------+--------------------------------------+--------+-------------------------------
+ 22222222-0059-4000-8000-000000000001 | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | 11111111-0059-4000-8000-000000000001 | t      | 2026-11-22 19:43:12.777842+00
+(1 row)
+
+
+##### 6. Sessoes anteriores
+GET /api/auth/me [jar-a1.txt]: {"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} -> HTTP 401
+GET /api/auth/me [jar-a2.txt]: {"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} -> HTTP 401
+GET /api/auth/me [jar-b.txt]: {"id":"6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378","email":"bia.qa@exemplo.com"} -> HTTP 200
+
+##### 7. Login com senha antiga e nova
+login A senha antiga: {"error":{"code":"invalid_credentials","message":"E-mail ou senha inválidos.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}} -> HTTP 401
+login A senha nova (jar-a1): {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+GET /api/auth/me [jar-a1.txt]: {"id":"17b1cbc4-9003-47f2-95aa-7d22830eed65","email":"ana.qa@exemplo.com"} -> HTTP 200
+GET /api/products [jar-a1, nova sessao]: {"detail":"Not Found"} -> HTTP 404
+login B senha propria (inalterada): {"id":"6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378","email":"bia.qa@exemplo.com"} -> HTTP 200
+
+##### estado final do banco
+       email        |                  id                  |             hash_md5             | sessoes | anuncios_ativos
+--------------------+--------------------------------------+----------------------------------+---------+-----------------
+ ana.qa@exemplo.com | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | f95fadf9fa7f4f3498562c246fa635c0 |       1 |               1
+ bia.qa@exemplo.com | 6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378 | 6272ccaed8d3c532b6c52964d7c1cded |       2 |               0
+(2 rows)
+
+                  id                  |               user_id                |              product_id              | active |         active_since
+--------------------------------------+--------------------------------------+--------------------------------------+--------+-------------------------------
+ 22222222-0059-4000-8000-000000000001 | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | 11111111-0059-4000-8000-000000000001 | t      | 2026-11-22 19:43:12.777842+00
+(1 row)
