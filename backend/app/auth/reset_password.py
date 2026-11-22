@@ -36,6 +36,8 @@ def reset_password(session: Session, email: str, password: str) -> None:
     if violations:
         raise AccountRuleError(violations)
     try:
+        # Espera logins que já leram a conta (FOR SHARE) e bloqueia os novos até o commit.
+        session.scalar(select(User.id).where(User.id == user.id).with_for_update())
         session.execute(delete(UserSession).where(UserSession.user_id == user.id))
         user.password_hash = hash_password(password)
         session.commit()

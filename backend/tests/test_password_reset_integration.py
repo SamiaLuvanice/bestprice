@@ -2,20 +2,24 @@
 
 import os
 import secrets
+import threading
+import time
 import uuid
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 import pytest
 from alembic.config import Config
+from fastapi import Response
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event, func, select
+from sqlalchemy import create_engine, event, func, select, text
 from sqlalchemy.orm import Session
 
 from alembic import command
 from app.auth import reset_password as reset_module
 from app.auth.accounts import add_account
 from app.auth.reset_password import reset_password
+from app.auth.routes import LoginRequest, _authenticate, issue_session
 from app.auth.security import verify_password
 from app.auth.settings import LoginSettings, login_settings
 from app.db import get_session
@@ -165,3 +169,88 @@ def test_ac08_database_failure_keeps_password_and_sessions_intact(engine, api) -
     assert after == before
     assert verify_password(OLD, after[0])
     assert login(email, OLD)[1].status_code == 200
+
+
+
+def lock_waiters(engine, fragment: str) -> int:
+    """Conexões esperando trava de linha numa consulta que contém `fragment`."""
+    with engine.connect() as connection:
+        return connection.scalar(
+            text(
+                "SELECT count(*) FROM pg_stat_activity WHERE wait_event_type = 'Lock'"
+                " AND datname = current_database() AND query LIKE :fragment"
+            ),
+            {"fragment": f"%{fragment}%"},
+        )
+
+
+def waits_on_lock(engine, fragment: str, thread: threading.Thread) -> bool:
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline and thread.is_alive():
+        if lock_waiters(engine, fragment):
+            return True
+        time.sleep(0.05)
+    return False
+
+
+def in_thread(target, errors: list[BaseException]) -> threading.Thread:
+    def run() -> None:
+        try:
+            target()
+        except BaseException as exc:  # noqa: BLE001 - repassado ao teste
+            errors.append(exc)
+
+    thread = threading.Thread(target=run)
+    thread.start()
+    return thread
+
+
+def reset_in_new_session(engine, email: str) -> None:
+    with Session(engine) as session:
+        reset_password(session, email, NEW)
+
+
+def test_race_login_in_progress_cannot_keep_a_session_after_the_reset(engine) -> None:
+    """Login já leu a conta (scrypt em curso): o reset espera e apaga também a sessão criada."""
+    email, user_id = new_account(engine)
+    errors: list[BaseException] = []
+    with Session(engine) as login_session:
+        user = _authenticate(login_session, LoginRequest(email=email, password=OLD))
+        assert user is not None
+        reset = in_thread(lambda: reset_in_new_session(engine, email), errors)
+        waited = waits_on_lock(engine, "FOR UPDATE", reset)
+        issue_session(login_session, Response(), user, datetime.now(UTC))
+    reset.join(timeout=10)
+    assert errors == []
+    assert waited, "o reset não esperou a trava do login em andamento"
+    assert snapshot(engine, user_id)[1] == 0
+
+
+def test_race_login_started_during_the_reset_reads_the_new_hash(engine) -> None:
+    """Login que começa com o reset em curso espera o commit e confere a senha nova."""
+    email, user_id = new_account(engine)
+    held, release = threading.Event(), threading.Event()
+    errors: list[BaseException] = []
+    results: list[object] = []
+    with Session(engine) as reset_session:
+
+        @event.listens_for(reset_session, "after_flush")
+        def hold_before_commit(_session, _context) -> None:
+            held.set()
+            release.wait(timeout=10)
+
+        reset = in_thread(lambda: reset_password(reset_session, email, NEW), errors)
+        assert held.wait(timeout=10)
+
+        def attempt() -> None:
+            with Session(engine) as login_session:
+                results.append(_authenticate(login_session, LoginRequest(email=email, password=NEW)))
+
+        login = in_thread(attempt, errors)
+        waited = waits_on_lock(engine, "FOR SHARE", login)
+        release.set()
+        reset.join(timeout=10)
+        login.join(timeout=10)
+    assert errors == []
+    assert waited, "o login não esperou a trava do reset em curso"
+    assert [getattr(user, "id", None) for user in results] == [user_id]

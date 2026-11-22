@@ -273,7 +273,11 @@ def _authenticate(session: Session, payload: LoginRequest) -> User | None:
     if len(payload.password) > PASSWORD_MAX_CHARS or len(payload.email) > EMAIL_MAX_CHARS:
         verify_password(DUMMY_PASSWORD, DUMMY_PASSWORD_HASH)
         return None
-    user = session.scalar(select(User).where(User.email == normalize_email(payload.email)))
+    # FOR SHARE até o commit de issue_session: uma redefinição de senha (spec 0059) espera este
+    # login terminar e apaga a sessão criada; um login que começa durante ela lê o hash novo.
+    user = session.scalar(
+        select(User).where(User.email == normalize_email(payload.email)).with_for_update(read=True),
+    )
     if user is None:
         verify_password(payload.password, DUMMY_PASSWORD_HASH)
         return None
