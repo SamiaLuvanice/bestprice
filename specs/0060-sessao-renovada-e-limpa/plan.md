@@ -29,6 +29,16 @@ e o `Set-Cookie` de renovação em respostas autenticadas. O frontend não muda.
 - **Cookie único:** extrair `_set_session_cookie(response, raw_token, max_age)` usado por
   `issue_session` e pela renovação, com os mesmos atributos de hoje (HttpOnly,
   SameSite=Lax, path `/api`, Secure em stage/production). O token não rotaciona.
+- **Desvio (implementação, 22/11/2026): cookie renovado por middleware, não pelo `Response`
+  da dependência.** No FastAPI 0.142, os cabeçalhos do `Response` injetado numa dependência
+  só chegam ao cliente quando a rota devolve um modelo; somem quando a rota devolve um
+  `Response` próprio (ex.: `DELETE /api/ai/...` → 204) e quando a rota termina em erro
+  (`ApiError` 404/409/422). Como a renovação já foi gravada no banco nesse ponto, o cookie
+  ficaria com o término antigo e o navegador poderia descartá-lo horas antes da sessão (ex.:
+  20 h sem uso + primeira requisição terminando em 404 → cookie expira 4 h depois). Por isso
+  `current_user` grava a renovação em `request.state` e um middleware HTTP (registrado em
+  `app/main.py`, definido junto do módulo de sessão) aplica o `Set-Cookie` a qualquer
+  resposta, de sucesso ou de erro. `current_user` recebe só `Request`, sessão e relógio.
 
 ## Limpeza (AC06, AC07)
 

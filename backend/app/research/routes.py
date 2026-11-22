@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.auth.routes import ClockDep as SessionClockDep
 from app.auth.routes import SessionDep, current_user
 from app.errors import ApiError
 from app.products.models import User
@@ -38,9 +39,9 @@ def database_guard(function):
     return guarded
 
 
-def research_user(request: Request, session: SessionDep) -> User:
+def research_user(request: Request, session: SessionDep, clock: SessionClockDep) -> User:
     try:
-        return current_user(request, session)
+        return current_user(request, session, clock)
     except SQLAlchemyError as error:
         raise ApiError(503, "research_unavailable", "Não foi possível acessar suas pesquisas. Tente novamente.") from error
 
