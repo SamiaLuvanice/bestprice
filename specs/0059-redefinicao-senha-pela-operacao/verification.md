@@ -60,10 +60,8 @@ ou o teste da 0057, fora do escopo exclusivo desta spec (a 0060 altera `routes.p
 
 ## Pendências
 
-- Portão `backend:test` vermelho pela falha pré-existente acima; precisa de correção em spec/PR próprio
-  (ou na 0060) antes do CI desta PR ficar verde.
-- R3 (`doc-sync-onboarding`) e R4 (PR). R1 e R2 foram feitos; as correções estão na seção final.
-- `docs/PROGRESS.md` fica com o orquestrador.
+- Resolvidas: a falha pré-existente foi corrigida pela 0060 e o portão ficou verde (seção "Integração com a
+  0060"); R1, R2 e R3 foram feitos. Resta R4 (PR).
 
 ## QA (R2)
 
@@ -154,3 +152,16 @@ Limites: as corridas foram exercitadas com as funções reais (`_authenticate`, 
 `reset_password`) em threads e sessões independentes no PostgreSQL. A espera foi detectada em
 `pg_stat_activity` (`wait_event_type = 'Lock'`), não por requisições HTTP concorrentes. O eco no console
 Windows continua não observado (ver R2).
+
+## Integração com a 0060 (22/11/2026)
+
+`develop` com a spec 0060 (PR #328, merge `674af59`) foi mesclada nesta branch (`f6f873d`). Conflitos só de
+documentação: `docs/PROGRESS.md` (as duas entradas mantidas) e `docs/apps/backend.md` (parágrafo de sessão da
+0060 + trecho da redefinição da 0059). `routes.py` mesclou sem conflito (`FOR SHARE` em `_authenticate`).
+
+- Primeira rodada após o merge: 5 falhas em `test_password_reset.py`, todas `NOT NULL constraint failed:
+  user_sessions.absolute_expires_at` — o helper do teste criava sessões sem a coluna nova da 0060. Corrigido em
+  `8dcd635` (sessões de teste com `absolute_expires_at`). O código de produção da 0059 não mudou.
+- `node .agents/scripts/gates.mjs --scope backend` com PostgreSQL 17 descartável (`bestprice-0059-merge-pg`,
+  porta 55459, removido): install ✔, lint ✔, test ✔ — **592 passed, 2 skipped** (POSIX de
+  `test_stage_start.py`), 0 failed. Testes da spec: **23 passed**.

@@ -13,9 +13,9 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 - [x] B1 — `reset_password`: testes Red (AC01–AC04, AC06) e implementação.
 - [x] B2 — CLI `python -m app.auth.reset_password`: testes Red (AC05, AC07) e implementação.
 - [x] B3 — Integração com PostgreSQL real: login antigo/novo, sessão anterior → 401 (AC01, AC06), atomicidade (AC08).
-- [ ] B4 — Gates do backend (`node .agents/scripts/gates.mjs --scope backend`) com contagem positiva; complexidade conforme a skill quality-gates.
-  Pendente só pelo `test_login_flow_integration.py::test_ac17_…`, pré-existente em `origin/develop` e corrigido
-  pela 0060. Na ponta `45dc5a5`: lint ✔, complexidade sem rank C, `backend:test` com 569 passed, 2 skipped e 1 failed (ver `verification.md`).
+- [x] B4 — Gates do backend (`node .agents/scripts/gates.mjs --scope backend`) com contagem positiva; complexidade conforme a skill quality-gates.
+  Depois de integrar `develop` com a 0060 (PR #328, `674af59`): install, lint e test verdes, 592 passed,
+  2 skipped (POSIX), 0 failed; o `test_ac17` voltou a passar (ver `verification.md`, seção "Integração com a 0060").
 
 ## Revisão, QA e entrega
 

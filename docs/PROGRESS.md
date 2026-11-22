@@ -12,8 +12,8 @@ trava a linha com `FOR UPDATE`, para que nenhum login concorrente fique com sess
 pela senha antiga. O procedimento local e em Stage está em
 [backend](apps/backend.md) e no README.
 
-Testes da spec **23 passed**; backend **569 passed, 2 skipped, 1 failed** (o
-`test_ac17` da 0057, pré-existente em `develop` e corrigido pela spec 0060). Revisão
+Testes da spec **23 passed**; backend, já integrado com a 0060, **592 passed, 2 skipped,
+0 failed**. Revisão
 independente aprovada; QA aprovou AC01–AC07 e AC09 no fluxo real (AC08 por teste de
 integração). Pendências: limite de espera (`lock_timeout`) na redefinição, como sugestão;
 conferir o login em Stage após a promoção (privilégio exigido pelo `FOR SHARE` com RLS).
