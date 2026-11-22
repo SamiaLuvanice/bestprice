@@ -16,11 +16,21 @@ e o `Set-Cookie` de renovação em respostas autenticadas. O frontend não muda.
   teto contado da criação). Índice em `expires_at` e em `absolute_expires_at` não é
   necessário para o volume atual; o purge usa um `DELETE ... WHERE` simples. Downgrade
   remove a coluna. RLS da tabela já está ativa (migração `20261014`).
-- **Renovação com granularidade de 1 hora:** em `current_user`, se a sessão é válida e
-  `expires_at - now < SESSION_IDLE - SESSION_RENEW_AFTER` (ou seja, a última renovação foi
-  há mais de 1 hora), grava `expires_at = min(now + SESSION_IDLE, absolute_expires_at)`,
-  confirma e reenvia o cookie com `max_age` igual aos segundos restantes até o novo
-  `expires_at` (AC01, AC04). Requisições dentro da mesma hora não escrevem no banco.
+- **Renovação com granularidade de 1 hora (condição implementada):** em `current_user`, se a
+  sessão é válida, calcula `alvo = min(now + SESSION_IDLE, absolute_expires_at)` e só grava
+  quando o **ganho é de pelo menos 1 hora** (`alvo - expires_at >= SESSION_RENEW_AFTER`). Longe
+  do teto isso equivale a "a última renovação foi há mais de 1 hora". A fórmula inicial
+  (`expires_at - now < SESSION_IDLE - SESSION_RENEW_AFTER`) regravaria o mesmo valor a cada
+  requisição na última hora antes do teto. Consequência aceita: com uso contínuo a sessão pode
+  terminar até 1 hora antes do teto de 7 dias, dentro da tolerância de 1 hora da spec. A escrita
+  é um `UPDATE` condicionado à linha existir e a `absolute_expires_at > now`; se um logout ou
+  purge concorrente a apagou (`rowcount == 0`), a resposta é `401 unauthenticated` (correção
+  R1-I1). Reenvia o cookie com `max_age` igual aos segundos restantes até o novo `expires_at`
+  (AC01, AC04). Requisições dentro da mesma hora não escrevem no banco.
+- **Padrão da coluna para implantação sem parada (correção R1-S1):** a migração dá a
+  `absolute_expires_at` o padrão `now() + interval '7 days'`, para a instância antiga, que não
+  conhece a coluna, continuar emitindo sessões até ser trocada. A API nova grava o valor
+  explícito; o modelo não declara o padrão porque o SQLite dos testes não aceita a expressão.
 - **Constantes:** `SESSION_IDLE = timedelta(hours=24)`, `SESSION_ABSOLUTE =
   timedelta(days=7)`, `SESSION_RENEW_AFTER = timedelta(hours=1)` em `routes.py` (sem
   variável de ambiente nesta fase). `SESSION_LIFETIME_SECONDS` é substituído.
@@ -39,6 +49,11 @@ e o `Set-Cookie` de renovação em respostas autenticadas. O frontend não muda.
   `current_user` grava a renovação em `request.state` e um middleware HTTP (registrado em
   `app/main.py`, definido junto do módulo de sessão) aplica o `Set-Cookie` a qualquer
   resposta, de sucesso ou de erro. `current_user` recebe só `Request`, sessão e relógio.
+- **Limite conhecido (R1-S4, não corrigido de propósito):** o middleware usa
+  `@app.middleware("http")` (`BaseHTTPMiddleware`). Numa exceção não tratada (500), a resposta
+  é montada pelo `ServerErrorMiddleware`, fora do middleware, e o `Set-Cookie` da renovação
+  não sai. O cookie fica com o término anterior: a sessão só encurta para o navegador, nunca
+  ganha sobrevida. Na próxima renovação (até 1 hora depois, com uso) o cookie é atualizado.
 
 ## Limpeza (AC06, AC07)
 

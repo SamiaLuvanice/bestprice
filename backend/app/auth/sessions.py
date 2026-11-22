@@ -31,6 +31,8 @@ def renewed_expiry(row: UserSession, now: datetime) -> datetime | None:
     """Novo término por inatividade, ou None quando o ganho seria menor que 1 hora.
 
     Limita a uma escrita por sessão por hora e, perto do teto, não regrava o mesmo valor.
+    Consequência aceita: com uso contínuo, a sessão pode terminar até 1 hora antes do teto
+    (dentro da tolerância de 1 hora da spec 0060).
     """
     target = min(now + SESSION_IDLE, _utc(row.absolute_expires_at))
     return target if target - _utc(row.expires_at) >= SESSION_RENEW_AFTER else None
@@ -66,6 +68,8 @@ async def renewed_session_cookie(
 
     O Response injetado numa dependência só é mesclado quando a rota devolve um modelo; a
     renovação já está gravada no banco e o cookie não pode ficar com o término antigo.
+    Limite conhecido: numa exceção não tratada (500) a resposta nasce fora deste middleware e
+    o cookie fica com o término anterior, o que só encurta a sessão no navegador.
     """
     response = await call_next(request)
     renewal = getattr(request.state, "session_renewal", None)
