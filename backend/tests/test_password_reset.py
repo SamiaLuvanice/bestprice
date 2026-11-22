@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
+from app.auth import reset_password as reset_module
 from app.auth.accounts import AccountRuleError, add_account
 from app.auth.reset_password import AccountNotFound, reset_password
 from app.auth.security import verify_password
@@ -103,3 +104,83 @@ def test_ac06_all_sessions_of_the_account_end_and_others_stay(engine) -> None:
         reset_password(session, "pessoa@exemplo.com", NEW)
     assert session_count(engine, owner) == 0
     assert session_count(engine, other) == 1
+
+
+def run_cli(monkeypatch, engine, argv: list[str], passwords: list[str]) -> list[str]:
+    prompts: list[str] = []
+    answers = iter(passwords)
+
+    def fake_getpass(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(answers)
+
+    monkeypatch.setattr(reset_module.getpass, "getpass", fake_getpass)
+    monkeypatch.setattr(reset_module, "create_database_engine", lambda: engine)
+    monkeypatch.setattr("sys.argv", ["reset_password", *argv])
+    reset_module.main()
+    return prompts
+
+
+def assert_password_hidden(captured, caplog, *secrets: str) -> None:
+    for secret in secrets:
+        assert secret not in captured.out
+        assert secret not in captured.err
+        assert secret not in caplog.text
+
+
+def test_cli_resets_password_with_hidden_prompt_and_confirmation(monkeypatch, engine, capsys, caplog) -> None:
+    user_id = create_account(engine, "pessoa@exemplo.com", sessions=2)
+    prompts = run_cli(monkeypatch, engine, [" Pessoa@Exemplo.com "], [NEW, NEW])
+    assert prompts == ["Nova senha (12 a 1024 caracteres): ", "Confirme a nova senha: "]
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "Senha redefinida; sessões encerradas"
+    assert_password_hidden(captured, caplog, NEW)
+    assert verify_password(NEW, password_hash(engine, "pessoa@exemplo.com"))
+    assert session_count(engine, user_id) == 0
+
+
+def test_ac05_different_confirmation_fails_and_keeps_the_password(monkeypatch, engine, capsys, caplog) -> None:
+    user_id = create_account(engine, "pessoa@exemplo.com", sessions=1)
+    original = password_hash(engine, "pessoa@exemplo.com")
+    with pytest.raises(SystemExit) as exited:
+        run_cli(monkeypatch, engine, ["pessoa@exemplo.com"], [NEW, NEW + "x"])
+    assert exited.value.code == 2
+    captured = capsys.readouterr()
+    assert "As senhas não conferem" in captured.err
+    assert_password_hidden(captured, caplog, NEW)
+    assert password_hash(engine, "pessoa@exemplo.com") == original
+    assert session_count(engine, user_id) == 1
+
+
+@pytest.mark.parametrize(("email", "password", "message"), [
+    ("outra@exemplo.com", NEW, "Nenhuma conta com este e-mail."),
+    ("pessoa@exemplo.com", "curta-11ch", "A senha precisa ter pelo menos 12 caracteres."),
+    ("pessoa@exemplo.com", "x" * 1025, "A senha pode ter no máximo 1024 caracteres."),
+    ("pessoa@exemplo.com", "senha-validada-" + chr(0xD800), "A senha contém caracteres inválidos."),
+    ("pessoa" + chr(0xD800) + "@exemplo.com", NEW, "O e-mail contém caracteres inválidos."),
+], ids=["sem-conta", "senha-curta", "senha-1025", "senha-nao-utf8", "email-nao-utf8"])
+def test_cli_reports_errors_in_portuguese_without_changes(monkeypatch, engine, capsys, caplog, email, password, message) -> None:
+    create_account(engine, "pessoa@exemplo.com")
+    original = password_hash(engine, "pessoa@exemplo.com")
+    with pytest.raises(SystemExit) as exited:
+        run_cli(monkeypatch, engine, [email], [password, password])
+    assert exited.value.code == 2
+    captured = capsys.readouterr()
+    assert message in captured.err
+    assert "Traceback" not in captured.err
+    assert_password_hidden(captured, caplog, password)
+    assert password_hash(engine, "pessoa@exemplo.com") == original
+    with Session(engine) as session:
+        assert session.scalars(select(User.email)).all() == ["pessoa@exemplo.com"]
+
+
+def test_ac07_password_is_not_accepted_as_argument(monkeypatch, engine, capsys) -> None:
+    create_account(engine, "pessoa@exemplo.com")
+    original = password_hash(engine, "pessoa@exemplo.com")
+    with pytest.raises(SystemExit) as exited:
+        run_cli(monkeypatch, engine, ["pessoa@exemplo.com", NEW], [])
+    assert exited.value.code == 2
+    assert password_hash(engine, "pessoa@exemplo.com") == original
+    with pytest.raises(SystemExit):
+        run_cli(monkeypatch, engine, ["pessoa@exemplo.com", "--password", NEW], [])
+    assert password_hash(engine, "pessoa@exemplo.com") == original
