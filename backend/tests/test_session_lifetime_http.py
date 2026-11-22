@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, delete, update
+from sqlalchemy import create_engine, delete, select, update
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -182,3 +182,26 @@ def test_session_ended_between_read_and_renewal_is_unauthenticated(engine, clien
     response = TestClient(app, raise_server_exceptions=False, cookies=client.cookies).get("/api/auth/me")
     assert_unauthenticated(response)
     assert session_cookie_header(response) is None
+
+
+def test_ac04_renewal_cookie_reaches_a_route_that_returns_its_own_204_response(
+    engine, client: TestClient, clock: Clock,
+) -> None:
+    # DELETE de pesquisa devolve Response(204) próprio: o caso que motivou o middleware.
+    from app.research.models import Conversation
+    from app.research.service import get_clock as research_clock
+
+    with Session(engine) as session:
+        owner = session.scalar(select(User.id).where(User.email == EMAIL))
+        conversation = Conversation(
+            user_id=owner, title="pesquisa", created_at=LOGIN_AT, updated_at=LOGIN_AT,
+            expires_at=LOGIN_AT + timedelta(days=90),
+        )
+        session.add(conversation)
+        session.commit()
+        conversation_id = conversation.id
+    app.dependency_overrides[research_clock] = lambda: (lambda: clock.now)
+    clock.at(timedelta(hours=20))
+    deleted = client.delete(f"/api/ai/conversations/{conversation_id}")
+    assert deleted.status_code == 204
+    assert "max-age=86400" in session_cookie_header(deleted).lower()
