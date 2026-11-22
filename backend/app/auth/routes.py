@@ -42,6 +42,7 @@ from app.products.models import User, UserSession
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 SESSION_COOKIE = "bestprice_session"
 SESSION_LIFETIME_SECONDS = 86400
+SESSION_ABSOLUTE = timedelta(days=7)
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
@@ -97,6 +98,7 @@ def issue_session(session: Session, response: Response, user: User, now: datetim
         user_id=user.id,
         token_hash=hashlib.sha256(raw_token.encode("utf-8")).hexdigest(),
         expires_at=now + timedelta(seconds=SESSION_LIFETIME_SECONDS),
+        absolute_expires_at=now + SESSION_ABSOLUTE,
     ))
     session.commit()
     response.set_cookie(
