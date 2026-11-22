@@ -10,11 +10,11 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 
 ## Backend (agente `backend`)
 
-- [ ] B1 — Modelo + migração `absolute_expires_at` com backfill; upgrade/downgrade testados (AC08).
-- [ ] B2 — Validade por inatividade e teto com relógio injetado: testes Red (AC02, AC03, AC09) e implementação.
-- [ ] B3 — Renovação horária e cookie: testes Red (AC01, AC04, AC05) e implementação.
-- [ ] B4 — Purge de sessões terminadas no ciclo de limpeza: testes Red (AC06, AC07) e implementação.
-- [ ] B5 — Gates do backend (`node .agents/scripts/gates.mjs --scope backend`) com contagem positiva; complexidade conforme a skill quality-gates.
+- [x] B1 — Modelo + migração `absolute_expires_at` com backfill; upgrade/downgrade testados (AC08).
+- [x] B2 — Validade por inatividade e teto com relógio injetado: testes Red (AC02, AC03, AC09) e implementação.
+- [x] B3 — Renovação horária e cookie: testes Red (AC01, AC04, AC05) e implementação.
+- [x] B4 — Purge de sessões terminadas no ciclo de limpeza: testes Red (AC06, AC07) e implementação.
+- [x] B5 — Gates do backend (`node .agents/scripts/gates.mjs --scope backend`) com contagem positiva; complexidade conforme a skill quality-gates.
 
 ## Revisão, QA e entrega
 
