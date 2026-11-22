@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import NamedTuple
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -7,6 +8,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.auth.limiter import purge_signup_attempts
 from app.auth.login_limiter import purge_login_failures
+from app.auth.sessions import purge_expired_sessions
 from app.auth.settings import login_settings, signup_settings
 from app.db import create_database_engine
 from app.research.repository import purge_expired
@@ -16,7 +18,15 @@ logger = logging.getLogger(__name__)
 CLEANUP_INTERVAL_SECONDS = 3600
 
 
-def purge_database() -> int:
+class PurgeCounts(NamedTuple):
+    research: int
+    sessions: int
+
+
+def purge_database() -> PurgeCounts:
+    # Uma transação para todos os purges, de propósito: se um falha, nenhum é confirmado e o
+    # ciclo seguinte refaz tudo. Nada vencido fica acessível nesse intervalo, porque cada
+    # leitura (pesquisas, limites, sessões) já recusa o que venceu, com ou sem limpeza.
     with Session(create_database_engine()) as session:
         now = now_utc()
         count = purge_expired(session, now)
@@ -26,8 +36,10 @@ def purge_database() -> int:
         purge_signup_attempts(session, now, signup_settings().rate_limit_window)
         # Mesma cadência para as falhas de login: os HMACs de origem e e-mail saem com a janela.
         purge_login_failures(session, now, login_settings().window)
+        # Sessões terminadas não guardam o vínculo conta–acesso; a validade nunca depende disto.
+        sessions = purge_expired_sessions(session, now)
         session.commit()
-        return count
+        return PurgeCounts(research=count, sessions=sessions)
 
 
 async def _run_cleaner(cleaner) -> None:
@@ -47,4 +59,6 @@ async def cleanup_loop(interval: float = CLEANUP_INTERVAL_SECONDS, cleaner=purge
 
 
 if __name__ == "__main__":
-    print(f"Pesquisas expiradas removidas: {purge_database()}")
+    counts = purge_database()
+    print(f"Pesquisas expiradas removidas: {counts.research}")
+    print(f"Sessões terminadas removidas: {counts.sessions}")

@@ -1,9 +1,8 @@
 import hashlib
 import json
-import os
 import secrets
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Annotated, Any, Protocol
 from uuid import UUID
 
@@ -29,6 +28,16 @@ from app.auth.login_limiter import (
     login_source_key,
 )
 from app.auth.security import DUMMY_PASSWORD, DUMMY_PASSWORD_HASH, verify_password
+from app.auth.sessions import (
+    SESSION_ABSOLUTE,
+    SESSION_COOKIE,
+    SESSION_IDLE,
+    extend_session,
+    remember_renewal,
+    renewed_expiry,
+    session_active,
+    set_session_cookie,
+)
 from app.auth.settings import (
     LoginSettings,
     SignupSettings,
@@ -40,8 +49,6 @@ from app.errors import GENERIC_FIELD_MESSAGE, ApiError, validation_fields
 from app.products.models import User, UserSession
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
-SESSION_COOKIE = "bestprice_session"
-SESSION_LIFETIME_SECONDS = 86400
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
@@ -68,20 +75,35 @@ class SignupStatus(BaseModel):
     enabled: bool
 
 
-def current_user(request: Request, session: SessionDep) -> User:
+Clock = Callable[[], datetime]
+
+
+def get_clock() -> Clock:
+    return lambda: datetime.now(UTC)
+
+
+ClockDep = Annotated[Clock, Depends(get_clock)]
+
+
+def current_user(request: Request, session: SessionDep, clock: ClockDep) -> User:
     raw_token = request.cookies.get(SESSION_COOKIE)
     if not raw_token:
         raise ApiError(401, "unauthenticated", "Entre para continuar.")
     token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
     row = session.scalar(select(UserSession).where(UserSession.token_hash == token_hash))
-    if row is None:
+    now = clock()
+    if row is None or not session_active(row, now):
         raise ApiError(401, "unauthenticated", "Entre para continuar.")
-    expires_at = row.expires_at
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=UTC)
-    if expires_at <= datetime.now(UTC):
-        raise ApiError(401, "unauthenticated", "Entre para continuar.")
-    user = session.get(User, row.user_id)
+    user_id = row.user_id
+    expires_at = renewed_expiry(row, now)
+    if expires_at is not None:
+        # Logout ou purge concorrente apagou a linha: a sessão terminou (401, não 500).
+        if not extend_session(session, row.id, expires_at, now):
+            raise ApiError(401, "unauthenticated", "Entre para continuar.")
+        # Confirma antes de a rota usar a sessão do banco; o middleware reenvia o cookie.
+        session.commit()
+        remember_renewal(request, raw_token, expires_at, now)
+    user = session.get(User, user_id)
     if user is None:
         raise ApiError(401, "unauthenticated", "Entre para continuar.")
     return user
@@ -96,14 +118,11 @@ def issue_session(session: Session, response: Response, user: User, now: datetim
     session.add(UserSession(
         user_id=user.id,
         token_hash=hashlib.sha256(raw_token.encode("utf-8")).hexdigest(),
-        expires_at=now + timedelta(seconds=SESSION_LIFETIME_SECONDS),
+        expires_at=now + SESSION_IDLE,
+        absolute_expires_at=now + SESSION_ABSOLUTE,
     ))
     session.commit()
-    response.set_cookie(
-        SESSION_COOKIE, raw_token, max_age=SESSION_LIFETIME_SECONDS,
-        secure=os.environ.get("APP_ENV") in {"stage", "production"}, httponly=True,
-        samesite="lax", path="/api",
-    )
+    set_session_cookie(response, raw_token, int(SESSION_IDLE.total_seconds()))
 
 
 @router.get("/me", response_model=UserResponse)
@@ -123,15 +142,8 @@ def logout(request: Request, response: Response, session: SessionDep) -> None:
     response.delete_cookie(SESSION_COOKIE, path="/api")
 
 
-Clock = Callable[[], datetime]
-
-
 class SignupLimiter(Protocol):
     def check_and_record(self, session: Session, source_key: str, now: datetime, settings: SignupSettings) -> None: ...
-
-
-def get_clock() -> Clock:
-    return lambda: datetime.now(UTC)
 
 
 def get_signup_limiter() -> SignupLimiter:

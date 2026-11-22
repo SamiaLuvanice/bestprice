@@ -1,0 +1,57 @@
+# AC06 — ciclo de limpeza com sessões das duas contas (PostgreSQL bestprice-0060-qa-pg)
+## Preparação: login ativo para a conta B e uma sessão no 'prazo antigo' (expires_at vencido, teto distante) para a conta B
+$ curl -i -c e.jar -X POST /api/auth/login (email qa0060-b@example.com)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=NUTJmO…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"72dcde75-46b4-49a2-a597-f31630e07f12","email":"qa0060-b@example.com"}
+jar: domain=#HttpOnly_127.0.0.1 path=/api secure=FALSE expira_epoch=1795463446
+$ curl -i -c f.jar -X POST /api/auth/login (email qa0060-b@example.com)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=G_ziAe…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"72dcde75-46b4-49a2-a597-f31630e07f12","email":"qa0060-b@example.com"}
+jar: domain=#HttpOnly_127.0.0.1 path=/api secure=FALSE expira_epoch=1795463447
+$ psql (sessão f, hash 65871c3e348a…): update user_sessions set created_at=now()-interval '25 hours', expires_at=now()-interval '1 hour', absolute_expires_at=now()-interval '25 hours'+interval '7 days' where token_hash=…
+UPDATE 1
+## Antes do ciclo
+        email         |     hash     |      desde_login       | resta_inatividade |       resta_teto       | valida
+----------------------+--------------+------------------------+-------------------+------------------------+--------
+ qa0060-b@example.com | 05fd730221e3 | 7 days 00:01:22.206047 | 23:49:37.793953   | -00:01:22.206047       | f
+ qa0060-b@example.com | dbb4a79fa2a8 | 1 day 06:00:46.337729  | -00:01:46.337729  | 6 days 22:48:38.073011 | f
+ qa0060-b@example.com | 65871c3e348a | 1 day 01:00:00.611555  | -01:00:00.611555  | 5 days 22:59:59.388445 | f
+ qa0060-b@example.com | ec88066b3836 | 00:00:02.68141         | 23:59:57.289769   | 6 days 23:59:57.289769 | t
+ qa0060@example.com   | 80d9eed2f34c | 7 days 00:03:06.676747 | -00:01:05.128503  | -00:01:05.128503       | f
+ qa0060@example.com   | e66e4335627f | 6 days 23:35:29.171719 | 09:54:30.828281   | 00:24:30.828281        | t
+ qa0060@example.com   | f1257498a2b2 | 1 day 06:02:19.549231  | -00:03:19.549231  | 5 days 17:57:40.450769 | f
+ qa0060@example.com   | f95c12f74932 | 23:05:29.171719        | 23:56:25.000845   | 6 days 00:54:30.828281 | t
+(8 rows)
+
+$ DATABASE_URL=… uv run python -m app.research.cleanup
+Pesquisas expiradas removidas: 0
+## Depois do ciclo
+        email         |     hash     |      desde_login       | resta_inatividade |       resta_teto       | valida
+----------------------+--------------+------------------------+-------------------+------------------------+--------
+ qa0060-b@example.com | ec88066b3836 | 00:00:06.755719        | 23:59:53.21546    | 6 days 23:59:53.21546  | t
+ qa0060@example.com   | e66e4335627f | 6 days 23:35:33.246028 | 09:54:26.753972   | 00:24:26.753972        | t
+ qa0060@example.com   | f95c12f74932 | 23:05:33.246028        | 23:56:20.926536   | 6 days 00:54:26.753972 | t
+(3 rows)
+
+## Sessões válidas continuam aceitas pela API
+$ curl -i -X GET /api/auth/me (cookie g8Ovhn…)
+HTTP/1.1 200 OK
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+$ curl -i -X GET /api/auth/me (cookie oNyAEI…)
+HTTP/1.1 200 OK
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+$ curl -i -X GET /api/auth/me (cookie NUTJmO…)
+HTTP/1.1 200 OK
+{"id":"72dcde75-46b4-49a2-a597-f31630e07f12","email":"qa0060-b@example.com"}
+## Removidas recebem 401
+$ curl -i -X GET /api/auth/me (cookie pWuZQ3…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+$ curl -i -X GET /api/auth/me (cookie 1rymG-…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+$ curl -i -X GET /api/auth/me (cookie G_ziAe…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}

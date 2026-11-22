@@ -1,0 +1,192 @@
+# 0060 QA R2 — fluxo HTTP real (uvicorn 127.0.0.1:8060 + PostgreSQL 17 bestprice-0060-qa-pg). Tokens truncados em 6 caracteres.
+
+## S1 — login e estado inicial
+$ curl -i -c a.jar -X POST /api/auth/login (email qa0060@example.com)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=pWuZQ3…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+jar: domain=#HttpOnly_127.0.0.1 path=/api secure=FALSE expira_epoch=1795463271
+$ psql (sessão a, hash f1257498a2b2…): select now(), created_at, expires_at, absolute_expires_at, expires_at-now() as resta_inatividade, absolute_expires_at-created_at as teto, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |          created_at           |          expires_at          |     absolute_expires_at      | resta_inatividade |          teto          |       resta_teto
+-------------------------------+-------------------------------+------------------------------+------------------------------+-------------------+------------------------+------------------------
+ 2026-11-22 19:47:52.900599+00 | 2026-11-22 19:47:51.322687+00 | 2026-11-23 19:47:51.23677+00 | 2026-11-29 19:47:51.23677+00 | 23:59:58.336171   | 6 days 23:59:59.914083 | 6 days 23:59:58.336171
+(1 row)
+
+
+## S2 — uso dentro da mesma hora: sem Set-Cookie e sem escrita
+$ curl -i -X GET /api/auth/me (cookie pWuZQ3…)
+HTTP/1.1 200 OK
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+$ curl -i -X GET /api/dashboard (cookie pWuZQ3…)
+HTTP/1.1 200 OK
+{"summary":{"tracked_count":0,"price_drop_count":0,"active_alert_count":0,"target_reached_count":0},"opportunities":[],"tracked_products":{"items":[],"next_cursor":null},"recent_updates":[]}
+$ curl -i -X GET /api/tracked-products (cookie pWuZQ3…)
+HTTP/1.1 200 OK
+{"items":[],"next_cursor":null}
+$ psql (sessão a, hash f1257498a2b2…): select now(), created_at, expires_at, absolute_expires_at, expires_at-now() as resta_inatividade, absolute_expires_at-created_at as teto, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |          created_at           |          expires_at          |     absolute_expires_at      | resta_inatividade |          teto          |       resta_teto
+-------------------------------+-------------------------------+------------------------------+------------------------------+-------------------+------------------------+------------------------
+ 2026-11-22 19:47:54.607378+00 | 2026-11-22 19:47:51.322687+00 | 2026-11-23 19:47:51.23677+00 | 2026-11-29 19:47:51.23677+00 | 23:59:56.629392   | 6 days 23:59:59.914083 | 6 days 23:59:56.629392
+(1 row)
+
+
+## S3 — renovação após > 1 h (instantes recuados 70 min no banco)
+$ psql (sessão a, hash f1257498a2b2…): update user_sessions set created_at=created_at-interval '70 minutes', expires_at=expires_at-interval '70 minutes', absolute_expires_at=absolute_expires_at-interval '70 minutes' where token_hash=…
+UPDATE 1
+$ psql (sessão a, hash f1257498a2b2…): select now(), created_at, expires_at, absolute_expires_at, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |          created_at           |          expires_at          |     absolute_expires_at      | resta_inatividade |       resta_teto
+-------------------------------+-------------------------------+------------------------------+------------------------------+-------------------+------------------------
+ 2026-11-22 19:48:09.524111+00 | 2026-11-22 18:37:51.322687+00 | 2026-11-23 18:37:51.23677+00 | 2026-11-29 18:37:51.23677+00 | 22:49:41.712659   | 6 days 22:49:41.712659
+(1 row)
+
+$ curl -i -b a.jar -c a.jar /api/auth/me
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=pWuZQ3…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+jar: token_inalterado=sim expira_epoch=1795463289 agora_epoch=1795376890
+$ psql (sessão a, hash f1257498a2b2…): select now(), created_at, expires_at, absolute_expires_at, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |          created_at           |          expires_at           |     absolute_expires_at      | resta_inatividade |       resta_teto
+-------------------------------+-------------------------------+-------------------------------+------------------------------+-------------------+------------------------
+ 2026-11-22 19:48:10.670453+00 | 2026-11-22 18:37:51.322687+00 | 2026-11-23 19:48:09.632553+00 | 2026-11-29 18:37:51.23677+00 | 23:59:58.9621     | 6 days 22:49:40.566317
+(1 row)
+
+# logo em seguida, mesma hora: sem Set-Cookie
+$ curl -i -b a.jar -c a.jar /api/dashboard
+HTTP/1.1 200 OK
+{"summary":{"tracked_count":0,"price_drop_count":0,"active_alert_count":0,"target_reached_count":0},"opportunities":[],"tracked_products":{"items":[],"next_cursor":null},"recent_updates":[]}
+jar: token_inalterado=sim expira_epoch=1795463289 agora_epoch=1795376891
+$ psql (sessão a, hash f1257498a2b2…): select expires_at from user_sessions where token_hash=…
+          expires_at
+-------------------------------
+ 2026-11-23 19:48:09.632553+00
+(1 row)
+
+
+## S4 — renovação também em resposta de erro (404), instantes recuados mais 70 min
+$ psql (sessão a, hash f1257498a2b2…): update user_sessions set created_at=created_at-interval '70 minutes', expires_at=expires_at-interval '70 minutes', absolute_expires_at=absolute_expires_at-interval '70 minutes' where token_hash=…
+UPDATE 1
+$ curl -i -b a.jar -c a.jar /api/tracked-products/00000000-0000-4000-8000-000000000000
+HTTP/1.1 404 Not Found
+set-cookie: bestprice_session=pWuZQ3…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"error":{"code":"resource_not_found","message":"Monitoramento não encontrado.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+jar: token_inalterado=sim expira_epoch=1795463292 agora_epoch=1795376892
+$ psql (sessão a, hash f1257498a2b2…): select now(), created_at, expires_at, absolute_expires_at, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |          created_at           |          expires_at           |     absolute_expires_at      | resta_inatividade |       resta_teto
+-------------------------------+-------------------------------+-------------------------------+------------------------------+-------------------+------------------------
+ 2026-11-22 19:48:13.219329+00 | 2026-11-22 17:27:51.322687+00 | 2026-11-23 19:48:12.330125+00 | 2026-11-29 17:27:51.23677+00 | 23:59:59.110796   | 6 days 21:39:38.017441
+(1 row)
+
+
+## S5 — AC01: login há 43 h, último uso há 23 h (às 20 h do login, expires_at = login+44 h)
+$ psql (sessão a, hash f1257498a2b2…): update user_sessions set created_at=now()-interval '43 hours', expires_at=now()+interval '1 hour', absolute_expires_at=now()-interval '43 hours'+interval '7 days' where token_hash=…
+UPDATE 1
+$ psql (sessão a, hash f1257498a2b2…): select now(), now()-created_at as desde_login, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |      desde_login      | resta_inatividade |       resta_teto
+-------------------------------+-----------------------+-------------------+------------------------
+ 2026-11-22 19:48:26.549464+00 | 1 day 19:00:00.598356 | 00:59:59.401644   | 5 days 04:59:59.401644
+(1 row)
+
+$ curl -i -X GET /api/dashboard (cookie pWuZQ3…)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=pWuZQ3…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"summary":{"tracked_count":0,"price_drop_count":0,"active_alert_count":0,"target_reached_count":0},"opportunities":[],"tracked_products":{"items":[],"next_cursor":null},"recent_updates":[]}
+$ psql (sessão a, hash f1257498a2b2…): select now(), now()-created_at as desde_login, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |     desde_login      | resta_inatividade |      resta_teto
+-------------------------------+----------------------+-------------------+-----------------------
+ 2026-11-22 19:48:27.309818+00 | 1 day 19:00:01.35871 | 23:59:59.441658   | 5 days 04:59:58.64129
+(1 row)
+
+
+## S6 — AC04: renovação perto do teto (renovado há 4 h; teto em 22 h) -> Max-Age limitado ao teto
+$ psql (sessão a, hash f1257498a2b2…): update user_sessions set created_at=now()-interval '146 hours', expires_at=now()+interval '20 hours', absolute_expires_at=now()+interval '22 hours' where token_hash=…
+UPDATE 1
+$ psql (sessão a, hash f1257498a2b2…): select now(), now()-created_at as desde_login, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |      desde_login       | resta_inatividade |   resta_teto
+-------------------------------+------------------------+-------------------+-----------------
+ 2026-11-22 19:48:28.530356+00 | 6 days 02:00:00.610379 | 19:59:59.389621   | 21:59:59.389621
+(1 row)
+
+$ curl -i -X GET /api/auth/me (cookie pWuZQ3…)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=pWuZQ3…; HttpOnly; Max-Age=79199; Path=/api; SameSite=lax
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+$ psql (sessão a, hash f1257498a2b2…): select now(), now()-created_at as desde_login, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |      desde_login       | resta_inatividade |   resta_teto
+-------------------------------+------------------------+-------------------+-----------------
+ 2026-11-22 19:48:29.345719+00 | 6 days 02:00:01.425742 | 21:59:58.574258   | 21:59:58.574258
+(1 row)
+
+
+## S7 — AC02: sem uso por mais de 24 h (expires_at venceu há 1 min; teto ainda distante)
+$ psql (sessão a, hash f1257498a2b2…): update user_sessions set created_at=now()-interval '30 hours', expires_at=now()-interval '1 minute', absolute_expires_at=now()-interval '30 hours'+interval '7 days' where token_hash=…
+UPDATE 1
+$ psql (sessão a, hash f1257498a2b2…): select now(), now()-created_at as desde_login, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |      desde_login      | resta_inatividade |       resta_teto
+-------------------------------+-----------------------+-------------------+------------------------
+ 2026-11-22 19:48:30.527596+00 | 1 day 06:00:00.593895 | -00:01:00.593895  | 5 days 17:59:59.406105
+(1 row)
+
+$ curl -i -X GET /api/auth/me (cookie pWuZQ3…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+$ curl -i -X GET /api/dashboard (cookie pWuZQ3…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+
+## S8 — AC03: uso contínuo (último uso há 5 min, expires_at em ~24 h) mas teto de 7 dias vencido há 1 min
+$ curl -i -c c.jar -X POST /api/auth/login (email qa0060@example.com)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=1rymG-…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+jar: domain=#HttpOnly_127.0.0.1 path=/api secure=FALSE expira_epoch=1795463322
+$ psql (sessão c, hash 80d9eed2f34c…): update user_sessions set created_at=now()-interval '7 days 1 minute', expires_at=now()+interval '23 hours 55 minutes', absolute_expires_at=now()-interval '1 minute' where token_hash=…
+UPDATE 1
+$ psql (sessão c, hash 80d9eed2f34c…): select now(), now()-created_at as desde_login, expires_at-now() as resta_inatividade, absolute_expires_at-now() as resta_teto from user_sessions where token_hash=…
+              now              |      desde_login      | resta_inatividade |   resta_teto
+-------------------------------+-----------------------+-------------------+-----------------
+ 2026-11-22 19:48:43.323705+00 | 7 days 00:01:00.51752 | 23:54:59.48248    | -00:01:00.51752
+(1 row)
+
+$ curl -i -X GET /api/auth/me (cookie 1rymG-…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+$ curl -i -X GET /api/dashboard (cookie 1rymG-…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+# limite: teto em +1 min, mesmo cenário -> ainda aceita (sem renovação: ganho < 1 h)
+$ psql (sessão c, hash 80d9eed2f34c…): update user_sessions set absolute_expires_at=now()+interval '1 minute', expires_at=now()+interval '1 minute' where token_hash=…
+UPDATE 1
+$ curl -i -X GET /api/auth/me (cookie 1rymG-…)
+HTTP/1.1 200 OK
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+
+## S9 — AC05: logout depois de renovação
+$ curl -i -c d.jar -X POST /api/auth/login (email qa0060@example.com)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=yIXaE6…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+jar: domain=#HttpOnly_127.0.0.1 path=/api secure=FALSE expira_epoch=1795463324
+$ psql (sessão d, hash 9b14728a1b5b…): update user_sessions set created_at=created_at-interval '2 hours', expires_at=expires_at-interval '2 hours', absolute_expires_at=absolute_expires_at-interval '2 hours' where token_hash=…
+UPDATE 1
+$ curl -i -X GET /api/auth/me (cookie yIXaE6…)
+HTTP/1.1 200 OK
+set-cookie: bestprice_session=yIXaE6…; HttpOnly; Max-Age=86400; Path=/api; SameSite=lax
+{"id":"e13a0819-42ad-4363-ba0c-d4522059de58","email":"qa0060@example.com"}
+$ curl -i -X POST /api/auth/logout (cookie yIXaE6…)
+HTTP/1.1 204 No Content
+set-cookie: bestprice_session=""; expires=Sun, 22 Nov 2026 19:48:46 GMT; Max-Age=0; Path=/api; SameSite=lax
+$ psql (sessão d, hash 9b14728a1b5b…): select count(*) as linhas_da_sessao from user_sessions where token_hash=…
+ linhas_da_sessao
+------------------
+                0
+(1 row)
+
+$ curl -i -X GET /api/auth/me (cookie yIXaE6…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+$ curl -i -X GET /api/dashboard (cookie yIXaE6…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
+$ curl -i -X GET /api/tracked-products/00000000-0000-4000-8000-000000000000 (cookie yIXaE6…)
+HTTP/1.1 401 Unauthorized
+{"error":{"code":"unauthenticated","message":"Entre para continuar.","fields":[],"tracked_product_id":null,"retry_after_seconds":null}}
