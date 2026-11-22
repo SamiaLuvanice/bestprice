@@ -135,7 +135,8 @@ A resposta 429 nunca depende de o e-mail ter conta (AC07). O contrato fica no Op
   quando chega um novo erro do servidor, e o e-mail é mantido. O alerta já é o único
   `role="alert"`. Mantém o foco na senha, como hoje.
 - Sem tela nova: usa o mesmo alerta do formulário (suposição da spec sobre o Figma). A QA
-  visual confere 1440 px e 390 px.
+  visual confere 1440 px e 390 px. Os quadros Figma `291:514` (desktop) e `292:442`
+  (mobile), criados depois, registram esse estado.
 - Testes Vitest: mensagem com N minutos (1 e plural), fallback sem espera, senha apagada e
   e-mail mantido, 401 inalterado e regressão do cadastro com o mesmo texto.
 

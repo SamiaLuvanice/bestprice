@@ -41,4 +41,4 @@ Nesse caso, editar o `.md` correspondente em `.agents/rules/` e adicionar linha 
 
 ## Fonte única (sem espelho)
 
-Toda regra vive **apenas** em `.agents/rules/`. As ferramentas (Codex, Claude Code, OpenCode, Cursor) enxergam a mesma pasta via symlink criado por `.agents/sync.sh` — não existe cópia para manter em dia.
+Toda regra vive **apenas** em `.agents/rules/`. As ferramentas (Codex, Claude Code, OpenCode, Cursor) enxergam a mesma pasta via links criados por `node .agents/scripts/sync.mjs` — não existe cópia para manter em dia.

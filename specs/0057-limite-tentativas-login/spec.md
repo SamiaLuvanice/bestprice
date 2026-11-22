@@ -172,12 +172,11 @@ Os números abaixo usam os valores padrão.
 
 ## Riscos e perguntas em aberto
 
-- **Pré-condição de Stage:** a configuração de origem confiável e de sigilo já está
-  declarada para o serviço de Stage, mas não há registro de que tenha valor preenchido.
-  Com AC14, a promoção para Stage sem esses valores derruba a API. Eles devem ser
-  conferidos pela operação antes da promoção.
-- **Valores padrão:** 10 falhas por origem + e-mail e 50 por origem em 15 minutos são
-  suposições. Confirme se servem ao uso real.
+- **Pré-condição de Stage (atendida em 13/11/2026):** a configuração de origem confiável
+  e de sigilo foi preenchida antes da promoção, e a origem real atrás do Pages foi
+  verificada depois dela (ver `verification.md`).
+- **Valores padrão (confirmados em 13/11/2026):** 10 falhas por origem + e-mail e 50 por
+  origem em 15 minutos foram confirmados pela responsável e aplicados em Stage.
 - **Origens compartilhadas:** em redes com muitas pessoas na mesma origem (rede de
   empresa, operadora móvel, mesma faixa IPv6 /64), um atacante pode bloquear o dono da
   conta pela contagem origem + e-mail e bloquear todos pela contagem por origem. Aceito
@@ -190,3 +189,6 @@ Os números abaixo usam os valores padrão.
   Suposição: o login reutiliza o mesmo padrão visual de alerta do formulário, sem tela
   nova. Se a revisão exigir um quadro próprio, ele deve ser aprovado antes do `/plan` da
   interface.
+  Resolvido em 13/11/2026: os quadros `02 · Entrar · Erros · Limite de tentativas`
+  (desktop `291:514`, mobile `292:442`) confirmam a suposição. O alerta do cadastro foi
+  reaproveitado entre Senha e Entrar, sem tela nova.

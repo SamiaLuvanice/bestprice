@@ -9,7 +9,7 @@ As migrations em `backend/alembic/versions/` criam o esquema SQLAlchemy definido
 | Tabela | Conteúdo e relação principal |
 |---|---|
 | `users` | Conta com e-mail único e hash de senha |
-| `user_sessions` | Sessões por usuário, hash de token único e expiração |
+| `user_sessions` | Sessões por usuário, hash de token único, `expires_at` `timestamptz` (término por inatividade: 24 h, renovado no máximo 1x/hora) e `absolute_expires_at` `timestamptz NOT NULL` (teto de 7 dias desde o login; spec 0060) |
 | `signup_attempts` | Tentativas do cadastro self-service (spec 0048): `source_hash` `CHAR(64)` com o HMAC-SHA256 da origem, nunca o IP, e `attempted_at` `timestamptz`; sem relação com `users` |
 | `login_failures` | Falhas de login e reservas em verificação (spec 0057): `source_hash` `CHAR(64)`, `account_hash` `CHAR(64)` nulo (HMAC do e-mail normalizado; nulo para corpo malformado ou depois de um sucesso da combinação) e `failed_at` `timestamptz`; nunca e-mail nem IP; sem relação com `users` |
 | `operator_credentials` | Registro único (`id = 1`) da conta operadora: tokens cifrados, expiração, bloqueio de refresh e prazo para nova tentativa após 429 |
@@ -58,7 +58,8 @@ persistem sem conteúdo para impedir ressurreição por replay; a janela de repl
 24 h. Limpeza horária remove pesquisas vencidas, tentativas com mais de 24 h e
 contadores cuja janela venceu há pelo menos dois dias. Excluir uma pesquisa não
 restitui cota. O CLI `uv run python -m app.research.cleanup`, em `backend/`, usa a
-mesma limpeza; backups e registros Google não fazem parte dessa garantia.
+mesma limpeza e imprime as pesquisas expiradas e as sessões terminadas removidas;
+backups e registros Google não fazem parte dessa garantia.
 
 A migration `20261106_signup_attempts.py` (revisão `20261106signup`, após
 `20261104grounding`) cria `signup_attempts` com `id BIGINT GENERATED ALWAYS AS
@@ -69,7 +70,7 @@ cada verificação do limite apaga as tentativas vencidas da origem e a limpeza 
 (na partida e a cada hora) apaga as vencidas de todas as origens, mantendo cerca de
 janela + 1 h. A conta criada pelo cadastro é uma linha comum em `users`; a restrição
 única de `users.email` decide a duplicidade, inclusive em envios simultâneos. A
-revisão não foi aplicada em Stage. Ver [backend](apps/backend.md#cadastro-self-service--spec-0048).
+revisão foi aplicada em Stage junto com `20261113loginfail` (promoção #318). Ver [backend](apps/backend.md#cadastro-self-service--spec-0048).
 
 A migration `20261113_login_failures.py` (revisão `20261113loginfail`, após
 `20261106signup`) cria `login_failures` com `id BIGINT GENERATED ALWAYS AS IDENTITY`,
@@ -79,13 +80,29 @@ A migration `20261113_login_failures.py` (revisão `20261113loginfail`, após
 retenção segue o cadastro: cada reserva apaga as falhas vencidas da própria origem, e a
 limpeza da API (na partida e a cada hora) apaga as vencidas de todas as origens. Um
 login bem-sucedido apaga a própria reserva e anula `account_hash` nas falhas anteriores
-da combinação, que continuam contando para a origem. A revisão não foi aplicada em
-Stage. Ver [backend](apps/backend.md#limite-de-tentativas-de-login--spec-0057).
+da combinação, que continuam contando para a origem. A revisão foi aplicada em Stage
+pelo `start-stage.sh` na promoção #318 (13/11/2026). Ver [backend](apps/backend.md#limite-de-tentativas-de-login--spec-0057).
+
+A migration `20261122_session_absolute_expiry.py` (revisão `20261122sessionabs`, após
+`20261113loginfail`) acrescenta `user_sessions.absolute_expires_at` `timestamptz NOT
+NULL`; o head do código passa a `20261122sessionabs`. As sessões existentes recebem
+`created_at + 7 dias` e mantêm o `expires_at`, que passa a significar o término por
+inatividade (24 h desde a última renovação). A sessão vale enquanto o instante atual for
+anterior aos dois prazos. A coluna tem `server_default now() + interval '7 days'` apenas
+no PostgreSQL migrado, para que a instância antiga da API, que ainda não conhece a coluna,
+continue criando sessões durante a implantação; o modelo SQLAlchemy não declara esse
+padrão e a API nova sempre grava o valor explícito. A renovação é um `UPDATE` de
+`expires_at` condicionado à linha existir e ao teto não ter passado. A limpeza da API (na
+partida e a cada hora, na mesma transação dos demais purges) apaga as sessões cujo
+`expires_at` ou `absolute_expires_at` já passou; a validade nunca depende dessa limpeza. O
+downgrade remove a coluna, e as sessões continuam válidas até o `expires_at`. A QA aplicou
+a migration em PostgreSQL 17 descartável; a revisão não foi aplicada em Stage. Ver
+[backend](apps/backend.md) e a [verificação 0060](../specs/0060-sessao-renovada-e-limpa/verification.md).
 
 Valores monetários persistem como `NUMERIC(18,2)`; o cliente Mercado Livre já entrega o preço arredondado a centavos (`ROUND_HALF_UP`), então o valor comparado é o mesmo persistido. Instantes usam colunas com fuso; `backend/app/db.py` executa `SET TIME ZONE 'UTC'` em cada nova conexão SQLAlchemy (em autocommit, para sobreviver a rollbacks), e a API serializa os instantes com `Z` independentemente do fuso padrão do servidor. Há índices para próxima consulta, vínculos ativos por usuário, histórico e eventos por publicação e notificações por usuário. Os detalhes de colunas e constraints estão nos modelos e na migration. Histórico e publicação são compartilhados; vínculo, alerta, sessão e notificação têm escopo individual.
 
 Cadastro e atualização de uma mesma publicação são serializados por `pg_try_advisory_lock` (chave derivada do `external_id`), de nível de sessão e mantido em conexão dedicada em AUTOCOMMIT; a sessão de domínio confirma a leitura antes da chamada HTTP externa, para que nenhuma transação fique aberta durante a consulta. A API espera até 5 segundos pela trava e o worker não espera. A avaliação e a edição de um alerta usam trava de linha em `price_alerts` no PostgreSQL; a avaliação compartilhada trava os alertas da publicação em ordem de chave primária e as rotas travam apenas o alerta envolvido, o que evita deadlock entre alertas de usuários distintos. Depois de esperar outra transação, a sessão recarrega o estado do alerta antes de decidir a notificação ou a próxima revisão. Criação, edição e exclusão de alerta e interrupção do monitoramento também travam e recarregam `tracked_products` antes de decidir pelo estado `active`. A restrição única de `notifications` permanece como proteção adicional. Testes com duas sessões confirmaram uma notificação por episódio, revisões sequenciais, alerta desabilitado nas duas ordens de edição/interrupção e um alerta com uma notificação no cadastro simultâneo; a segunda tentativa retorna `alert_already_exists`.
 
-A chave Fernet fica somente no ambiente (`MERCADOLIVRE_OAUTH_KEY`), não no banco. A trava de linha desse registro serializa refresh entre API e worker; uma resposta ambígua exige reprovisionamento para evitar reutilizar refresh token possivelmente consumido. A API ainda usa psycopg com conexão curta para o health check. As rotas de domínio usam sessões SQLAlchemy criadas a partir da mesma configuração de banco, sobre um engine que reaproveita conexões com `pool_pre_ping`, recicla as que passam de 300 s, reutiliza as mais recentes e limita a espera por conexão e a abertura de conexão nova por prazo (`backend/app/db.py`; ver [spec 0022](../specs/0022-conexao-resiliente-ao-banco/verification.md)). `DATABASE_URL` tem precedência sobre os campos `DB_*`. A aplicação não cria usuários automaticamente: contas vêm do cadastro self-service, desligado por padrão, ou do comando de provisionamento; veja [backend](apps/backend.md).
+A chave Fernet fica somente no ambiente (`MERCADOLIVRE_OAUTH_KEY`), não no banco. A trava de linha desse registro serializa refresh entre API e worker; uma resposta ambígua exige reprovisionamento para evitar reutilizar refresh token possivelmente consumido. A API ainda usa psycopg com conexão curta para o health check. As rotas de domínio usam sessões SQLAlchemy criadas a partir da mesma configuração de banco, sobre um engine que reaproveita conexões com `pool_pre_ping`, recicla as que passam de 300 s, reutiliza as mais recentes e limita a espera por conexão e a abertura de conexão nova por prazo (`backend/app/db.py`; ver [spec 0022](../specs/0022-conexao-resiliente-ao-banco/verification.md)). `DATABASE_URL` tem precedência sobre os campos `DB_*`. A aplicação não cria usuários automaticamente: contas vêm do cadastro self-service, desligado por padrão, ou do comando de provisionamento; veja [backend](apps/backend.md). A redefinição de senha pela operação (spec 0059) troca `users.password_hash` e apaga todas as linhas de `user_sessions` da conta numa única transação, travando a linha de `users` com `FOR UPDATE`; o login lê a conta com `FOR SHARE` até confirmar a sessão, de modo que nenhum login concorrente mantém sessão criada com a senha antiga.
 
 O teste de integração requer `TEST_DATABASE_URL` apontando a um banco isolado, com URL `postgresql://...` compatível também com o health check psycopg. A continuação da spec 0013 aplicou a migration em PostgreSQL 17 isolado, verificou unicidade e `Decimal`, testou duas sessões concorrentes para cadastro e atualização de uma publicação, falha de escrita após o flush sem linhas remanescentes nem trava advisory presa, e workers em processos distintos; os limites constam em [verification.md](../specs/0013-monitoramento-mercado-livre-brasil/verification.md).

@@ -1,16 +1,22 @@
-# Hooks mínimos e genéricos (https://pre-commit.com). Opcional: `pip install pre-commit && pre-commit install`.
+# Hooks mínimos e genéricos (https://pre-commit.com). Opcional: `pip install pre-commit && pre-commit install --hook-type pre-commit --hook-type commit-msg`.
 # Ruff, pytest, ESLint, Vitest e build ficam em quality-gates/CI.
 default_install_hook_types: [pre-commit, commit-msg]
 
 repos:
   - repo: local
     hooks:
-      - id: guard-protected-branch
-        name: bloqueia commit direto em branch integradora
-        entry: python scripts/guard-protected-branch.py
+      # Branch protegida (harness.yaml), Conventional Commits e autoria humana.
+      - id: commit-msg-policy
+        name: política de commits do harness
+        entry: node .agents/scripts/commit-msg.mjs
         language: system
         stages: [commit-msg]
         pass_filenames: true
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

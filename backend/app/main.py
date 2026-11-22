@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 
 from app.auth.routes import router as auth_router
+from app.auth.sessions import renewed_session_cookie
 from app.auth.settings import login_settings, signup_settings
 from app.errors import ApiError, api_error_handler, validation_error_handler
 from app.health import database_available
@@ -38,6 +39,7 @@ async def lifespan(_app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_exception_handler(ApiError, api_error_handler)
 app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.middleware("http")(renewed_session_cookie)
 app.include_router(auth_router)
 app.include_router(product_router)
 app.include_router(dashboard_router)

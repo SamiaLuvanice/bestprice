@@ -107,7 +107,7 @@ Feita pelo `arch-reviewer` sobre `af8d15e`: veredito "mudanças necessárias" po
   posteriores não alteram as configurações.
 - Viewport: 1440 px e 390 px foram observados via `iframe`; a tela direta do navegador chegou a
   1359 px. Não houve comparação com o Figma, porque a spec assume o alerta existente, sem quadro
-  próprio.
+  próprio. Os quadros foram criados depois (ver "Figma — 13/11/2026").
 - Não houve teste com leitor de tela real; o anúncio foi verificado pelo papel `role="alert"` no
   DOM.
 - No AC08, o caso "campo acima do máximo" teve mediana de 4% a 18% menor que a senha errada (não
@@ -138,3 +138,42 @@ A branch segue `feature/0054-issue-128-limite-tentativas-login`.
 
 Depois da renumeração, os gates foram reexecutados: `ruff` limpo, pytest **547 passed, 2 skipped**
 com PostgreSQL real, `eslint` sem avisos e Vitest **838 passed (61 arquivos)**.
+
+## Stage — 13/11/2026
+
+Promoção pela PR #318 (`0c80a94`), depois de a responsável preencher `TRUSTED_PROXY_SECRET`
+e `SIGNUP_SOURCE_HASH_SECRET` no Render e `API_PROXY_SECRET` (tipo Secret) no Pages. Só os
+nomes das variáveis foram conferidos nos painéis; nenhum valor foi lido nem registrado.
+
+| Verificação | Resultado |
+|---|---|
+| Deploy da nova versão | `/openapi.json` passou a listar `login_rate_limited` cerca de 270 s após o merge |
+| Health | `GET /api/health` 200 `{"status":"ok","database":"ok"}` direto no Render e pelo Pages |
+| AC14 em Stage | A API subiu com `APP_ENV=stage` e os segredos preenchidos |
+| Migration `20261113loginfail` | `POST /api/auth/login` com `text/plain` pelo Pages → `422 json_required`; a falha foi gravada em `login_failures` |
+| Origem real atrás do Pages | 3 falhas pelo Pages com o mesmo `source_hash` (`…559a640`); 2 falhas direto no Render com outro (`…22128f8`). Consulta só de leitura no SQL Editor do Supabase |
+| Blueprint | Sincronização manual criou `SIGNUP_ENABLED` e as três `LOGIN_RATE_LIMIT_*`; nenhuma variável existente foi alterada |
+
+Limites: o teste de origem não estourou o limite (5 falhas só de origem, limite 50), para
+não bloquear ninguém. Não houve teste com duas redes de visitantes diferentes; a
+diferença observada é entre o IP repassado pela Function e o peer interno do Render.
+
+## Figma — 13/11/2026
+
+Criados pelo Chrome no arquivo BestPrice IA, com autorização da responsável, a partir das
+telas de login `59:44` e `59:602`, que não foram alteradas:
+
+| Quadro | Nó | Tamanho |
+|---|---|---|
+| `02 · Entrar · Erros · Limite de tentativas · Desktop` | `291:514` | 1440×1040 |
+| `02 · Entrar · Erros · Limite de tentativas · Mobile` | `292:442` | 390×844 |
+
+O alerta (fundo `FFF0F0`, raio 12, ícone de erro e texto) foi copiado do estado
+`02b · Criar conta · Erros · Limite de tentativas`. Ele fica entre Senha e Entrar, com 28 px
+de espaço acima e abaixo. O botão e os textos seguintes desceram 86 px. Texto: "Muitas
+tentativas de login. Tente novamente em 15 minutos.", o mesmo que o app mostra com a janela
+padrão.
+
+Limites: os campos aparecem vazios, como na tela de login original. No app, o e-mail se
+mantém depois da falha e só a senha é apagada (AC16). Não houve comparação pixel a pixel
+entre os quadros e a SPA.

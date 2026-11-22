@@ -1,0 +1,17 @@
+INSERT 0 1
+INSERT 0 1
+       email        |                  id                  |              tracked_id              | active
+--------------------+--------------------------------------+--------------------------------------+--------
+ ana.qa@exemplo.com | 17b1cbc4-9003-47f2-95aa-7d22830eed65 | 22222222-0059-4000-8000-000000000001 | t
+ bia.qa@exemplo.com | 6a2dbdf1-06fc-4fb0-9a60-f0f7eb14b378 |                                      |
+(2 rows)
+
+
+## Contas criadas antes do seed com a CLI real sob pty (imagem bestprice-0059-qa-api)
+$ python ptydrive.py app.auth.provision ana.qa@exemplo.com   (respostas: <SENHA_ANTIGA> x2)
+Senha (12 a 1024 caracteres):
+Confirme a senha:
+Conta criada
+ECHO ativo no momento de cada resposta: [False, False]; respostas na transcricao: nenhuma; exit=0
+$ python ptydrive.py app.auth.provision bia.qa@exemplo.com   (respostas: <SENHA_OUTRA> x2)
+(mesma transcricao) ECHO [False, False]; respostas na transcricao: nenhuma; exit=0

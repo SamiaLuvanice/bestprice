@@ -24,6 +24,6 @@ Leia [docs/product-context.md](../../docs/product-context.md) antes de definir o
 
 Mudança de comportamento nasce de spec numerada: /spec → /plan → /implement com TDD → /verify. A skill agent-orchestration coordena os papéis quando há delegação. GitHub Issues, PRs e CI seguem docs/github-workflow.md; Project é opcional e implantação externa não está configurada.
 
-Após qualquer alteração de código, execute o agente `doc-sync-onboarding` como última etapa da tarefa, depois dos gates e da revisão. Confira `AGENTS.md`, `CLAUDE.md` e os documentos afetados em `docs/`; sincronize o que a mudança exigir. A tarefa de código só pode ser considerada concluída após esse agente terminar. Se houver nova alteração de código, repita a sincronização.
+Documentação: siga a regra única de sincronização em `task-done-criteria.md`.
 
 Identificadores em inglês; documentação e mensagens para usuários em português. Segredos só por ambiente. Dinheiro usa Decimal no Python e NUMERIC no PostgreSQL; instantes UTC. Verifique testes e build antes da entrega.

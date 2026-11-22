@@ -1,18 +1,17 @@
 # Instalação do harness
 
-Pré-requisitos deste perfil: Python 3.13, uv, Node.js 22/npm, Docker Compose, Git e PowerShell no Windows (ou Bash em Unix). Clone o repositório, crie .env a partir de .env.example, instale backend com uv sync --locked --extra dev e frontend com npm ci. Para ferramentas que precisam projeção, execute .agents/sync.ps1 no Windows ou bash .agents/sync.sh no Unix. O OpenCode recebe .opencode/agent apontando para .opencode/generated/agents, gerado a partir de .agents/agents com o frontmatter convertido; rode o sync novamente após editar um agente. Codex lê AGENTS.md e .agents/ diretamente.
+Pré-requisitos deste perfil: Python 3.13, uv, Node.js 22/npm, Docker Compose, Git e PowerShell no Windows (ou Bash em Unix). Clone o repositório, crie .env a partir de .env.example, instale backend com uv sync --locked --extra dev e frontend com npm ci. Para ferramentas que precisam projeção, execute `node .agents/scripts/sync.mjs` (os wrappers `.agents/sync.ps1` e `bash .agents/sync.sh` chamam o mesmo script). Instale os hooks com `pre-commit install --hook-type pre-commit --hook-type commit-msg`: o `commit-msg` aplica a política de `.agents/scripts/commit-msg.mjs` (branch protegida, Conventional Commits e autoria humana) e o pre-commit roda o gitleaks. O OpenCode recebe .opencode/agent apontando para .opencode/generated/agents, gerado a partir de .agents/agents com o frontmatter convertido; rode o sync novamente após editar um agente. Codex lê AGENTS.md e .agents/ diretamente.
 
-Rode scripts/diagnose-harness.ps1 para conferir referências. Não copie segredos, volumes ou arquivos .env para outro projeto. Se adaptar o harness, edite .agents/ e config/harness.example.yaml; os links gerados não são fonte.
+Rode `node .agents/scripts/diagnose.mjs` (ou o wrapper `scripts/diagnose-harness.ps1`) para conferir arquivos obrigatórios, itens do perfil, skills travadas, projeções, referências proibidas, segredos aparentes, termos da stack no núcleo e worktrees obsoletas; os valores ficam na seção `diagnose` de `harness.yaml`. Os portões rodam com `node .agents/scripts/gates.mjs`. Não copie segredos, volumes ou arquivos .env para outro projeto. Se adaptar o harness, edite .agents/ e config/harness.example.yaml; os links gerados não são fonte.
 
 A fonte de configuração é `.agents/mcp.json`. Após alterá-la, execute
-`.agents/sync.ps1 -WithCursor -WithOpenCode` no Windows ou
-`bash .agents/sync.sh --with-cursor --with-opencode` em Unix. O sync projeta
+`node .agents/scripts/sync.mjs --with-cursor --with-opencode` (ou os wrappers
+`.agents/sync.ps1 -WithCursor -WithOpenCode` e `bash .agents/sync.sh --with-cursor --with-opencode`). O sync projeta
 `.mcp.json` com `"type": "http"` nas entradas remotas — o Claude Code descarta
 entradas com `url` sem tipo —, gera `opencode.json` e `.cursor/mcp.json`; não
 edite os arquivos gerados. O canônico permanece agnóstico, sem credenciais.
-`scripts/diagnose-harness.ps1` confere se as projeções geradas listam os mesmos
-servidores do canônico e se as entradas remotas de `.mcp.json` têm transporte
-válido.
+`node .agents/scripts/sync.mjs --check` (também executado pelo diagnóstico e no
+CI) falha quando alguma projeção gerada diverge do canônico.
 
 O perfil declara cinco servidores: `chrome-devtools` (local, via npx),
 `mercadolibre-mcp-server` (`https://mcp.mercadolivre.com/devsite/v1/mcp`, OAuth;

@@ -1,5 +1,51 @@
 # Progresso das specs
 
+## 0059 — Redefinição de senha pela operação
+
+**22/11/2026 — spec `implementada`.** A PR #329 foi integrada em `develop` (`db90a49`). A validação em Stage segue pendente. [Issue #326](https://github.com/SamiaLuvanice/bestprice/issues/326),
+branch `feature/0059-issue-326-redefinicao-senha-pela-operacao`. O comando
+`python -m app.auth.reset_password EMAIL`, rodado em `backend/` depois de confirmar a
+identidade da pessoa fora do sistema, pede a nova senha duas vezes sem eco (nunca como
+argumento), aplica as regras de senha do cadastro e, na mesma transação, grava o novo hash
+e encerra todas as sessões da conta. O login lê a conta com `FOR SHARE` e a redefinição
+trava a linha com `FOR UPDATE`, para que nenhum login concorrente fique com sessão criada
+pela senha antiga. O procedimento local e em Stage está em
+[backend](apps/backend.md) e no README.
+
+Testes da spec **23 passed**; backend, já integrado com a 0060, **592 passed, 2 skipped,
+0 failed**. Revisão
+independente aprovada; QA aprovou AC01–AC07 e AC09 no fluxo real (AC08 por teste de
+integração). Pendências: limite de espera (`lock_timeout`) na redefinição, como sugestão;
+conferir o login em Stage após a promoção (privilégio exigido pelo `FOR SHARE` com RLS).
+Ver [verificação da spec 0059](../specs/0059-redefinicao-senha-pela-operacao/verification.md).
+
+## 0060 — Sessão renovada durante o uso e sessões expiradas removidas
+
+**22/11/2026 — spec `implementada`.** A PR #328 foi integrada em `develop` (`674af59`). A validação em Stage segue pendente. [Issue #327](https://github.com/SamiaLuvanice/bestprice/issues/327),
+branch `feature/0060-issue-327-sessao-renovada-e-limpa`. A sessão termina após 24 horas
+sem uso ou 7 dias após o login, o que vier primeiro. A renovação é gravada no máximo uma
+vez por hora por um `UPDATE` condicionado, e o middleware `renewed_session_cookie` reenvia
+o cookie com o novo prazo em qualquer resposta. O ciclo de limpeza da API apaga as sessões
+terminadas, e `python -m app.research.cleanup` informa pesquisas e sessões removidas. A
+migração `20261122sessionabs` acrescenta `user_sessions.absolute_expires_at`, com backfill
+`created_at + 7 dias`. Também corrige a regressão pré-existente `test_ac17` da 0057.
+
+Backend: **569 passed, 2 skipped, 0 failed** com PostgreSQL 17 descartável; Radon sem
+bloco ≥ C. Revisão independente aprovada em duas rodadas; QA aprovou AC01–AC09 com API,
+SPA e PostgreSQL reais e Chrome. Pendências: marca `Secure` do cookie em Stage não
+observada; o middleware (`BaseHTTPMiddleware`) não reenvia o cookie num 500 não tratado,
+o que só encurta a sessão no navegador; o `server_default` do teto existe só na migração,
+não no modelo. Ver [verificação](../specs/0060-sessao-renovada-e-limpa/verification.md).
+
+## 0058 — Harness agnóstico e verificável
+
+**13/11/2026 — implementação entregue; aguarda revisão.** [Issue #322](https://github.com/SamiaLuvanice/bestprice/issues/322),
+branch `feature/0058-issue-322-harness-agnostico`. Núcleo Node em `.agents/scripts/` (sync,
+diagnose, gates, docs-impact, commit-msg) configurado por `harness.yaml` 0.4.0; hook
+`commit-msg` e gitleaks; jobs CI `Commit policy` e `Secrets`; núcleo separado do perfil e
+doc-sync condicional em regra única. Testes do harness 15/15, automações 50/50, actionlint
+limpo, diagnóstico válido. Ver [verificação](../specs/0058-harness-agnostico/verification.md).
+
 ## 0057 — Limite de tentativas repetidas de login
 
 **13/11/2026 — spec `implementada`.** A PR #315 foi integrada em `develop` (`df39589`). A
@@ -18,9 +64,12 @@ Backend: Ruff aprovado e pytest com PostgreSQL 17 descartável **547 passed, 2 s
 SPA e PostgreSQL reais (sem Compose) aprovou AC01–AC17; AC10–AC12 só por teste. A
 revisão independente foi feita (R1).
 
-Pendências: antes da promoção para Stage,
-conferir os dois segredos no Render e `API_PROXY_SECRET` no Pages; depois, verificar a
-origem real atrás do Pages. Ver
+Promovida para Stage pela PR #318 (`0c80a94`), com segredos preenchidos no Render e no
+Pages, migration aplicada, Blueprint sincronizado e health 200. A origem real atrás do
+Pages foi verificada: falhas pelo Pages e direto no Render gravaram `source_hash`
+distintos. Limites padrão confirmados pela responsável. O Figma ganhou os quadros do
+estado de limite no login, desktop `291:514` e mobile `292:442`, com o mesmo alerta do
+formulário. Ver
 [verificação da spec 0057](../specs/0057-limite-tentativas-login/verification.md).
 
 ## 0056 — Monitoramento com textos enxutos

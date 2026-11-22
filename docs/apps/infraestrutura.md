@@ -23,12 +23,14 @@ A direção de operação em LOCAL, DEV, STAGE e PROD, com configurações indep
 | `frontend/public/_headers` | Cache imutável de um ano em `/assets/*` no Cloudflare Pages (spec 0051) |
 | `frontend/scripts/not-found-page.mjs` | Plugin do Vite que copia `dist/index.html` para `dist/404.html` no fim do build (spec 0051) |
 | `scripts/compose-worktree.ps1` | Isola nome Compose, volume e portas por worktree no Windows |
-| `.github/workflows/ci.yml` | Agrega qualidade e política de PR sob check obrigatório `CI` |
-| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test React e `npm run build:check` (build com checagens de catálogo e fontes, spec 0049), testes Node gerais e actionlint |
+| `.github/workflows/ci.yml` | Agrega qualidade, política de PR, política de commits (range do PR) e varredura de segredos (gitleaks nos commits do evento) sob check obrigatório `CI` (spec 0058) |
+| `.github/workflows/quality.yml` | Ruff/pytest/PostgreSQL, lint/test React e `npm run build:check` (build com checagens de catálogo e fontes, spec 0049), testes Node gerais, testes do núcleo do harness, `sync.mjs --check`, `diagnose.mjs` e actionlint |
 | `.github/workflows/project.yml` | Sincronização opcional com GitHub Project; job `resolve` define a chave de concorrência por Issue |
 | `.github/workflows/release.yml` | Em tag `vMAJOR.MINOR.PATCH` validada contra stage, publica imagens e cria release com digests |
 | `.github/workflows/validate-mercadolivre-stage.yml` | Execução manual em `develop` para consultar anúncios e validar OAuth no banco Stage; a renovação pode atualizar credenciais |
 | `.github/scripts/*.cjs` | Política de PR e integração GraphQL/Project, com testes Node adjacentes |
+| `.agents/scripts/*.mjs` | Núcleo do harness (spec 0058): sync das projeções, diagnóstico, portões de `harness.yaml`, impacto em docs e política de commit (hook `commit-msg`) |
+| `scripts/diagnose-harness.ps1` | Wrapper Windows de `node .agents/scripts/diagnose.mjs` |
 
 ## Integração de design
 
@@ -189,17 +191,18 @@ da conexão. Localmente, Vite e Nginx não assinam a origem e o limite usa o pee
 Roteiro para ligar em Stage, quando autorizado (pendência I3 da
 [verificação 0048](../../specs/0048-cadastro-self-service-usuarios/verification.md)):
 
-1. Criar `API_PROXY_SECRET` no Pages e `TRUSTED_PROXY_SECRET` (mesmo valor) e
-   `SIGNUP_SOURCE_HASH_SECRET` (outro valor) no Render, sem registrá-los em arquivos,
-   Issue, PR ou logs.
+1. ~~Criar `API_PROXY_SECRET` no Pages e `TRUSTED_PROXY_SECRET` (mesmo valor) e
+   `SIGNUP_SOURCE_HASH_SECRET` (outro valor) no Render.~~ Feito em 13/11/2026 para a
+   spec 0057 (seção seguinte); `API_PROXY_SECRET` é do tipo **Secret** no Pages.
 2. Mudar `SIGNUP_ENABLED` para `true` no Render e conferir o health.
 3. Pelo Pages, enviar 6 cadastros de um mesmo IP (o 6º deve responder `429`) e 1 de
    outro IP (aceito); depois, apagar as contas de teste.
 
 Com a API em `stage`/`production` e o cadastro ligado sem `TRUSTED_PROXY_SECRET`, a
 API não inicia. A migration `20261106signup` cria `signup_attempts` e é aplicada pelo
-`alembic upgrade head` do Compose e do `start-stage.sh`; ainda não foi aplicada em
-Stage. Nada disso foi exercitado em Stage nesta spec.
+`alembic upgrade head` do Compose e do `start-stage.sh`; foi aplicada em Stage na
+promoção #318, junto com `20261113loginfail`. O cadastro em si continua sem
+exercício em Stage.
 
 ## Limite de tentativas de login em Stage — spec 0057
 
@@ -212,24 +215,29 @@ acrescenta `LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS: "10"`,
 a mudança exige a sincronização manual do Blueprint descrita abaixo. Regras em
 [backend](backend.md#limite-de-tentativas-de-login--spec-0057).
 
-**Pré-condição da próxima promoção para Stage:** antes do PR `develop` → `stage` que
-levar esta mudança, confira no painel do Render que `TRUSTED_PROXY_SECRET` e
-`SIGNUP_SOURCE_HASH_SECRET` têm valor (≥ 32 caracteres, diferentes entre si) e, no
-Pages, que `API_PROXY_SECRET` existe com o mesmo valor de `TRUSTED_PROXY_SECRET`.
-Sem os segredos do Render, o deploy falha na partida; sem o do Pages, a API sobe, mas
-todo o tráfego do Pages cai numa única origem, e 50 falhas de qualquer pessoa em 15
-minutos bloqueiam o login de todos. Não há registro de que esses valores estejam
-preenchidos hoje. Depois da promoção, verifique a origem real atrás do Pages (por
-exemplo, falhas de dois IPs distintos contadas separadamente).
+**Estado em Stage (13/11/2026, promoção PR #318):** `TRUSTED_PROXY_SECRET` e
+`SIGNUP_SOURCE_HASH_SECRET` estão preenchidos no Render e `API_PROXY_SECRET` (tipo
+Secret, mesmo valor de `TRUSTED_PROXY_SECRET`) no Pages. O deploy de `0c80a94` subiu
+com health 200 direto e pelo Pages, e a migration `20261113loginfail` foi aplicada pelo
+`start-stage.sh` (um login malformado pelo Pages respondeu `422 json_required` e gravou
+a falha em `login_failures`). O Blueprint foi sincronizado manualmente no mesmo dia,
+criando `SIGNUP_ENABLED=false` e as três `LOGIN_RATE_LIMIT_*` com os padrões (10, 50 e
+15 min), confirmados pela responsável.
+
+**Origem real atrás do Pages, verificada:** três logins malformados enviados pelo Pages
+gravaram o mesmo `source_hash`, e dois enviados direto a `*.onrender.com` gravaram
+outro (consulta só de leitura no SQL Editor do Supabase, agrupando
+`left(source_hash, 8)`). Ou seja, a Function repassa o IP do visitante e a API o aceita
+pelo segredo do proxy. Para repetir, envie falhas de duas redes diferentes pelo Pages e
+confira `select count(distinct source_hash) from login_failures` dentro da janela.
 
 Limite conhecido: como no cadastro, o acesso direto a `*.onrender.com`, sem passar
 pelo Pages, usa o peer da conexão como origem e cai num único balde; esse tráfego
 pode ser bloqueado em conjunto. A SPA sempre passa pelo Pages. A migration
 `20261113loginfail` cria `login_failures` e é aplicada pelo `alembic upgrade head` do
-Compose e do `start-stage.sh`; não foi aplicada em Stage. No Compose local, as
-variáveis `LOGIN_RATE_LIMIT_*` não são repassadas ao serviço `backend`, que usa os
-padrões (10, 50 e 15 min); com o segredo de HMAC vazio, a API gera um valor aleatório
-por processo.
+Compose e do `start-stage.sh`. No Compose local, o serviço `backend` recebe as três
+`LOGIN_RATE_LIMIT_*` do `.env`, com os mesmos padrões do código; com o segredo de HMAC
+vazio, a API gera um valor aleatório por processo.
 
 ## Sonda oficial do Mercado Livre no GitHub Actions
 
