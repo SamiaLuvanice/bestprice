@@ -36,7 +36,8 @@ fontes devolvidas pela pesquisa na web; a chamada real com grounding não foi va
 As pesquisas expiram 90 dias após a criação, sem extensão por edição. A API as
 torna inacessíveis no vencimento e tenta removê-las fisicamente a cada hora enquanto
 está em execução. Para executar a limpeza manualmente em `backend/`, use
-`uv run python -m app.research.cleanup` com o banco configurado. A exclusão se
+`uv run python -m app.research.cleanup` com o banco configurado; o comando imprime as
+pesquisas expiradas e as sessões terminadas removidas. A exclusão se
 refere ao banco ativo do BestPrice, sem promessa sobre backups ou registros Google.
 Em desenvolvimento isolado, `API_PROXY_TARGET` pode apontar o proxy Vite para outra
 API; o padrão continua `http://localhost:8000`.

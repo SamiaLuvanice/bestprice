@@ -74,12 +74,12 @@ descartável `bestprice-0060-test-pg` (`-p 55460:5432`, sem volume), removido ao
 - `docs/apps/backend.md`: duração da sessão atualizada (24 h sem uso, teto de 7 dias, renovação
   no máximo por hora com cookie reenviado, purge no ciclo de limpeza).
 - `node .agents/scripts/docs-impact.mjs` também aponta `docs/architecture.md` e `docs/database.md`
-  (nova coluna `user_sessions.absolute_expires_at`): **pendente** para o `doc-sync-onboarding` (R3).
+  (nova coluna `user_sessions.absolute_expires_at`); sincronizados pelo `doc-sync-onboarding` em
+  "Sincronização da documentação (R3)".
 
 ## Pendências
 
-- R3 sincronização de `docs/architecture.md` e `docs/database.md` (doc-sync-onboarding, pelo
-  orquestrador) e R4 PR. R1 e R2 estão registradas abaixo; as correções pedidas por elas, em
+- R4 PR. R1, R2 e R3 estão registradas abaixo; as correções pedidas por R1 e R2, em
   "Correções pós-revisão".
 - Sem push nem PR nesta etapa.
 
@@ -191,3 +191,27 @@ a saída da limpeza manual (`e88f204`).
 
 O fluxo ponta a ponta (API + SPA) do QA não foi refeito após as correções. Elas não mudam o contrato
 REST nem o caminho feliz, que segue coberto pelos testes acima.
+
+## Sincronização da documentação (R3)
+
+Agente `doc-sync-onboarding` em 22/11/2026, mesma worktree e branch, ponta `892e263` (código
+final aprovado). Nenhum código alterado.
+
+`node .agents/scripts/docs-impact.mjs`:
+
+```text
+Documentos a conferir (mudanças desde origin/develop):
+  ✔ alterado  docs/apps/backend.md  ← backend/app/auth/routes.py, backend/app/auth/sessions.py, backend/app/main.py, …
+  • revisar  docs/architecture.md  ← backend/app/auth/routes.py, backend/app/auth/sessions.py, backend/app/main.py, …
+  • revisar  docs/database.md  ← backend/alembic/versions/20261122_session_absolute_expiry.py
+```
+
+- `docs/database.md`: linha de `user_sessions` com `expires_at` (inatividade) e
+  `absolute_expires_at` (teto); parágrafo da migration `20261122sessionabs` (backfill,
+  `server_default` só na migração, `UPDATE` condicionado, purge, downgrade); saída do CLI de limpeza.
+- `docs/architecture.md`: parágrafo da spec 0060 (`app/auth/sessions.py`, middleware
+  `renewed_session_cookie` em `app/main.py`, limpeza das sessões terminadas).
+- `README.md`: saída do comando manual de limpeza.
+- `docs/PROGRESS.md`: entrada da 0060.
+- `docs/apps/backend.md`: conferido contra `sessions.py`, `routes.py`, `cleanup.py` e a migração;
+  coerente, sem mudança. `AGENTS.md` e `CLAUDE.md`: sem mudança (o harness não mudou).
