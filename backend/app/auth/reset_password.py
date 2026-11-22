@@ -41,11 +41,13 @@ def reset_password(session: Session, email: str, password: str) -> None:
     violations = account_rule_violations(user.email, password)
     if violations:
         raise AccountRuleError(violations)
+    # O scrypt roda antes da trava: a linha da conta fica bloqueada só pelo DELETE, UPDATE e COMMIT.
+    new_hash = hash_password(password)
     try:
         # Espera logins que já leram a conta (FOR SHARE) e bloqueia os novos até o commit.
         session.scalar(select(User.id).where(User.id == user.id).with_for_update())
         session.execute(delete(UserSession).where(UserSession.user_id == user.id))
-        user.password_hash = hash_password(password)
+        user.password_hash = new_hash
         session.commit()
     except Exception:
         session.rollback()
