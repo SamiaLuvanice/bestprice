@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, delete, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -156,3 +156,30 @@ def test_ac01_renewal_is_written_once_per_hour_in_postgresql(engine, pg_client) 
     assert stored()[0] == NOW + timedelta(hours=44)  # mesma hora: sem nova escrita
     clock[0] = NOW + timedelta(hours=43)
     assert client.get("/api/auth/me").status_code == 200
+
+
+@pytest.mark.parametrize("path", ["/api/auth/me", "/api/ai/capabilities"])
+def test_session_ended_concurrently_with_the_renewal_is_unauthenticated(engine, pg_client, monkeypatch, path) -> None:
+    # Logout ou purge em outra conexão entre a leitura da sessão e a renovação: 401, não 500/503.
+    from app.auth import routes
+
+    client, clock = pg_client
+    email, password = f"corrida-{uuid.uuid4().hex}@exemplo.com", "senha-validada-123"
+    with Session(engine) as session:
+        add_account(session, email, password)
+        session.commit()
+    assert client.post("/api/auth/login", json={"email": email, "password": password}).status_code == 200
+    token_hash = hashlib.sha256(client.cookies["bestprice_session"].encode()).hexdigest()
+    original = routes.renewed_expiry
+
+    def ended_meanwhile(row: UserSession, now: datetime) -> datetime | None:
+        with engine.begin() as connection:
+            connection.execute(delete(UserSession).where(UserSession.token_hash == token_hash))
+        return original(row, now)
+
+    monkeypatch.setattr(routes, "renewed_expiry", ended_meanwhile)
+    clock[0] = NOW + timedelta(hours=20)
+    response = TestClient(app, raise_server_exceptions=False, cookies=client.cookies).get(path)
+    assert response.status_code == 401, response.text
+    assert response.json()["error"]["code"] == "unauthenticated"
+    assert "set-cookie" not in response.headers

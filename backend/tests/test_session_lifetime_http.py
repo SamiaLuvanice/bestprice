@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, update
+from sqlalchemy import create_engine, delete, update
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -164,3 +164,21 @@ def test_ac05_logout_after_renewal_ends_the_session_immediately(client: TestClie
     assert client.post("/api/auth/logout").status_code == 204
     client.cookies.set("bestprice_session", cookie, path="/api")
     assert_unauthenticated(me_at(client, clock, timedelta(hours=20, minutes=1)))
+
+
+def test_session_ended_between_read_and_renewal_is_unauthenticated(engine, client: TestClient, clock: Clock, monkeypatch) -> None:
+    from app.auth import routes
+
+    original = routes.renewed_expiry
+
+    def ended_meanwhile(row: UserSession, now: datetime) -> datetime | None:
+        with Session(engine) as other:
+            other.execute(delete(UserSession))
+            other.commit()
+        return original(row, now)
+
+    monkeypatch.setattr(routes, "renewed_expiry", ended_meanwhile)
+    clock.at(timedelta(hours=20))
+    response = TestClient(app, raise_server_exceptions=False, cookies=client.cookies).get("/api/auth/me")
+    assert_unauthenticated(response)
+    assert session_cookie_header(response) is None

@@ -32,6 +32,7 @@ from app.auth.sessions import (
     SESSION_ABSOLUTE,
     SESSION_COOKIE,
     SESSION_IDLE,
+    extend_session,
     remember_renewal,
     renewed_expiry,
     session_active,
@@ -93,13 +94,16 @@ def current_user(request: Request, session: SessionDep, clock: ClockDep) -> User
     now = clock()
     if row is None or not session_active(row, now):
         raise ApiError(401, "unauthenticated", "Entre para continuar.")
+    user_id = row.user_id
     expires_at = renewed_expiry(row, now)
     if expires_at is not None:
+        # Logout ou purge concorrente apagou a linha: a sessão terminou (401, não 500).
+        if not extend_session(session, row.id, expires_at, now):
+            raise ApiError(401, "unauthenticated", "Entre para continuar.")
         # Confirma antes de a rota usar a sessão do banco; o middleware reenvia o cookie.
-        row.expires_at = expires_at
         session.commit()
         remember_renewal(request, raw_token, expires_at, now)
-    user = session.get(User, row.user_id)
+    user = session.get(User, user_id)
     if user is None:
         raise ApiError(401, "unauthenticated", "Entre para continuar.")
     return user

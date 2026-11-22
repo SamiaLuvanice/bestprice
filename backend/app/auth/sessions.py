@@ -1,11 +1,12 @@
 """Duração da sessão: 24 h sem uso, teto de 7 dias desde o login e renovação no máximo 1x/hora."""
 
 import os
+import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Request, Response
-from sqlalchemy import delete, or_
+from sqlalchemy import delete, or_, update
 from sqlalchemy.orm import Session
 
 from app.products.models import UserSession
@@ -33,6 +34,17 @@ def renewed_expiry(row: UserSession, now: datetime) -> datetime | None:
     """
     target = min(now + SESSION_IDLE, _utc(row.absolute_expires_at))
     return target if target - _utc(row.expires_at) >= SESSION_RENEW_AFTER else None
+
+
+def extend_session(session: Session, session_id: uuid.UUID, expires_at: datetime, now: datetime) -> bool:
+    """Grava o novo término só se a linha ainda existe e não passou do teto; não confirma."""
+    result = session.execute(
+        update(UserSession)
+        .where(UserSession.id == session_id, UserSession.absolute_expires_at > now)
+        .values(expires_at=expires_at)
+        .execution_options(synchronize_session=False),
+    )
+    return result.rowcount == 1
 
 
 def set_session_cookie(response: Response, raw_token: str, max_age: int) -> None:
