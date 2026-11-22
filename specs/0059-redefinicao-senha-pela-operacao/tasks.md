@@ -26,4 +26,4 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
   `doc-sync-onboarding` conferiu `backend.md` e `README.md` contra `reset_password.py` e `_authenticate`;
   `architecture.md` segue correto sem edição; `docs/index.md` e `docs/database.md` passaram a citar a redefinição;
   entrada da 0059 em `docs/PROGRESS.md`.
-- [ ] R4 — PR para `develop` com `Closes #326`.
+- [x] R4 — PR #329 integrada em `develop` (`db90a49`), com `Closes #326`.
