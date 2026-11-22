@@ -1,0 +1,11 @@
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> d0d0756a0096, initial_domain
+INFO  [alembic.runtime.migration] Running upgrade d0d0756a0096 -> 20261009oauth, encrypted operator OAuth credentials
+INFO  [alembic.runtime.migration] Running upgrade 20261009oauth -> 20261009safe, prevent reuse of ambiguous one-time OAuth refresh tokens
+INFO  [alembic.runtime.migration] Running upgrade 20261009safe -> 20261014rls, Enable RLS on all BestPrice tables exposed by Supabase's public schema.
+INFO  [alembic.runtime.migration] Running upgrade 20261014rls -> 20261026research, Persist private purchase research and independent AI consumption counters.
+INFO  [alembic.runtime.migration] Running upgrade 20261026research -> 20261104grounding, Store web grounding (sources and Google suggestions) with assistant messages.
+INFO  [alembic.runtime.migration] Running upgrade 20261104grounding -> 20261106signup, Store signup attempts (keyed source hash only) for the per-source rate limit.
+INFO  [alembic.runtime.migration] Running upgrade 20261106signup -> 20261113loginfail, Store login failures (keyed source and account hashes only) for the login rate limit.
+exit=0

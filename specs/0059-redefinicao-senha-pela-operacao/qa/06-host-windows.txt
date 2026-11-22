@@ -1,0 +1,7 @@
+## CLI no host Windows (Git Bash, sem console interativo), stdin por pipe
+Comando (em backend/, DATABASE_URL apontando para localhost:55462):
+  printf '<SENHA_HOST>\n<SENHA_HOST>\n' | timeout 25 uv run python -m app.auth.reset_password bia.qa@exemplo.com
+Resultado: exit=124 (timeout), nenhuma saida (nem o prompt apareceu no stdout/stderr capturado).
+Estado da conta B depois: bia.qa@exemplo.com|6272ccaed8d3c532b6c52964d7c1cded|2  (hash e sessoes inalterados)
+Leitura: no Windows o getpass le direto do console (msvcrt), sem fallback para stdin; por pipe o comando
+espera o console e nao altera nada. O eco desligado no console Windows nao foi observado (limite).
