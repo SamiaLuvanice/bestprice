@@ -10,10 +10,12 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 
 ## Backend (agente `backend`)
 
-- [ ] B1 — `reset_password`: testes Red (AC01–AC04, AC06) e implementação.
-- [ ] B2 — CLI `python -m app.auth.reset_password`: testes Red (AC05, AC07) e implementação.
-- [ ] B3 — Integração com PostgreSQL real: login antigo/novo, sessão anterior → 401 (AC01, AC06), atomicidade (AC08).
+- [x] B1 — `reset_password`: testes Red (AC01–AC04, AC06) e implementação.
+- [x] B2 — CLI `python -m app.auth.reset_password`: testes Red (AC05, AC07) e implementação.
+- [x] B3 — Integração com PostgreSQL real: login antigo/novo, sessão anterior → 401 (AC01, AC06), atomicidade (AC08).
 - [ ] B4 — Gates do backend (`node .agents/scripts/gates.mjs --scope backend`) com contagem positiva; complexidade conforme a skill quality-gates.
+  Pendente: lint e complexidade ok; `backend:test` com 563 passed, 2 skipped e 1 falha pré-existente
+  (`test_login_flow_integration.py::test_ac17_…`, reproduzida em `origin/develop`; ver `verification.md`).
 
 ## Revisão, QA e entrega
 
