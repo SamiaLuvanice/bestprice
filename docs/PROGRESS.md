@@ -2,7 +2,7 @@
 
 ## 0059 — Redefinição de senha pela operação
 
-**22/11/2026 — spec `implementada`.** A PR #329 foi integrada em `develop` (`db90a49`). A validação em Stage segue pendente. [Issue #326](https://github.com/SamiaLuvanice/bestprice/issues/326),
+**22/11/2026 — spec `implementada`.** A PR #329 foi integrada em `develop` (`db90a49`). Promovida a `stage` pela PR #332 (`588859f`): health, migration e login sob RLS validados de fora; as verificações com conta QA seguem pendentes ([infraestrutura](apps/infraestrutura.md#sessões-e-redefinição-de-senha-em-stage--specs-0059-e-0060)). [Issue #326](https://github.com/SamiaLuvanice/bestprice/issues/326),
 branch `feature/0059-issue-326-redefinicao-senha-pela-operacao`. O comando
 `python -m app.auth.reset_password EMAIL`, rodado em `backend/` depois de confirmar a
 identidade da pessoa fora do sistema, pede a nova senha duas vezes sem eco (nunca como
@@ -21,7 +21,7 @@ Ver [verificação da spec 0059](../specs/0059-redefinicao-senha-pela-operacao/v
 
 ## 0060 — Sessão renovada durante o uso e sessões expiradas removidas
 
-**22/11/2026 — spec `implementada`.** A PR #328 foi integrada em `develop` (`674af59`). A validação em Stage segue pendente. [Issue #327](https://github.com/SamiaLuvanice/bestprice/issues/327),
+**22/11/2026 — spec `implementada`.** A PR #328 foi integrada em `develop` (`674af59`). Promovida a `stage` pela PR #332 (`588859f`): health, migration e login sob RLS validados de fora; as verificações com conta QA seguem pendentes ([infraestrutura](apps/infraestrutura.md#sessões-e-redefinição-de-senha-em-stage--specs-0059-e-0060)). [Issue #327](https://github.com/SamiaLuvanice/bestprice/issues/327),
 branch `feature/0060-issue-327-sessao-renovada-e-limpa`. A sessão termina após 24 horas
 sem uso ou 7 dias após o login, o que vier primeiro. A renovação é gravada no máximo uma
 vez por hora por um `UPDATE` condicionado, e o middleware `renewed_session_cookie` reenvia
