@@ -152,4 +152,15 @@ sempre ligado, a API não inicia em stage/production sem os dois segredos. Detal
 [backend](apps/backend.md#limite-de-tentativas-de-login--spec-0057) e pré-condição de
 Stage em [infraestrutura](apps/infraestrutura.md#limite-de-tentativas-de-login-em-stage--spec-0057).
 
+A spec 0060 dá à sessão duração por uso: ela termina após 24 horas sem requisição
+autenticada ou 7 dias após o login, o que vier primeiro. As regras ficam em
+`app/auth/sessions.py`; `current_user` usa o relógio injetado e, quando o novo término
+ganharia pelo menos 1 hora, grava a renovação em `user_sessions` por um `UPDATE`
+condicionado e a confirma antes da rota. O middleware HTTP `renewed_session_cookie`,
+registrado em `app/main.py`, reenvia o mesmo token com o novo `Max-Age` em qualquer
+resposta, inclusive erro; numa exceção não tratada (500) o cookie não é reenviado e só
+fica mais curto. O token não rotaciona. O ciclo de limpeza da API (`app/research/cleanup.py`)
+também apaga as sessões terminadas. Detalhes em [backend](apps/backend.md) e esquema em
+[banco](database.md).
+
 O Compose inicia DB, executa Alembic no backend, aguarda seu health check e inicia worker e frontend. A spec 0018 configura outra topologia: navegador → Cloudflare Pages/Function em `/api/*` → API Render → PostgreSQL Supabase exclusivo de stage. O Blueprint chama um script que executa Alembic antes de Uvicorn e usa `/api/health` como health check. O proxy mantém as chamadas e o cookie na origem da interface. Após a promoção #69, API e proxy públicos responderam health 200 com banco `ok`; login via Pages emitiu cookie `Secure` e `HttpOnly`. A migration `20261014rls` protege as dez tabelas `public` do Supabase de stage sem políticas de acesso direto. Uma pausa controlada do banco fez a API retornar 503; Events do Render registrou health check 503, seguido de 502 na borda. O restore recuperou o serviço. O worker não integra essa topologia. GitHub Actions valida o código e publica imagens após o fluxo de release. Consulte os guias de [backend](apps/backend.md), [frontend](apps/frontend.md), [banco](database.md) e [infraestrutura](apps/infraestrutura.md).

@@ -19,6 +19,24 @@ integração). Pendências: limite de espera (`lock_timeout`) na redefinição, 
 conferir o login em Stage após a promoção (privilégio exigido pelo `FOR SHARE` com RLS).
 Ver [verificação da spec 0059](../specs/0059-redefinicao-senha-pela-operacao/verification.md).
 
+## 0060 — Sessão renovada durante o uso e sessões expiradas removidas
+
+**22/11/2026 — implementação entregue; aguarda revisão.** [Issue #327](https://github.com/SamiaLuvanice/bestprice/issues/327),
+branch `feature/0060-issue-327-sessao-renovada-e-limpa`. A sessão termina após 24 horas
+sem uso ou 7 dias após o login, o que vier primeiro. A renovação é gravada no máximo uma
+vez por hora por um `UPDATE` condicionado, e o middleware `renewed_session_cookie` reenvia
+o cookie com o novo prazo em qualquer resposta. O ciclo de limpeza da API apaga as sessões
+terminadas, e `python -m app.research.cleanup` informa pesquisas e sessões removidas. A
+migração `20261122sessionabs` acrescenta `user_sessions.absolute_expires_at`, com backfill
+`created_at + 7 dias`. Também corrige a regressão pré-existente `test_ac17` da 0057.
+
+Backend: **569 passed, 2 skipped, 0 failed** com PostgreSQL 17 descartável; Radon sem
+bloco ≥ C. Revisão independente aprovada em duas rodadas; QA aprovou AC01–AC09 com API,
+SPA e PostgreSQL reais e Chrome. Pendências: marca `Secure` do cookie em Stage não
+observada; o middleware (`BaseHTTPMiddleware`) não reenvia o cookie num 500 não tratado,
+o que só encurta a sessão no navegador; o `server_default` do teto existe só na migração,
+não no modelo. Ver [verificação](../specs/0060-sessao-renovada-e-limpa/verification.md).
+
 ## 0058 — Harness agnóstico e verificável
 
 **13/11/2026 — implementação entregue; aguarda revisão.** [Issue #322](https://github.com/SamiaLuvanice/bestprice/issues/322),

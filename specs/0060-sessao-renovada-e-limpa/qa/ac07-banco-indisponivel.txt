@@ -1,0 +1,29 @@
+# AC07 — banco parado (docker stop bestprice-0060-qa-pg) durante a partida da API: o ciclo de limpeza falha
+## log do uvicorn (partida com o banco fora)
+INFO:     Started server process [27064]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8060 (Press CTRL+C to quit)
+Research expiration cleanup unavailable; expired records remain inaccessible.
+INFO:     127.0.0.1:65514 - "GET /api/health HTTP/1.1" 503 Service Unavailable
+## API continua respondendo
+$ curl -i /api/health
+HTTP/1.1 503 Service Unavailable
+{"status":"unavailable","database":"unavailable"}
+$ curl -i -X GET /api/auth/me (cookie NUTJmO…)
+HTTP/1.1 500 Internal Server Error
+$ docker start bestprice-0060-qa-pg
+$ curl -i /api/health
+HTTP/1.1 200 OK
+{"status":"ok","database":"ok"}
+$ curl -i -X GET /api/auth/me (cookie NUTJmO…)
+HTTP/1.1 200 OK
+{"id":"72dcde75-46b4-49a2-a597-f31630e07f12","email":"qa0060-b@example.com"}
+## log do uvicorn (final)
+  File "C:\Users\luvan\Learning\bestprice\.worktrees\feature-0060-issue-327-sessao-renovada-e-limpa\backend\.venv\Lib\site-packages\psycopg\connection.py", line 126, in connect
+    raise last_ex.with_traceback(None)
+sqlalchemy.exc.OperationalError: (psycopg.errors.ConnectionTimeout) connection timeout expired
+(Background on this error at: https://sqlalche.me/e/21/e3q8)
+INFO:     127.0.0.1:56403 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56405 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56407 - "GET /api/auth/me HTTP/1.1" 200 OK
