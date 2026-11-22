@@ -105,38 +105,40 @@ def snapshot(engine, user_id: uuid.UUID) -> tuple[str, int]:
         return password_hash, sessions
 
 
+def signed_in(email: str) -> TestClient:
+    client, response = login(email, OLD)
+    assert response.status_code == 200, response.text
+    assert client.get("/api/auth/me").status_code == 200
+    return client
+
+
+def error_code(response) -> tuple[int, str]:
+    return response.status_code, response.json().get("error", {}).get("code")
+
+
+def assert_account_data_kept(engine, email: str, user_id: uuid.UUID) -> None:
+    with Session(engine) as session:
+        assert session.scalar(select(User.id).where(User.email == email)) == user_id
+        tracked = session.scalars(select(TrackedProduct.active).where(TrackedProduct.user_id == user_id)).all()
+    assert tracked == [True]
+
+
 def test_ac01_ac06_cli_reset_switches_the_password_and_ends_every_session(monkeypatch, engine, api, capsys) -> None:
     email, user_id = new_account(engine, tracked=True)
     other_email, _ = new_account(engine)
-    browsers = []
-    for _ in range(2):
-        client, response = login(email, OLD)
-        assert response.status_code == 200, response.text
-        browsers.append(client)
-    other_client, response = login(other_email, OLD)
-    assert response.status_code == 200, response.text
-    assert all(client.get("/api/auth/me").status_code == 200 for client in browsers)
+    browsers = [signed_in(email), signed_in(email)]
+    other_browser = signed_in(other_email)
 
     run_cli(monkeypatch, engine, f"  {email.upper()} ", NEW)
     assert capsys.readouterr().out.strip() == "Senha redefinida; sessões encerradas"
 
-    for client in browsers:
-        me = client.get("/api/auth/me")
-        assert me.status_code == 401
-        assert me.json()["error"]["code"] == "unauthenticated"
-    assert other_client.get("/api/auth/me").status_code == 200
-
-    _, refused = login(email, OLD)
-    assert refused.status_code == 401
-    assert refused.json()["error"]["code"] == "invalid_credentials"
+    assert [error_code(client.get("/api/auth/me")) for client in browsers] == [(401, "unauthenticated")] * 2
+    assert other_browser.get("/api/auth/me").status_code == 200
+    assert error_code(login(email, OLD)[1]) == (401, "invalid_credentials")
     client, accepted = login(email, NEW)
     assert accepted.status_code == 200, accepted.text
-    me = client.get("/api/auth/me")
-    assert me.status_code == 200 and me.json()["email"] == email
-    with Session(engine) as session:
-        assert session.scalar(select(User.id).where(User.email == email)) == user_id
-        tracked = session.scalars(select(TrackedProduct.active).where(TrackedProduct.user_id == user_id)).all()
-        assert tracked == [True]
+    assert client.get("/api/auth/me").json()["email"] == email
+    assert_account_data_kept(engine, email, user_id)
 
 
 def test_ac08_database_failure_keeps_password_and_sessions_intact(engine, api) -> None:
