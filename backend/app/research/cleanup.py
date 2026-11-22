@@ -7,6 +7,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.auth.limiter import purge_signup_attempts
 from app.auth.login_limiter import purge_login_failures
+from app.auth.sessions import purge_expired_sessions
 from app.auth.settings import login_settings, signup_settings
 from app.db import create_database_engine
 from app.research.repository import purge_expired
@@ -26,6 +27,8 @@ def purge_database() -> int:
         purge_signup_attempts(session, now, signup_settings().rate_limit_window)
         # Mesma cadência para as falhas de login: os HMACs de origem e e-mail saem com a janela.
         purge_login_failures(session, now, login_settings().window)
+        # Sessões terminadas não guardam o vínculo conta–acesso; a validade nunca depende disto.
+        purge_expired_sessions(session, now)
         session.commit()
         return count
 

@@ -5,6 +5,8 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Request, Response
+from sqlalchemy import delete, or_
+from sqlalchemy.orm import Session
 
 from app.products.models import UserSession
 
@@ -58,3 +60,11 @@ async def renewed_session_cookie(
     if renewal is not None:
         set_session_cookie(response, *renewal)
     return response
+
+
+def purge_expired_sessions(session: Session, now: datetime) -> int:
+    """Apaga as sessões terminadas (inatividade, teto ou prazo antigo); quem chama confirma."""
+    result = session.execute(
+        delete(UserSession).where(or_(UserSession.expires_at <= now, UserSession.absolute_expires_at <= now)),
+    )
+    return result.rowcount
