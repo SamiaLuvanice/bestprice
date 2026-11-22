@@ -1,5 +1,24 @@
 # Progresso das specs
 
+## 0059 — Redefinição de senha pela operação
+
+**22/11/2026 — implementação entregue; aguarda revisão.** [Issue #326](https://github.com/SamiaLuvanice/bestprice/issues/326),
+branch `feature/0059-issue-326-redefinicao-senha-pela-operacao`. O comando
+`python -m app.auth.reset_password EMAIL`, rodado em `backend/` depois de confirmar a
+identidade da pessoa fora do sistema, pede a nova senha duas vezes sem eco (nunca como
+argumento), aplica as regras de senha do cadastro e, na mesma transação, grava o novo hash
+e encerra todas as sessões da conta. O login lê a conta com `FOR SHARE` e a redefinição
+trava a linha com `FOR UPDATE`, para que nenhum login concorrente fique com sessão criada
+pela senha antiga. O procedimento local e em Stage está em
+[backend](apps/backend.md) e no README.
+
+Testes da spec **23 passed**; backend **569 passed, 2 skipped, 1 failed** (o
+`test_ac17` da 0057, pré-existente em `develop` e corrigido pela spec 0060). Revisão
+independente aprovada; QA aprovou AC01–AC07 e AC09 no fluxo real (AC08 por teste de
+integração). Pendências: limite de espera (`lock_timeout`) na redefinição, como sugestão;
+conferir o login em Stage após a promoção (privilégio exigido pelo `FOR SHARE` com RLS).
+Ver [verificação da spec 0059](../specs/0059-redefinicao-senha-pela-operacao/verification.md).
+
 ## 0058 — Harness agnóstico e verificável
 
 **13/11/2026 — implementação entregue; aguarda revisão.** [Issue #322](https://github.com/SamiaLuvanice/bestprice/issues/322),

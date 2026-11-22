@@ -21,5 +21,9 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 
 - [x] R1 — `arch-reviewer` independente do diff. As correções 1–6 têm Red/Green em `verification.md` (seção "Correções de R1 e R2").
 - [x] R2 — `qa` valida AC01–AC09 com evidência (`verification.md`, seção QA). O achado Q1 foi corrigido em `c4869d4`.
-- [ ] R3 — Documentação (AC09) e `docs-impact` / `doc-sync-onboarding`.
+- [x] R3 — Documentação (AC09) e `docs-impact` / `doc-sync-onboarding`.
+  Na ponta `84da6ea`, `docs-impact` listou `docs/apps/backend.md` (alterado) e `docs/architecture.md` (a revisar).
+  `doc-sync-onboarding` conferiu `backend.md` e `README.md` contra `reset_password.py` e `_authenticate`;
+  `architecture.md` segue correto sem edição; `docs/index.md` e `docs/database.md` passaram a citar a redefinição;
+  entrada da 0059 em `docs/PROGRESS.md`.
 - [ ] R4 — PR para `develop` com `Closes #326`.
