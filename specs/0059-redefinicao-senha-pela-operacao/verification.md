@@ -31,7 +31,7 @@ QA (R2), `doc-sync-onboarding` (R3), CI e PR (R4) **não foram executados** e n�
 | AC01 — Redefinição bem-sucedida | aprovado (teste) | No PostgreSQL, após `main()`: login com a senha antiga → `401 invalid_credentials`; com a nova → 200 e `/api/auth/me` 200 com o mesmo e-mail; `users.id` e o vínculo em `tracked_products` (ativo) inalterados | `test_password_reset_integration.py::test_ac01_ac06_cli_reset_switches_the_password_and_ends_every_session`; `test_password_reset.py::test_ac01_new_password_replaces_the_old_one`, `::test_cli_resets_password_with_hidden_prompt_and_confirmation` |
 | AC02 — E-mail normalizado | aprovado (teste) | `"  Pessoa@EXEMPLO.com \t"` e o e-mail em maiúsculas com espaços (integração) encontram a conta | `test_password_reset.py::test_ac02_email_is_normalized_like_the_login`; integração acima (`f"  {email.upper()} "`) |
 | AC03 — Conta inexistente | aprovado (teste) | `AccountNotFound("Nenhuma conta com este e-mail.")`; CLI sai com código 2 e a mensagem em português; nenhuma conta criada, hash existente intacto | `test_password_reset.py::test_ac03_unknown_email_fails_without_creating_or_changing_anything`, `::test_cli_reports_errors_in_portuguese_without_changes[sem-conta]` |
-| AC04 — Regras de senha do cadastro | aprovado (teste) | 11 e 1025 caracteres → mesmas mensagens do cadastro (`password_too_short`, `password_too_long`); 12 e 1024 aceitos; surrogate isolado → "A senha contém caracteres inválidos."; hash e sessões intactos | `test_password_reset.py::test_ac04_signup_password_rules_apply_and_keep_the_password[senha-11/senha-1025]`, `::test_ac04_limits_are_inclusive`, `::test_cli_reports_errors_in_portuguese_without_changes[senha-curta/senha-1025/senha-nao-utf8/email-nao-utf8]` |
+| AC04 — Regras de senha do cadastro | aprovado (teste) | 11 e 1025 caracteres → mesmas mensagens do cadastro (`password_too_short`, `password_too_long`); 12 e 1024 aceitos; surrogate isolado → "A senha contém caracteres inválidos."; hash e sessões intactos. A referência da regra de caractere inválido é a CLI de criar conta (`provision`, mesma mensagem), não a API: o JSON da API não chega a ter texto que não vira UTF-8 | `test_password_reset.py::test_ac04_signup_password_rules_apply_and_keep_the_password[senha-11/senha-1025]`, `::test_ac04_limits_are_inclusive`, `::test_cli_reports_errors_in_portuguese_without_changes[senha-curta/senha-1025/senha-nao-utf8/email-nao-utf8]` |
 | AC05 — Confirmação diferente | aprovado (teste) | Código 2, "As senhas não conferem", hash e sessão intactos | `test_password_reset.py::test_ac05_different_confirmation_fails_and_keeps_the_password` |
 | AC06 — Sessões encerradas | aprovado (teste) | Duas sessões abertas pela API → ambas `401 unauthenticated` em `/api/auth/me`; sessão de outra conta segue 200 | integração `test_ac01_ac06_…`; `test_password_reset.py::test_ac06_all_sessions_of_the_account_end_and_others_stay` |
 | AC07 — Senha nunca exposta | aprovado (teste) | Argumento posicional extra ou `--password` → código 2 sem alterar o hash; prompts via `getpass` ("Nova senha (12 a 1024 caracteres): ", "Confirme a nova senha: "); a senha não aparece em stdout, stderr nem `caplog` no sucesso e em cada erro | `test_password_reset.py::test_ac07_password_is_not_accepted_as_argument`, `::test_cli_resets_password_with_hidden_prompt_and_confirmation`, `::test_ac05_…`, `::test_cli_reports_errors_in_portuguese_without_changes` |
@@ -62,7 +62,7 @@ ou o teste da 0057, fora do escopo exclusivo desta spec (a 0060 altera `routes.p
 
 - Portão `backend:test` vermelho pela falha pré-existente acima; precisa de correção em spec/PR próprio
   (ou na 0060) antes do CI desta PR ficar verde.
-- R1 (revisão independente), R2 (QA com fluxo em terminal real), R3 (`doc-sync-onboarding`), R4 (PR).
+- R3 (`doc-sync-onboarding`) e R4 (PR). R1 e R2 foram feitos; as correções estão na seção final.
 - `docs/PROGRESS.md` fica com o orquestrador.
 
 ## QA (R2)
@@ -126,3 +126,31 @@ CI, PR, Project e release não foram verificados pelo QA.
 
 Container `bestprice-0059-qa-pg`, imagem `bestprice-0059-qa-api` e o processo uvicorn da porta
 8059 removidos/parados ao final.
+
+## Correções de R1 e R2
+
+Registro do agente `backend` em 22/11/2026. A ponta inicial era `5ad760c` (commit da QA) e a ponta
+avaliada é **`45dc5a5`**. PostgreSQL 17 descartável `bestprice-0059-test-pg` (localhost:55459), removido ao final.
+
+| Item | Origem | Red (motivo esperado) | Green | Commit |
+|---|---|---|---|---|
+| 1 — Corrida login × redefinição | R1 (importante) | `test_race_login_in_progress_cannot_keep_a_session_after_the_reset`: `AssertionError: o reset não esperou a trava do login em andamento`; `test_race_login_started_during_the_reset_reads_the_new_hash`: `AssertionError: o login não esperou a trava do reset em curso` | `_authenticate` lê a conta com `with_for_update(read=True)` (FOR SHARE, mantido até o commit de `issue_session`); `reset_password` faz `SELECT … FOR UPDATE` na linha antes do `DELETE`. Os 2 testes passam, e as suítes de login com PostgreSQL (`test_login_concurrency_integration.py`, `test_login_flow_integration.py`) e SQLite (`test_login_http.py`, `test_auth_http.py`) também, exceto o `test_ac17` pré-existente | `e5000bc` |
+| 2 — Senha ecoada pelo argparse | Q1 do R2 e sugestão 5 do R1 | `test_ac07_password_is_not_accepted_as_argument_nor_echoed[posicional/opcao/opcao-com-igual]`: o stderr continha `unrecognized arguments: senha-nova-validada-456` (e `--password …`, `--password=…`) | `parse_known_args` e `allow_abbrev=False`. Os argumentos extras saem com código 2 e a mensagem "Argumentos não reconhecidos; a senha é solicitada no terminal.", sem o valor em stdout, stderr nem log. O `provision` tem o mesmo eco: fica como observação, fora do escopo | `c4869d4` |
+| 3 — Conta conferida antes dos prompts | R1 | `test_cli_checks_the_account_before_asking_for_the_password[sem-conta/email-nao-utf8]`: `assert ['Nova senha …', 'Confirme a nova senha: '] == []` | `utf8_encodable(email)` e `find_account` rodam antes do `getpass`, com as mesmas mensagens e o código 2; `reset_password` continua conferindo a conta na própria transação | `58c27ab` |
+| 4 — Hash fora da trava | R1 | Refatoração sem mudança observável (sem Red) | `hash_password` roda antes do `SELECT … FOR UPDATE`; 23 passed | `479eb5f` |
+| 5 — AC08 autossuficiente | R1 | Mudança de teste. Controle por mutação (commit separado após o `DELETE`): falha com sessões `0 != 2` | Dentro do listener `after_flush`, a própria transação vê `(sessões=0, hash novo)`, `inside == [(0, True)]`; depois do rollback, hash e as 2 sessões voltam a ser os de antes | `3e37df7` |
+| 6 — DATABASE_URL do Stage fora do histórico | R1 | Documentação | `docs/apps/backend.md`: no PowerShell, `Read-Host -AsSecureString` e `Remove-Item Env:DATABASE_URL`; no bash, `read -rs` e `unset`. Também registra as travas do login e do reset | `45dc5a5` |
+
+### Portões nesta rodada (ponta `45dc5a5`)
+
+| Comando | Resultado |
+|---|---|
+| `uv run pytest -q tests/test_password_reset.py tests/test_password_reset_integration.py` (com `TEST_DATABASE_URL`) | **23 passed**, 0 skipped |
+| `node .agents/scripts/gates.mjs --scope backend` (com `TEST_DATABASE_URL`) | install ✔, lint ✔, test ✘: **1 failed, 569 passed, 2 skipped**. A falha é só o `test_ac17` pré-existente; os skips são os 2 POSIX de `test_stage_start.py` |
+| `complexity_report.py backend/app --changed origin/develop` | 65 blocos, média 2,63 (A), A 58 · B 7, nenhum rank C ou pior |
+| `node .agents/scripts/docs-impact.mjs` | `docs/apps/backend.md` alterado (por `reset_password.py` e `routes.py`). `docs/architecture.md` a revisar: conferido, continua correto sem edição |
+
+Limites: as corridas foram exercitadas com as funções reais (`_authenticate`, `issue_session`,
+`reset_password`) em threads e sessões independentes no PostgreSQL. A espera foi detectada em
+`pg_stat_activity` (`wait_event_type = 'Lock'`), não por requisições HTTP concorrentes. O eco no console
+Windows continua não observado (ver R2).

@@ -18,6 +18,15 @@ unauthenticated` nas sessões encerradas).
   `users.password_hash` e apaga as linhas de `user_sessions` do `user_id` e confirma uma
   única vez. Qualquer exceção antes do commit faz rollback (AC08).
 - **Sem mudança de esquema:** nenhuma migração.
+- **Travas de linha contra a corrida com o login (após R1):** o login (`_authenticate` em
+  `routes.py`) lê a conta com `FOR SHARE`, mantido até o commit de `issue_session` na mesma sessão
+  da requisição. `reset_password` faz `SELECT … FOR UPDATE` na linha da conta antes do `DELETE` das
+  sessões. Assim, um login que já leu o hash antigo termina antes e a sessão dele é apagada, e um login
+  que começa durante o reset espera e confere o hash novo. Logins simultâneos não se bloqueiam entre si
+  (`FOR SHARE` é compatível com `FOR SHARE`); no SQLite, o SQLAlchemy omite a cláusula. O
+  `hash_password` roda antes da trava, para encurtar a transação de escrita.
+- **CLI sem eco de argumentos:** `parse_known_args`; extras saem com código 2 e mensagem genérica,
+  sem repetir o valor. E-mail e conta são conferidos antes dos prompts de senha.
 
 ## Função de domínio
 

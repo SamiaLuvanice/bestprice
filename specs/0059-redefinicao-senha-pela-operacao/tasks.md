@@ -14,12 +14,12 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 - [x] B2 — CLI `python -m app.auth.reset_password`: testes Red (AC05, AC07) e implementação.
 - [x] B3 — Integração com PostgreSQL real: login antigo/novo, sessão anterior → 401 (AC01, AC06), atomicidade (AC08).
 - [ ] B4 — Gates do backend (`node .agents/scripts/gates.mjs --scope backend`) com contagem positiva; complexidade conforme a skill quality-gates.
-  Pendente: lint e complexidade ok; `backend:test` com 563 passed, 2 skipped e 1 falha pré-existente
-  (`test_login_flow_integration.py::test_ac17_…`, reproduzida em `origin/develop`; ver `verification.md`).
+  Pendente só pelo `test_login_flow_integration.py::test_ac17_…`, pré-existente em `origin/develop` e corrigido
+  pela 0060. Na ponta `45dc5a5`: lint ✔, complexidade sem rank C, `backend:test` com 569 passed, 2 skipped e 1 failed (ver `verification.md`).
 
 ## Revisão, QA e entrega
 
-- [ ] R1 — `arch-reviewer` independente do diff.
-- [ ] R2 — `qa` valida AC01–AC09 com evidência.
+- [x] R1 — `arch-reviewer` independente do diff. As correções 1–6 têm Red/Green em `verification.md` (seção "Correções de R1 e R2").
+- [x] R2 — `qa` valida AC01–AC09 com evidência (`verification.md`, seção QA). O achado Q1 foi corrigido em `c4869d4`.
 - [ ] R3 — Documentação (AC09) e `docs-impact` / `doc-sync-onboarding`.
 - [ ] R4 — PR para `develop` com `Closes #326`.
