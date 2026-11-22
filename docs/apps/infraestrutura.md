@@ -239,6 +239,35 @@ Compose e do `start-stage.sh`. No Compose local, o serviço `backend` recebe as 
 `LOGIN_RATE_LIMIT_*` do `.env`, com os mesmos padrões do código; com o segredo de HMAC
 vazio, a API gera um valor aleatório por processo.
 
+## Sessões e redefinição de senha em Stage — specs 0059 e 0060
+
+Nenhuma variável nova no Render ou no Pages. A migration `20261122sessionabs` acrescenta
+`user_sessions.absolute_expires_at` (backfill `created_at + 7 dias` e `server_default`
+para a instância antiga durante a troca) e é aplicada pelo `start-stage.sh`; se falhar, a
+API não inicia e o deploy anterior continua no ar. Regras em
+[backend](backend.md).
+
+**Estado em Stage (22/11/2026, promoção PR #332):** o Render publicou `588859f` às
+20:43:18 UTC, depois do CI verde no push em `stage`. Observado de fora, sem conta e sem
+acesso ao banco:
+
+- health 200 com banco `ok`, direto em `*.onrender.com` e pelo Pages;
+- `GET /api/auth/me` com cookie inválido respondeu `401 unauthenticated`, não 500. O
+  código novo lê `absolute_expires_at` em toda checagem de sessão, e o `start-stage.sh`
+  não sobe a API sem a migration; daí a inferência de que a coluna existe;
+- `POST /api/auth/login` pelo Pages com e-mail sem conta respondeu `401
+  invalid_credentials`, não 500. A leitura da conta usa `FOR SHARE`, cujo privilégio o
+  PostgreSQL confere ao executar a consulta mesmo sem linhas; o papel da `DATABASE_URL`
+  tem o privilégio necessário sob RLS;
+- a SPA respondeu 200 em `/login`.
+
+**Pendente (exige conta QA descartável e a `DATABASE_URL` de Stage):** login com sucesso
+e atributos do cookie (`Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/api`), renovação após
+mais de 1 hora, a limpeza das sessões terminadas no ciclo da API (sem acesso aos logs do
+Render nesta validação) e o comando `python -m app.auth.reset_password` encerrando sessões
+reais. O procedimento seguro para rodar comandos contra o banco Stage está em
+[backend](backend.md).
+
 ## Sonda oficial do Mercado Livre no GitHub Actions
 
 O Render Free não disponibiliza Shell nem One-off Jobs. Após o workflow ser
