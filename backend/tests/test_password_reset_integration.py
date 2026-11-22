@@ -153,17 +153,22 @@ def test_ac08_database_failure_keeps_password_and_sessions_intact(engine, api) -
     assert before[1] == 2
 
     with Session(engine) as session:
-        statements: list[str] = []
+        inside: list[tuple[int, bool]] = []
 
         @event.listens_for(session, "after_flush")
-        def fail_after_writes(_session, _context) -> None:
-            # O DELETE das sessões e o UPDATE do hash já foram enviados ao PostgreSQL.
-            statements.append("flush")
+        def fail_after_writes(flushed, _context) -> None:
+            # Na própria transação: o DELETE e o UPDATE já foram enviados ao PostgreSQL.
+            connection = flushed.connection()
+            sessions = connection.scalar(
+                select(func.count()).select_from(UserSession).where(UserSession.user_id == user_id),
+            )
+            stored = connection.scalar(select(User.password_hash).where(User.id == user_id))
+            inside.append((sessions, verify_password(NEW, stored)))
             raise RuntimeError("falha simulada do banco antes do commit")
 
         with pytest.raises(RuntimeError, match="falha simulada"):
             reset_password(session, email, NEW)
-        assert statements == ["flush"]
+        assert inside == [(0, True)]
 
     after = snapshot(engine, user_id)
     assert after == before
