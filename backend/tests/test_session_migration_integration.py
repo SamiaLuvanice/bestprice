@@ -65,3 +65,24 @@ def test_upgrade_caps_existing_sessions_at_seven_days_from_creation(engine) -> N
         ).one()
     assert expires_at == old_expiry  # mantém o término que já tinha
     assert absolute_expires_at == CREATED + timedelta(days=7)
+
+
+def test_insert_without_ceiling_from_an_old_instance_gets_seven_days(engine) -> None:
+    # Implantação sem parada: a instância antiga ainda grava sessões sem a coluna nova.
+    user_id = uuid.uuid4()
+    with engine.begin() as connection:
+        connection.execute(
+            text("INSERT INTO users (id, email, password_hash) VALUES (:id, :email, 'x')"),
+            {"id": user_id, "email": f"antiga-{user_id.hex}@exemplo.com"},
+        )
+        connection.execute(
+            text(
+                "INSERT INTO user_sessions (id, user_id, token_hash, expires_at) "
+                "VALUES (:id, :user_id, :token_hash, now() + interval '24 hours')",
+            ),
+            {"id": uuid.uuid4(), "user_id": user_id, "token_hash": uuid.uuid4().hex * 2},
+        )
+        ceiling_offset = connection.execute(
+            text("SELECT absolute_expires_at - now() FROM user_sessions WHERE user_id = :id"), {"id": user_id},
+        ).scalar_one()
+    assert ceiling_offset == timedelta(days=7)  # now() é o instante da transação

@@ -37,6 +37,8 @@ class UserSession(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id"), nullable=False)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     # Término por inatividade (deslizante); absolute_expires_at é o teto contado do login.
+    # No PostgreSQL a coluna tem padrão now() + 7 dias (migração 20261122sessionabs) só para a
+    # instância antiga durante a implantação; o SQLite dos testes não aceita essa expressão.
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     absolute_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
