@@ -78,6 +78,75 @@ descartável `bestprice-0060-test-pg` (`-p 55460:5432`, sem volume), removido ao
 
 ## Pendências
 
-- R1 revisão independente, R2 QA ponta a ponta (API + SPA, sessão continua após renovação e
-  expira), R3 sincronização de `docs/architecture.md` e `docs/database.md`, R4 PR.
+- R1 revisão independente, R3 sincronização de `docs/architecture.md` e `docs/database.md`, R4 PR.
+  R2 (QA ponta a ponta) registrada na seção abaixo.
 - Sem push nem PR nesta etapa.
+
+## QA (R2)
+
+Registro do agente QA em 22/11/2026, na mesma worktree e branch, ponta avaliada **`fb6f211`**
+(código igual a `5a93913`; os commits seguintes são só documentação). Nenhum código de produção foi
+alterado. Saídas brutas em [`qa/`](qa/): tokens truncados em 6 caracteres, banco identificado só
+pelos 12 primeiros caracteres do hash. Nenhuma senha, segredo ou token completo foi gravado (conferido
+por busca nos arquivos).
+
+### Fronteiras da evidência
+
+| Camada | Real | Simulado | Limite |
+|---|---|---|---|
+| Fluxo HTTP | uvicorn `app.main:app` (127.0.0.1:8060, `APP_ENV=development`), PostgreSQL 17 descartável `bestprice-0060-qa-pg` (127.0.0.1:55464, sem volume), migrações Alembic reais, `curl` com cookie jar | Passagem do tempo: `created_at`, `expires_at` e `absolute_expires_at` recuados/ajustados por `UPDATE` no `psql` (a API usa o relógio real) | Não houve espera real de horas ou dias; `cleanup_loop` não foi observado no intervalo de 1 h, só na partida |
+| SPA | Chrome real (Claude in Chrome), Vite 127.0.0.1:5160 com proxy `/api` → 8060 | Mesma manipulação de instantes no banco | Viewport única (1100 px); `Secure` em Stage não observado (só teste `::test_ac04_renewed_cookie_is_secure_in_stage`) |
+| Conta | `provision_user` de `app.auth.provision` contra o banco do QA | — | **`uv run python -m app.auth.provision` não foi usado**: o `getpass` no Windows lê o console e não o stdin canalizado (o comando terminou sem criar a conta). As duas contas foram criadas chamando a mesma função `provision_user` por `uv run python -c` |
+| Stage / CI / PR | — | — | Não observados |
+
+Configuração do ambiente: na primeira partida usei `DATABASE_URL=postgresql+psycopg://…`; o health
+respondeu `503` (`ProgrammingError`), porque `app/health.py` passa a URL direto ao psycopg. Erro meu de
+configuração (o formato documentado é `postgresql://…`); com ele a API e o health ficaram `200`. Não é
+efeito da 0060.
+
+### Matriz de aceite (R2)
+
+| AC | Veredito | Observado em execução real | Saída |
+|---|---|---|---|
+| AC01 — Uso prolonga | **aprovado** | S5: sessão com login há 43 h e `expires_at` em +1 h (última renovação às 20 h). `GET /api/dashboard` → **200** com `Set-Cookie` de renovação (valor de sessão inalterado, idade máxima de 86400 s); no banco `expires_at` passou a `now()+24h` e o teto ficou intacto (5 dias 4 h restantes) | `qa/http-flow.txt` |
+| AC02 — Inatividade encerra | **aprovado** | S7: `expires_at` vencido há 1 min, teto a 5 dias 18 h → `/api/auth/me` e `/api/dashboard` **401 `unauthenticated`**, sem `Set-Cookie`. Na SPA: sessão renovada pela navegação, depois `expires_at` vencido no banco; ao abrir Monitoramento a interface foi para `/login?returnTo=%2Fapp%2Fmonitoring` com o alerta "Entre para continuar." | `qa/http-flow.txt`, `qa/ui-ac02-inatividade-volta-ao-login.jpg` |
+| AC03 — Teto absoluto | **aprovado** | S8: login real, `absolute_expires_at` vencido há 1 min e `expires_at` em +23 h 55 min (uso recente) → **401** em `/me` e `/dashboard`. Fronteira: teto em +1 min → 200 sem renovação. Na SPA: novo login, teto vencido no banco, recarga de `/app/dashboard` → tela de login (`returnTo=%2Fapp%2Fdashboard`); na carga inicial a tela não mostra o alerta, igual ao que já acontecia para sessão ausente | `qa/http-flow.txt`, `qa/ui-ac03-teto-volta-ao-login.jpg` |
+| AC04 — Cookie acompanha | **aprovado** (Stage só teste) | Login: `HttpOnly; Max-Age=86400; Path=/api; SameSite=lax`, sem `Secure` em development. S2: três requisições na mesma hora → sem `Set-Cookie` e `expires_at` sem escrita. S3: instantes recuados 70 min → `Set-Cookie` com o **mesmo valor de sessão** e os mesmos atributos, idade máxima de 86400 s; o cookie jar do curl manteve o token e passou a expirar em agora + 86 399 s; a requisição seguinte não renovou. S4: renovação também na resposta **404** de `GET /api/tracked-products/{id}`. S6: teto em 22 h e `expires_at` em 20 h → `Max-Age=79199` e `expires_at = absolute_expires_at` (não passa do teto). SPA: após recuo de 70 min, a navegação gravou `expires_at = now()+24h` e o recarregamento seguinte continuou autenticado | `qa/http-flow.txt` |
+| AC05 — Logout imediato | **aprovado** | S9: login, recuo de 2 h, `/me` → 200 com `Set-Cookie` de renovação; `POST /api/auth/logout` → **204** com `Set-Cookie` de exclusão (`Max-Age=0`, valor vazio); 0 linhas da sessão no banco; o mesmo cookie em `/me`, `/dashboard` e `/tracked-products/{id}` → **401**, nenhum `Set-Cookie` que recrie a sessão | `qa/http-flow.txt` |
+| AC06 — Limpeza | **aprovado** | Antes do ciclo havia 8 sessões nas duas contas: 5 terminadas (inatividade nas contas A e B, teto nas contas A e B e "prazo antigo" na conta B) e 3 válidas (2 da A, incluindo as duas emitidas antes da migração, e 1 da B). `uv run python -m app.research.cleanup` → ficaram **só as 3 válidas**; elas seguem com `200` em `/me` e as removidas recebem `401`. Na partida da API, o ciclo também removeu a sessão antiga vencida (`legacy_expired`) | `qa/ac06-cleanup.txt`, `qa/ac08-backfill.txt` |
+| AC07 — Falha na limpeza | **aprovado** (falha total do banco; falha só do purge de sessões, só teste) | `docker stop` do PostgreSQL e partida da API: o log mostra `Research expiration cleanup unavailable; expired records remain inaccessible.` e o processo segue no ar; `/api/health` → `503 {"status":"unavailable",…}`. Após `docker start`: health `200` e a mesma sessão `/me` → `200`. Com o banco fora, `/me` → `500` (comportamento anterior, igual ao login na 0057). Nenhuma senha nem token no log do uvicorn | `qa/ac07-banco-indisponivel.txt` |
+| AC08 — Sessões anteriores | **aprovado** | Na revisão `20261113loginfail`, foram inseridas 3 sessões no formato antigo. `alembic upgrade head` → coluna `absolute_expires_at timestamptz NOT NULL`, `absolute_expires_at - created_at = 7 days` nas 3, `expires_at` preservado. `legacy_recent` (23 h): 200 e renovada para +24 h (dentro do teto). `legacy_near_ceiling` (expires_at +10 h, teto em ~28 min): 200 **sem** renovação; término efetivo = teto, sem sobrevida. `legacy_expired`: 401 e removida na partida | `qa/ac08-backfill.txt` |
+| AC09 — Relógio injetado | **aprovado** (teste) | Fora do escopo do fluxo real; conferido na suíte (abaixo) | — |
+
+### Gates reexecutados pelo QA (`fb6f211`)
+
+PostgreSQL de teste: banco `bestprice_test` no mesmo container do QA, apontado por `TEST_DATABASE_URL`.
+
+| Comando | Resultado |
+|---|---|
+| `node .agents/scripts/gates.mjs --scope backend` | install ✔, lint ✔ (`All checks passed!`), test ✔: **563 passed, 2 skipped** em 120,77 s (skips: `test_stage_start.py`, POSIX) |
+| `uv run pytest -q -rs tests/test_session_migration_integration.py tests/test_session_purge_integration.py tests/test_session_lifetime_http.py` | **16 passed**, 0 skipped |
+
+Frontend não foi alterado pela spec e seus portões não foram reexecutados nesta QA.
+
+### Observações (não bloqueiam o aceite)
+
+- **O1 — Saída da limpeza manual.** `python -m app.research.cleanup` imprime só "Pesquisas expiradas
+  removidas: 0" e não informa quantas sessões removeu (`purge_expired_sessions` devolve a contagem, mas
+  `purge_database` não a usa). Só a verificação no banco mostra o efeito.
+- **O2 — Corrida logout × renovação (hipótese, não reproduzida).** Se uma requisição renova a sessão
+  enquanto o logout dela é confirmado em paralelo, o `UPDATE` do ORM pode afetar 0 linhas e o SQLAlchemy
+  pode levantar `StaleDataError` (500 em vez de 401). A janela é de milissegundos e não houve teste
+  nem reprodução.
+- **O3 — `created_at` e teto.** `created_at` vem do `now()` do banco e `absolute_expires_at` do relógio da
+  API, com diferença observada de cerca de 0,09 s. O efeito é desprezível.
+
+### Bugs
+
+Nenhum bug encontrado nos cenários executados.
+
+### Limpeza do ambiente
+
+uvicorn e Vite encerrados (um processo filho do Vite em 5160 sobreviveu ao fim da tarefa e foi
+finalizado pelo PID). O container `bestprice-0060-qa-pg` foi removido. As portas 8060, 5160 e 55464
+ficaram livres.
