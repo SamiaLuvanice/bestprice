@@ -2,7 +2,7 @@
 
 ## 0061 — Login disponível enquanto a API está acordando
 
-**25/11/2026 — implementação entregue; aguarda PR e revisão final.** [Issue #336](https://github.com/SamiaLuvanice/bestprice/issues/336),
+**25/11/2026 — spec `implementada`.** A PR #337 foi integrada em `develop` (`6e65785`); a validação em Stage depende da próxima promoção. [Issue #336](https://github.com/SamiaLuvanice/bestprice/issues/336),
 branch `feature/0061-issue-336-login-disponivel-com-api-acordando`. Só frontend; o contrato
 REST não muda. Quando a verificação de sessão ou do cadastro falha por indisponibilidade
 (rede, `429` sem envelope do Render hibernado, `5xx`, resposta inválida) ou passa de 5 s

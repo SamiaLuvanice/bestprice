@@ -3,7 +3,7 @@ numero: 0061
 titulo: Login disponível enquanto a API está acordando
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend]
 depende_de: [0048, 0050]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/336

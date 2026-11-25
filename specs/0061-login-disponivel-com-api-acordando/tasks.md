@@ -21,4 +21,4 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 - [x] R1 — `arch-reviewer` independente do diff (aprovada com condições; correções em `verification.md`, "Correções pós-revisão e QA"; re-revisão aprovada em "Re-revisão das correções (R1)").
 - [x] R2 — `qa` valida AC01–AC15 com evidência, incluindo fluxo local com API indisponível e lenta (`verification.md`, "QA (R2)"; observações tratadas em "Correções pós-revisão e QA").
 - [x] R3 — `docs-impact` / `doc-sync-onboarding` (`docs/apps/frontend.md` e `docs/PROGRESS.md`; ver `verification.md`, "Sincronização da documentação (R3)").
-- [ ] R4 — PR para `develop` com `Closes #336`.
+- [x] R4 — PR #337 integrada em `develop` (`6e65785`), com `Closes #336`.
