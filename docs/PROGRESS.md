@@ -1,5 +1,24 @@
 # Progresso das specs
 
+## 0061 — Login disponível enquanto a API está acordando
+
+**25/11/2026 — implementação entregue; aguarda PR e revisão final.** [Issue #336](https://github.com/SamiaLuvanice/bestprice/issues/336),
+branch `feature/0061-issue-336-login-disponivel-com-api-acordando`. Só frontend; o contrato
+REST não muda. Quando a verificação de sessão ou do cadastro falha por indisponibilidade
+(rede, `429` sem envelope do Render hibernado, `5xx`, resposta inválida) ou passa de 5 s
+sem resposta, a SPA repete a consulta sozinha numa janela de 60 s, com até 6 novas
+tentativas (2/4/8/12/15/15 s) e um aviso neutro em `role="status"`. O login mostra o
+formulário com o aviso em vez da tela que só oferecia "Tentar novamente"; o cadastro e as
+áreas logadas esperam com o aviso e só mostram o erro ao fim da janela. A landing não muda.
+Detalhes em [frontend](apps/frontend.md#sessão-com-a-api-acordando--spec-0061).
+
+Frontend: **892 testes Vitest** (63 arquivos), lint, `tsc` e build verdes; portões do
+frontend verdes no commit `9ab04a6`. Revisão independente aprovada com condições, todas
+corrigidas em TDD; QA aprovou AC01–AC15 com uma API falsa que simula a hibernação.
+Pendências: verificação contra Render e Pages reais (exige promoção a Stage), leitor de
+tela real, nova captura do espaçamento do aviso e quadro Figma do aviso, se desejado.
+Ver [verificação](../specs/0061-login-disponivel-com-api-acordando/verification.md).
+
 ## 0059 — Redefinição de senha pela operação
 
 **22/11/2026 — spec `implementada`.** A PR #329 foi integrada em `develop` (`db90a49`). Promovida a `stage` pela PR #332 (`588859f`): health, migration e login sob RLS validados de fora; as verificações com conta QA seguem pendentes ([infraestrutura](apps/infraestrutura.md#sessões-e-redefinição-de-senha-em-stage--specs-0059-e-0060)). [Issue #326](https://github.com/SamiaLuvanice/bestprice/issues/326),

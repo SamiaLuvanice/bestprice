@@ -1,29 +1,21 @@
-import { useCallback, useEffect, useState } from 'react'
 import { api } from '../api'
+import { useWakeRetry } from './wakeRetry'
 
 /** Interruptor do cadastro decidido pelo servidor (spec 0048, AC14). */
 export type SignupAvailability = 'loading' | 'enabled' | 'disabled' | 'error'
 
+const fetchSignupStatus = () => api.signupStatus()
+
 /**
- * Consulta `GET /api/auth/signup` uma vez por montagem. Erro de rede, HTTP ou corpo fora do
- * contrato vira `error`; `retry` consulta de novo. Quem consome esconde os links fora de `enabled`.
+ * Consulta `GET /api/auth/signup` na montagem. Com `active` (Entrar e Criar conta), uma
+ * indisponibilidade é repetida na janela da spec 0061, com `waking` verdadeiro; o erro só aparece
+ * quando a janela termina ou quando a API acordada responde um erro definitivo. `retry` abre uma
+ * nova janela. Quem consome esconde os links fora de `enabled`.
  */
-export function useSignupAvailability(): { availability: SignupAvailability; retry: () => void } {
-  const [availability, setAvailability] = useState<SignupAvailability>('loading')
-  const [attempt, setAttempt] = useState(0)
-
-  useEffect(() => {
-    let active = true
-    api.signupStatus()
-      .then((status) => { if (active) setAvailability(status.enabled ? 'enabled' : 'disabled') })
-      .catch(() => { if (active) setAvailability('error') })
-    return () => { active = false }
-  }, [attempt])
-
-  const retry = useCallback(() => {
-    setAvailability('loading')
-    setAttempt((current) => current + 1)
-  }, [])
-
-  return { availability, retry }
+export function useSignupAvailability(active = true): { availability: SignupAvailability; waking: boolean; retry: () => void } {
+  const check = useWakeRetry(fetchSignupStatus, { active })
+  const availability: SignupAvailability = check.phase === 'settled'
+    ? check.value ? check.value.enabled ? 'enabled' : 'disabled' : 'error'
+    : check.phase === 'exhausted' ? 'error' : 'loading'
+  return { availability, waking: check.phase === 'waking', retry: check.retry }
 }

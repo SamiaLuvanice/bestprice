@@ -1,0 +1,112 @@
+[
+  {
+    "name": "AC14 login rápido sem aviso",
+    "ok": true,
+    "detail": "aviso visível=false"
+  },
+  {
+    "name": "AC01/AC02 formulário + aviso como status",
+    "ok": true,
+    "detail": "t=1.7s status=1 tentarNovamente=0 foco=login-title linkCriarConta=0"
+  },
+  {
+    "name": "AC04 aviso some com 401 e preserva digitação",
+    "ok": true,
+    "detail": "aviso sumiu em t=15.6s email=qa@example.com senhaPreservada=true"
+  },
+  {
+    "name": "AC07 link Criar conta aparece sem recarregar",
+    "ok": true,
+    "detail": "links=1"
+  },
+  {
+    "name": "AC04 tentativas param após 401",
+    "ok": true,
+    "detail": "me antes=5 depois de 10 s=5; chamadas=[{\"t\":\"1.1\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"1.1\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"1.1\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"1.1\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"3.2\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"3.2\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"7.2\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"7.2\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"15.2\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"15.2\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"}]"
+  },
+  {
+    "name": "Visual 390 px sem rolagem horizontal",
+    "ok": true,
+    "detail": "scrollWidth=390"
+  },
+  {
+    "name": "AC05 envio durante hibernação mostra erro atual e mantém aviso",
+    "ok": true,
+    "detail": "t=5.6s alerta=[\"Não foi possível concluir a operação. Tente novamente.\"] aviso=true"
+  },
+  {
+    "name": "AC05 login bem-sucedido segue ao returnTo e não é desfeito",
+    "ok": true,
+    "detail": "url após 8 s=/alertas; chamadas=[{\"t\":\"0.5\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"0.5\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"0.5\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"0.5\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"2.6\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"2.6\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"4.7\",\"url\":\"/api/auth/login\",\"method\":\"POST\"},{\"t\":\"6.6\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"6.6\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"8.7\",\"url\":\"/api/auth/login\",\"method\":\"POST\"},{\"t\":\"8.7\",\"url\":\"/api/tracked-products\",\"method\":\"GET\"},{\"t\":\"8.7\",\"url\":\"/api/notifications\",\"method\":\"GET\"},{\"t\":\"8.7\",\"url\":\"/api/notifications\",\"method\":\"GET\"},{\"t\":\"8.7\",\"url\":\"/api/tracked-products\",\"method\":\"GET\"},{\"t\":\"8.7\",\"url\":\"/api/notifications\",\"method\":\"GET\"},{\"t\":\"8.7\",\"url\":\"/api/notifications\",\"method\":\"GET\"}]"
+  },
+  {
+    "name": "AC03 sessão encontrada depois leva ao returnTo",
+    "ok": true,
+    "detail": "t=6.4s url=/produtos"
+  },
+  {
+    "name": "AC08 Carregando… + aviso sem Tentar novamente",
+    "ok": true,
+    "detail": "t=0.4s carregando=1 tentar=0"
+  },
+  {
+    "name": "AC08 formulário aparece quando o cadastro é confirmado",
+    "ok": true,
+    "detail": "t=14.6s url=/cadastro; chamadas=[{\"t\":\"0.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"0.4\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"0.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"0.4\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"2.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"2.4\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"6.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"6.4\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"},{\"t\":\"14.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"14.4\",\"url\":\"/api/auth/signup\",\"method\":\"GET\"}]"
+  },
+  {
+    "name": "AC10 Carregando sua conta… + aviso",
+    "ok": true,
+    "detail": "t=0.5s"
+  },
+  {
+    "name": "AC10 área abre quando a API acorda",
+    "ok": true,
+    "detail": "t=14.6s chamadas=[{\"t\":\"0.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"0.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"2.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"6.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"14.5\",\"url\":\"/api/auth/me\",\"method\":\"GET\"}]"
+  },
+  {
+    "name": "AC01 demora > 5 s mostra formulário + aviso",
+    "ok": true,
+    "detail": "aos 2,5 s carregando=1 form=0; aviso em t=5.8s"
+  },
+  {
+    "name": "Modo lento: sem requisições paralelas e aviso some ao acordar",
+    "ok": true,
+    "detail": "aviso sumiu em t=30.9s; me=[{\"t\":\"0.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"0.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"18.4\",\"url\":\"/api/auth/me\",\"method\":\"GET\"},{\"t\":\"30.5\",\"url\":\"/api/auth/me\",\"method\":\"GET\"}]"
+  },
+  {
+    "name": "Falha de rede: formulário + aviso",
+    "ok": true,
+    "detail": "t=1.1s"
+  },
+  {
+    "name": "Falha de rede: aviso some quando a rede volta",
+    "ok": true,
+    "detail": "t=3.5s"
+  },
+  {
+    "name": "AC13 landing para as tentativas",
+    "ok": true,
+    "detail": "chamadas /api na landing em 20 s=0; me até sair=[\"0.5\",\"0.5\",\"2.5\",\"6.6\"]"
+  },
+  {
+    "name": "AC06 fim da janela mantém formulário + aviso",
+    "ok": true,
+    "detail": "t=76.1s form=1 tentar=0"
+  },
+  {
+    "name": "AC12 no máximo 1+6 consultas, nenhuma após 60 s",
+    "ok": false,
+    "detail": "me=8 [\"1.0\",\"1.0\",\"3.0\",\"7.0\",\"15.0\",\"27.1\",\"42.1\",\"57.1\"] signup=8 [\"1.0\",\"1.0\",\"3.0\",\"7.0\",\"15.0\",\"27.1\",\"42.1\",\"57.1\"]"
+  },
+  {
+    "name": "AC11 erro só no fim da janela",
+    "ok": true,
+    "detail": "botão aos 55 s=0; erro em t=61.1s texto=\"Não foi possível concluir a operação. Tente novamente.\""
+  },
+  {
+    "name": "AC11 Tentar novamente abre nova janela e a área abre",
+    "ok": true,
+    "detail": "me=9"
+  }
+]
