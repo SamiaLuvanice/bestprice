@@ -266,3 +266,29 @@ Contagem positiva pela execução direta acima (892 testes).
 - O espaçamento do aviso não foi revalidado em navegador (sem nova captura a 390 px).
 - O anúncio por leitor de tela real não foi testado; os testes conferem a estrutura (status
   estável, texto trocado) em jsdom.
+
+## Sincronização da documentação (R3) — 25/11/2026
+
+Agente `doc-sync-onboarding`, mesma worktree, sobre o código do commit `f9ac0dc`. Não alterou
+código.
+
+- `node .agents/scripts/docs-impact.mjs` antes da edição: `revisar docs/apps/frontend.md` (por
+  `App.tsx`, `App.wake.test.tsx`, `auth/*` e demais arquivos do diff). Depois:
+  `✔ alterado docs/apps/frontend.md`.
+- `docs/apps/frontend.md`: nova seção "Sessão com a API acordando — spec 0061" (classificação da
+  indisponibilidade, demora de 5 s, janela de 60 s com até 6 tentativas em 2/4/8/12/15/15 s,
+  escopo de telas, landing e 404 inalterados, tabela de estados por tela, login durante a
+  espera com `markAwake`/`settle`, aviso neutro no `Alert` informativo dentro de contêiner
+  `role="status"` estável). Corrigidos os trechos que descreviam "Tentar novamente" logo após
+  falha da sessão ou do cadastro (seções da tela de entrada 0046/0053/0057, cadastro 0048,
+  rotas 0034 e monitoramento) e registrado que o aviso não tem quadro Figma próprio, por
+  decisão da spec, como no limite de login da 0057. Tabela de arquivos com `wakeRetry.ts`,
+  `useSessionCheck.ts`, `ServerWakingNotice.tsx` e a prop `notice` do `LoginForm`.
+- `docs/PROGRESS.md`: entrada da 0061 com os resultados já registrados acima (892 testes,
+  portões no `9ab04a6`, revisão e QA) e as pendências.
+- Conferidos sem mudança: `README.md` e `docs/architecture.md` (não descrevem a verificação de
+  sessão nem o "Tentar novamente"), `docs/index.md` (nenhum documento novo), `AGENTS.md` e
+  `CLAUDE.md` (sem mudança de instruções do harness).
+- `git diff --check` sem problemas; âncora `#sessão-com-a-api-acordando--spec-0061` conferida
+  contra o título, e caminhos dos links locais existentes. Nenhum portão de código foi
+  reexecutado nesta etapa (só documentação).
