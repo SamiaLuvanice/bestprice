@@ -292,3 +292,18 @@ código.
 - `git diff --check` sem problemas; âncora `#sessão-com-a-api-acordando--spec-0061` conferida
   contra o título, e caminhos dos links locais existentes. Nenhum portão de código foi
   reexecutado nesta etapa (só documentação).
+
+## Re-revisão das correções (R1) — 25/11/2026
+
+`arch-reviewer` revisou `git diff 5ff98b7..f9ac0dc` (bbca3e5, 9ab04a6, f9ac0dc). **Veredito: aprovada.**
+I1 e I2 resolvidos sem regressão; S1 e S2 corretos e testados; registros de S3–S5 em `plan.md` adequados.
+Execução do revisor: `npx vitest run` nos arquivos tocados (`src/auth`, `App.wake`, `App`, `LoginForm`, `routes`,
+`pageMeta`) — `Test Files 9 passed (9)`, `Tests 243 passed (243)`; `npx eslint src` e `npx tsc -b` sem saída.
+
+Sugestões novas, não bloqueantes, abertas como pendência:
+
+- **N1:** a consulta de sessão não tem timeout/abort (`frontend/src/api.ts`). Com uma conexão presa indefinidamente,
+  "Tentar novamente" e a volta pelo histórico não abrem requisição nova (efeito de S1). Risco baixo: o Render
+  hibernando responde `429` rápido. Possível evolução: abortar após ~15 s e tratar como indisponibilidade.
+- **N2:** em `/cadastro`, na troca de `loading` para `waking` da sessão, o `role="status"` do cadastro pode montar já
+  com o aviso. O anúncio ainda ocorre pelo texto "Carregando…". Confirmar com leitor de tela real.
