@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { EyeIcon, EyeOffIcon } from './dashboard/Icons'
 import { Brand } from './components/Brand'
@@ -17,6 +17,8 @@ type Props = {
   onValidationFail?: () => void
   /** 0048: destino do cadastro (com o `returnTo` válido); ausente quando o cadastro está desligado. */
   signupHref?: string | null
+  /** 0061: aviso de servidor acordando (status educado), entre o subtítulo e o erro. */
+  notice?: ReactNode
 }
 
 export type LoginErrors = { email?: string; password?: string }
@@ -43,7 +45,7 @@ function LoginVisual() {
 }
 
 /** Entrada da tela de visitante (spec 0017), com validação própria no envio (0020/AC07). */
-export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref }: Props) {
+export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref, notice }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -94,6 +96,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref 
         <Brand className="login-brand" />
         <h1 id="login-title" tabIndex={-1}>Entrar na sua conta</h1>
         <p className="login-subtitle">Acesse seus anúncios monitorados e alertas.</p>
+        {notice}
         {error && <p role="alert" className="error-box login-error">{error}</p>}
         <form onSubmit={submit} className="login-fields" noValidate>
           <div className="login-field">

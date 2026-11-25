@@ -251,3 +251,15 @@ it('não mostra Criar conta sem destino de cadastro', () => {
   render(<MemoryRouter><LoginForm busy={false} error={null} onSubmit={vi.fn()} signupHref={null} /></MemoryRouter>)
   expect(screen.queryByRole('link', { name: 'Criar conta' })).not.toBeInTheDocument()
 })
+
+// 0061/AC02: o aviso de servidor acordando fica entre o subtítulo e o erro, sem roubar o foco.
+it('renderiza o aviso recebido abaixo do subtítulo e acima do erro, sem mover o foco', () => {
+  renderForm({ notice: <p role="status">Servidor iniciando.</p>, error: 'Falhou.' })
+  const subtitle = screen.getByText('Acesse seus anúncios monitorados e alertas.')
+  const status = screen.getByRole('status')
+  expect(status).toHaveTextContent('Servidor iniciando.')
+  expect(subtitle.compareDocumentPosition(status)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  expect(status.compareDocumentPosition(screen.getByRole('alert'))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  expect(status).not.toHaveFocus()
+  expect(document.body).toHaveFocus()
+})
