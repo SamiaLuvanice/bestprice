@@ -307,3 +307,21 @@ Sugestões novas, não bloqueantes, abertas como pendência:
   hibernando responde `429` rápido. Possível evolução: abortar após ~15 s e tratar como indisponibilidade.
 - **N2:** em `/cadastro`, na troca de `loading` para `waking` da sessão, o `role="status"` do cadastro pode montar já
   com o aviso. O anúncio ainda ocorre pelo texto "Carregando…". Confirmar com leitor de tela real.
+
+## Validação em Stage — 25/11/2026
+
+Promoção PR #340 (`a5a5cc8`) e sincronização reversa PR #341. Bundle do Pages
+`assets/index-BjHoPS1S.js` com o texto do aviso (conferido com `curl`). Observado no Chrome:
+
+| Verificação | Resultado |
+|---|---|
+| `/login` com a API hibernando (`/auth/me` e `/auth/signup` → `429 hibernate-rate-limited`) | formulário + aviso (AC01, AC02) |
+| Novas tentativas | 7 consultas de cada (inicial + 6), depois param (AC12) |
+| Fim da janela sem a API acordar | formulário e aviso permanecem (AC06) |
+| `/login` com a API acordada | sem aviso (AC14) |
+| `/alertas` sem sessão | `/login?returnTo=%2Falertas` (AC10) |
+| `/cadastro` | cadastro desligado em Stage (`enabled:false`) → login; AC08 não conferido em Stage |
+
+Achado: pelo Pages, a API hibernando responde `429` em ~0,25 s e não acorda; o acesso direto a
+`*.onrender.com` esperou ~35 s e acordou o serviço. Detalhes em
+`docs/apps/infraestrutura.md`, "Login com a API acordando em Stage — spec 0061".
