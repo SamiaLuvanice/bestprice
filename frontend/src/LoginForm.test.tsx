@@ -254,7 +254,7 @@ it('não mostra Criar conta sem destino de cadastro', () => {
 
 // 0061/AC02: o aviso de servidor acordando fica entre o subtítulo e o erro, sem roubar o foco.
 it('renderiza o aviso recebido abaixo do subtítulo e acima do erro, sem mover o foco', () => {
-  renderForm({ notice: <p role="status">Servidor iniciando.</p>, error: 'Falhou.' })
+  renderForm({ notice: <p>Servidor iniciando.</p>, error: 'Falhou.' })
   const subtitle = screen.getByText('Acesse seus anúncios monitorados e alertas.')
   const status = screen.getByRole('status')
   expect(status).toHaveTextContent('Servidor iniciando.')
@@ -262,4 +262,17 @@ it('renderiza o aviso recebido abaixo do subtítulo e acima do erro, sem mover o
   expect(status.compareDocumentPosition(screen.getByRole('alert'))).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   expect(status).not.toHaveFocus()
   expect(document.body).toHaveFocus()
+})
+
+// 0061 (revisão R1, I2): o contêiner de status é estável; só o texto do aviso entra e sai.
+it('mantém o mesmo contêiner de status vazio sem aviso e preenchido com aviso', () => {
+  const { rerender } = renderForm()
+  const status = screen.getByRole('status')
+  expect(status).toBeEmptyDOMElement()
+  rerender(<LoginForm busy={false} error={null} onSubmit={vi.fn()} notice={<p>Servidor iniciando.</p>} />)
+  expect(screen.getByRole('status')).toBe(status)
+  expect(status).toHaveTextContent('Servidor iniciando.')
+  rerender(<LoginForm busy={false} error={null} onSubmit={vi.fn()} notice={null} />)
+  expect(screen.getByRole('status')).toBe(status)
+  expect(status).toBeEmptyDOMElement()
 })

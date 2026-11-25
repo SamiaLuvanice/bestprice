@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { api, ApiFailure, type User } from '../api'
 import { useWakeRetry } from './wakeRetry'
 
@@ -24,7 +24,7 @@ function fetchSession(): Promise<User | null> {
 
 export function useSessionCheck(active: boolean) {
   const check = useWakeRetry(fetchSession, { active })
-  const { retry, settle } = check
+  const { retry, settle, markAwake: markCheckAwake } = check
 
   // Voltar pelo histórico (bfcache) refaz a verificação desde o início.
   useEffect(() => {
@@ -48,5 +48,7 @@ export function useSessionCheck(active: boolean) {
     retry,
     /** Decide a sessão por fora (login, cadastro, logout): `null` é sem sessão. */
     settle,
+    /** A API acordou por outra chamada (login): sem sessão até a verificação em voo dizer o contrário. */
+    markAwake: useCallback(() => markCheckAwake(null), [markCheckAwake]),
   }
 }

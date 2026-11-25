@@ -6,7 +6,8 @@ import { apiError, callsTo, deferred, fakeApi, reply, sessionUser } from './test
 // Spec 0061: telas do escopo com a API acordando (Render Free hibernado). Tempo sob timers falsos (AC15).
 const NOTICE = 'Não conseguimos falar com o servidor agora. Ele pode estar iniciando; isso leva alguns segundos.'
 
-beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] }) })
+// S6 (revisão): requestAnimationFrame também é falso, para o foco não depender do rAF do jsdom.
+beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date', 'requestAnimationFrame', 'cancelAnimationFrame'] }) })
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals() })
 
 async function advance(ms = 0) {
@@ -325,5 +326,93 @@ describe('Navegação durante a janela (AC13)', () => {
     expect(callsTo(mockFetch, '/api/auth/me')).toHaveLength(2)
     expect(window.location.pathname).toBe('/login')
     expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/produtos')
+  })
+})
+
+describe('Correções pós-revisão e QA', () => {
+  it('I1: senha errada durante uma verificação lenta não impede um 200 tardio de levar ao destino', async () => {
+    const lateSession = deferred()
+    wakingApi({
+      me: () => lateSession.promise,
+      login: () => reply(401, apiError('invalid_credentials', 'E-mail ou senha inválidos.')),
+    })
+    await visit('/login?returnTo=%2Falertas')
+    await advance(5_000)
+    expect(notice()).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'pessoa@example.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'errada' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    await advance()
+    expect(screen.getByRole('alert')).toHaveTextContent('E-mail ou senha inválidos.')
+    expect(notice()).not.toBeInTheDocument()
+    await act(async () => { lateSession.resolve(reply(200, sessionUser)) })
+    await advance()
+    expect(window.location.pathname).toBe('/alertas')
+  })
+
+  it('AC05: 429 de limite de login (com envelope) durante a janela mostra a espera, remove o aviso e para as tentativas', async () => {
+    const mockFetch = wakingApi({
+      me: hibernating,
+      login: () => reply(429, apiError('login_rate_limited', 'Muitas tentativas de login. Tente novamente mais tarde.', { retry_after_seconds: 900 })),
+    })
+    await visit('/login')
+    fireEvent.change(screen.getByLabelText('E-mail'), { target: { value: 'pessoa@example.com' } })
+    fireEvent.change(screen.getByLabelText('Senha'), { target: { value: 'errada' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
+    await advance()
+    expect(screen.getByRole('alert')).toHaveTextContent('Muitas tentativas de login. Tente novamente em 15 minutos.')
+    expect(notice()).not.toBeInTheDocument()
+    await advance(60_000)
+    expect(callsTo(mockFetch, '/api/auth/me')).toHaveLength(1)
+  })
+
+  it('AC09 (desvio): "Tentar novamente" do cadastro reabre também a sessão esgotada', async () => {
+    const mockFetch = wakingApi({ me: hibernating, signup: hibernating })
+    await visit('/cadastro')
+    await advance(60_000)
+    expect(screen.getByRole('alert')).toHaveTextContent(SIGNUP_ERROR)
+    expect(callsTo(mockFetch, '/api/auth/me')).toHaveLength(7)
+    expect(callsTo(mockFetch, '/api/auth/signup')).toHaveLength(7)
+    fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
+    await advance()
+    expect(callsTo(mockFetch, '/api/auth/me')).toHaveLength(8)
+    expect(callsTo(mockFetch, '/api/auth/signup')).toHaveLength(8)
+  })
+
+  it('I2: no login, o status é um contêiner estável; o aviso entra e sai sem trocar o elemento', async () => {
+    wakingApi({ me: sessionSequence(hibernating, noSession) })
+    await visit('/login')
+    const status = screen.getByRole('status')
+    expect(status).toHaveTextContent(NOTICE)
+    await advance(2_000)
+    expect(screen.getByRole('status')).toBe(status)
+    expect(status).toBeEmptyDOMElement()
+  })
+
+  it('I2: sem indisponibilidade, o login já tem o contêiner de status vazio', async () => {
+    wakingApi({ me: noSession })
+    await visit('/login')
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
+  })
+
+  it('I2: em "Carregando sua conta…" há um único status, que passa a incluir o aviso', async () => {
+    const pending = deferred()
+    wakingApi({ me: () => pending.promise })
+    await visit('/produtos')
+    const status = screen.getByRole('status')
+    expect(status).toHaveTextContent('Carregando sua conta…')
+    await advance(5_000)
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getByRole('status')).toBe(status)
+    expect(status).toHaveTextContent('Carregando sua conta…')
+    expect(status).toHaveTextContent(NOTICE)
+  })
+
+  it('I2: no cadastro em espera há um único status com "Carregando…" e o aviso', async () => {
+    wakingApi({ me: hibernating, signup: hibernating })
+    await visit('/cadastro')
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+    expect(screen.getByRole('status')).toHaveTextContent('Carregando…')
+    expect(screen.getByRole('status')).toHaveTextContent(NOTICE)
   })
 })

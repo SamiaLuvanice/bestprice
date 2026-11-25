@@ -17,7 +17,7 @@ type Props = {
   onValidationFail?: () => void
   /** 0048: destino do cadastro (com o `returnTo` válido); ausente quando o cadastro está desligado. */
   signupHref?: string | null
-  /** 0061: aviso de servidor acordando (status educado), entre o subtítulo e o erro. */
+  /** 0061: aviso de servidor acordando, anunciado pelo contêiner `status` estável, entre o subtítulo e o erro. */
   notice?: ReactNode
 }
 
@@ -53,6 +53,10 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref,
   const attempted = useRef(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
+  // 0061 (revisão R1, I2): o contêiner `status` existe desde a montagem e o aviso entra depois,
+  // para o leitor de tela anunciar a troca de texto mesmo quando o formulário já nasce com aviso.
+  const [statusReady, setStatusReady] = useState(false)
+  useEffect(() => { setStatusReady(true) }, [])
 
   // Só uma tentativa que falhou apaga a senha (0057/AC16) e devolve o foco a ela; o e-mail fica.
   // O aviso de sessão na montagem não apaga nem move o foco.
@@ -96,7 +100,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref,
         <Brand className="login-brand" />
         <h1 id="login-title" tabIndex={-1}>Entrar na sua conta</h1>
         <p className="login-subtitle">Acesse seus anúncios monitorados e alertas.</p>
-        {notice}
+        <div role="status" className="login-notice">{statusReady ? notice : null}</div>
         {error && <p role="alert" className="error-box login-error">{error}</p>}
         <form onSubmit={submit} className="login-fields" noValidate>
           <div className="login-field">

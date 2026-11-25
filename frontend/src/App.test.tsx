@@ -61,7 +61,8 @@ it.each(['HTTP 503', 'falha de rede'])('mantém o login sem rodapé durante a se
     expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
     await act(async () => { await vi.advanceTimersByTimeAsync(2_000) })
     expect(screen.getByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    // Revisão R1, I2: o contêiner de status do login é estável; sem aviso, fica vazio.
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
     expect(document.title).toBe('Entrar · BestPrice')
     expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
     expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/produtos')

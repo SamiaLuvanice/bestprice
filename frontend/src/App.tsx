@@ -115,8 +115,9 @@ function AppRoutes({ clock }: { clock: () => Date }) {
       settleSession(result)
     } catch (failure) {
       setGuestMessage(loginMessage(failure))
-      // 0061/AC05: resposta da API acordada (ex.: credencial inválida) encerra a espera sem sessão.
-      if (!isUnavailable(failure)) settleSession(null)
+      // 0061/AC05: resposta da API acordada (ex.: credencial inválida) encerra a espera e o aviso;
+      // a verificação em voo ainda pode encontrar a sessão (revisão R1, I1).
+      if (!isUnavailable(failure)) session.markAwake()
     }
     finally { setBusy(false) }
   }
@@ -142,8 +143,8 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     <header className="masthead"><Brand /></header>
     <main className="page-main session-check">
       <div className="content narrow">{sessionState === 'loading' || sessionState === 'waking' ? <>
-        <p role="status">Carregando sua conta…</p>
-        {sessionState === 'waking' && <ServerWakingNotice />}
+        {/* Revisão R1, I2: um único status, cujo texto passa a incluir o aviso. */}
+        <div role="status"><p>Carregando sua conta…</p>{sessionState === 'waking' && <ServerWakingNotice />}</div>
       </> : <div className="panel">
         <p role="alert" className="error-box">{session.error}</p>
         <Button type="button" className="primary-button" onClick={session.retry}>Tentar novamente</Button>
@@ -161,8 +162,7 @@ function AppRoutes({ clock }: { clock: () => Date }) {
     : <div className="page"><main className="page-main">{signup.availability === 'enabled'
       ? <SignupForm loginHref={`/login${returnToQuery}`} onSignedUp={signedUp} />
       : <div className="content narrow session-check">{signup.availability === 'loading' ? <>
-        <p role="status">Carregando…</p>
-        {(sessionWaking || signup.waking) && <ServerWakingNotice />}
+        <div role="status"><p>Carregando…</p>{(sessionWaking || signup.waking) && <ServerWakingNotice />}</div>
       </> : <div className="panel">
         <p role="alert" className="error-box">Não foi possível verificar o cadastro agora. Tente novamente.</p>
         <Button type="button" className="primary-button" onClick={() => {
