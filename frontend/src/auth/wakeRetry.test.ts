@@ -68,7 +68,7 @@ describe('useWakeRetry', () => {
     expect(result.current.value).toBe('acordou')
   })
 
-  it('repete com atrasos crescentes de pelo menos 2 s, no máximo 6 vezes, e esgota a janela', async () => {
+  it('repete com atrasos crescentes de pelo menos 2 s, no máximo 6 vezes, e esgota no fim da janela', async () => {
     const fetcher = vi.fn(() => Promise.reject(unavailable()))
     const { result } = renderHook(() => useWakeRetry(fetcher, { active: true }))
     await advance()
@@ -86,6 +86,11 @@ describe('useWakeRetry', () => {
       expect(fetcher).toHaveBeenCalledTimes(calls)
     }
     expect(fetcher).toHaveBeenCalledTimes(1 + MAX_RETRIES)
+    // 56 s desde a primeira falha: sem tentativas restantes, mas a janela de 60 s ainda corre.
+    expect(result.current.phase).toBe('waking')
+    await advance(3_999)
+    expect(result.current.phase).toBe('waking')
+    await advance(1)
     expect(result.current.phase).toBe('exhausted')
     expect(result.current.error).toBeInstanceOf(ApiFailure)
     await advance(WINDOW_MS)

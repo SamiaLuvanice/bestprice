@@ -119,11 +119,12 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
         }
         markUnavailable(failure)
         if (!activeRef.current || state.window !== 'open') return
-        if (state.retries >= MAX_RETRIES) { exhaust(failure); return }
+        // Sem tentativas restantes, a espera continua até o fim da janela (AC06, AC09, AC11).
+        if (state.retries >= MAX_RETRIES) return
         state.retryTimer = setTimeout(() => { state.retries += 1; run() }, RETRY_DELAYS_MS[state.retries])
       }),
     )
-  }, [exhaust, markUnavailable, update])
+  }, [markUnavailable, update])
 
   const restart = useCallback(() => {
     const state = engine.current
