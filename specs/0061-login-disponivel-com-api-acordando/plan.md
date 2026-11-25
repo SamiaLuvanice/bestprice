@@ -96,3 +96,26 @@ Novos: `frontend/src/auth/wakeRetry.ts`, `wakeRetry.test.ts`, `useSessionCheck.t
   rota existentes precisam continuar verdes sem alteração fora dos casos de falha.
 - Timers falsos com `fetch` simulado: avançar timers dentro de `act` e aguardar as
   promessas pendentes, para evitar testes intermitentes.
+
+## Desvios registrados na implementação (agente frontend, 25/11/2026)
+
+- **Sem relógio injetado em `useWakeRetry`:** a demora de 5 s, os atrasos e a janela de 60 s
+  são medidos só por `setTimeout` (um timer de janela aberto na primeira indisponibilidade).
+  Isso basta para AC12/AC15: nos testes, `vi.useFakeTimers({ toFake: ['setTimeout',
+  'clearTimeout', 'Date'] })` controla todo o tempo, sem `clock` extra na API do hook.
+- **Esgotamento só no fim da janela:** depois da 6ª nova tentativa (aos ~56 s) o estado
+  continua `waking` até completar 60 s; só então vira `exhausted`. Motivo: AC06, AC09 e AC11
+  falam em "fim da janela", não em "fim das tentativas".
+- **Sem `markAwake()`:** no login, uma falha que não é indisponibilidade (ex.: `401
+  invalid_credentials`, `429 login_rate_limited`) chama `settle(null)`: a API acordou e a
+  pessoa está sem sessão. Um único método (`settle`) cobre login, cadastro, logout e AC05.
+- **Estado `failed` em `useSessionCheck`:** separa "janela esgotada" (`unavailable`) de "API
+  acordada com erro definitivo" (4xx com envelope, exceto 401). Em `/login`, `unavailable`
+  mantém o formulário com aviso (AC06), enquanto `failed` mostra o erro atual com "Tentar
+  novamente", como pede a definição de indisponibilidade da spec.
+- **`active` do cadastro só em `/login` e `/cadastro`:** o interruptor só aparece nessas telas;
+  repeti-lo nas áreas logadas seria carga sem efeito visível. A sessão usa o escopo completo.
+- **"Tentar novamente" do cadastro (AC09):** além de `signup.retry()`, reabre a janela da
+  sessão quando ela também estiver esgotada, para a sessão não ficar sem nova verificação.
+- **Falha fora de `ApiFailure`:** `isUnavailable` a trata como indisponibilidade (repetir dentro
+  dos limites de AC12 é mais seguro que prender a pessoa num erro).

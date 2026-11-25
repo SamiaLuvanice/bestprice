@@ -10,11 +10,11 @@ Cada tarefa só fecha com evidência registrada em `verification.md`.
 
 ## Frontend (agente `frontend`)
 
-- [ ] F1 — `wakeRetry.ts`: testes Red de `isUnavailable` e do hook com timers falsos (AC12, AC15); implementação.
-- [ ] F2 — `useSessionCheck` + `App.tsx` no login: testes Red AC01–AC07, AC14; implementação; `LoginForm` com `notice`.
-- [ ] F3 — Cadastro: `useSignupAvailability` com novas tentativas; testes Red AC08, AC09; implementação.
-- [ ] F4 — Áreas logadas e navegação: testes Red AC10, AC11, AC13; implementação.
-- [ ] F5 — Gates do frontend (`node .agents/scripts/gates.mjs --scope frontend`) com contagem positiva.
+- [x] F1 — `wakeRetry.ts`: testes Red de `isUnavailable` e do hook com timers falsos (AC12, AC15); implementação.
+- [x] F2 — `useSessionCheck` + `App.tsx` no login: testes Red AC01–AC07, AC14; implementação; `LoginForm` com `notice`.
+- [x] F3 — Cadastro: `useSignupAvailability` com novas tentativas; testes Red AC08, AC09; implementação.
+- [x] F4 — Áreas logadas e navegação: testes Red AC10, AC11, AC13; implementação.
+- [x] F5 — Gates do frontend (`node .agents/scripts/gates.mjs --scope frontend`) com contagem positiva.
 
 ## Revisão, QA e entrega
 
