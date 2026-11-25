@@ -106,9 +106,34 @@ Novos: `frontend/src/auth/wakeRetry.ts`, `wakeRetry.test.ts`, `useSessionCheck.t
 - **Esgotamento só no fim da janela:** depois da 6ª nova tentativa (aos ~56 s) o estado
   continua `waking` até completar 60 s; só então vira `exhausted`. Motivo: AC06, AC09 e AC11
   falam em "fim da janela", não em "fim das tentativas".
-- **Sem `markAwake()`:** no login, uma falha que não é indisponibilidade (ex.: `401
-  invalid_credentials`, `429 login_rate_limited`) chama `settle(null)`: a API acordou e a
-  pessoa está sem sessão. Um único método (`settle`) cobre login, cadastro, logout e AC05.
+- **~~Sem `markAwake()`~~ (revertido na revisão R1, I1):** a primeira versão usava
+  `settle(null)` após erro de login com a API acordada, o que descartava um `200` tardio de
+  `/auth/me` e prendia no login quem tinha cookie válido. Voltou o `markAwake()` do plano:
+  encerra janela, timers e aviso sem mudar a época, e a requisição em voo ainda decide (uma
+  falha atrasada dela é ignorada). `settle()` fica só para decisões verdadeiras (login ou
+  cadastro bem-sucedidos, logout).
+- **`retry()` com requisição em voo (revisão R1, S1):** reinicia janela e demora de 5 s sem
+  abrir requisição paralela; a resposta em voo continua valendo. Vale para o botão e para o
+  `pageshow` persistido.
+- **Mensagem do esgotamento (revisão R1, S2):** a janela esgotada mostra a falha mais recente.
+- **Status acessível (revisão R1, I2):** o login tem um contêiner `role="status"` estável
+  (vazio sem aviso; o aviso entra depois da montagem). Em "Carregando sua conta…" e
+  "Carregando…" há um único status cujo texto passa a incluir o aviso. O `Alert` do aviso
+  perde o próprio `role`.
+
+### Comportamentos registrados na revisão (sem mudança de código)
+
+- **S3 — ir e voltar rápido landing ↔ login:** cada volta a uma tela do escopo sem decisão
+  abre nova janela e, sem requisição em voo, dispara uma consulta imediata. É o que AC13 pede
+  ("uma nova janela começa"); a carga fica limitada pela navegação da própria pessoa.
+- **S4 — `/cadastro` com API lenta (< 5 s):** enquanto a sessão está `loading`, a tela mostra
+  "Carregando sua conta…" mesmo com o cadastro já `enabled`. Interpretação de AC08: o
+  formulário independe da sessão só quando há indisponibilidade (falha ou mais de 5 s); no
+  caminho comum vale o fluxo anterior (AC14).
+- **S5 — janelas separadas:** sessão e cadastro têm cada um a própria janela de 60 s,
+  contada a partir da primeira indisponibilidade de cada consulta. Na prática as duas começam
+  com milissegundos de diferença; AC07 ("mesma janela e mesmos limites") é atendido nos
+  limites, com essa diferença de início.
 - **Estado `failed` em `useSessionCheck`:** separa "janela esgotada" (`unavailable`) de "API
   acordada com erro definitivo" (4xx com envelope, exceto 401). Em `/login`, `unavailable`
   mantém o formulário com aviso (AC06), enquanto `failed` mostra o erro atual com "Tentar

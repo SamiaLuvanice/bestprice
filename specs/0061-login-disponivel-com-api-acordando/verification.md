@@ -200,3 +200,69 @@ primeira é descartada pela época). As 6 novas tentativas seguem os atrasos 2/4
 
 Veredito da QA: **aprovada**. Todos os AC01–AC15 foram demonstrados, sem bug funcional. As
 observações 1–3 não bloqueiam.
+
+## Correções pós-revisão e QA — 25/11/2026
+
+Revisão R1 (aprovada com condições) e QA R2 (aprovada, commit `5ff98b7`). Mudanças de
+comportamento em TDD, na mesma worktree.
+
+### Red
+
+- `npx vitest run src/auth/wakeRetry.test.ts` com 4 testes novos: `Tests 4 failed | 18 passed
+  (22)`. Motivos: `result.current.markAwake is not a function` (I1, 2 testes: método ainda
+  inexistente), `expected "vi.fn()" to be called once, but got 2 times` (S1: `retry()` abria
+  requisição paralela) e `expected 'Não foi possível conectar ao BestPric…' to be 'Banco
+  indisponível.'` (S2: mensagem da primeira falha).
+- `npx vitest run src/App.wake.test.tsx` com 7 testes novos: `Tests 5 failed | 24 passed (29)`.
+  Motivos: `expected '/login' to be '/alertas'` (I1: senha errada + `200` tardio descartado),
+  `Unable to find … role "status"` (I2: login sem contêiner estável, 2 testes) e `expected [
+  <p role="status">, … ] to have a length of 1 but got 2` (I2: dois status concorrentes em
+  "Carregando sua conta…" e no cadastro). Passaram já no código anterior, como cobertura nova
+  de comportamento existente: AC05 com `429 login_rate_limited` (com envelope) durante a
+  janela e o "Tentar novamente" do cadastro reabrindo a sessão esgotada (AC09, desvio).
+
+### Green
+
+- `wakeRetry.test.ts`: `Tests 22 passed (22)`.
+- `App.wake.test.tsx`, `LoginForm.test.tsx` e `src/auth`: `Tests 156 passed (156)`.
+- Suíte completa `npx vitest run`: primeira execução com `2 failed | 890 passed (892)` no
+  teste de login de `App.test.tsx` que exigia ausência de status depois do `401`; ajustado de
+  propósito para "status presente e vazio" (I2). Depois: `Test Files 63 passed (63)`, `Tests
+  892 passed (892)`.
+- `npx tsc -b` e `npm run lint` sem erros nem avisos.
+
+### O que mudou
+
+- I1: `useWakeRetry.markAwake(fallback)`; `useSessionCheck.markAwake()`; o login usa
+  `markAwake()` após falha que não é indisponibilidade.
+- S1: `retry()` com requisição em voo reinicia só janela e demora de 5 s.
+- S2: `lastError` guardado em `markUnavailable` e usado no esgotamento.
+- I2: contêiner `role="status"` estável no `LoginForm` (aviso entra depois da montagem); um
+  único status nas telas de espera; `ServerWakingNotice` sem `role` próprio.
+- S6: `requestAnimationFrame`/`cancelAnimationFrame` falsos em `App.wake.test.tsx`; o foco do
+  título é avançado pelo relógio falso.
+- QA obs. 2: `.login-notice:not(:empty) { margin-top: var(--space-6) }`, o mesmo respiro do
+  erro do login; vazio não ocupa espaço. Sem nova captura visual nesta etapa.
+- S3, S4 e S5: só registrados em `plan.md` ("Comportamentos registrados na revisão").
+
+### Portões
+
+`node .agents/scripts/gates.mjs --scope frontend` (commit `9ab04a6`, exit 0):
+
+```
+Resumo dos portões:
+  ✔ frontend:install       40.9s
+  ✔ frontend:lint          10.7s
+  ✔ frontend:test          114.8s
+  ✔ frontend:build         20.0s
+Sem vestígios do catálogo em dist (5 marcadores conferidos).
+Fontes conforme em dist: Geist Mono latin/latin-ext 400–600, sem base64.
+```
+
+Contagem positiva pela execução direta acima (892 testes).
+
+### Limites
+
+- O espaçamento do aviso não foi revalidado em navegador (sem nova captura a 390 px).
+- O anúncio por leitor de tela real não foi testado; os testes conferem a estrutura (status
+  estável, texto trocado) em jsdom.
