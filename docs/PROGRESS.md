@@ -1,8 +1,27 @@
 # Progresso das specs
 
+## 0061 — Login disponível enquanto a API está acordando
+
+**25/11/2026 — spec `implementada`.** A PR #337 foi integrada em `develop` (`6e65785`); a validação em Stage depende da próxima promoção. [Issue #336](https://github.com/SamiaLuvanice/bestprice/issues/336),
+branch `feature/0061-issue-336-login-disponivel-com-api-acordando`. Só frontend; o contrato
+REST não muda. Quando a verificação de sessão ou do cadastro falha por indisponibilidade
+(rede, `429` sem envelope do Render hibernado, `5xx`, resposta inválida) ou passa de 5 s
+sem resposta, a SPA repete a consulta sozinha numa janela de 60 s, com até 6 novas
+tentativas (2/4/8/12/15/15 s) e um aviso neutro em `role="status"`. O login mostra o
+formulário com o aviso em vez da tela que só oferecia "Tentar novamente"; o cadastro e as
+áreas logadas esperam com o aviso e só mostram o erro ao fim da janela. A landing não muda.
+Detalhes em [frontend](apps/frontend.md#sessão-com-a-api-acordando--spec-0061).
+
+Frontend: **892 testes Vitest** (63 arquivos), lint, `tsc` e build verdes; portões do
+frontend verdes no commit `9ab04a6`. Revisão independente aprovada com condições, todas
+corrigidas em TDD; QA aprovou AC01–AC15 com uma API falsa que simula a hibernação.
+Pendências: verificação contra Render e Pages reais (exige promoção a Stage), leitor de
+tela real, nova captura do espaçamento do aviso e quadro Figma do aviso, se desejado.
+Ver [verificação](../specs/0061-login-disponivel-com-api-acordando/verification.md).
+
 ## 0059 — Redefinição de senha pela operação
 
-**22/11/2026 — spec `implementada`.** A PR #329 foi integrada em `develop` (`db90a49`). A validação em Stage segue pendente. [Issue #326](https://github.com/SamiaLuvanice/bestprice/issues/326),
+**22/11/2026 — spec `implementada`.** A PR #329 foi integrada em `develop` (`db90a49`). Promovida a `stage` pela PR #332 (`588859f`): health, migration e login sob RLS validados de fora; as verificações com conta QA seguem pendentes ([infraestrutura](apps/infraestrutura.md#sessões-e-redefinição-de-senha-em-stage--specs-0059-e-0060)). [Issue #326](https://github.com/SamiaLuvanice/bestprice/issues/326),
 branch `feature/0059-issue-326-redefinicao-senha-pela-operacao`. O comando
 `python -m app.auth.reset_password EMAIL`, rodado em `backend/` depois de confirmar a
 identidade da pessoa fora do sistema, pede a nova senha duas vezes sem eco (nunca como
@@ -21,7 +40,7 @@ Ver [verificação da spec 0059](../specs/0059-redefinicao-senha-pela-operacao/v
 
 ## 0060 — Sessão renovada durante o uso e sessões expiradas removidas
 
-**22/11/2026 — spec `implementada`.** A PR #328 foi integrada em `develop` (`674af59`). A validação em Stage segue pendente. [Issue #327](https://github.com/SamiaLuvanice/bestprice/issues/327),
+**22/11/2026 — spec `implementada`.** A PR #328 foi integrada em `develop` (`674af59`). Promovida a `stage` pela PR #332 (`588859f`): health, migration e login sob RLS validados de fora; as verificações com conta QA seguem pendentes ([infraestrutura](apps/infraestrutura.md#sessões-e-redefinição-de-senha-em-stage--specs-0059-e-0060)). [Issue #327](https://github.com/SamiaLuvanice/bestprice/issues/327),
 branch `feature/0060-issue-327-sessao-renovada-e-limpa`. A sessão termina após 24 horas
 sem uso ou 7 dias após o login, o que vier primeiro. A renovação é gravada no máximo uma
 vez por hora por um `UPDATE` condicionado, e o middleware `renewed_session_cookie` reenvia

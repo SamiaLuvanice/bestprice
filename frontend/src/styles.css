@@ -724,6 +724,8 @@ h1, h2 { text-wrap: balance; }
 .login-form-side h1 { font-size: clamp(30px, 3vw, 38px); font-weight: 700; line-height: 1.15; letter-spacing: -.025em; margin: 0 0 var(--space-3); }
 .login-subtitle { margin: 0; color: var(--color-text-muted); font-size: 17px; line-height: 1.5; }
 .login-error { margin: var(--space-6) 0 0; overflow-wrap: anywhere; }
+/* 0061 (QA): o aviso de servidor acordando tem o mesmo respiro acima que o erro; vazio, não ocupa espaço. */
+.login-notice:not(:empty) { margin-top: var(--space-6); }
 .login-fields { display: grid; gap: 20px; margin-top: var(--space-8); }
 .login-field { display: grid; gap: var(--space-2); min-width: 0; }
 .login-field label { font-size: 14px; font-weight: 600; color: var(--color-text); }

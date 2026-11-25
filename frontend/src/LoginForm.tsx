@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { EyeIcon, EyeOffIcon } from './dashboard/Icons'
 import { Brand } from './components/Brand'
@@ -17,6 +17,8 @@ type Props = {
   onValidationFail?: () => void
   /** 0048: destino do cadastro (com o `returnTo` válido); ausente quando o cadastro está desligado. */
   signupHref?: string | null
+  /** 0061: aviso de servidor acordando, anunciado pelo contêiner `status` estável, entre o subtítulo e o erro. */
+  notice?: ReactNode
 }
 
 export type LoginErrors = { email?: string; password?: string }
@@ -43,7 +45,7 @@ function LoginVisual() {
 }
 
 /** Entrada da tela de visitante (spec 0017), com validação própria no envio (0020/AC07). */
-export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref }: Props) {
+export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref, notice }: Props) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordVisible, setPasswordVisible] = useState(false)
@@ -51,6 +53,10 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref 
   const attempted = useRef(false)
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
+  // 0061 (revisão R1, I2): o contêiner `status` existe desde a montagem e o aviso entra depois,
+  // para o leitor de tela anunciar a troca de texto mesmo quando o formulário já nasce com aviso.
+  const [statusReady, setStatusReady] = useState(false)
+  useEffect(() => { setStatusReady(true) }, [])
 
   // Só uma tentativa que falhou apaga a senha (0057/AC16) e devolve o foco a ela; o e-mail fica.
   // O aviso de sessão na montagem não apaga nem move o foco.
@@ -94,6 +100,7 @@ export function LoginForm({ busy, error, onSubmit, onValidationFail, signupHref 
         <Brand className="login-brand" />
         <h1 id="login-title" tabIndex={-1}>Entrar na sua conta</h1>
         <p className="login-subtitle">Acesse seus anúncios monitorados e alertas.</p>
+        <div role="status" className="login-notice">{statusReady ? notice : null}</div>
         {error && <p role="alert" className="error-box login-error">{error}</p>}
         <form onSubmit={submit} className="login-fields" noValidate>
           <div className="login-field">

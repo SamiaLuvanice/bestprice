@@ -163,7 +163,7 @@ e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
 [`verification.md`](../../specs/0015-redesign-design-system-oficial/verification.md).
 
-## Tela de entrada — specs 0017, 0020, 0023, 0027 e 0046
+## Tela de entrada — specs 0017, 0020, 0023, 0027, 0046 e 0061
 
 Na rota `/login`, sem sessão, `App.tsx` renderiza `LoginForm` (`frontend/src/LoginForm.tsx`) direto,
 sem o cabeçalho (masthead), o hero com o campo de link (spec 0020) ou o rodapé
@@ -214,6 +214,12 @@ mantendo os controles e a autenticação existentes:
   `frontend/src/lib/format.ts`, compartilhado com o 429 do cadastro (cujo texto não
   mudou). O alerta reutiliza o padrão existente do formulário, sem quadro Figma
   próprio.
+- **API acordando (spec 0061):** se a verificação de sessão estiver indisponível, o
+  formulário aparece com o aviso descrito em
+  [Sessão com a API acordando](#sessão-com-a-api-acordando--spec-0061), sem a tela que só
+  oferece “Tentar novamente”. O `LoginForm` recebe a prop opcional `notice`, renderizada
+  num contêiner `role="status"` (`.login-notice`) entre o subtítulo e o erro. O contêiner
+  existe desde a montagem, vazio, e não ocupa espaço sem aviso.
 - **Movimento:** com `prefers-reduced-motion: reduce`, o botão não encolhe ao ser
   pressionado.
 
@@ -221,7 +227,8 @@ A implementação local da [spec 0046](../../specs/0046-login-stage-sem-rodape/s
 preserva o login aprovado em stage e retira somente seu rodapé. A composição do
 rodapé em `App.tsx` usa `matchPath('/login', location.pathname)`, o mesmo padrão
 do roteador; isso inclui `/login/`, `/LOGIN` e a entrada com `returnTo`. A ausência
-vale também durante carga, HTTP 503, falha de rede e recuperação da sessão.
+vale também durante carga, HTTP 503, falha de rede e recuperação da sessão (desde a
+0061, esses estados mostram o formulário com aviso).
 Desde a [spec 0053](../../specs/0053-rotas-durante-consulta-sessao/spec.md), a
 aba mostra “Entrar · BestPrice” durante toda a consulta e sua recuperação.
 Landing, páginas autenticadas e rota inexistente conservam seus rodapés; desde a
@@ -241,6 +248,75 @@ O estado de limite de tentativas do login (spec 0057) tem quadros próprios: des
 `291:514` e mobile `292:442`. Eles reaproveitam o alerta do cadastro entre Senha e
 Entrar. Detalhes na
 [verificação da 0057](../../specs/0057-limite-tentativas-login/verification.md).
+
+O aviso de servidor acordando (spec 0061) não tem quadro Figma próprio, por decisão da
+spec, como o alerta de limite de login no texto da 0057: reutiliza o `Alert` informativo
+existente. Se a responsável quiser um quadro, ele entra como validação visual posterior.
+
+## Sessão com a API acordando — spec 0061
+
+A API de Stage roda no Render Free e hiberna sem uso; ao acordar, responde por alguns
+segundos `429` sem corpo da API (`x-render-routing: hibernate-rate-limited`). Desde a
+[spec 0061](../../specs/0061-login-disponivel-com-api-acordando/spec.md), a SPA trata
+essa fase sem prender a pessoa numa tela que só oferece “Tentar novamente”. O contrato
+REST não mudou.
+
+- **Motor:** `src/auth/wakeRetry.ts` (`useWakeRetry` e `isUnavailable`) serve às duas
+  consultas: `GET /api/auth/me`, por `src/auth/useSessionCheck.ts`, e
+  `GET /api/auth/signup`, por `useSignupAvailability`.
+- **Indisponibilidade:** falha de rede, corpo fora do envelope da API (como o `429` do
+  Render), resposta inválida, qualquer `5xx` (inclusive `503` com envelope) ou mais de
+  5 s sem resposta (`SLOW_AFTER_MS`). `401` de `/auth/me` decide “sem sessão”. Outro
+  `4xx` com envelope mostra a API acordada: vale o erro atual, sem novas tentativas.
+- **Janela:** a primeira indisponibilidade abre uma janela de 60 s (`WINDOW_MS`) com no
+  máximo 6 novas tentativas (`MAX_RETRIES`), com atrasos de 2, 4, 8, 12, 15 e 15 s entre
+  o fim de uma e o início da seguinte (`RETRY_DELAYS_MS`). Nunca há duas consultas
+  paralelas: a requisição lenta continua em voo. O estado só vira esgotado ao fim dos
+  60 s. Sessão e cadastro têm janelas separadas, que na prática começam juntas.
+- **Escopo:** a sessão se repete em `/login`, `/cadastro`, `/app`, `/app/*`,
+  `/produtos`, `/produtos/:id` e `/alertas`; o cadastro, só em `/login` e `/cadastro`.
+  Navegar entre essas telas mantém a janela. Ir à landing ou a uma rota inexistente
+  cancela as novas tentativas; voltar a uma tela do escopo sem decisão abre outra janela.
+  Restaurar a página pelo histórico (`pageshow` com `persisted`) recomeça a verificação.
+- **Landing e 404:** inalterados; não abrem janela nem repetem consultas.
+
+| Estado da sessão | `/login` | `/cadastro` | Áreas logadas |
+|---|---|---|---|
+| Em voo há menos de 5 s | “Carregando sua conta…” | idem | idem |
+| Indisponível, janela em curso | formulário + aviso | “Carregando…” + aviso até o cadastro ser confirmado | “Carregando sua conta…” + aviso |
+| Janela esgotada | formulário + aviso | formulário se o cadastro foi confirmado; senão, erro do cadastro com “Tentar novamente” | erro atual com “Tentar novamente” |
+| `4xx` definitivo (exceto `401`) | erro atual com “Tentar novamente” | idem | idem |
+| `401` | formulário sem aviso | cadastro como antes | login com `returnTo` |
+| Sessão válida | destino seguro | destino seguro | área |
+
+- **Login durante a espera:** o envio segue o tratamento de erro atual (0057). Uma
+  resposta que mostra a API acordada (como `401` de credencial ou `429
+  login_rate_limited`) chama `markAwake()`: o aviso some e as tentativas param, mas uma
+  verificação de sessão ainda em voo pode encontrar a sessão. Login, cadastro e logout
+  bem-sucedidos chamam `settle()`, e uma resposta atrasada não os desfaz. Sessão
+  encontrada numa nova tentativa leva ao destino, mesmo durante a digitação.
+- **Cadastro:** o formulário aparece quando o cadastro é confirmado como habilitado, sem
+  esperar a sessão; desligado leva ao login (0048/AC14). Com a API lenta mas sem falha
+  (menos de 5 s), a tela continua em “Carregando sua conta…”. O link “Criar conta” do
+  login aparece sem recarregar quando o cadastro é confirmado. “Tentar novamente” no
+  erro do cadastro abre nova janela do cadastro e, se a da sessão também esgotou, dela.
+- **“Tentar novamente” e `pageshow`:** abrem nova janela; com uma requisição em voo,
+  reiniciam só a janela e a demora de 5 s, sem consulta paralela. A janela esgotada
+  mostra a mensagem da falha mais recente.
+- **Aviso:** `src/auth/ServerWakingNotice.tsx` reutiliza o `Alert` informativo
+  (`components/ui/alert.tsx`) com o texto neutro “Não conseguimos falar com o servidor
+  agora. Ele pode estar iniciando; isso leva alguns segundos.”. O `Alert` perde o próprio
+  `role`; quem o mostra o coloca num contêiner `role="status"` estável: no login, o
+  `.login-notice`; em “Carregando sua conta…” e “Carregando…”, o único status da tela, cujo
+  texto passa a incluir o aviso. Assim o leitor de tela anuncia a troca de forma educada,
+  e o foco inicial do login continua no título.
+
+Testes com timers falsos (`vi.useFakeTimers`) cobrem a demora, os atrasos, o limite e a
+janela: `src/auth/wakeRetry.test.ts`, `src/App.wake.test.tsx`,
+`src/auth/useSignupAvailability.test.ts` e `src/LoginForm.test.tsx`. A QA usou uma API
+falsa que simula a hibernação; a verificação contra Render e Pages reais, o leitor de
+tela real e a captura visual depois do ajuste de espaçamento do aviso estão pendentes na
+[verificação da 0061](../../specs/0061-login-disponivel-com-api-acordando/verification.md).
 
 A verificação (QA em Chrome headless com axe, larguras de 320, 768 e 1280 px, com
 desfoque e em modo sólido simulado) e os limites estão em
@@ -374,16 +450,19 @@ Lighthouse estão como pendências na
 
 ## Cadastro self-service — spec 0048
 
-`useSignupAvailability` (`src/auth/`) consulta `GET /api/auth/signup` uma vez por
-carregamento do `App` e devolve `loading`, `enabled`, `disabled` ou `error`. O
+`useSignupAvailability` (`src/auth/`) consulta `GET /api/auth/signup` ao carregar o
+`App` e devolve `loading`, `enabled`, `disabled` ou `error`, além de `waking`. Desde a
+0061, indisponibilidade em `/login` ou `/cadastro` é repetida sozinha na janela descrita
+em [Sessão com a API acordando](#sessão-com-a-api-acordando--spec-0061). O
 interruptor é decidido pela API, não por variável `VITE_*`, para ligar ou desligar
 sem novo build do Pages. Só `enabled` mostra “Ainda não tem conta? Criar conta”
 abaixo do botão do login e, desde a 0050, faz os CTAs de monitoramento da landing
 levarem a `/cadastro` (o link “Criar conta” do cabeçalho da landing saiu na 0050). O
 link do login leva o `returnTo` quando ele é
-um destino interno válido. Em `/cadastro`, `loading` mostra “Carregando…” e `error`
-mostra alerta com “Tentar novamente”; `disabled` redireciona a `/login` sem
-formulário. `/cadastro` não tem rodapé, como o login, e tem o título “Criar conta ·
+um destino interno válido. Em `/cadastro`, `loading` mostra “Carregando…” (com o
+aviso enquanto a API acorda) e `error` mostra alerta com “Tentar novamente”, que abre
+nova janela; o erro só aparece ao fim da janela ou com um `4xx` definitivo da API.
+`disabled` redireciona a `/login` sem formulário. `/cadastro` não tem rodapé, como o login, e tem o título “Criar conta ·
 BestPrice”.
 
 `src/auth/accountRules.ts` espelha `backend/app/auth/accounts.py`: limites de 320
@@ -453,7 +532,10 @@ A SPA usa `react-router-dom`, o contrato de monitoramento existente e o novo
 cliente tipado `features/research/api.ts`. `App.tsx` consulta `GET /api/auth/me`
 ao abrir ou restaurar a página pelo histórico. Um 401 identifica visitante. Login,
 cadastro e áreas protegidas exibem o estado de carregamento enquanto aguardam a
-sessão e oferecem “Tentar novamente” quando a consulta falha. A landing e o 404
+sessão. Desde a 0061, uma indisponibilidade é repetida sozinha por até 60 s: o login
+mostra o formulário com aviso, e cadastro e áreas protegidas só oferecem “Tentar
+novamente” ao fim da janela ou diante de um `4xx` definitivo (ver
+[Sessão com a API acordando](#sessão-com-a-api-acordando--spec-0061)). A landing e o 404
 público são renderizados desde o início.
 A conta é criada pelo cadastro self-service, quando ligado (spec 0048), ou
 provisionada no backend antes do login.
@@ -664,7 +746,7 @@ e [verificação](../../specs/0047-chat-pesquisa-precos-web-gemini/verification.
 
 ## Monitoramento preservado
 
-O monitoramento oferece links Início/Produtos/Alertas e sino; o acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040). Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Nas rotas de monitoramento, a consulta de sessão exibe a marca e o estado de carregamento. Em caso de falha, a tela oferece “Tentar novamente”. O formulário exige sessão confirmada (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
+O monitoramento oferece links Início/Produtos/Alertas e sino; o acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040). Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Nas rotas de monitoramento, a consulta de sessão exibe a marca e o estado de carregamento. Em caso de falha, a tela oferece “Tentar novamente” depois da janela de novas tentativas da 0061. O formulário exige sessão confirmada (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
 
 O preço-alvo aceita o formato brasileiro (spec 0028): `src/lib/targetPrice.ts` normaliza `99,90`, `99.90`, `1.899,90`, `1899,9` e o prefixo `R$` para o decimal do contrato (`"99.90"`), só com texto, sem `number`. Valor inválido, zero, acima de 16 dígitos inteiros ou com milhar iniciado por zero (`0.500`) não chama a API: o campo recebe `aria-invalid` e a mensagem “Informe um valor em reais, como 99,90.” em `role="alert"`. O campo de edição mostra o alvo atual com vírgula. O contrato REST `target_price` e o backend não mudaram. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 
@@ -672,11 +754,12 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `frontend/src/App.tsx` | `BrowserRouter`, rotas, consulta e revalidação de sessão, login, retorno seguro e títulos; recebe o relógio injetável (`clock`) |
+| `frontend/src/App.tsx` | `BrowserRouter`, rotas, escopo das novas tentativas (0061), estados de sessão por tela, login, retorno seguro e títulos; recebe o relógio injetável (`clock`) |
+| `frontend/src/auth/wakeRetry.ts`, `useSessionCheck.ts`, `ServerWakingNotice.tsx` | Novas tentativas enquanto a API acorda, verificação de sessão com revalidação por `pageshow` e aviso neutro (0061) |
 | `frontend/src/landing/` | Landing pública da 0050: seções, robô, gráfico em degraus, menu móvel (Sheet), mini-robô, barra fixa, destinos e movimento |
 | `frontend/src/navigation/pendingTrackLink.ts` | Link do hero guardado na aba até o primeiro uso no monitoramento (0050) |
 | `frontend/src/assets/redesign/` | Arte do login (`login-left.webp`); as artes da landing antiga foram removidas na 0050 |
-| `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único e, após falha, senha apagada e foco em Senha (0057) |
+| `frontend/src/LoginForm.tsx` | Entrada da 0027: arte e marca, validação própria, “Mostrar senha”, envio único, após falha senha apagada e foco em Senha (0057) e aviso opcional em status estável (0061) |
 | `frontend/src/NotFoundPage.tsx` | 404 público, título e foco da página, ação principal por sessão e ação de voltar |
 | `frontend/src/components/ui/`, `frontend/src/lib/utils.ts`, `frontend/components.json` | Componentes oficiais shadcn/ui, combinação de classes e configuração de geração |
 | `frontend/src/navigation/returnTo.ts` | Allowlist de destinos internos após login ou expiração de sessão |
