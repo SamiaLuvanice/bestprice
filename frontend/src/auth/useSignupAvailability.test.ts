@@ -29,13 +29,31 @@ it('fica disabled com {enabled: false}', async () => {
   await waitFor(() => expect(result.current.availability).toBe('disabled'))
 })
 
+// Mudança intencional da 0061 (AC07/AC08): indisponibilidade não vira error de imediato; fica em
+// loading com waking e é repetida sozinha 2 s depois.
 it.each([
   ['HTTP 503', () => Promise.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))],
   ['falha de rede', () => Promise.reject(new TypeError('Failed to fetch'))],
   ['resposta inválida', () => Promise.resolve(reply(200, { enabled: 'yes' }))],
-])('fica em error com %s e volta a consultar ao tentar de novo', async (_case, failure) => {
-  const mockFetch = stub(failure, () => Promise.resolve(reply(200, { enabled: true })))
-  const { result } = renderHook(() => useSignupAvailability())
+])('com %s espera a API acordar e consulta de novo sozinho', async (_case, failure) => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  try {
+    const mockFetch = stub(failure, () => Promise.resolve(reply(200, { enabled: true })))
+    const { result } = renderHook(() => useSignupAvailability(true))
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    expect(result.current.availability).toBe('loading')
+    expect(result.current.waking).toBe(true)
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_000) })
+    expect(result.current.availability).toBe('enabled')
+    expect(result.current.waking).toBe(false)
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  } finally { vi.useRealTimers() }
+})
+
+it('fica em error com erro definitivo da API acordada e volta a consultar ao tentar de novo', async () => {
+  const mockFetch = stub(() => Promise.resolve(reply(404, apiError('not_found', 'Não encontrado.'))),
+    () => Promise.resolve(reply(200, { enabled: true })))
+  const { result } = renderHook(() => useSignupAvailability(true))
   await waitFor(() => expect(result.current.availability).toBe('error'))
   act(() => result.current.retry())
   expect(result.current.availability).toBe('loading')

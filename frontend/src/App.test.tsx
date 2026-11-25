@@ -36,28 +36,36 @@ it.each(['/login', '/login?returnTo=%2Fprodutos', '/login/', '/LOGIN'])('mostra 
   expect(screen.getByRole('link', { name: 'Voltar para o início' })).toHaveAttribute('href', '/')
 })
 
+// Mudança intencional da 0061 (AC01/AC04): antes, 503 ou falha de rede deixavam só "Tentar novamente";
+// agora o formulário aparece com o aviso e a nova tentativa automática (2 s depois) recebe o 401.
 it.each(['HTTP 503', 'falha de rede'])('mantém o login sem rodapé durante a sessão pendente, %s e recuperação', async (failure) => {
-  const session = deferred()
-  let attempt = 0
-  fakeApi((url) => url === '/api/auth/me'
-    ? ++attempt === 1 ? session.promise : reply(401, apiError('unauthenticated', 'Entre para continuar.'))
-    : undefined)
-  visit('/login?returnTo=%2Fprodutos')
-  expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
-  expect(document.title).toBe('Entrar · BestPrice')
-  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
-  if (failure === 'HTTP 503') session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
-  else session.reject(new TypeError('Failed to fetch'))
-  const retry = await screen.findByRole('button', { name: 'Tentar novamente' })
-  expect(document.title).toBe('Entrar · BestPrice')
-  expect(screen.getByRole('alert')).toHaveTextContent(failure === 'HTTP 503'
-    ? 'Serviço temporariamente indisponível.' : 'Não foi possível conectar ao BestPrice. Tente novamente.')
-  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
-  fireEvent.click(retry)
-  expect(await screen.findByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
-  expect(document.title).toBe('Entrar · BestPrice')
-  expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
-  expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/produtos')
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  try {
+    const session = deferred()
+    let attempt = 0
+    fakeApi((url) => url === '/api/auth/me'
+      ? ++attempt === 1 ? session.promise : reply(401, apiError('unauthenticated', 'Entre para continuar.'))
+      : undefined)
+    visit('/login?returnTo=%2Fprodutos')
+    expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
+    expect(document.title).toBe('Entrar · BestPrice')
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+    await act(async () => {
+      if (failure === 'HTTP 503') session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
+      else session.reject(new TypeError('Failed to fetch'))
+    })
+    expect(screen.getByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Ele pode estar iniciando')
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument()
+    expect(document.title).toBe('Entrar · BestPrice')
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_000) })
+    expect(screen.getByRole('heading', { name: 'Entrar na sua conta' })).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    expect(document.title).toBe('Entrar · BestPrice')
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
+    expect(new URLSearchParams(window.location.search).get('returnTo')).toBe('/produtos')
+  } finally { vi.useRealTimers() }
 })
 
 it('mostra o 404 público durante a consulta de sessão e após falha da API', async () => {
@@ -90,7 +98,11 @@ it.each([
 })
 
 // 0028/AC14: enquanto a sessão é verificada (ou falha), a tela não oferece o formulário de link.
+// Mudança intencional da 0061 (AC10/AC11): o 503 passa pela espera automática com aviso; o erro com
+// "Tentar novamente" só aparece quando a janela de 60 s termina.
 it('mantém a marca sem formulário de link enquanto verifica a sessão e quando ela falha', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  try {
   const session = deferred()
   vi.stubGlobal('fetch', vi.fn().mockReturnValue(session.promise))
   visit('/produtos')
@@ -101,24 +113,35 @@ it('mantém a marca sem formulário de link enquanto verifica a sessão e quando
   expect(screen.getAllByRole('img', { name: 'BestPrice' })).toHaveLength(1)
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'Seu painel de preços' })).not.toBeInTheDocument()
-  session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
-  expect(await screen.findByText('Serviço temporariamente indisponível.')).toBeInTheDocument()
+  await act(async () => { session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))) })
+  expect(screen.getByText('Carregando sua conta…')).toBeInTheDocument()
+  expect(screen.getByText(/Ele pode estar iniciando/)).toBeInTheDocument()
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+  await act(async () => { await vi.advanceTimersByTimeAsync(60_000) })
+  expect(screen.getByText('Serviço temporariamente indisponível.')).toBeInTheDocument()
   expect(screen.getByRole('banner')).toHaveTextContent('BestPrice')
   expect(screen.getAllByRole('img', { name: 'BestPrice' })).toHaveLength(1)
   expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
   expect(screen.getByRole('contentinfo')).toHaveTextContent('BestPrice · Acompanhe com clareza')
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
+  } finally { vi.useRealTimers() }
 })
 
+// Mudança intencional da 0061 (AC10): a falha de rede é repetida sozinha, sem exigir clique.
 it('recupera falha de rede na verificação sem concluir logout', async () => {
-  const mockFetch = fakeApi()
-  mockFetch.mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch')))
-  visit('/produtos')
-  expect(await screen.findByText('Não foi possível conectar ao BestPrice. Tente novamente.')).toBeInTheDocument()
-  fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
-  expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
-  expect(window.location.pathname).toBe('/produtos')
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  try {
+    const mockFetch = fakeApi()
+    mockFetch.mockImplementationOnce(() => Promise.reject(new TypeError('Failed to fetch')))
+    visit('/produtos')
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    expect(screen.getByText(/Ele pode estar iniciando/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument()
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_000) })
+    expect(screen.getByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/produtos')
+  } finally { vi.useRealTimers() }
 })
 
 it('não mostra dados protegidos após 401 da área autenticada', async () => {
@@ -361,17 +384,25 @@ it('com o cadastro ligado mostra o formulário sem rodapé e com título própri
   expect(screen.queryByText('Este endereço saiu do radar.')).not.toBeInTheDocument()
 })
 
-it('mostra carregando enquanto consulta o cadastro e alerta com nova tentativa quando falha', async () => {
-  const first = deferred()
-  let attempt = 0
-  signupApi(() => ++attempt === 1 ? first.promise : reply(200, { enabled: true }))
-  visit('/cadastro')
-  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/^Carregando…$/))
-  first.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
-  expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível verificar o cadastro agora.')
-  expect(window.location.pathname).toBe('/cadastro')
-  fireEvent.click(screen.getByRole('button', { name: 'Tentar novamente' }))
-  expect(await screen.findByRole('heading', { name: 'Criar sua conta', level: 1 })).toBeInTheDocument()
+// Mudança intencional da 0061 (AC08, altera 0048/AC14): o 503 do interruptor é repetido sozinho,
+// com aviso, em vez de mostrar logo o erro com "Tentar novamente" (que agora vem no fim da janela, AC09).
+it('mostra carregando enquanto consulta o cadastro e espera a API sem clique quando falha', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  try {
+    const first = deferred()
+    let attempt = 0
+    signupApi(() => ++attempt === 1 ? first.promise : reply(200, { enabled: true }))
+    visit('/cadastro')
+    await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+    expect(screen.getByRole('status')).toHaveTextContent(/^Carregando…$/)
+    await act(async () => { first.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.'))) })
+    expect(screen.getByText(/^Carregando…$/)).toBeInTheDocument()
+    expect(screen.getByText(/Ele pode estar iniciando/)).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(window.location.pathname).toBe('/cadastro')
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_000) })
+    expect(screen.getByRole('heading', { name: 'Criar sua conta', level: 1 })).toBeInTheDocument()
+  } finally { vi.useRealTimers() }
 })
 
 // 0048/F6 (AC02): o cadastro inicia a sessão e segue ao destino, sem novo login.

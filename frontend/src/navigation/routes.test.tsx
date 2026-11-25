@@ -50,7 +50,10 @@ it('preserva o destino protegido durante login e recarga', async () => {
   expect(fetch.mock.calls.some(([url]) => url === '/api/tracked-products/tracking-1')).toBe(true)
 })
 
-it('erro temporário da sessão mantém a URL e permite tentar novamente', async () => {
+// Mudança intencional da 0061 (AC10): o erro temporário é repetido sozinho; o botão só no fim da janela.
+it('erro temporário da sessão mantém a URL e tenta novamente sozinho', async () => {
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] })
+  try {
   let attempts = 0
   fakeApi((url) => {
     if (url === '/api/auth/me') {
@@ -61,11 +64,14 @@ it('erro temporário da sessão mantém a URL e permite tentar novamente', async
     return undefined
   }, dashboardFixture())
   visit('/produtos')
-  expect(await screen.findByRole('alert')).toHaveTextContent('Serviço indisponível.')
+  await act(async () => { await vi.advanceTimersByTimeAsync(0) })
+  expect(screen.getByText('Carregando sua conta…')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Tentar novamente' })).not.toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
-  await userEvent.setup().click(screen.getByRole('button', { name: 'Tentar novamente' }))
-  expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
+  await act(async () => { await vi.advanceTimersByTimeAsync(2_000) })
+  expect(screen.getByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
   expect(window.location.pathname).toBe('/produtos')
+  } finally { vi.useRealTimers() }
 })
 
 it('detalhe inexistente mostra mensagem segura e link para Produtos', async () => {

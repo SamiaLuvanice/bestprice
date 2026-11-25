@@ -79,7 +79,8 @@ it.each(['pendente', 'HTTP 503', 'falha de rede'])('o App em /login declara cano
   if (state === 'HTTP 503') session.resolve(reply(503, apiError('database_unavailable', 'Serviço temporariamente indisponível.')))
   if (state === 'falha de rede') session.reject(new TypeError('Failed to fetch'))
   if (state === 'pendente') expect(screen.getByRole('status')).toHaveTextContent('Carregando sua conta…')
-  else expect(await screen.findByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument()
+  // 0061/AC01: com a sessão indisponível, Entrar já mostra o formulário (antes: "Tentar novamente").
+  else expect(await screen.findByRole('heading', { level: 1, name: 'Entrar na sua conta' })).toBeInTheDocument()
   // O efeito do usePageMeta é passivo: pode rodar depois de o findBy* resolver.
   await waitFor(() => {
     expect(canonicalHref()).toBe('https://bestprice-stage.pages.dev/login')
