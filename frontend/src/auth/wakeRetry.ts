@@ -35,6 +35,12 @@ export type WakeRetry<T> = Snapshot<T> & {
   retry: () => void
   /** Decisão vinda de fora (login, cadastro, logout); respostas atrasadas são descartadas. */
   settle: (value: T) => void
+  /**
+   * A API mostrou que acordou por outra chamada (ex.: 401 de credencial no login): encerra janela,
+   * timers e aviso e assume `fallback`, mas a requisição em voo ainda decide se responder com
+   * sucesso (revisão R1, I1). Uma falha atrasada dela é ignorada.
+   */
+  markAwake: (fallback: T) => void
 }
 
 type Engine = {
@@ -43,6 +49,10 @@ type Engine = {
   inFlight: boolean
   retries: number
   window: 'none' | 'open' | 'closed'
+  /** Depois de `markAwake`, só um sucesso da requisição em voo muda o estado. */
+  awake: boolean
+  /** Falha mais recente, mostrada quando a janela esgota (revisão R1, S2). */
+  lastError: unknown
   slowTimer?: ReturnType<typeof setTimeout>
   retryTimer?: ReturnType<typeof setTimeout>
   windowTimer?: ReturnType<typeof setTimeout>
@@ -63,7 +73,7 @@ function clearTimers(engine: Engine) {
  */
 export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active: boolean }): WakeRetry<T> {
   const [snapshot, setSnapshot] = useState<Snapshot<T>>({ phase: 'loading', value: undefined, error: undefined })
-  const engine = useRef<Engine>({ epoch: 0, inFlight: false, retries: 0, window: 'none' })
+  const engine = useRef<Engine>({ epoch: 0, inFlight: false, retries: 0, window: 'none', awake: false, lastError: undefined })
   const activeRef = useRef(active)
   const fetcherRef = useRef(fetcher)
   const phaseRef = useRef<WakePhase>('loading')
@@ -73,23 +83,25 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
     setSnapshot(next)
   }, [])
 
-  const exhaust = useCallback((error: unknown) => {
+  const exhaust = useCallback(() => {
     const state = engine.current
     clearTimeout(state.retryTimer)
     clearTimeout(state.windowTimer)
     state.window = 'closed'
-    update({ phase: 'exhausted', value: undefined, error })
+    update({ phase: 'exhausted', value: undefined, error: state.lastError })
   }, [update])
 
   // Primeira indisponibilidade observada numa tela do escopo: a janela começa a contar.
+  // A demora de 5 s chega sem falha (`undefined`) e preserva a última falha conhecida.
   const markUnavailable = useCallback((error: unknown) => {
     const state = engine.current
-    if (state.window === 'closed') { update({ phase: 'exhausted', value: undefined, error }); return }
+    if (error !== undefined) state.lastError = error
+    if (state.window === 'closed') { update({ phase: 'exhausted', value: undefined, error: state.lastError }); return }
     if (state.window === 'none' && activeRef.current) {
       state.window = 'open'
-      state.windowTimer = setTimeout(() => exhaust(error), WINDOW_MS)
+      state.windowTimer = setTimeout(exhaust, WINDOW_MS)
     }
-    update({ phase: 'waking', value: undefined, error })
+    update({ phase: 'waking', value: undefined, error: state.lastError })
   }, [exhaust, update])
 
   const run = useCallback(function run() {
@@ -108,9 +120,11 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
       (value) => finish(() => {
         clearTimers(state)
         state.window = 'none'
+        state.awake = false
         update({ phase: 'settled', value, error: undefined })
       }),
       (failure: unknown) => finish(() => {
+        if (state.awake) return
         if (!isUnavailable(failure)) {
           clearTimers(state)
           state.window = 'none'
@@ -126,16 +140,18 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
     )
   }, [markUnavailable, update])
 
+  // Nova janela; com uma requisição em voo, ela continua valendo e não se abre outra (revisão R1, S1).
   const restart = useCallback(() => {
     const state = engine.current
-    state.epoch += 1
     clearTimers(state)
-    state.inFlight = false
     state.retries = 0
     state.window = 'none'
+    state.awake = false
+    state.lastError = undefined
     update({ phase: 'loading', value: undefined, error: undefined })
-    run()
-  }, [run, update])
+    if (!state.inFlight) { run(); return }
+    if (activeRef.current) state.slowTimer = setTimeout(() => markUnavailable(undefined), SLOW_AFTER_MS)
+  }, [markUnavailable, run, update])
 
   const settle = useCallback((value: T) => {
     const state = engine.current
@@ -143,7 +159,16 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
     clearTimers(state)
     state.inFlight = false
     state.window = 'none'
+    state.awake = false
     update({ phase: 'settled', value, error: undefined })
+  }, [update])
+
+  const markAwake = useCallback((fallback: T) => {
+    const state = engine.current
+    clearTimers(state)
+    state.window = 'none'
+    state.awake = true
+    update({ phase: 'settled', value: fallback, error: undefined })
   }, [update])
 
   useEffect(() => { fetcherRef.current = fetcher }, [fetcher])
@@ -174,5 +199,5 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
     }
   }, [run])
 
-  return { ...snapshot, retry: restart, settle }
+  return { ...snapshot, retry: restart, settle, markAwake }
 }

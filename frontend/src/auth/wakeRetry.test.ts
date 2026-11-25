@@ -169,3 +169,62 @@ describe('useWakeRetry', () => {
     expect(fetcher).toHaveBeenCalledOnce()
   })
 })
+
+describe('useWakeRetry: correções pós-revisão (R1)', () => {
+  it('I1: markAwake() encerra a janela e o aviso, mas a requisição em voo ainda decide', async () => {
+    const pending = deferred<string>()
+    const fetcher = vi.fn(() => pending.promise)
+    const { result } = renderHook(() => useWakeRetry<string | null>(fetcher, { active: true }))
+    await advance(6_000)
+    expect(result.current.phase).toBe('waking')
+    act(() => result.current.markAwake(null))
+    expect(result.current.phase).toBe('settled')
+    expect(result.current.value).toBeNull()
+    await act(async () => { pending.resolve('sessao') })
+    expect(result.current.value).toBe('sessao')
+    await advance(WINDOW_MS)
+    expect(fetcher).toHaveBeenCalledOnce()
+  })
+
+  it('I1: depois de markAwake(), uma falha atrasada não reabre a janela nem o aviso', async () => {
+    const pending = deferred<string>()
+    const fetcher = vi.fn(() => pending.promise)
+    const { result } = renderHook(() => useWakeRetry<string | null>(fetcher, { active: true }))
+    await advance(6_000)
+    act(() => result.current.markAwake(null))
+    await act(async () => { pending.reject(unavailable()) })
+    expect(result.current.phase).toBe('settled')
+    expect(result.current.value).toBeNull()
+    await advance(WINDOW_MS)
+    expect(fetcher).toHaveBeenCalledOnce()
+  })
+
+  it('S1: retry() com requisição em voo reinicia a janela sem abrir outra em paralelo', async () => {
+    const pending = deferred<string>()
+    const fetcher = vi.fn(() => pending.promise)
+    const { result } = renderHook(() => useWakeRetry(fetcher, { active: true }))
+    await advance(6_000)
+    expect(result.current.phase).toBe('waking')
+    act(() => result.current.retry())
+    expect(result.current.phase).toBe('loading')
+    expect(fetcher).toHaveBeenCalledOnce()
+    await advance(4_999)
+    expect(result.current.phase).toBe('loading')
+    await advance(1)
+    expect(result.current.phase).toBe('waking')
+    await act(async () => { pending.resolve('ok') })
+    expect(result.current.phase).toBe('settled')
+    expect(result.current.value).toBe('ok')
+    expect(fetcher).toHaveBeenCalledOnce()
+  })
+
+  it('S2: a janela esgotada mostra a falha mais recente, não a primeira', async () => {
+    let call = 0
+    const fetcher = vi.fn(() => Promise.reject(++call === 1
+      ? unavailable() : new ApiFailure(503, 'database_unavailable', 'Banco indisponível.')))
+    const { result } = renderHook(() => useWakeRetry(fetcher, { active: true }))
+    await advance(WINDOW_MS)
+    expect(result.current.phase).toBe('exhausted')
+    expect((result.current.error as ApiFailure).message).toBe('Banco indisponível.')
+  })
+})
