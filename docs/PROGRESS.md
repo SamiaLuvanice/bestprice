@@ -1,5 +1,15 @@
 # Progresso das specs
 
+## 0062 — API de Stage acordada pelo navegador
+
+**26/11/2026 — implementação entregue; aguarda revisão.** [Issue #344](https://github.com/SamiaLuvanice/bestprice/issues/344),
+branch `feature/0062-issue-344-api-acordada-pelo-navegador`. Só frontend: quando a janela de
+espera da 0061 abre, o navegador faz um `GET` cego e direto ao health da origem da API
+(`VITE_API_ORIGIN`), uma vez por janela. Sem a variável, nada muda. Pendências: criar
+`VITE_API_ORIGIN` no Cloudflare Pages e verificar o AC07 em Stage após a promoção.
+Detalhes em [infraestrutura](apps/infraestrutura.md#api-acordada-pelo-navegador-em-stage--spec-0062).
+Ver [verificação](../specs/0062-api-acordada-pelo-navegador/verification.md).
+
 ## 0061 — Login disponível enquanto a API está acordando
 
 **25/11/2026 — spec `implementada`.** A PR #337 foi integrada em `develop` (`6e65785`); promovida a `stage` pela PR #340 (`a5a5cc8`): no Chrome, com a API hibernando, `/login` mostrou o formulário com o aviso e as tentativas pararam no fim da janela ([infraestrutura](apps/infraestrutura.md#login-com-a-api-acordando-em-stage--spec-0061)). Achado: chamadas pelo Pages recebem `429` sem acordar o Render. [Issue #336](https://github.com/SamiaLuvanice/bestprice/issues/336),

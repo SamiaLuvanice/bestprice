@@ -97,6 +97,7 @@ Uma URL MLB e os vínculos já persistidos são resolvidos antes de construir o 
 | `MERCADOLIVRE_VALIDATION_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_NO_PRICE_ITEM_ID`, `MERCADOLIVRE_VALIDATION_UNAVAILABLE_ITEM_ID` | IDs MLB distintos e autorizados para a sonda manual somente de leitura; vazios por padrão |
 | `APP_ENV` | Cookie Secure quando igual a `stage` ou `production` |
 | `API_ORIGIN` | Origem HTTPS da API Render usada apenas pela Pages Function de stage; não é segredo nem entra na SPA |
+| `VITE_API_ORIGIN` | Variável de build do Cloudflare Pages com o mesmo valor de `API_ORIGIN`; entra no bundle para o navegador acordar a API diretamente (spec 0062). Ausente ou inválida, o despertar é no-op |
 | `SIGNUP_ENABLED`, `SIGNUP_RATE_LIMIT_ATTEMPTS`, `SIGNUP_RATE_LIMIT_WINDOW_MINUTES` | Cadastro self-service (spec 0048); padrões `false`, 5 tentativas e 60 minutos por origem |
 | `LOGIN_RATE_LIMIT_ACCOUNT_ATTEMPTS`, `LOGIN_RATE_LIMIT_SOURCE_ATTEMPTS`, `LOGIN_RATE_LIMIT_WINDOW_MINUTES` | Limite de falhas de login (spec 0057); padrões 10 por origem + e-mail, 50 por origem e 15 minutos |
 | `SIGNUP_SOURCE_HASH_SECRET` | Chave do HMAC da origem em `signup_attempts` e da origem e do e-mail em `login_failures`; obrigatória com o cadastro ligado e sempre em stage/production (localmente, vazia gera um segredo aleatório por processo) |
