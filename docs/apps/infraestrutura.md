@@ -268,6 +268,64 @@ Render nesta validação) e o comando `python -m app.auth.reset_password` encerr
 reais. O procedimento seguro para rodar comandos contra o banco Stage está em
 [backend](backend.md).
 
+## Login com a API acordando em Stage — spec 0061
+
+Só frontend: nenhuma variável nova no Render ou no Pages, nenhuma migration e nenhum
+contrato REST alterado. Regras em [frontend](frontend.md#sessão-com-a-api-acordando--spec-0061).
+
+**Estado em Stage (25/11/2026, promoção PR #340, `a5a5cc8`; sincronização reversa PR
+#341):** o Pages publicou o bundle `assets/index-BjHoPS1S.js`, que contém o texto do aviso
+da 0061. A revisão publicada pelo Render não foi conferida; a mudança não toca a API.
+Observado no Chrome, sem conta:
+
+- com a API hibernando, `/login` mostrou o formulário com o aviso "Não conseguimos falar
+  com o servidor agora…". Foram 7 consultas a `/api/auth/me` e 7 a `/api/auth/signup`
+  (a inicial e 6 novas tentativas), todas `429`. Depois da janela, as tentativas pararam e
+  o formulário e o aviso permaneceram;
+- com a API acordada, `/login` abriu sem aviso, `/alertas` sem sessão levou a
+  `/login?returnTo=%2Falertas`, e o health pelo Pages respondeu 200;
+- o cadastro está desligado em Stage (`GET /api/auth/signup` → `{"enabled":false}`), então
+  `/cadastro` vai ao login. O formulário de cadastro durante o despertar não foi conferido
+  em Stage; ele foi conferido na QA com a API simulada.
+
+**Achado: o tráfego pelo Pages não acorda o Render.** Com a API hibernando, toda chamada a
+`https://bestprice-stage.pages.dev/api/*` respondeu `429 Too Many Requests` com
+`x-render-routing: hibernate-rate-limited` em cerca de 0,25 s, inclusive as 14 da página.
+Na mesma janela, `GET https://bestprice-stage-api.onrender.com/api/health` direto esperou
+cerca de 35 s, respondeu 200 com banco `ok` e, a partir daí, o Pages passou a responder 200.
+Inferência: o Render limita as requisições que chegam pela Pages Function sem usá-las
+para acordar o serviço; quem usa só o site pode não acordar a API. A 0061 torna esse estado
+visível e tolerável, mas não o resolve. A correção (por exemplo, o proxy acordar a API ao
+receber esse `429`) precisa de spec própria: é a
+[spec 0062](#api-acordada-pelo-navegador-em-stage--spec-0062).
+
+**Pendente:** leitor de tela real com o aviso e o formulário de cadastro durante o
+despertar em Stage (exige o cadastro habilitado).
+
+## API acordada pelo navegador em Stage — spec 0062
+
+Correção do achado da 0061: quando a janela de espera abre, o navegador faz um `GET` cego
+e direto a `/api/health` na origem da API, sem passar pelo proxy
+(`frontend/src/auth/apiWaker.ts`). Regras em
+[frontend](frontend.md#sessão-com-a-api-acordando--spec-0061).
+
+| Onde | Variável | Uso |
+|---|---|---|
+| Cloudflare Pages (produção) | `VITE_API_ORIGIN` | Variável de build com o mesmo valor de `API_ORIGIN` (ex.: `https://bestprice-stage-api.onrender.com`); entra no bundle, por isso exige novo build. Ausente ou inválida, o despertar é no-op |
+
+Nenhuma variável nova no Render, nenhuma migration e nenhum contrato REST alterado.
+
+**Pendente:** criar `VITE_API_ORIGIN` no Pages (não foi confirmado que exista) e verificar
+o AC07 em Stage depois da promoção.
+
+**Riscos:**
+
+- não há CSP hoje; se uma for criada, `connect-src` precisa incluir a origem da API;
+- o navegador passa a expor o IP e o User-Agent da pessoa diretamente à origem
+  `*.onrender.com` (antes, só via Cloudflare);
+- se o despertar passar de 60 s, o pedido pode ser abortado antes de terminar. É premissa a
+  confirmar no AC07; o "Tentar novamente" da 0061 abre nova janela e, com ela, novo pedido.
+
 ## Sonda oficial do Mercado Livre no GitHub Actions
 
 O Render Free não disponibiliza Shell nem One-off Jobs. Após o workflow ser

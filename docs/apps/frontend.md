@@ -310,6 +310,18 @@ REST não mudou.
   `.login-notice`; em “Carregando sua conta…” e “Carregando…”, o único status da tela, cujo
   texto passa a incluir o aviso. Assim o leitor de tela anuncia a troca de forma educada,
   e o foco inicial do login continua no título.
+- **Despertar pelo navegador (spec 0062):** em Stage, o tráfego pelo proxy do Pages
+  recebe o `429` sem acordar a API. Por isso, quando uma janela abre (falha de
+  indisponibilidade ou 5 s sem resposta, numa tela do escopo), `useWakeRetry` chama
+  `onWindowOpen` uma vez por janela. Sessão e cadastro passam `wakeApiOrigin`
+  (`src/auth/apiWaker.ts`), que faz um `GET` cego a `${VITE_API_ORIGIN}/api/health` com
+  `mode: 'no-cors'`, `credentials: 'omit'`, `cache: 'no-store'` e
+  `referrerPolicy: 'no-referrer'`, aborta em 60 s (`WAKE_TIMEOUT_MS`), ignora chamadas
+  enquanto um pedido está em voo e engole falhas. A resposta nunca decide a interface:
+  quem decide continua sendo a consulta pelo proxy. Sem `VITE_API_ORIGIN` válida (HTTPS,
+  sem caminho, consulta, fragmento ou credenciais, as mesmas regras do proxy) é no-op:
+  Compose, Vitest e Playwright não fazem o pedido. Configuração em
+  [infraestrutura](infraestrutura.md#api-acordada-pelo-navegador-em-stage--spec-0062).
 
 Testes com timers falsos (`vi.useFakeTimers`) cobrem a demora, os atrasos, o limite e a
 janela: `src/auth/wakeRetry.test.ts`, `src/App.wake.test.tsx`,
@@ -756,6 +768,7 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 |---|---|
 | `frontend/src/App.tsx` | `BrowserRouter`, rotas, escopo das novas tentativas (0061), estados de sessão por tela, login, retorno seguro e títulos; recebe o relógio injetável (`clock`) |
 | `frontend/src/auth/wakeRetry.ts`, `useSessionCheck.ts`, `ServerWakingNotice.tsx` | Novas tentativas enquanto a API acorda, verificação de sessão com revalidação por `pageshow` e aviso neutro (0061) |
+| `frontend/src/auth/apiWaker.ts` | Pedido cego e direto à origem da API (`VITE_API_ORIGIN`) quando a janela de espera abre (0062) |
 | `frontend/src/landing/` | Landing pública da 0050: seções, robô, gráfico em degraus, menu móvel (Sheet), mini-robô, barra fixa, destinos e movimento |
 | `frontend/src/navigation/pendingTrackLink.ts` | Link do hero guardado na aba até o primeiro uso no monitoramento (0050) |
 | `frontend/src/assets/redesign/` | Arte do login (`login-left.webp`); as artes da landing antiga foram removidas na 0050 |

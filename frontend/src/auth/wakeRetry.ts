@@ -71,11 +71,19 @@ function clearTimers(engine: Engine) {
  * Ao voltar a ficar ativo sem decisão, começa uma nova janela. O relógio é o dos timers
  * (`setTimeout`), controlado nos testes por `vi.useFakeTimers()`.
  */
-export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active: boolean }): WakeRetry<T> {
+export function useWakeRetry<T>(
+  fetcher: () => Promise<T>,
+  { active, onWindowOpen }: {
+    active: boolean
+    /** Spec 0062: chamado uma vez por janela, quando ela abre (não nas novas tentativas). */
+    onWindowOpen?: () => void
+  },
+): WakeRetry<T> {
   const [snapshot, setSnapshot] = useState<Snapshot<T>>({ phase: 'loading', value: undefined, error: undefined })
   const engine = useRef<Engine>({ epoch: 0, inFlight: false, retries: 0, window: 'none', awake: false, lastError: undefined })
   const activeRef = useRef(active)
   const fetcherRef = useRef(fetcher)
+  const onWindowOpenRef = useRef(onWindowOpen)
   const phaseRef = useRef<WakePhase>('loading')
 
   const update = useCallback((next: Snapshot<T>) => {
@@ -100,6 +108,7 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
     if (state.window === 'none' && activeRef.current) {
       state.window = 'open'
       state.windowTimer = setTimeout(exhaust, WINDOW_MS)
+      onWindowOpenRef.current?.()
     }
     update({ phase: 'waking', value: undefined, error: state.lastError })
   }, [exhaust, update])
@@ -172,6 +181,7 @@ export function useWakeRetry<T>(fetcher: () => Promise<T>, { active }: { active:
   }, [update])
 
   useEffect(() => { fetcherRef.current = fetcher }, [fetcher])
+  useEffect(() => { onWindowOpenRef.current = onWindowOpen }, [onWindowOpen])
 
   // Declarado antes do efeito de montagem para `activeRef` já valer na primeira tentativa.
   useEffect(() => {

@@ -1,4 +1,5 @@
 import { api } from '../api'
+import { wakeApiOrigin } from './apiWaker'
 import { useWakeRetry } from './wakeRetry'
 
 /** Interruptor do cadastro decidido pelo servidor (spec 0048, AC14). */
@@ -13,7 +14,7 @@ const fetchSignupStatus = () => api.signupStatus()
  * nova janela. Quem consome esconde os links fora de `enabled`.
  */
 export function useSignupAvailability(active = true): { availability: SignupAvailability; waking: boolean; retry: () => void } {
-  const check = useWakeRetry(fetchSignupStatus, { active })
+  const check = useWakeRetry(fetchSignupStatus, { active, onWindowOpen: wakeApiOrigin })
   const availability: SignupAvailability = check.phase === 'settled'
     ? check.value ? check.value.enabled ? 'enabled' : 'disabled' : 'error'
     : check.phase === 'exhausted' ? 'error' : 'loading'
