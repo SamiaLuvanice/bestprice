@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { api, ApiFailure, type User } from '../api'
+import { wakeApiOrigin } from './apiWaker'
 import { useWakeRetry } from './wakeRetry'
 
 /**
@@ -23,7 +24,7 @@ function fetchSession(): Promise<User | null> {
 }
 
 export function useSessionCheck(active: boolean) {
-  const check = useWakeRetry(fetchSession, { active })
+  const check = useWakeRetry(fetchSession, { active, onWindowOpen: wakeApiOrigin })
   const { retry, settle, markAwake: markCheckAwake } = check
 
   // Voltar pelo histórico (bfcache) refaz a verificação desde o início.
