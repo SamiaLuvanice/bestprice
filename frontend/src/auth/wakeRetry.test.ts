@@ -228,3 +228,70 @@ describe('useWakeRetry: correções pós-revisão (R1)', () => {
     expect((result.current.error as ApiFailure).message).toBe('Banco indisponível.')
   })
 })
+
+describe('useWakeRetry: onWindowOpen (spec 0062)', () => {
+  it('AC01/AC02: chama uma vez ao abrir a janela, não nas novas tentativas, e de novo após retry()', async () => {
+    const onWindowOpen = vi.fn()
+    const fetcher = vi.fn(() => Promise.reject(unavailable()))
+    const { result } = renderHook(() => useWakeRetry(fetcher, { active: true, onWindowOpen }))
+    await advance()
+    expect(onWindowOpen).toHaveBeenCalledOnce()
+    await advance(WINDOW_MS)
+    expect(fetcher).toHaveBeenCalledTimes(MAX_RETRIES + 1)
+    expect(onWindowOpen).toHaveBeenCalledOnce()
+    act(() => { result.current.retry() })
+    await advance()
+    expect(onWindowOpen).toHaveBeenCalledTimes(2)
+  })
+
+  it('AC01: a demora de 5 s também abre a janela e chama uma vez', async () => {
+    const onWindowOpen = vi.fn()
+    const pending = deferred<string>()
+    renderHook(() => useWakeRetry(() => pending.promise, { active: true, onWindowOpen }))
+    await advance(4_999)
+    expect(onWindowOpen).not.toHaveBeenCalled()
+    await advance(1)
+    expect(onWindowOpen).toHaveBeenCalledOnce()
+  })
+
+  it('AC02: retry() com requisição em voo abre uma nova janela e chama uma única vez', async () => {
+    const onWindowOpen = vi.fn()
+    const pending = deferred<string>()
+    const { result } = renderHook(() => useWakeRetry(() => pending.promise, { active: true, onWindowOpen }))
+    await advance(5_000)
+    expect(onWindowOpen).toHaveBeenCalledOnce()
+    act(() => { result.current.retry() })
+    await advance(5_000)
+    expect(onWindowOpen).toHaveBeenCalledTimes(2)
+    await act(async () => { pending.reject(unavailable()) })
+    expect(onWindowOpen).toHaveBeenCalledTimes(2)
+  })
+
+  it('AC02: ao voltar a uma tela do escopo sem decisão, a nova janela chama de novo', async () => {
+    const onWindowOpen = vi.fn()
+    const fetcher = vi.fn(() => Promise.reject(unavailable()))
+    const { rerender } = renderHook(({ active }) => useWakeRetry(fetcher, { active, onWindowOpen }), { initialProps: { active: true } })
+    await advance()
+    expect(onWindowOpen).toHaveBeenCalledOnce()
+    rerender({ active: false })
+    await advance(WINDOW_MS)
+    expect(onWindowOpen).toHaveBeenCalledOnce()
+    rerender({ active: true })
+    await advance()
+    expect(onWindowOpen).toHaveBeenCalledTimes(2)
+  })
+
+  it('AC06: com a API respondendo, não chama', async () => {
+    const onWindowOpen = vi.fn()
+    renderHook(() => useWakeRetry(() => Promise.resolve('ok'), { active: true, onWindowOpen }))
+    await advance(WINDOW_MS)
+    expect(onWindowOpen).not.toHaveBeenCalled()
+  })
+
+  it('inativo (landing) não abre janela nem chama', async () => {
+    const onWindowOpen = vi.fn()
+    renderHook(() => useWakeRetry(() => Promise.reject(unavailable()), { active: false, onWindowOpen }))
+    await advance(WINDOW_MS)
+    expect(onWindowOpen).not.toHaveBeenCalled()
+  })
+})
