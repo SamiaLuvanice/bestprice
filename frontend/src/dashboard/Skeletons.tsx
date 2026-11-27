@@ -10,10 +10,6 @@ export function IndicatorsSkeleton() {
   return <div data-skeleton="indicators" aria-hidden="true" className="skeleton skeleton-indicators"><Bars count={4} className="skeleton-indicator" /></div>
 }
 
-export function OpportunitiesSkeleton() {
-  return <div data-skeleton="opportunities" aria-hidden="true" className="skeleton skeleton-cards"><Bars count={4} className="skeleton-card" /></div>
-}
-
 export function ProductsSkeleton() {
   return <div data-skeleton="products" aria-hidden="true" className="skeleton skeleton-rows"><Bars count={4} className="skeleton-row" /></div>
 }

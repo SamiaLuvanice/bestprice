@@ -637,10 +637,14 @@ h1, h2 { text-wrap: balance; }
   .products-table td { display: block; padding: 0; overflow-wrap: anywhere; }
   .products-table td.cell-product { grid-column: 1 / 3; grid-row: 1; display: block; max-width: none; min-width: 0; }
   .products-table .cell-product .row-image { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 64px; height: 64px; }
-  .products-table td.cell-price { grid-column: 1; grid-row: 2; font-size: 18px; white-space: nowrap; }
-  .products-table td:nth-child(3) { grid-column: 2; grid-row: 2; justify-self: start; }
-  .products-table td:nth-child(4), .products-table td:nth-child(5), .products-table td:nth-child(6) { display: none; }
-  .products-table td.cell-actions { grid-column: 3; grid-row: 1 / 3; display: flex; justify-content: flex-end; }
+  /* Quebra só entre palavras: o valor usa espaço não separável, então só "Preço indisponível" quebra. */
+  .products-table td.cell-price { grid-column: 1 / 3; grid-row: 2; font-size: 18px; overflow-wrap: normal; }
+  .products-table td:nth-child(3) { grid-column: 1; grid-row: 3; justify-self: start; }
+  .products-table td:nth-child(4) { display: none; }
+  /* 0063: situação e última leitura fazem parte do item empilhado. */
+  .products-table td:nth-child(5) { grid-column: 2; grid-row: 3; justify-self: start; overflow-wrap: normal; white-space: nowrap; }
+  .products-table td:nth-child(6) { grid-column: 1 / 3; grid-row: 4; justify-self: start; color: var(--color-text-muted); font-size: 13px; }
+  .products-table td.cell-actions { grid-column: 3; grid-row: 1 / 5; display: flex; justify-content: flex-end; }
   .products-table .row-menu { display: none; }
   .products-table .row-details-link { width: 44px; min-width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--color-brand); }
   .products-table .row-details-link::after { content: ""; position: absolute; inset: 0; }
@@ -649,7 +653,8 @@ h1, h2 { text-wrap: balance; }
   .products-table .row-details-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
   .products-table .row-details-chevron { display: block; width: 24px; height: 24px; }
   .products-table .product-secondary td { padding: 0 0 0 76px; }
-  .products-table .product-secondary td:has(.row-flags:empty):has(.row-status:empty) { display: none; }
+  /* A linha inteira some quando não há aviso: uma linha sem célula visível viola aria-required-children. */
+  .products-table tr.product-secondary:has(.row-flags:empty):has(.row-status:empty) { display: none; }
   .products-table .row-details, .products-table .small-badge { display: none; }
   .products-table .row-flags:not(:has(:not(.small-badge))) { display: none; }
   .products-table .row-status:not(:empty) { margin: 0 0 var(--space-3); }
@@ -801,3 +806,10 @@ h1, h2 { text-wrap: balance; }
   .not-found-actions { grid-row: 4; align-items: stretch; flex-direction: column; }
   .not-found-actions [data-variant="ghost"] { justify-content: start; padding-left: 0; }
 }
+
+/* 0063: situação do produto na lista; o texto carrega o estado, a cor só reforça. */
+.situation { display:inline-block; padding:2px 8px; border-radius:8px; font-size:12px; font-weight:600; }
+.situation-down { background:var(--color-down-soft); color:var(--color-down); }
+.situation-up { background:var(--color-up-soft); color:var(--color-up); }
+.situation-stable, .situation-unknown-change, .situation-no-price { background:var(--color-surface-raised); color:var(--color-text-muted); }
+.situation-unavailable { background:var(--color-amber-soft); color:var(--color-text); }

@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiFailure, type Dashboard, type HistoryEntry, type TrackedProduct, type User } from '../api'
 import { retryHint } from '../lib/format'
@@ -12,10 +12,10 @@ import { HeroTrackForm, type TrackFeedback } from './HeroTrackForm'
 import { attemptResult } from './labels'
 import { takePendingTrackLink } from '../navigation/pendingTrackLink'
 import { initialTrackedList, trackedListReducer } from './trackedList'
+import { embeddedPaths, legacyPaths, MonitoringPathsProvider } from './monitoringPaths'
 import { NotificationBell } from './NotificationBell'
 import { ProductDetailDialog, type DetailMode } from './ProductDetailDialog'
-import { OpportunityList } from './OpportunityList'
-import { IndicatorsSkeleton, OpportunitiesSkeleton, ProductsSkeleton, TimelineSkeleton } from './Skeletons'
+import { IndicatorsSkeleton, ProductsSkeleton, TimelineSkeleton } from './Skeletons'
 import { RecentUpdatesTimeline, type KnownProduct } from './RecentUpdatesTimeline'
 import { RowActionsMenu } from './RowActionsMenu'
 import { SummaryIndicators } from './SummaryIndicators'
@@ -65,10 +65,14 @@ type Props = {
 export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embedded = false }: Props) {
   const location = useLocation()
   const navigateTo = useNavigate()
-  const canonicalPath = location.pathname === '/app/monitoring/overview' ? '/' : location.pathname === '/app/monitoring/alerts' ? '/alertas'
+  // /app/monitoring/overview é redirecionado pela área com barra lateral (0063); não chega aqui.
+  const canonicalPath = location.pathname === '/app/monitoring/alerts' ? '/alertas'
     : location.pathname.replace(/^\/app\/monitoring(?=\/|$)/, '/produtos')
   const detailId = canonicalPath.startsWith('/produtos/') ? canonicalPath.slice('/produtos/'.length) : null
-  const currentSection: SectionKey = canonicalPath === '/alertas' ? 'alerts' : canonicalPath.startsWith('/produtos') ? 'products' : 'home'
+  const currentSection: Exclude<SectionKey, 'home'> = canonicalPath === '/alertas' ? 'alerts' : 'products'
+  const paths = embedded ? embeddedPaths : legacyPaths
+  // 0063: na área com barra lateral, a lista vira a página única de Monitoramento (sem Início/Produtos/Alertas).
+  const singlePage = embedded && currentSection === 'products' && !detailId
   const [list, dispatchList] = useReducer(trackedListReducer, initialTrackedList)
   // 0050: link colado no hero da landing, consumido uma vez no inicializador (seguro no StrictMode).
   // Vale só para a primeira visita a Produtos: ao mudar de endereço some, e o título volta a ter o foco.
@@ -115,6 +119,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     trackedHeading.current = element
     pageHeading.current = element
   }, [])
+  // Página única: o h1 é o título da página; o da lista é um h2 (alvo de foco após parar de monitorar).
+  const listHeading = useCallback((element: HTMLHeadingElement | null) => { trackedHeading.current = element }, [])
   const [logoutError, setLogoutError] = useState<string | null>(null)
   const [loggingOut, setLoggingOut] = useState(false)
   const detailOpen = selected !== null
@@ -259,13 +265,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     try {
       const page = await api.history(id, cursor)
       if (!mounted.current || sequence !== openSequence.current || openDetailId.current !== id ||
-        window.location.pathname !== `/produtos/${id}`) return
+        window.location.pathname !== paths.product(id)) return
       setHistory((current) => [...current, ...page.items.filter((item) => !current.some((existing) => existing.id === item.id))])
       setHistoryCursor(page.next_cursor)
     } catch (failure) {
       if (unauthenticated(failure)) endSession(failure)
       else if (mounted.current && sequence === openSequence.current && openDetailId.current === id &&
-        window.location.pathname === `/produtos/${id}`) fail(failure)
+        window.location.pathname === paths.product(id)) fail(failure)
     } finally {
       if (mounted.current && sequence === openSequence.current && openDetailId.current === id) setBusy(false)
     }
@@ -278,7 +284,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     if (openDetailId.current === id) {
       detailOpener.current = null
       setSelected(null)
-      if (detailId === id) navigateTo('/produtos', { replace: true })
+      if (detailId === id) navigateTo(paths.list, { replace: true })
     }
     removeTracked(id, text)
     recalculate()
@@ -383,7 +389,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     setDetailStopBusy(true)
     const failure = await stopTrackingRequest(id)
     if (!mounted.current || sequence !== detailStopSequence.current || openDetailId.current !== id ||
-      window.location.pathname !== `/produtos/${id}`) return
+      window.location.pathname !== paths.product(id)) return
     setDetailStopBusy(false)
     if (failure) {
       setError({ message: failure, trackedProductId: null })
@@ -394,7 +400,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     detailOpener.current = null
     setSelected(null)
     setFocusAfterStop(true)
-    navigateTo('/produtos')
+    navigateTo(paths.list)
   }
 
   async function refreshSelected() {
@@ -591,7 +597,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
   }, [detailId])
 
   useEffect(() => {
-    document.title = currentSection === 'home' ? 'Início · BestPrice' : currentSection === 'alerts'
+    document.title = currentSection === 'alerts'
       ? 'Alertas · BestPrice' : detailId ? 'Produto · BestPrice' : 'Produtos · BestPrice'
     const frame = window.requestAnimationFrame(() => {
       if (detailId) document.getElementById('detail-title')?.focus()
@@ -619,63 +625,86 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
   }, [detailId, error, selected])
 
   useEffect(() => {
-    if (!focusAfterStop || location.pathname !== '/produtos' || !list.loaded || loading) return
+    if (!focusAfterStop || location.pathname !== paths.list || !list.loaded || loading) return
     setFocusAfterStop(false)
     if (list.items.length > 0) trackedHeading.current?.focus()
     else linkInput.current?.focus()
-  }, [focusAfterStop, location.pathname, list.loaded, list.items.length, loading])
+  }, [focusAfterStop, location.pathname, paths.list, list.loaded, list.items.length, loading])
 
-  // Campo de link: hero do Início ou, em Produtos, ação abaixo do título único "Seus produtos".
-  // `inToolbar`: o formulário compacto da seção Produtos (não confundir com a prop `embedded` da área).
+  // Campo de link abaixo do título da lista: ação compacta "Adicionar anúncio" ou, sem produtos, aberto.
   // É nele que o link trazido da landing aparece, tanto em /app/monitoring quanto em /produtos.
-  function trackForm(inToolbar: boolean) {
+  // `emptyText`: a rota legada traz o texto de vazio junto ao campo; a página única tem seu próprio cartão.
+  function trackForm(emptyText = true) {
     return <HeroTrackForm onSubmit={track} submitting={submitting}
-      error={trackError} success={trackSuccess} successId={trackSuccessId} headingRef={inToolbar ? undefined : pageHeading}
-      inputRef={linkInput} priority={isEmpty} embedded={inToolbar} compact={inToolbar && !isEmpty}
-      initialValue={inToolbar ? initialLink ?? undefined : undefined}
+      error={trackError} success={trackSuccess} successId={trackSuccessId}
+      inputRef={linkInput} priority={isEmpty} embedded compact={!isEmpty}
+      initialValue={initialLink ?? undefined}
       onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
-      {isEmpty && <div className="empty-state">
+      {isEmpty && emptyText && <div className="empty-state">
         <p className="empty-title">Você ainda não está acompanhando nenhum produto.</p>
         <p>Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.</p>
       </div>}
     </HeroTrackForm>
   }
 
-  return <>
-    <AppHeader embedded={embedded} key={location.pathname} email={user.email} current={currentSection}
-      bell={<NotificationBell unread={notifications.unread} onRetry={notifications.reloadUnread}
-        onMarkRead={notifications.markRead} />}
-      logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />
+  const bell = <NotificationBell unread={notifications.unread} onRetry={notifications.reloadUnread} onMarkRead={notifications.markRead} />
+  const productsTable = (props: { headingRef: (element: HTMLHeadingElement | null) => void; title?: string; headingLevel?: 1 | 2; count?: number | null; toolbar?: ReactNode }) =>
+    <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
+      loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)}
+      renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
+        disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
+      message={productsMessage} skeleton={loading ? <ProductsSkeleton /> : undefined} toolbar={trackForm()} {...props} />
+
+  return <MonitoringPathsProvider value={paths}>
+    {/* Na área com barra lateral, a barra já é a navegação: sem Início/Produtos/Alertas (0063). */}
+    {!embedded && <AppHeader key={location.pathname} email={user.email} current={currentSection} bell={bell}
+      logoutError={logoutError} loggingOut={loggingOut} onLogout={() => void logout()} />}
 
     <main id="conteudo" className="page-main">
-    {currentSection === 'home' && trackForm(false)}
     <div className="content global-messages">
       <p role="status" data-testid="global-status" className={globalMessage ? 'global-status' : 'sr-only'}>{globalMessage}</p>
       {error && !selected && !detailId && <p role="alert" className="error-box">{error.message}</p>}
     </div>
 
-    {currentSection === 'home' && <div className="content dashboard-content">
+    {currentSection === 'products' && !detailId && !singlePage && <div className="content dashboard-content">
+      {dashboardError && <div className="region-error"><p role="alert" className="error-box">{dashboardError}</p>
+        <Button variant="ghost" type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button></div>}
+      {productsTable({ headingRef: productsHeading })}
+    </div>}
+
+    {singlePage && <div className="content dashboard-content monitoring-page">
+      <div className="monitoring-heading">
+        <div>
+          <h1 ref={pageHeading} tabIndex={-1}>Monitoramento de preços</h1>
+          <p className="intro">Acompanhe seus anúncios e reconheça o melhor momento de comprar.</p>
+        </div>
+        <div className="monitoring-heading-actions">
+          <Link className="text-button" to={paths.alerts}>Ver alertas</Link>
+          {bell}
+        </div>
+      </div>
       {/* Fora das regiões aria-busy, para o anúncio não ser suprimido. */}
       <p role="status" className={loading ? 'loading-status' : 'sr-only'}>{loading ? 'Carregando seu painel…' : ''}</p>
-      {/* 0028/AC09: sem produtos, o convite do hero fica sozinho, sem indicadores zerados. */}
-      {(!isEmpty || dashboardError) && <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
-        {dashboardError && <div className="region-error">
-          <p role="alert" className="error-box">{dashboardError}</p>
-          <Button variant="ghost" type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button>
-        </div>}
+      {dashboardError && <div className="region-error"><p role="alert" className="error-box">{dashboardError}</p>
+        <Button variant="ghost" type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button></div>}
+      {/* 0028/AC09: sem produtos, nenhum indicador zerado. */}
+      {(loading || (dashboard && !isEmpty)) && <section aria-label="Resumo do monitoramento" className="summary-section" aria-busy={loading}>
         {loading && <IndicatorsSkeleton />}
-        {dashboard && !isEmpty && <><h2 className="overview-title">Visão geral</h2><SummaryIndicators summary={dashboard.summary} /></>}
+        {dashboard && !isEmpty && <SummaryIndicators summary={dashboard.summary} variant="cards" />}
       </section>}
-
-      {showProductSections && <section aria-labelledby="opportunities-title" className="card-section" aria-busy={loading}>
-        <div className="section-heading">
-          <h2 id="opportunities-title">Boas oportunidades</h2>
-          <p className="section-subtitle">Produtos monitorados que tiveram redução de preço recentemente.</p>
-        </div>
-        {loading && <OpportunitiesSkeleton />}
-        {dashboardView.status === 'ready' && <OpportunityList items={dashboardView.data.opportunities} receivedAt={dashboardView.receivedAt} />}
+      {isEmpty && <section aria-labelledby="empty-title" className="card-section monitoring-empty">
+        <h2 id="empty-title">Nenhum produto acompanhado</h2>
+        <p>Cole o link de um anúncio do Mercado Livre para começar.</p>
+        {trackForm(false)}
       </section>}
-
+      {/* Painel em falha: sem lista para mostrar, mas o campo de link continua disponível (AC11). */}
+      {dashboardView.status === 'error' && <div className="monitoring-error-form">{trackForm()}</div>}
+      {/* Durante a carga, sem campo: ele só aparece quando se sabe se vai na lista ou no cartão vazio,
+          para não trocar de instância e perder o que a pessoa digitou. */}
+      {!isEmpty && dashboardView.status !== 'error' && productsTable({
+        headingRef: listHeading, title: 'Produtos monitorados', headingLevel: 2, count: dashboard?.summary.tracked_count ?? null,
+        toolbar: loading ? undefined : trackForm(),
+      })}
       {showProductSections && <section aria-labelledby="updates-title" aria-busy={loading}>
         <div className="section-heading"><h2 id="updates-title">Atualizações recentes</h2></div>
         {loading && <TimelineSkeleton />}
@@ -684,24 +713,13 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
       </section>}
     </div>}
 
-    {currentSection === 'products' && !detailId && <div className="content dashboard-content">
-      {dashboardError && <div className="region-error"><p role="alert" className="error-box">{dashboardError}</p>
-        <Button variant="ghost" type="button" className="text-button" onClick={() => void reloadDashboard()}>Tentar novamente</Button></div>}
-      <TrackedProductsTable entries={list.items} rowStates={rowStates} hasMore={list.nextCursor !== null}
-        loadingMore={loadingMore} loadMoreError={loadMoreError} onLoadMore={() => void loadMore(true)}
-        renderActions={(entry) => <RowActionsMenu id={entry.tracked.id} title={entry.tracked.product.title} href={entry.tracked.product.canonical_url}
-          disabled={rowStates[entry.tracked.id]?.busy ?? false} onRefresh={() => void refreshRow(entry.tracked.id)} onStop={() => requestStop(entry.tracked.id)} />}
-        message={productsMessage} headingRef={productsHeading} skeleton={loading ? <ProductsSkeleton /> : undefined}
-        toolbar={trackForm(true)} />
-    </div>}
-
     {detailId && <div className="content dashboard-content">
       {selected?.id !== detailId && !error && <p role="status">Carregando produto…</p>}
       {selected?.id !== detailId && error && <div className="region-error">
         <h1 tabIndex={-1}>Produto indisponível</h1>
         <p role="alert" className="error-box">{error.message}</p>
         <Button variant="outline" type="button" className="secondary-button" onClick={() => void open(detailId)}>Tentar novamente</Button>
-        <Link className="text-button" to="/produtos">Ir para Produtos</Link>
+        <Link className="text-button" to={paths.list}>{paths.backLabel}</Link>
       </div>}
       {selected?.id === detailId && <ProductDetailDialog tracked={selected} history={history} historyCursor={historyCursor} busy={busy} error={error?.message ?? null}
         target={target} onTargetChange={setTarget} onRefresh={() => void refreshSelected()}
@@ -712,7 +730,8 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
     </div>}
 
     {currentSection === 'alerts' && <div className="content dashboard-content">
-      <div className="alerts-page-heading"><h1 id="alerts-page-title" tabIndex={-1}>Alertas</h1><p className="intro">Seus valores desejados e as notificações recentes.</p></div>
+      <div className="alerts-page-heading"><h1 id="alerts-page-title" tabIndex={-1}>Alertas</h1><p className="intro">Seus valores desejados e as notificações recentes.</p>
+        {embedded && <Link className="text-button" to={paths.list}>{paths.backLabel}</Link>}</div>
       <ConfiguredAlerts onUnauthenticated={(text) => onUnauthenticated(text)} />
       <AlertsSection notifications={notifications.all} headingRef={alertsHeading} focusHeading={focusAlertsHeading}
         onMarkRead={notifications.markRead} onLoadMore={notifications.loadMoreAll} onRetry={() => void notifications.reloadAll()} />
@@ -726,5 +745,5 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
       alertActive={Boolean(selected.alert?.enabled)} busy={detailStopBusy}
       onCancel={() => { setDetailMode('detail'); window.setTimeout(() => document.querySelector<HTMLElement>('.detail-actions button')?.focus(), 0) }}
       onConfirm={() => void confirmDetailStop()} />}
-  </>
+  </MonitoringPathsProvider>
 }

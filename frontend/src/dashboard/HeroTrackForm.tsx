@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type Ref } from 'react'
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import { ArrowRightIcon, InfoIcon, LinkIcon } from './Icons'
 
 export type TrackFeedback = { message: string; trackedProductId: string | null }
@@ -45,6 +46,7 @@ type Props = {
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
 export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, embedded = false, onDismissFeedback, children, initialValue }: Props) {
+  const paths = useMonitoringPaths()
   const panelId = useId()
   const [expanded, setExpanded] = useState(Boolean(initialValue))
   const focusOnOpen = useRef(false)
@@ -112,10 +114,10 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
         </form>
         <p id={hintId} className="hero-hint"><InfoIcon /> Copie o link do anúncio no Mercado Livre e cole aqui.</p>
         <div role="status" className="hero-status">{submitting ? 'Localizando produto...' : success}</div>
-        {successId && <Link className="text-button" to={`/produtos/${successId}`}>Ver produto</Link>}
+        {successId && <Link className="text-button" to={paths.product(successId)}>Ver produto</Link>}
         {error && <div className="hero-error">
           <p id={errorId} role="alert" className="error-box">{error.message}</p>
-          {error.trackedProductId && <Link className="text-button" to={`/produtos/${error.trackedProductId}`}>Ver produto</Link>}
+          {error.trackedProductId && <Link className="text-button" to={paths.product(error.trackedProductId)}>Ver produto</Link>}
         </div>}
         </Card>
         {children}

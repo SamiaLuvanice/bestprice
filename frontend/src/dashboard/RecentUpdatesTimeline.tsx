@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import type { RecentUpdate } from '../api'
 import { compareDecimal } from '../lib/decimal'
 import { formatMoney } from '../lib/format'
@@ -36,6 +37,7 @@ function describe(event: RecentUpdate): Description {
 
 /** Linha do tempo de recent_updates, na ordem da API (mais recentes primeiro), sem “Ver todas”. */
 export function RecentUpdatesTimeline({ events, receivedAt, known }: Props) {
+  const paths = useMonitoringPaths()
   if (events.length === 0) return <p className="empty">As mudanças confirmadas de preço e disponibilidade aparecerão aqui.</p>
   return <ol className="timeline">
     {events.map((event) => {
@@ -49,7 +51,7 @@ export function RecentUpdatesTimeline({ events, receivedAt, known }: Props) {
         <div className="timeline-body">
           <p><strong>{productInfo?.title ?? 'Um produto monitorado'}</strong>{text}</p>
           <RelativeTime iso={event.observed_at} receivedAt={receivedAt} />
-          <Link className="link-button" to={`/produtos/${event.tracked_product_id}`}>Ver produto</Link>
+          <Link className="link-button" to={paths.product(event.tracked_product_id)}>Ver produto</Link>
         </div>
       </li>
     })}

@@ -36,7 +36,7 @@ async function observe(page: Page, selector = '.brand, .masthead:not(:has(.brand
 }
 
 const scenarios = [
-  ['landing', '/', 'guest'], ['login', '/login', 'guest'], ['inicio', '/app/monitoring/overview', 'ready'],
+  ['landing', '/', 'guest'], ['login', '/login', 'guest'], ['inicio', '/app/monitoring', 'ready'],
   ['produtos', '/produtos', 'ready'], ['detalhe-erro', '/produtos/tracking-1', 'ready'],
   ['alertas', '/alertas', 'ready'], ['nao-encontrada', '/nao-existe', 'guest'],
   ['sessao-carregando', '/produtos', 'loading'], ['sessao-erro', '/produtos', 'error'],
@@ -69,7 +69,9 @@ for (const [name, path, state] of scenarios) {
       observations.push(await observe(page, scope))
       steps.push('recarregamento')
       if (state === 'ready') {
-        await page.getByRole('navigation', { name: 'Principal', exact: true }).getByRole('link', { name: path === '/alertas' ? 'Produtos' : 'Alertas' }).click()
+        // 0063: a página única não tem navegação interna; chega aos alertas por "Ver alertas".
+        if (path.startsWith('/app')) await page.getByRole('link', { name: 'Ver alertas' }).click()
+        else await page.getByRole('navigation', { name: 'Principal', exact: true }).getByRole('link', { name: path === '/alertas' ? 'Produtos' : 'Alertas' }).click()
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
         observations.push(await observe(page, scope))
         steps.push('navegacao')

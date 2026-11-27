@@ -19,14 +19,14 @@ const entries = ['369.90', '349.90', '359.90', '279.90', '319.90', '299.90'].map
 const scenarios = [
   { name: 'landing', path: '/', guest: true },
   { name: 'login', path: '/login', guest: true },
-  { name: 'inicio', path: '/app/monitoring/overview', guest: false },
+  { name: 'inicio', path: '/app/monitoring', guest: false },
   { name: 'produtos', path: '/produtos', guest: false },
   { name: 'detalhe', path: '/produtos/tracking-1', guest: false },
   { name: 'alertas', path: '/alertas', guest: false },
   { name: 'nao-encontrada', path: '/nao-existe', guest: true },
-  { name: 'vazio', path: '/app/monitoring/overview', guest: false, empty: true },
-  { name: 'erro', path: '/app/monitoring/overview', guest: false, error: true },
-  { name: 'carregando', path: '/app/monitoring/overview', guest: false, loading: true },
+  { name: 'vazio', path: '/app/monitoring', guest: false, empty: true },
+  { name: 'erro', path: '/app/monitoring', guest: false, error: true },
+  { name: 'carregando', path: '/app/monitoring', guest: false, loading: true },
 ] as const
 
 for (const scenario of scenarios) {
@@ -62,7 +62,7 @@ for (const scenario of scenarios) {
       await expect(page.locator('.recharts-line-curve')).toBeVisible()
       await expect(page.getByText(/Exibindo os registros carregados/)).toBeVisible()
     }
-    if (scenario.name === 'vazio') await expect(page.getByText('Você ainda não está acompanhando nenhum produto.')).toBeVisible()
+    if (scenario.name === 'vazio') await expect(page.getByRole('heading', { name: 'Nenhum produto acompanhado' })).toBeVisible()
     if (scenario.name === 'erro') await expect(page.getByRole('button', { name: 'Tentar novamente' })).toBeVisible()
     if (scenario.name === 'carregando') await expect(page.getByText('Carregando seu painel…')).toBeVisible()
     await page.evaluate(async () => {
@@ -81,7 +81,8 @@ for (const scenario of scenarios) {
     expect(accessibility.violations.map(({ id, nodes }) => ({ id, targets: nodes.map((node) => node.target) }))).toEqual([])
     await page.screenshot({ path: testInfo.outputPath(`${scenario.name}.png`), fullPage: true, animations: 'disabled' })
     if (!scenario.guest) await expect(page.getByRole('button', { name: /Conta: pessoa@example.com/ })).toBeVisible()
-    if (!scenario.guest) {
+    // Na área com barra lateral não há cabeçalho próprio da conta (0063); a margem é a do shell.
+    if (!scenario.guest && !scenario.path.startsWith('/app')) {
       // 0028/AC12: cabeçalho e conteúdo começam na mesma margem lateral.
       const edges = await page.evaluate(() => ({
         header: document.querySelector('.app-header-inner')?.getBoundingClientRect().left,

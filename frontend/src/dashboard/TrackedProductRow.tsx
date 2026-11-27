@@ -1,9 +1,10 @@
 import { Badge } from '@/components/ui/badge'
 import { useId, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import { formatMoney, formatPercentage } from '../lib/format'
 import { ArrowDownIcon, ArrowUpIcon, ChevronRightIcon } from './Icons'
-import { attemptResult, availabilityLabel } from './labels'
+import { attemptResult, availabilityLabel, productSituation } from './labels'
 import { ProductImage } from './ProductImage'
 import { productColumns, type RowState } from './productColumns'
 import { RelativeTime } from './RelativeTime'
@@ -40,10 +41,12 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
  * horários, alerta, avisos e região anunciada da própria linha). Empilhado por CSS em telas estreitas.
  */
 export function TrackedProductRow({ entry, state, actions }: Props) {
+  const paths = useMonitoringPaths()
   const titleId = useId()
   const { tracked, receivedAt } = entry
   const product = tracked.product
   const notFound = product.lookup_status === 'not_found'
+  const situation = productSituation(product)
   const label = (index: number) => ({ 'data-label': productColumns[index] })
   return <tbody role="rowgroup" aria-labelledby={titleId} data-busy={state.busy || undefined} className={state.busy ? 'product-group is-busy' : 'product-group'}>
     <tr role="row" className="product-main">
@@ -58,11 +61,11 @@ export function TrackedProductRow({ entry, state, actions }: Props) {
       </td>
       <td role="cell" {...label(2)}><Variation value={product.percentage_change} /></td>
       <td role="cell" {...label(3)}>{formatMoney(product.min_price) ?? 'Desconhecido'}</td>
-      <td role="cell" {...label(4)}><span className={`availability availability-${product.availability}`}>{availabilityLabel(product.availability)}</span></td>
+      <td role="cell" {...label(4)}><span data-testid="situation" className={`situation situation-${situation.key}`}>{situation.label}</span></td>
       <td role="cell" {...label(5)}><RelativeTime iso={product.last_price_observed_at} receivedAt={receivedAt} /></td>
       <td role="cell" {...label(6)} className="cell-actions">
         {/* No celular vira a seta da linha e cobre a linha inteira (quadro 11); o nome acessível não muda. */}
-        <Link className="secondary-button row-details-link" to={`/produtos/${tracked.id}`} data-row-details={tracked.id}>
+        <Link className="secondary-button row-details-link" to={paths.product(tracked.id)} data-row-details={tracked.id}>
           <span className="row-details-text">Ver detalhes</span>{' '}<span className="sr-only">de {product.title}</span>
           <ChevronRightIcon className="row-details-chevron" />
         </Link>
@@ -74,6 +77,7 @@ export function TrackedProductRow({ entry, state, actions }: Props) {
         <dl className="row-details">
           <Detail label="Preço anterior">{formatMoney(product.previous_price) ?? 'Desconhecido'}</Detail>
           <Detail label="Maior preço">{formatMoney(product.max_price) ?? 'Desconhecido'}</Detail>
+          <Detail label="Disponibilidade"><span className={`availability availability-${product.availability}`}>{availabilityLabel(product.availability)}</span></Detail>
           <Detail label="Última consulta"><RelativeTime iso={product.last_attempt_at} receivedAt={receivedAt} /></Detail>
           <Detail label="Última alteração"><RelativeTime iso={product.price_changed_at} receivedAt={receivedAt} /></Detail>
         </dl>

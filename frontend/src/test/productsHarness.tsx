@@ -22,11 +22,12 @@ export async function renderArea(dashboard: unknown, route: Route = () => undefi
   const user = userEvent.setup()
   window.history.replaceState({}, '', initialPath)
   render(<App clock={clock} />)
-  await screen.findByRole('navigation', { name: 'Principal' })
+  // Rotas legadas têm a navegação Início/Produtos/Alertas; a área com barra lateral (0063) não tem.
+  if (!initialPath.startsWith('/app/')) await screen.findByRole('navigation', { name: 'Principal' })
   await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
   if (initialPath === '/produtos') {
     await waitFor(() => expect(screen.getByRole('region', { name: 'Seus produtos' })).toHaveAttribute('aria-busy', 'false'))
-  } else if (initialPath === '/app/monitoring/overview') {
+  } else if (initialPath === '/app/monitoring' || initialPath === '/app/monitoring/overview') {
     await waitFor(() => expect(screen.queryByText('Carregando seu painel…')).not.toBeInTheDocument())
   }
   return { user, mockFetch }

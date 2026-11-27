@@ -247,8 +247,8 @@ it('recarregar após conflito de edição libera a versão recuperada para anál
 
 it('atalho de conteúdo do monitoramento aponta para o main existente', async () => {
   researchApi()
-  visit('/app/monitoring/overview')
-  await screen.findByRole('heading', { name: 'Seu painel de preços' })
+  visit('/app/monitoring')
+  await screen.findByRole('heading', { level: 1, name: 'Monitoramento de preços' })
   const href = document.querySelector<HTMLAnchorElement>('.research-skip')?.getAttribute('href')
   expect(href).toBe('#conteudo')
   expect(document.querySelector(href ?? '#research-content')).toBe(screen.getByRole('main'))

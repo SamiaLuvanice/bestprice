@@ -23,7 +23,7 @@ async function renderHero(trackRoute: Route, extra: Route = () => undefined, ini
   render(<App clock={clock} />)
   await screen.findByRole('heading', { level: 1 })
   // Em Produtos com lista, o formulário fica atrás da ação compacta “Adicionar anúncio” (0028/AC05).
-  if (initialPath === '/produtos') await user.click(await screen.findByRole('button', { name: 'Adicionar anúncio' }))
+  if (initialPath === '/produtos' || initialPath === '/app/monitoring') await user.click(await screen.findByRole('button', { name: 'Adicionar anúncio' }))
   return { user, mockFetch }
 }
 
@@ -42,17 +42,20 @@ async function submit(user: ReturnType<typeof userEvent.setup>, value: string) {
 const validUrl = 'https://produto.mercadolivre.com.br/MLB-2222222222-cafeteira-_JM'
 
 describe('hero', () => {
+  // 0063: a Início com o hero "Seu painel de preços" virou a página única; a orientação fica no campo
+  // aberto por "Adicionar anúncio", abaixo de "Produtos monitorados".
   it('exibe a orientação para adicionar um anúncio', async () => {
-    await renderHero(() => undefined, () => undefined, '/app/monitoring/overview')
-    const hero = within(screen.getByRole('region', { name: 'Seu painel de preços' }))
-    expect(hero.getByRole('heading', { level: 1 })).toHaveTextContent('Seu painel de preços')
-    expect(hero.getByText('Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.')).toBeInTheDocument()
+    await renderHero(() => undefined, () => undefined, '/app/monitoring')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Monitoramento de preços')
+    expect(screen.getByText('Acompanhe seus anúncios e reconheça o melhor momento de comprar.')).toBeInTheDocument()
+    const panel = field().closest('.track-panel') as HTMLElement
+    const hero = within(panel)
+    expect(field()).toBeVisible()
     expect(field()).toHaveAttribute('placeholder', 'https://www.mercadolivre.com.br/...')
     expect(hero.getByRole('button', { name: 'Monitorar preço' })).toBeInTheDocument()
     expect(hero.getByText('Copie o link do anúncio no Mercado Livre e cole aqui.')).toBeInTheDocument()
     expect(hero.queryByText(/vêm das consultas do BestPrice ao Mercado Livre e podem diferir/)).not.toBeInTheDocument()
-    const region = screen.getByRole('region', { name: 'Seu painel de preços' })
-    expect(region).not.toHaveTextContent(/R\$|★|Amazon|prime|Histórico de preço/i)
+    expect(panel).not.toHaveTextContent(/R\$|★|Amazon|prime|Histórico de preço/i)
     expect(hero.queryByRole('img')).not.toBeInTheDocument()
   })
 })
@@ -129,6 +132,22 @@ describe('envio do link', () => {
     await user.click(screen.getByRole('link', { name: 'Ver produto' }))
     expect(window.location.pathname).toBe('/produtos/tracking-9')
     expect(await screen.findByRole('heading', { name: 'Liquidificador' })).toBeInTheDocument()
+  })
+
+  it('na área com barra lateral, Ver produto do already_tracked abre o detalhe dentro da área (0063/AC07)', async () => {
+    const other = trackedFixture({ id: 'product-9', title: 'Liquidificador' }, { id: 'tracking-9' })
+    const { user } = await renderHero(() => reply(409, apiError('already_tracked', 'Você já monitora este anúncio.', { tracked_product_id: 'tracking-9' })), (url) => {
+      if (url === '/api/tracked-products/tracking-9') return reply(200, other)
+      if (url === '/api/tracked-products/tracking-9/history') return reply(200, { items: [], next_cursor: null })
+      return undefined
+    }, '/app/monitoring')
+    await submit(user, validUrl)
+    expect(await screen.findByRole('alert')).toHaveTextContent('Você já monitora este anúncio.')
+    expect(screen.getByRole('link', { name: 'Ver produto' })).toHaveAttribute('href', '/app/monitoring/tracking-9')
+    await user.click(screen.getByRole('link', { name: 'Ver produto' }))
+    expect(window.location.pathname).toBe('/app/monitoring/tracking-9')
+    expect(await screen.findByRole('heading', { name: 'Liquidificador' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Voltar ao monitoramento' })).toHaveAttribute('href', '/app/monitoring')
   })
 
   it('acrescenta o prazo de nova tentativa ao 429', async () => {

@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -83,11 +83,14 @@ describe('conteúdo da interface', () => {
 
   it('não mostra nenhum produto, preço ou evento quando a API devolve lista vazia', async () => {
     fakeApi(() => undefined, emptyDashboard)
-    window.history.replaceState(null, '', '/app/monitoring/overview')
+    window.history.replaceState(null, '', '/app/monitoring')
     const user = userEvent.setup()
     render(<App />)
-    await screen.findByText('Você ainda não está acompanhando nenhum produto.')
-    await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Alertas' }))
+    await screen.findByRole('heading', { name: 'Nenhum produto acompanhado' })
+    expect(screen.queryAllByRole('rowgroup')).toHaveLength(0)
+    expect(document.body).not.toHaveTextContent(/R\$|Amazon|\bprime\b/i)
+    // 0063: na página única, os alertas ficam no link "Ver alertas" (sem navegação Início/Produtos/Alertas).
+    await user.click(screen.getByRole('link', { name: 'Ver alertas' }))
     await waitFor(() => expect(screen.getByText('Nenhuma notificação por enquanto.')).toBeInTheDocument())
     expect(screen.queryAllByRole('rowgroup')).toHaveLength(0)
     expect(document.body).not.toHaveTextContent(/R\$|Amazon|\bprime\b/i)

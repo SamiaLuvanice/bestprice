@@ -22,7 +22,7 @@ describe('tabela Seus produtos', () => {
     expect(section.queryByText('Todos os produtos que você está monitorando.')).not.toBeInTheDocument()
     expect(section.queryByText('Ordem: mais recentes primeiro')).not.toBeInTheDocument()
     expect(section.getAllByRole('columnheader').map((header) => header.textContent)).toEqual([
-      'Produto', 'Preço atual', 'Variação', 'Menor preço', 'Disponibilidade', 'Preço observado', 'Ações',
+      'Produto', 'Último preço', 'Variação', 'Menor preço', 'Situação', 'Última leitura', 'Ações',
     ])
     const [main, secondary] = within(productRow('Fone sem fio')).getAllByRole('row')
     const cells = cellsOf(main)
@@ -31,11 +31,12 @@ describe('tabela Seus produtos', () => {
     expect(cells[2]).toBe('queda -20,00% vs. preço anterior')
     expect(main.querySelectorAll('td')[2].querySelector('svg')).not.toBeNull()
     expect(cells[3]).toMatch(/^R\$ 80,00$/)
-    expect(cells[4]).toBe('Disponível')
+    expect(cells[4]).toBe('Em queda')
     expect(cells[5]).toMatch(/^Há 2 h/)
     const details = within(secondary)
     expect(details.getByText('Preço anterior').closest('div')).toHaveTextContent(/Preço anterior\s*R\$\s*100,00/)
     expect(details.getByText('Maior preço').closest('div')).toHaveTextContent(/Maior preço\s*R\$\s*100,00/)
+    expect(details.getByText('Disponibilidade').closest('div')).toHaveTextContent(/Disponibilidade\s*Disponível/)
     expect(details.getByText('Última consulta').closest('div')).toHaveTextContent(/Última consulta\s*Há 30 min/)
     expect(details.getByText('Última alteração').closest('div')).toHaveTextContent(/Última alteração\s*Há 3 h/)
     expect(details.getByText(/Alerta em/)).toHaveTextContent(/Alerta em R\$\s*99,90/)
@@ -43,6 +44,7 @@ describe('tabela Seus produtos', () => {
 
     const other = productRow('Cafeteira elétrica')
     expect(cellsOf(within(other).getAllByRole('row')[0])[2]).toBe('alta +5,00% vs. preço anterior')
+    expect(cellsOf(within(other).getAllByRole('row')[0])[4]).toBe('Em alta')
     expect(within(other).queryByText(/Alerta em/)).not.toBeInTheDocument()
   })
 
@@ -77,7 +79,9 @@ describe('tabela Seus produtos', () => {
     ['unknown', 'Não confirmada'],
   ])('mostra disponibilidade %s como %s', async (availability, label) => {
     await renderProducts(dashboardFixture({ items: [product('1', 'Fone sem fio', { availability })] }))
-    expect(cellsOf(within(productRow('Fone sem fio')).getAllByRole('row')[0])[4]).toBe(label)
+    // 0063: a disponibilidade saiu da coluna (agora Situação) e foi para a linha secundária.
+    const secondary = within(within(productRow('Fone sem fio')).getAllByRole('row')[1])
+    expect(secondary.getByText('Disponibilidade').closest('div')).toHaveTextContent(new RegExp(`^Disponibilidade\\s*${label}$`))
   })
 
   it('mostra anúncio não localizado, preço desatualizado e aviso da última tentativa', async () => {

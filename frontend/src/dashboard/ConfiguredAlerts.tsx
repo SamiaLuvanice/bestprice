@@ -3,6 +3,7 @@ import { ProductImage } from './ProductImage'
 import { Button } from '@/components/ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import { api, ApiFailure, type TrackedProduct } from '../api'
 import { formatMoney } from '../lib/format'
 
@@ -10,6 +11,7 @@ type Props = { onUnauthenticated: (message: string) => void }
 
 /** Percorre páginas de monitoramentos até encontrar alertas ou esgotar a lista. */
 export function ConfiguredAlerts({ onUnauthenticated }: Props) {
+  const paths = useMonitoringPaths()
   const [items, setItems] = useState<TrackedProduct[]>([])
   const [cursor, setCursor] = useState<string | null | undefined>(undefined)
   const [loading, setLoading] = useState(false)
@@ -65,10 +67,10 @@ export function ConfiguredAlerts({ onUnauthenticated }: Props) {
     </div>}
     {!loading && !error && items.length === 0 && cursor === null && <p className="empty">Nenhum alerta configurado por enquanto.</p>}
     {items.length > 0 && <ul className="configured-alerts-list">{items.map((item) => <li key={item.id}>
-      <ProductImage src={item.product.image_url} /><Link className="alert-item-title" to={`/produtos/${item.id}`}>{item.product.title}</Link>
+      <ProductImage src={item.product.image_url} /><Link className="alert-item-title" to={paths.product(item.id)}>{item.product.title}</Link>
       <span className="alert-item-target">Alvo: {formatMoney(item.alert?.target_price ?? null) ?? 'Desconhecido'}</span>
       <Badge variant="secondary" className={item.alert?.enabled ? 'alert-item-state availability-available' : 'alert-item-state'}>{item.alert?.enabled ? 'Ativo' : 'Pausado'}</Badge>
-      <Link className="text-button alert-item-action" to={`/produtos/${item.id}`}>Configurar alerta</Link>
+      <Link className="text-button alert-item-action" to={paths.product(item.id)}>Configurar alerta</Link>
     </li>)}</ul>}
     {cursor && !error && <Button variant="outline" type="button" className="secondary-button" disabled={loading} onClick={() => void load()}>
       Carregar mais alertas
