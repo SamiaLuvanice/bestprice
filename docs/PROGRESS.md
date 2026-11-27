@@ -2,7 +2,7 @@
 
 ## 0063 — Monitoramento em página única
 
-**27/11/2026 — spec `pronta`; implementação entregue; aguarda revisão no PR.**
+**27/11/2026 — spec `implementada`: PR [#351](https://github.com/SamiaLuvanice/bestprice/pull/351) integrada em `develop` (`7fcd235`) com CI verde; Issue #349 fechada.**
 [Issue #349](https://github.com/SamiaLuvanice/bestprice/issues/349), branch
 `feature/0063-issue-349-monitoramento-pagina-unica`, commits `077015d` (spec e plano),
 `2c77664` (implementação) e `2a691f3` (ajustes da revisão). Só frontend; o contrato REST
@@ -22,7 +22,7 @@ build ok. Playwright dos specs afetados: 146 passaram, só `brand.spec.ts › ma
 sessao-erro` falhou, e falha também em `develop`; após a correção de 320 px,
 `monitoring-single-page` + `redesign` 73/73. `gates.mjs --scope frontend` verde em
 `2a691f3` (install, lint, 934/934 em 66 arquivos, build). Revisão independente aprovada com
-ressalvas, todas tratadas; QA independente: AC01–AC13 passaram. Pendências: PR e CI, quadros Figma 0041/06 a atualizar para o híbrido
+ressalvas, todas tratadas; QA independente: AC01–AC13 passaram. Pendências: quadros Figma 0041/06 a atualizar para o híbrido
 e tarefa própria para `sessao-erro`.
 Ver [verificação](../specs/0063-monitoramento-pagina-unica/verification.md).
 

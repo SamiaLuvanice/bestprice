@@ -8,4 +8,4 @@
 - [x] T06 — Ajuste dos testes existentes ao novo fluxo; Vitest completo verde.
 - [x] T07 — Playwright: overflow 320–1440 e axe na página única (AC12).
 - [x] T08 — Portões `node .agents/scripts/gates.mjs --scope frontend`, revisão independente e QA.
-- [ ] T09 — `verification.md`, `docs/PROGRESS.md`, docs-impact e PR para `develop`.
+- [x] T09 — `verification.md`, `docs/PROGRESS.md`, docs-impact e PR para `develop` ([#351](https://github.com/SamiaLuvanice/bestprice/pull/351), merge `7fcd235`).
