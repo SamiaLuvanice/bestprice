@@ -147,7 +147,7 @@ it('recupera falha de rede na verificação sem concluir logout', async () => {
 
 it('não mostra dados protegidos após 401 da área autenticada', async () => {
   fakeApi((url) => url === '/api/dashboard' ? reply(401, apiError('unauthenticated', 'Sua sessão expirou. Entre novamente.')) : undefined)
-  visit('/app/monitoring/overview')
+  visit('/app/monitoring')
   expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
   expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
   expect(screen.queryByText('pessoa@example.com')).not.toBeInTheDocument()
@@ -202,7 +202,7 @@ it.each([
   ['instante inválido', { ...validPriceEvent, observed_at: null }],
 ])('rejeita resposta de dashboard com evento fora do contrato: %s', async (_case, event) => {
   fakeApi(() => undefined, dashboardFixture({ recentUpdates: [event] }))
-  visit('/app/monitoring/overview')
+  visit('/app/monitoring')
   expect(await screen.findByText('A API respondeu com dados inválidos.')).toBeInTheDocument()
 })
 
@@ -211,7 +211,7 @@ it('aceita evento de disponibilidade sem moeda e mostra a atualização recente'
     ...validPriceEvent, type: 'availability_changed', previous_value: 'unavailable',
     current_value: 'available', currency: null,
   }] }))
-  visit('/app/monitoring/overview')
+  visit('/app/monitoring')
   await waitFor(() => expect(screen.getByRole('region', { name: 'Atualizações recentes' }))
     .toHaveTextContent('Fone sem fio voltou a ficar disponível.'))
   expect(screen.queryByText('A API respondeu com dados inválidos.')).not.toBeInTheDocument()
@@ -220,8 +220,8 @@ it('aceita evento de disponibilidade sem moeda e mostra a atualização recente'
 it('mostra falha da integração no formulário sem afirmar sucesso', async () => {
   fakeApi((url, init) => url === '/api/tracked-products' && init?.method === 'POST'
     ? reply(503, apiError('integration_not_configured', 'Integração indisponível no momento.')) : undefined)
-  visit('/app/monitoring/overview')
-  await screen.findByRole('heading', { name: 'Seu painel de preços' })
+  visit('/app/monitoring')
+  await screen.findByRole('heading', { name: 'Nenhum produto acompanhado' })
   fireEvent.change(screen.getByPlaceholderText('https://www.mercadolivre.com.br/...'), {
     target: { value: 'https://produto.mercadolivre.com.br/MLB-1234567890-fone-_JM' },
   })
@@ -466,11 +466,15 @@ it('leva o link guardado na landing pelo login até o monitoramento, preenchido 
   fillLogin('pessoa@example.com', 'certa')
   fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
   await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring'))
-  const field = await screen.findByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })
-  expect(field).toHaveValue(link)
-  await waitFor(() => expect(field).toHaveFocus())
+  // 0063: sem produtos, o campo fica no cartão "Nenhum produto acompanhado", que só aparece depois da
+  // carga do painel; por isso o campo é procurado de novo em cada verificação.
+  await screen.findByRole('heading', { name: 'Nenhum produto acompanhado' })
+  const field = () => screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })
+  expect(field()).toHaveValue(link)
+  await waitFor(() => expect(field()).toHaveFocus())
   await new Promise((resolve) => setTimeout(resolve, 50))
-  expect(field).toHaveFocus()
+  expect(field()).toHaveFocus()
+  expect(field()).toHaveValue(link)
   expect(window.location.href).not.toContain('MLB-4444444444')
   expect(mockFetch.mock.calls.filter(([url, init]) => String(url).includes('MLB-4444444444')
     || String(init?.body ?? '').includes('MLB-4444444444'))).toHaveLength(0)

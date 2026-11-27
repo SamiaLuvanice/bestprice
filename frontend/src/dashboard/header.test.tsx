@@ -37,29 +37,30 @@ describe('cabeçalho', () => {
   })
 
   it('leva o foco às páginas e marca somente a rota ativada como atual', async () => {
-    const { user } = await renderArea(() => undefined, '/app/monitoring/overview')
+    const { user } = await renderArea()
     const home = () => nav().getByRole('link', { name: 'Início' })
     const products = () => nav().getByRole('link', { name: 'Produtos' })
     const alerts = () => nav().getByRole('link', { name: 'Alertas' })
 
+    await user.click(alerts())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Alertas', level: 1 })).toHaveFocus())
+    expect(window.location.pathname).toBe('/alertas')
+    expect(alerts()).toHaveAttribute('aria-current', 'page')
+    expect(products()).not.toHaveAttribute('aria-current')
+    expect(home()).not.toHaveAttribute('aria-current')
+
     await user.click(products())
     await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
-    expect(window.location.pathname).toBe('/app/monitoring')
+    expect(window.location.pathname).toBe('/produtos')
     expect(products()).toHaveAttribute('aria-current', 'page')
     expect(home()).not.toHaveAttribute('aria-current')
     expect(alerts()).not.toHaveAttribute('aria-current')
 
-    await user.click(alerts())
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Alertas', level: 1 })).toHaveFocus())
-    expect(window.location.pathname).toBe('/app/monitoring/alerts')
-    expect(alerts()).toHaveAttribute('aria-current', 'page')
-    expect(products()).not.toHaveAttribute('aria-current')
-
+    // 0063: Início leva ao endereço antigo da visão geral, substituído pela página única de Monitoramento.
+    expect(home()).toHaveAttribute('href', '/app/monitoring/overview')
     await user.click(home())
-    await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
-    expect(window.location.pathname).toBe('/app/monitoring/overview')
-    expect(home()).toHaveAttribute('aria-current', 'page')
-    expect(alerts()).not.toHaveAttribute('aria-current')
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Monitoramento de preços' })).toHaveFocus())
+    expect(window.location.pathname).toBe('/app/monitoring')
   })
 
   it('sai da conta e mostra a entrada quando o encerramento tem sucesso', async () => {

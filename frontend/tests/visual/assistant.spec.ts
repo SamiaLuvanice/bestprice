@@ -134,7 +134,7 @@ test('títulos e mensagens sem espaços não criam rolagem horizontal', async ({
   await fit(page)
 })
 
-test('shell: teclado desktop e subnavegação móvel do monitoramento', async ({ page }) => {
+test('shell: teclado desktop e página única do monitoramento', async ({ page }) => {
   await api(page)
   if ((page.viewportSize()?.width ?? 0) >= 960) {
     await page.goto('/app/assistant')
@@ -147,16 +147,20 @@ test('shell: teclado desktop e subnavegação móvel do monitoramento', async ({
   await page.route('**/api/tracked-products', (route) => route.fulfill({ json: { items: [], next_cursor: null } }))
   await page.route('**/api/notifications**', (route) => route.fulfill({ json: { items: [], next_cursor: null } }))
   await page.goto('/app/monitoring/overview')
-  await expect(page.getByRole('heading', { name: 'Seu painel de preços' })).toBeVisible()
+  // 0063: a visão geral virou a página única, sem navegação interna nem segundo cabeçalho.
+  await expect(page).toHaveURL(/\/app\/monitoring$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Monitoramento de preços' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Conta: pessoa@example.com' })).toHaveCount(1)
   await expect(page.getByRole('banner')).toHaveCount(1)
-  await expect(page.getByRole('navigation', { name: 'Principal' }).locator('[aria-current="page"]')).toHaveCount(1)
+  await expect(page.getByRole('navigation', { name: 'Principal' })).toHaveCount(0)
   if ((page.viewportSize()?.width ?? 0) < 960) {
-    const subnav = await page.getByRole('navigation', { name: 'Principal' }).boundingBox()
+    const alerts = await page.getByRole('link', { name: 'Ver alertas' }).boundingBox()
     const bottom = await page.getByRole('navigation', { name: 'Atalhos móveis' }).boundingBox()
-    expect(subnav!.y + subnav!.height).toBeLessThan(bottom!.y)
+    expect(alerts!.y + alerts!.height).toBeLessThan(bottom!.y)
   }
-  await page.getByRole('navigation', { name: 'Principal' }).getByRole('link', { name: 'Produtos' }).click()
+  await page.getByRole('link', { name: 'Ver alertas' }).click()
+  await expect(page).toHaveURL(/\/app\/monitoring\/alerts$/)
+  await page.getByRole('link', { name: 'Voltar ao monitoramento' }).click()
   await expect(page).toHaveURL(/\/app\/monitoring$/)
-  await expect(page.getByRole('heading', { name: 'Seus produtos' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Monitoramento de preços' })).toBeVisible()
 })

@@ -18,16 +18,21 @@ type Props = {
   skeleton?: ReactNode
   /** Ação compacta "Adicionar anúncio" (ou o convite, sem produtos), logo abaixo do título. */
   toolbar?: ReactNode
+  /** Página única (0063): h2 "Produtos monitorados (N)" abaixo do h1 da página. */
+  title?: string
+  headingLevel?: 1 | 2
+  count?: number | null
 }
 
 const idle: RowState = { busy: false, message: null }
 
 /** Seção “Seus produtos”: tabela semântica com papéis explícitos, para manter a semântica empilhada. */
-export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore, loadMoreError, onLoadMore, renderActions, message, headingRef, skeleton, toolbar }: Props) {
+export function TrackedProductsTable({ entries, rowStates, hasMore, loadingMore, loadMoreError, onLoadMore, renderActions, message, headingRef, skeleton, toolbar, title = 'Seus produtos', headingLevel = 1, count = null }: Props) {
+  const Heading = headingLevel === 1 ? 'h1' : 'h2'
   return <section id="seus-produtos" aria-labelledby="tracked-title" aria-busy={Boolean(skeleton)} className="card-section products-section">
     <div className="section-heading">
       {/* Título único da página Produtos (revisão 0028): h1, sem "Produtos" duplicado. */}
-      <h1 id="tracked-title" ref={headingRef} tabIndex={-1}>Seus produtos</h1>
+      <Heading id="tracked-title" ref={headingRef} tabIndex={-1}>{title}{count !== null && <> <span className="section-count">({count})</span></>}</Heading>
     </div>
     {toolbar}
     <div role="status" data-testid="products-status" className="section-status">{message}</div>

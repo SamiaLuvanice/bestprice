@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import { formatMoney } from '../lib/format'
 import { useDisclosure } from '../lib/focus'
 import { BellIcon } from './Icons'
@@ -28,6 +29,7 @@ type FocusRequest = { previous: string[]; index: number } | 'title' | null
 
 /** Sino com contador de não lidas e painel (disclosure) com as 5 mais recentes. */
 export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
+  const paths = useMonitoringPaths()
   const panel = useDisclosure()
   const panelId = useId()
   const titleId = useId()
@@ -94,13 +96,13 @@ export function NotificationBell({ unread, onRetry, onMarkRead }: Props) {
             Preço observado: {formatMoney(item.observed_price) ?? 'Desconhecido'} · Alvo: {formatMoney(item.target_price) ?? 'Desconhecido'}
           </span>
           <RelativeTime iso={item.created_at} receivedAt={unread.receivedAt} />
-          <Link className="link-button" to={`/produtos/${item.tracked_product_id}`} onClick={() => panel.close()}>Abrir produto</Link>
+          <Link className="link-button" to={paths.product(item.tracked_product_id)} onClick={() => panel.close()}>Abrir produto</Link>
           <Button variant="link" type="button" className="link-button" data-notification-id={item.id} aria-disabled={pending === item.id || undefined}
             onClick={() => void markRead(item.id)}>
             Marcar como lida<span className="sr-only">: {item.product_title}</span>
           </Button>
         </li>)}</ul>)}
-      <Link className="panel-link" to="/alertas" onClick={() => panel.close()}>Ver todas as notificações</Link>
+      <Link className="panel-link" to={paths.alerts} onClick={() => panel.close()}>Ver todas as notificações</Link>
     </section>}
   </div>
 }

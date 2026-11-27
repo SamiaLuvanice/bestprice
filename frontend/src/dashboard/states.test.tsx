@@ -11,10 +11,12 @@ afterEach(() => {
 
 const clock = () => new Date('2026-10-11T18:00:00Z')
 
+// 0063: os estados do painel valem para a página única de Monitoramento (/app/monitoring), que reúne
+// indicadores, lista e atualizações recentes; "Boas oportunidades" saiu da página.
 function dashboardRegions() {
   return [
     screen.getByRole('region', { name: 'Resumo do monitoramento' }),
-    screen.getByRole('region', { name: 'Boas oportunidades' }),
+    screen.getByRole('region', { name: /^Produtos monitorados/ }),
     screen.getByRole('region', { name: 'Atualizações recentes' }),
   ]
 }
@@ -23,11 +25,16 @@ function at(path: string) {
   window.history.replaceState(null, '', path)
 }
 
+async function openLinkField(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: /Adicionar anúncio/ }))
+  return screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })
+}
+
 describe('carregamento do painel', () => {
   it('mostra esqueletos anunciados como carregando, sem números nem textos de vazio, até a resposta chegar', async () => {
     const response = deferred()
     fakeApi((url) => url === '/api/dashboard' ? response.promise : undefined)
-    at('/app/monitoring/overview')
+    at('/app/monitoring')
     render(<App clock={clock} />)
     const loadingStatus = (await screen.findByText('Carregando seu painel…')).closest('[role="status"]')
     expect(loadingStatus).not.toBeNull()
@@ -39,7 +46,7 @@ describe('carregamento do painel', () => {
       expect(region).not.toHaveTextContent(/\d/)
       expect(region.querySelector('[data-skeleton]')).toHaveAttribute('aria-hidden', 'true')
     }
-    expect(screen.queryByText(/Nenhuma oportunidade|ainda não monitora|aparecerão aqui/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Nenhuma oportunidade|Nenhum produto acompanhado|ainda não está acompanhando|aparecerão aqui/)).not.toBeInTheDocument()
 
     response.resolve(reply(200, dashboardFixture({
       items: [trackedFixture()], summary: { price_drop_count: 3 },
@@ -54,24 +61,23 @@ describe('carregamento do painel', () => {
 })
 
 describe('estado vazio', () => {
-  it('prioriza o hero, mostra os textos de vazio e oculta oportunidades, produtos e atualizações', async () => {
+  it('prioriza o convite com o campo de link e oculta indicadores, produtos e atualizações', async () => {
     fakeApi(() => undefined, emptyDashboard)
-    const user = userEvent.setup()
-    at('/app/monitoring/overview')
+    at('/app/monitoring')
     render(<App clock={clock} />)
-    expect(await screen.findByText('Você ainda não está acompanhando nenhum produto.')).toBeInTheDocument()
-    expect(screen.getByText('Encontre um produto no Mercado Livre, copie o link do anúncio e cole acima. O BestPrice acompanha as alterações para você.')).toBeInTheDocument()
-    const hero = screen.getByRole('region', { name: 'Seu painel de preços' })
-    expect(hero).toHaveClass('hero-priority')
-    // 0028/AC09: sem produtos, o convite fica sozinho, sem quatro indicadores zerados.
-    expect(screen.queryByRole('heading', { name: 'Visão geral' })).not.toBeInTheDocument()
+    const card = within(await screen.findByRole('region', { name: 'Nenhum produto acompanhado' }))
+    expect(card.getByText('Cole o link de um anúncio do Mercado Livre para começar.')).toBeInTheDocument()
+    const field = card.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })
+    expect(field).toBeVisible()
+    expect(field.closest('.hero')).toHaveClass('hero-priority')
+    expect(card.getByRole('button', { name: /Monitorar preço/ })).toBeEnabled()
+    // 0028/AC09 e 0063/AC10: sem produtos, o convite fica sozinho, sem indicadores zerados nem tabela vazia.
     expect(screen.queryByText('Produtos monitorados')).not.toBeInTheDocument()
-    for (const name of ['Resumo do monitoramento', 'Boas oportunidades', 'Seus produtos', 'Atualizações recentes']) {
+    expect(screen.queryByRole('columnheader')).not.toBeInTheDocument()
+    for (const name of ['Resumo do monitoramento', /^Produtos monitorados/, 'Atualizações recentes', 'Notificações recebidas']) {
       expect(screen.queryByRole('region', { name })).not.toBeInTheDocument()
     }
-    expect(screen.queryByRole('region', { name: 'Notificações recebidas' })).not.toBeInTheDocument()
-    await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: 'Produtos' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Seus produtos', level: 1 })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Monitoramento de preços', level: 1 })).toHaveFocus())
   })
 })
 
@@ -94,11 +100,11 @@ describe('respostas concorrentes do painel', () => {
       return undefined
     })
     const user = userEvent.setup()
-    at('/app/monitoring/overview')
+    at('/app/monitoring')
     render(<App clock={clock} />)
     const summary = () => within(screen.getByRole('region', { name: 'Resumo do monitoramento' }))
     await waitFor(() => expect(summary().getByText('1')).toBeInTheDocument())
-    const field = screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })
+    const field = await openLinkField(user)
     for (const link of ['https://produto.mercadolivre.com.br/MLB-1-a-_JM', 'https://produto.mercadolivre.com.br/MLB-2-b-_JM']) {
       await user.click(field)
       await user.paste(link)
@@ -113,33 +119,47 @@ describe('respostas concorrentes do painel', () => {
     await new Promise((resolve) => setTimeout(resolve, 50))
     expect(summary().getByText('5')).toBeInTheDocument()
     expect(summary().queryByText('4')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /^Produtos monitorados/ })).toHaveTextContent(/\(5\)/)
   })
 })
 
 describe('falhas por região', () => {
-  it.each([
+  const dashboardFailures = [
     ['500', () => reply(500, apiError('internal_error', 'Não foi possível carregar o painel.')), 'Não foi possível carregar o painel.'],
     ['rede', () => Promise.reject(new TypeError('Failed to fetch')), 'Não foi possível conectar ao BestPrice. Tente novamente.'],
-  ])('mostra a falha do painel na região com Tentar novamente, sem bloquear o hero (%s)', async (_case, failure, message) => {
+  ] as const
+
+  it.each(dashboardFailures)('mostra a falha do painel com Tentar novamente, sem números fabricados (%s)', async (_case, failure, message) => {
     let fail = true
-    const mockFetch = fakeApi((url, init) => {
+    const mockFetch = fakeApi((url) => {
       if (url === '/api/dashboard') return fail ? failure() : reply(200, dashboardFixture({ items: [trackedFixture()] }))
-      if (url === '/api/tracked-products' && init?.method === 'POST') return reply(201, trackedFixture())
       return undefined
     })
     const user = userEvent.setup()
-    at('/app/monitoring/overview')
+    at('/app/monitoring')
     render(<App clock={clock} />)
-    const summary = within(await screen.findByRole('region', { name: 'Resumo do monitoramento' }))
-    expect(await summary.findByRole('alert')).toHaveTextContent(message)
-    const field = screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })
-    expect(field).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Monitorar preço' })).toBeEnabled()
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(screen.getByRole('heading', { level: 1, name: 'Monitoramento de preços' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Resumo do monitoramento' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Nenhum produto acompanhado')).not.toBeInTheDocument()
     const notificationCalls = callsTo(mockFetch, '/api/notifications').length
     fail = false
-    await user.click(summary.getByRole('button', { name: 'Tentar novamente' }))
+    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }))
     await waitFor(() => expect(within(screen.getByRole('region', { name: 'Resumo do monitoramento' })).getByText('1')).toBeInTheDocument())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(callsTo(mockFetch, '/api/notifications')).toHaveLength(notificationCalls)
+  })
+
+  // Antes da 0063, a falha do painel não bloqueava o campo de link (hero da Início e a lista em
+  // /app/monitoring). A spec pede que o erro continue "como hoje" (AC11).
+  it.each(dashboardFailures)('mantém o campo de link disponível quando o painel falha (%s)', async (_case, failure) => {
+    fakeApi((url) => url === '/api/dashboard' ? failure() : undefined)
+    at('/app/monitoring')
+    render(<App clock={clock} />)
+    await screen.findByRole('alert')
+    const field = screen.queryByRole('textbox', { name: 'Link do anúncio do Mercado Livre', hidden: true })
+    expect(field).not.toBeNull()
+    expect(field).toBeEnabled()
   })
 
   it('mantém os dados e mostra a falha de recarga do painel com Tentar novamente', async () => {
@@ -150,18 +170,23 @@ describe('falhas por região', () => {
       return undefined
     })
     const user = userEvent.setup()
-    at('/app/monitoring/overview')
+    at('/app/monitoring')
     render(<App clock={clock} />)
     const summary = () => within(screen.getByRole('region', { name: 'Resumo do monitoramento' }))
     await waitFor(() => expect(summary().getByText('1')).toBeInTheDocument())
-    await user.click(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' }))
+    await user.click(await openLinkField(user))
     await user.paste('https://produto.mercadolivre.com.br/MLB-2-b-_JM')
     await user.click(screen.getByRole('button', { name: 'Monitorar preço' }))
-    expect(await summary().findByRole('alert')).toHaveTextContent('Serviço temporariamente indisponível.')
+    const refreshError = await screen.findByText('Serviço temporariamente indisponível.')
+    expect(refreshError).toHaveAttribute('role', 'alert')
+    // Dados já exibidos preservados: indicadores, lista (com o produto novo) e atualizações recentes.
     expect(summary().getByText('1')).toBeInTheDocument()
+    expect(screen.getByRole('rowgroup', { name: 'Fone sem fio' })).toBeInTheDocument()
+    expect(screen.getByRole('rowgroup', { name: 'Cafeteira elétrica' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Atualizações recentes' })).toBeInTheDocument()
     fail = false
-    await user.click(summary().getByRole('button', { name: 'Tentar novamente' }))
-    await waitFor(() => expect(summary().queryByRole('alert')).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }))
+    await waitFor(() => expect(screen.queryByText('Serviço temporariamente indisponível.')).not.toBeInTheDocument())
   })
 
   it.each([
@@ -179,7 +204,7 @@ describe('falhas por região', () => {
 
   it.each([['/api/dashboard'], ['/api/notifications'], [unreadUrl]])('volta à entrada com 401 em %s', async (target) => {
     fakeApi((url) => url === target ? reply(401, apiError('unauthenticated', 'Sua sessão expirou. Entre novamente.')) : undefined, dashboardFixture({ items: [trackedFixture()] }))
-    at(target === '/api/dashboard' ? '/app/monitoring/overview' : '/alertas')
+    at(target === '/api/dashboard' ? '/app/monitoring' : '/alertas')
     render(<App clock={clock} />)
     expect(await screen.findByRole('button', { name: 'Entrar' })).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')

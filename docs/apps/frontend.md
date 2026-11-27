@@ -157,7 +157,8 @@ A composição da 0027 usa conteúdo de até 1248 px, oportunidades em linhas e
 navegação inferior da conta até 700 px. Os quatro indicadores existentes foram
 preservados; desde a 0028 o Início sem produtos mostra só o convite do campo de
 link, sem indicadores zerados, e Produtos abre na lista, com o campo de link
-recolhido na ação compacta “Adicionar anúncio”. A verificação visual da spec 0015 (à época, com tema automático) foi feita em
+recolhido na ação compacta “Adicionar anúncio”. A 0063 removeu a Início e a lista
+de oportunidades; ver [Monitoramento em página única](#monitoramento-em-página-única--spec-0063). A verificação visual da spec 0015 (à época, com tema automático) foi feita em
 Chromium nas larguras de 320, 768 e 1280 px, nos dois temas, com fixtures sintéticas
 e um smoke local com API e
 PostgreSQL isolados. Os resultados e limites estão em
@@ -562,8 +563,8 @@ provisionada no backend antes do login.
 | `/app/assistant`, `/app/assistant/:id` | Nova conversa ou conversa própria salva |
 | `/app/compare`, `/app/compare/:id` | Nova comparação manual ou comparação própria salva |
 | `/app/history` | Conversas salvas, busca por título, paginação, Continuar e exclusão confirmada (0045) |
-| `/app/monitoring` | Lista de monitoramentos e formulário “Adicionar anúncio” |
-| `/app/monitoring/overview` | Painel completo de acompanhamento anterior |
+| `/app/monitoring` | Página única “Monitoramento de preços”: indicadores, lista “Produtos monitorados (N)”, formulário “Adicionar anúncio” e atualizações recentes (0063) |
+| `/app/monitoring/overview` | Redireciona para `/app/monitoring` com `replace` (0063) |
 | `/app/monitoring/:id` | Detalhe do vínculo próprio, histórico, alerta e ações |
 | `/app/monitoring/alerts` | Alertas configurados e notificações |
 | `/produtos`, `/produtos/:id`, `/alertas` | Destinos anteriores preservados de lista, detalhe e alertas |
@@ -682,9 +683,9 @@ Dashboard e comparador mantêm páginas, rotas, dados e APIs, embora seus atalho
 tenham saído dessa navegação. A landing e a entrada preservam a composição pública.
 
 Em `/app/monitoring`, `AccountArea` e `AppHeader` recebem `embedded`: o shell
-fornece marca e conta uma única vez, enquanto a subnavegação Início/Produtos/Alertas
-e o sino permanecem no fluxo, sem disputar o rodapé móvel. Os links dessa
-subnavegação usam os caminhos internos de monitoramento. O modo anterior e seus
+fornece marca e conta uma única vez. Desde a 0063, `AccountArea` não renderiza
+`AppHeader` nesse modo: não há subnavegação Início/Produtos/Alertas, e o sino fica
+no cabeçalho da página única, ao lado de “Ver alertas”. O modo anterior e seus
 links `/produtos` e `/alertas` permanecem disponíveis. O foco de título agendado
 não toma o foco quando a pessoa já interagiu com outro controle; a saída por Tab
 para o botão do menu aplica-se somente ao menu móvel aberto.
@@ -756,9 +757,55 @@ fixo). A suíte completa registrou intermitência preexistente em `App.test.tsx`
 fora do diff. Ver [evidência frontend](../../specs/0047-chat-pesquisa-precos-web-gemini/frontend-evidence.md)
 e [verificação](../../specs/0047-chat-pesquisa-precos-web-gemini/verification.md).
 
+## Monitoramento em página única — spec 0063
+
+Na área com barra lateral, `/app/monitoring` é uma página única com o título
+“Monitoramento de preços” (h1), a frase “Acompanhe seus anúncios e reconheça o melhor
+momento de comprar.”, o link “Ver alertas” (`/app/monitoring/alerts`) e o sino. A
+aba recebe “Monitoramento · BestPrice”. `/app/monitoring/overview` é substituído
+por `/app/monitoring` sem nova entrada no histórico (`Navigate replace` em
+`ResearchArea`); o destino continua aceito por `safeReturnTo`.
+
+- **Indicadores:** com produtos, `SummaryIndicators` com `variant="cards"` mostra
+  quatro cartões com ícone, número e rótulo, fiéis ao resumo da API: produtos
+  monitorados, baixaram de preço nas últimas 24h, alertas ativos e preço-alvo
+  atingido. Sem produtos, nenhum indicador zerado.
+- **Lista:** h2 “Produtos monitorados (N)”, com N vindo de `summary.tracked_count`,
+  e a ação “Adicionar anúncio” abaixo. As colunas são Produto, Último preço,
+  Variação, Menor preço, Situação, Última leitura e Ações. A Situação
+  (`productSituation` em `labels.ts`) usa só dados do próprio produto, nesta ordem:
+  “Indisponível”, “Sem preço”, “Sem variação conhecida”, “Em queda”, “Em alta” ou
+  “Sem alteração”; a direção usa o mesmo arredondamento da pílula de variação.
+  A disponibilidade passou para a linha secundária, junto a preço anterior, maior
+  preço e horários.
+- **Atualizações recentes** ficam abaixo da lista. A seção “Boas oportunidades” e
+  `OpportunityList` foram removidas; a API continua devolvendo `opportunities`,
+  sem uso na interface.
+- **Sem produtos:** cartão “Nenhum produto acompanhado” com o campo de link aberto,
+  sem indicadores nem cabeçalho de tabela.
+- **Erro do painel:** mensagem com “Tentar novamente”; o campo de link continua
+  disponível, e uma falha de recarga preserva os dados já exibidos.
+- **Caminhos:** `monitoringPaths.ts` fornece por contexto os endereços da área.
+  Embutida, a lista, o detalhe (`/app/monitoring/:id`), “Ver produto”, atualizações,
+  sino e alertas permanecem em `/app/monitoring…`, e o retorno se chama “Voltar ao
+  monitoramento”. Nas rotas anteriores, os mesmos componentes usam `/produtos`,
+  `/produtos/:id`, `/alertas` e “Ir para Produtos”.
+- **Foco:** ao parar de monitorar pelo detalhe, o foco vai ao título da lista no
+  quadro seguinte ao foco agendado do h1, ou ao campo de link quando a lista fica vazia.
+
+As rotas `/produtos`, `/produtos/:id` e `/alertas` mantêm o cabeçalho próprio
+(`AppHeader`) e a lista “Seus produtos”, que também usa a coluna Situação. O item
+“Início” desse cabeçalho aponta para `/app/monitoring/overview` e, portanto, leva à
+página única. O quadro Figma 0041 (nó 151-11) e o estado vazio (quadro 06, nó 59-254)
+guiaram a estrutura. Anel de situação, busca, filtros, gráfico agregado, coluna Loja
+e indicador “Sem estoque” ficaram fora porque a API não fornece esses dados. A
+cobertura visual está em `tests/visual/monitoring-single-page.spec.ts`: sem rolagem
+lateral de 320 a 1440 px, alvos de 44 px e axe. Ver
+[verificação](../../specs/0063-monitoramento-pagina-unica/verification.md).
+
 ## Monitoramento preservado
 
-O monitoramento oferece links Início/Produtos/Alertas e sino; o acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040). Em Início ou Produtos, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Nas rotas de monitoramento, a consulta de sessão exibe a marca e o estado de carregamento. Em caso de falha, a tela oferece “Tentar novamente” depois da janela de novas tentativas da 0061. O formulário exige sessão confirmada (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, oportunidades, atualizações e notificações levam por link a `/produtos/:id`; o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
+O acesso à conta fica no cabeçalho próprio das rotas anteriores ou no shell compartilhado de `/app/monitoring` (0040); a página única está descrita na seção acima. Na lista, o mesmo formulário recebe o link do anúncio; o preço desejado continua opcional no detalhe. Em Produtos com lista, o formulário fica recolhido: “Adicionar anúncio” usa `aria-expanded`/`aria-controls`, foca o campo ao abrir e, ao recolher, limpa erro e sucesso do último envio. Nas rotas de monitoramento, a consulta de sessão exibe a marca e o estado de carregamento. Em caso de falha, a tela oferece “Tentar novamente” depois da janela de novas tentativas da 0061. O formulário exige sessão confirmada (0028/AC14). O sucesso de cadastro mantém a rota, distingue 201 (“Produto adicionado ao monitoramento.”) de 200 (“Você voltou a monitorar este produto.”) e oferece “Ver produto”. Sem monitoramentos, o formulário ganha destaque e orienta o primeiro cadastro. A lista de Produtos conserva preço, variação, disponibilidade, horários, paginação e ações de linha; abaixo de 960 px a linha fica compacta (imagem, título, preço, pílula de variação e seta) e a linha inteira abre o detalhe, onde ficam disponibilidade, horários, “Atualizar agora” e “Parar de monitorar”. O rótulo “vs. preço anterior” fica fora da pílula. Lista, atualizações e notificações levam por link ao detalhe da área atual (`/produtos/:id` ou `/app/monitoring/:id`); o detalhe consulta esse ID diretamente, preserva histórico paginado, alerta (criar, editar, pausar, excluir), atualização e link externo. No alerta, cada controle tem uma única função: salvar o alvo, pausar/retomar e excluir (`outline`); “Parar de monitorar” usa a variante `destructive`. Pausar ou retomar preserva o rascunho do campo. Os metadados da consulta ficam recolhidos em “Detalhes da consulta” (`<details>`), sem repetir “sem frete”.
 
 O preço-alvo aceita o formato brasileiro (spec 0028): `src/lib/targetPrice.ts` normaliza `99,90`, `99.90`, `1.899,90`, `1899,9` e o prefixo `R$` para o decimal do contrato (`"99.90"`), só com texto, sem `number`. Valor inválido, zero, acima de 16 dígitos inteiros ou com milhar iniciado por zero (`0.500`) não chama a API: o campo recebe `aria-invalid` e a mensagem “Informe um valor em reais, como 99,90.” em `role="alert"`. O campo de edição mostra o alvo atual com vírgula. O contrato REST `target_price` e o backend não mudaram. Monitoramento interrompido aberto por URL informa seu estado e não oferece atualização, configuração de alerta ou parada.
 
@@ -777,19 +824,20 @@ Em Alertas, `ConfiguredAlerts` percorre páginas de monitoramentos para alcança
 | `frontend/src/components/ui/`, `frontend/src/lib/utils.ts`, `frontend/components.json` | Componentes oficiais shadcn/ui, combinação de classes e configuração de geração |
 | `frontend/src/navigation/returnTo.ts` | Allowlist de destinos internos após login ou expiração de sessão |
 | `frontend/src/dashboard/AccountArea.tsx` | Orquestra as telas autenticadas, dados, ações e foco; componentes de apresentação não chamam `fetch` |
-| `frontend/src/dashboard/AppHeader.tsx`, `AccountMenu.tsx` | Cabeçalho, links de rota, seção ativa e menu da conta |
+| `frontend/src/dashboard/AppHeader.tsx`, `AccountMenu.tsx` | Cabeçalho das rotas anteriores (`/produtos`, `/alertas`), links de rota, seção ativa e menu da conta; não aparece na área com barra lateral (0063) |
 | `frontend/src/dashboard/NotificationBell.tsx`, `useNotifications.ts` | Sino com contador e painel das não lidas; notificações da rota Alertas; marcar como lida |
-| `frontend/src/dashboard/HeroTrackForm.tsx` | Campo de link em Início e Produtos (sem validação nativa de URL), sucesso, erro e link “Ver produto” no sucesso ou 409 `already_tracked` |
-| `frontend/src/dashboard/SummaryIndicators.tsx`, `OpportunityList.tsx` | Indicadores existentes e linhas de oportunidades na ordem da API |
-| `frontend/src/dashboard/TrackedProductsTable.tsx`, `TrackedProductRow.tsx`, `RowActionsMenu.tsx` | Tabela “Seus produtos” (empilhada por CSS em telas estreitas), linha e menu de ações |
+| `frontend/src/dashboard/HeroTrackForm.tsx` | Campo de link na lista ou no cartão vazio (sem validação nativa de URL), sucesso, erro e link “Ver produto” no sucesso ou 409 `already_tracked` |
+| `frontend/src/dashboard/SummaryIndicators.tsx` | Indicadores do resumo: cartões com ícone na página única (`variant="cards"`) ou faixa em linha |
+| `frontend/src/dashboard/monitoringPaths.ts` | Contexto com os endereços de lista, detalhe e alertas da área embutida ou das rotas anteriores (0063) |
+| `frontend/src/dashboard/TrackedProductsTable.tsx`, `TrackedProductRow.tsx`, `RowActionsMenu.tsx` | Tabela “Produtos monitorados (N)” na página única ou “Seus produtos” nas rotas anteriores (empilhada por CSS em telas estreitas), linha com Situação e menu de ações |
 | `frontend/src/dashboard/ConfirmStopDialog.tsx`, `StopTrackingConfirm.tsx` | Confirmação de “Parar de monitorar” pela linha e conteúdo compartilhado com o detalhe |
 | `frontend/src/dashboard/ProductDetailDialog.tsx` | Página de detalhe: imagem, preço, contexto, histórico, alerta e carregamento lazy do gráfico |
 | `frontend/src/dashboard/PriceHistoryChart.tsx` | Recharts/shadcn Chart, tooltip, tabela textual e cobertura parcial |
 | `frontend/src/dashboard/ConfiguredAlerts.tsx` | Grupo de alertas configurados, com paginação completa de monitoramentos |
 | `frontend/src/dashboard/RecentUpdatesTimeline.tsx`, `AlertsSection.tsx` | Linha do tempo de `recent_updates` e grupo de notificações com estado de leitura |
-| `frontend/src/dashboard/trackedList.ts`, `useDashboard.ts` | Reducer da lista “Seus produtos” e carga do painel com descarte de respostas antigas |
+| `frontend/src/dashboard/trackedList.ts`, `useDashboard.ts` | Reducer da lista de produtos monitorados e carga do painel com descarte de respostas antigas |
 | `frontend/src/dashboard/RelativeTime.tsx`, `Skeletons.tsx` | Tempo relativo e esqueletos do carregamento inicial |
-| `frontend/src/dashboard/ExternalListingLink.tsx`, `ProductImage.tsx`, `labels.ts`, `Icons.tsx` | Link do anúncio, imagem ou marcador neutro, rótulos de estados da API e ícones |
+| `frontend/src/dashboard/ExternalListingLink.tsx`, `ProductImage.tsx`, `labels.ts`, `Icons.tsx` | Link do anúncio, imagem ou marcador neutro, rótulos de estados da API, situação do produto na lista (0063) e ícones |
 | `frontend/src/lib/decimal.ts` | Validação e comparação de decimais como texto, sem converter para `number` |
 | `frontend/src/lib/format.ts` | Dinheiro (BRL), percentual com direção, tempo relativo, instante absoluto e rótulo do eixo do gráfico (`formatAxisPrice`) via `Intl` |
 | `frontend/src/lib/targetPrice.ts` | Normalização do preço-alvo digitado em pt-BR para o decimal do contrato e mensagem de erro local |

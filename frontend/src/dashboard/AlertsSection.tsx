@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { useEffect, useRef, useState, type Ref } from 'react'
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import { formatMoney } from '../lib/format'
 import { RelativeTime } from './RelativeTime'
 import type { AllNotifications } from './useNotifications'
@@ -19,6 +20,7 @@ type Props = {
  * “Marcar como lida”, o foco vai ao próximo item ainda não lido (ou ao título, se não restar nenhum).
  */
 export function AlertsSection({ notifications, headingRef, focusHeading, onMarkRead, onLoadMore, onRetry }: Props) {
+  const paths = useMonitoringPaths()
   const list = useRef<HTMLUListElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState<string | null>(null)
@@ -76,7 +78,7 @@ export function AlertsSection({ notifications, headingRef, focusHeading, onMarkR
           <RelativeTime iso={notification.created_at} receivedAt={receivedAt} />
         </div>
         <span className="read-state">{notification.read_at ? 'Lida' : 'Não lida'}</span>
-        <Link className="text-button" to={`/produtos/${notification.tracked_product_id}`}>Abrir produto</Link>
+        <Link className="text-button" to={paths.product(notification.tracked_product_id)}>Abrir produto</Link>
         {!notification.read_at && <Button variant="outline" type="button" className="secondary-button" data-notification-id={notification.id}
           aria-disabled={pending === notification.id || undefined} onClick={() => void markRead(notification.id)}>
           Marcar como lida<span className="sr-only">: {notification.product_title}</span>

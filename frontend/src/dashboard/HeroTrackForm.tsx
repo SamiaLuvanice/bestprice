@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type Ref } from 'react'
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import { ArrowRightIcon, InfoIcon, LinkIcon } from './Icons'
 
 export type TrackFeedback = { message: string; trackedProductId: string | null }
@@ -14,21 +15,14 @@ type Props = {
   error: TrackFeedback | null
   success: string | null
   successId?: string | null
-  headingRef?: Ref<HTMLHeadingElement>
   inputRef?: Ref<HTMLInputElement>
-  /** Sem produtos monitorados: o hero ganha prioridade visual (AC23). */
+  /** Sem produtos monitorados: o formulário ganha prioridade visual (AC23). */
   priority?: boolean
-  pageTitle?: string
   /**
-   * Produtos com lista (0028/AC05): título curto e a ação compacta “Adicionar anúncio”, que
-   * expande o formulário. Sem produtos, o formulário aparece aberto como convite.
+   * Produtos com lista (0028/AC05): a ação compacta “Adicionar anúncio”, que expande o
+   * formulário. Sem produtos, o formulário aparece aberto como convite.
    */
   compact?: boolean
-  /**
-   * Dentro de outra seção que já tem o título da página (Produtos): sem h1, sem região própria
-   * e sem introdução. Combinado com `compact`, mostra só a ação "Adicionar anúncio".
-   */
-  embedded?: boolean
   /** Ao recolher o formulário compacto: limpa erro e sucesso do último envio. */
   onDismissFeedback?: () => void
   /** Conteúdo extra abaixo do formulário (ex.: estado vazio). */
@@ -41,10 +35,12 @@ type Props = {
 }
 
 /**
- * Hero com o campo de link. O campo é só obrigatório (sem validação nativa de URL), para que a
+ * Campo de link dentro de uma seção que já tem título (lista ou cartão vazio; 0063 removeu o hero
+ * com h1 da antiga Início). O campo é só obrigatório (sem validação nativa de URL), para que a
  * orientação venha sempre da API (0013); o erro fica junto ao campo e é anunciado.
  */
-export function HeroTrackForm({ onSubmit, submitting, error, success, successId, headingRef, inputRef, priority = false, pageTitle, compact = false, embedded = false, onDismissFeedback, children, initialValue }: Props) {
+export function HeroTrackForm({ onSubmit, submitting, error, success, successId, inputRef, priority = false, compact = false, onDismissFeedback, children, initialValue }: Props) {
+  const paths = useMonitoringPaths()
   const panelId = useId()
   const [expanded, setExpanded] = useState(Boolean(initialValue))
   const focusOnOpen = useRef(false)
@@ -80,21 +76,13 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
     if (submitting) return
     if (await onSubmit(value)) setValue('')
   }
-  const classes = ['hero', priority && 'hero-priority', compact && 'hero-compact', embedded && 'hero-embedded'].filter(Boolean).join(' ')
-  const addButton = compact && <Button type="button" variant="link" className="add-listing" aria-expanded={open} aria-controls={panelId}
-    onClick={toggle}>Adicionar anúncio <span aria-hidden="true">{open ? '−' : '+'}</span></Button>
-  const Root = embedded ? 'div' : 'section'
-  return <Root className={classes} id={embedded ? undefined : 'inicio'} aria-labelledby={embedded ? undefined : 'page-title'}>
+  const classes = ['hero', 'hero-embedded', priority && 'hero-priority', compact && 'hero-compact'].filter(Boolean).join(' ')
+  return <div className={classes}>
     <div className="hero-inner">
       <div className="hero-copy">
         <div className="hero-intro">
-        {embedded ? addButton : <div className="hero-heading">
-          <h1 id="page-title" ref={headingRef} tabIndex={-1}>
-            {pageTitle ?? 'Seu painel de preços'}
-          </h1>
-          {addButton}
-        </div>}
-        {!compact && !embedded && <p className="intro">Cole o link de um produto do Mercado Livre e deixe o BestPrice acompanhar as mudanças de preço para você.</p>}
+        {compact && <Button type="button" variant="link" className="add-listing" aria-expanded={open} aria-controls={panelId}
+          onClick={toggle}>Adicionar anúncio <span aria-hidden="true">{open ? '−' : '+'}</span></Button>}
         </div>
         <div className="hero-entry">
         {/* Sempre no DOM para aria-controls apontar para um id existente; `hidden` quando recolhido. */}
@@ -112,15 +100,15 @@ export function HeroTrackForm({ onSubmit, submitting, error, success, successId,
         </form>
         <p id={hintId} className="hero-hint"><InfoIcon /> Copie o link do anúncio no Mercado Livre e cole aqui.</p>
         <div role="status" className="hero-status">{submitting ? 'Localizando produto...' : success}</div>
-        {successId && <Link className="text-button" to={`/produtos/${successId}`}>Ver produto</Link>}
+        {successId && <Link className="text-button" to={paths.product(successId)}>Ver produto</Link>}
         {error && <div className="hero-error">
           <p id={errorId} role="alert" className="error-box">{error.message}</p>
-          {error.trackedProductId && <Link className="text-button" to={`/produtos/${error.trackedProductId}`}>Ver produto</Link>}
+          {error.trackedProductId && <Link className="text-button" to={paths.product(error.trackedProductId)}>Ver produto</Link>}
         </div>}
         </Card>
         {children}
         </div>
       </div>
     </div>
-  </Root>
+  </div>
 }

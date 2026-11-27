@@ -5,6 +5,7 @@ import { ProductImage } from './ProductImage'
 
 const PriceHistoryChart = lazy(() => import('./PriceHistoryChart').then((module) => ({ default: module.PriceHistoryChart })))
 import { Link } from 'react-router-dom'
+import { useMonitoringPaths } from './monitoringPaths'
 import type { HistoryEntry, Product, TrackedProduct } from '../api'
 import { formatMoney, formatPercentage } from '../lib/format'
 import { chartTargetPrice, normalizeTargetPrice, targetPriceError } from '../lib/targetPrice'
@@ -88,12 +89,13 @@ function TargetForm({ id, label, submitLabel, value, busy, onChange, onSubmit }:
  * Cada controle do alerta tem uma única função (0028/AC06): salvar alvo, pausar/retomar e excluir.
  */
 export function ProductDetailDialog(props: Props) {
+  const paths = useMonitoringPaths()
   const { tracked, history, historyCursor, busy, error, target, onTargetChange } = props
   const product = tracked.product
   const alert = tracked.alert
   const stopButton = useRef<HTMLButtonElement>(null)
   return <section className="detail-page" aria-labelledby="detail-title">
-    <Link className="text-button detail-back" to="/produtos">Ir para Produtos</Link>
+    <Link className="text-button detail-back" to={paths.list}>{paths.backLabel}</Link>
     <div className="detail-product-heading"><ProductImage src={product.image_url} /><div className="detail-product-copy">
       <h1 id="detail-title" tabIndex={-1}>{product.title}</h1>
       <p className="detail-reference"><span className="detail-reference-id">{product.external_id}</span> · Mercado Livre</p>

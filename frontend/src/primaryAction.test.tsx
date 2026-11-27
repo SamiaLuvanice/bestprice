@@ -25,6 +25,8 @@ function visibleActions(): Element[] {
 
 type Ready = () => Promise<unknown>
 const heading = (name: string | RegExp): Ready => () => screen.findByRole('heading', { level: 1, name })
+// 0063: o vazio da página única é um cartão com h2 próprio.
+const subheading = (name: string): Ready => () => screen.findByRole('heading', { level: 2, name })
 const text = (content: string): Ready => async () => (await screen.findAllByText(content))[0]
 
 // Cada tela espera um elemento próprio do estado (dados carregados ou erro). Se ele não aparecer,
@@ -37,7 +39,7 @@ const screens: [string, string, Route, unknown, Ready][] = [
   ['Assistente indisponível', '/app/assistant', (url) => url === '/api/ai/capabilities' ? reply(200, { ...capabilities, enabled: false }) : ai(url), undefined,
     text('O assistente está indisponível no momento. Suas pesquisas salvas continuam acessíveis.')],
   ['Histórico', '/app/history', ai, undefined, text('Notebook')],
-  ['Monitoramento — sem produtos', '/app/monitoring', () => undefined, undefined, text('Você ainda não está acompanhando nenhum produto.')],
+  ['Monitoramento — sem produtos', '/app/monitoring', () => undefined, undefined, subheading('Nenhum produto acompanhado')],
   ['Monitoramento — com produtos', '/app/monitoring', () => undefined, dashboardWith([trackedFixture()]), text('Fone sem fio')],
   ['Monitoramento indisponível', '/app/monitoring', (url) => url === '/api/dashboard' ? reply(503, apiError('unavailable', 'Não foi possível carregar o painel. Tente novamente.')) : undefined, undefined,
     text('Não foi possível carregar o painel. Tente novamente.')],

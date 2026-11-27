@@ -36,8 +36,8 @@ Na interface, `BrowserRouter` mantém `/` pública mesmo com sessão válida. `/
 redireciona para `/app/dashboard`; assistente, comparador e histórico ficam em
 `/app/assistant`, `/app/compare` e `/app/history`, com IDs nas URLs dos recursos
 salvos. `App.tsx` valida a sessão antes da área protegida. `/app/monitoring` abre a
-lista, `/app/monitoring/overview` preserva o painel e `/app/monitoring/alerts` os
-alertas; `/produtos`, `/produtos/:id` e `/alertas` continuam funcionais. A API valida
+página única de monitoramento (0063), `/app/monitoring/overview` redireciona para ela
+e `/app/monitoring/alerts` mostra os alertas; `/produtos`, `/produtos/:id` e `/alertas` continuam funcionais. A API valida
 propriedade e expiração em cada operação. O retorno do login aceita apenas caminhos
 internos conhecidos; o estado da área é isolado por usuário e desmontado no logout
 ou 401, com revalidação ao restaurar uma página pelo histórico. Nginx resolve
@@ -60,7 +60,8 @@ conversa por ID e a exclusão usa a rota existente de conversas; a API e as
 comparações salvas permanecem preservadas. O diálogo compartilhado de exclusão
 gere foco inicial em Cancelar e retorno ao acionador ou título da página.
 No monitoramento interno, `AccountArea`/`AppHeader` em modo `embedded`
-compartilham marca e conta do shell e conservam subnavegação/sino no fluxo.
+compartilham marca e conta do shell; desde a 0063, não há subnavegação e o sino
+fica no cabeçalho da página única, ao lado de “Ver alertas”.
 Não há mudança de contrato, persistência, dependências ou configuração de IA.
 Os testes desta revisão usam a fronteira HTTP controlada; não comprovam teclado
 virtual real, backend/banco reais, disponibilidade do fornecedor ou deploy.

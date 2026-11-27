@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -24,8 +24,9 @@ async function openMonitoring(strict = false, dashboard: unknown = dashboardWith
   const mockFetch = fakeApi(() => undefined, dashboard)
   const app = <App clock={clock} />
   render(strict ? <StrictMode>{app}</StrictMode> : app)
-  await screen.findByRole('heading', { level: 1, name: 'Seus produtos' })
-  await waitFor(() => expect(screen.getByRole('region', { name: 'Seus produtos' })).toHaveAttribute('aria-busy', 'false'))
+  // 0063: página única de Monitoramento; a lista (ou o cartão de vazio) aparece quando o painel carrega.
+  await screen.findByRole('heading', { level: 1, name: 'Monitoramento de preços' })
+  await waitFor(() => expect(screen.queryByText('Carregando seu painel…')).not.toBeInTheDocument())
   return mockFetch
 }
 
@@ -62,17 +63,17 @@ describe('link trazido da landing no monitoramento', () => {
     expect(screen.getByRole('button', { name: /Adicionar anúncio/ })).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('ao sair e voltar para Produtos na mesma sessão, o campo vem vazio e o título recebe o foco', async () => {
+  it('ao sair e voltar ao monitoramento na mesma sessão, o campo vem vazio e o título recebe o foco', async () => {
     savePendingTrackLink(link)
     await openMonitoring()
     expect(field()).toHaveValue(link)
     const user = userEvent.setup()
-    await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: /Alertas/ }))
+    await user.click(screen.getByRole('link', { name: 'Ver alertas' }))
     await screen.findByRole('heading', { level: 1, name: 'Alertas' })
-    await user.click(within(screen.getByRole('navigation', { name: 'Principal' })).getByRole('link', { name: /Produtos/ }))
-    await screen.findByRole('heading', { level: 1, name: 'Seus produtos' })
+    await user.click(screen.getByRole('link', { name: 'Voltar ao monitoramento' }))
+    await screen.findByRole('heading', { level: 1, name: 'Monitoramento de preços' })
     expect(field()).toHaveValue('')
-    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Monitoramento de preços' })).toHaveFocus())
   })
 
   // Revisão (rodada 4): no endereço legado /produtos (área não embutida no shell) o link também é
@@ -90,7 +91,7 @@ describe('link trazido da landing no monitoramento', () => {
   it('sem link pendente, nada muda', async () => {
     await openMonitoring()
     expect(field()).toHaveValue('')
-    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Seus produtos' })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Monitoramento de preços' })).toHaveFocus())
   })
 
   // Revisão (rodada 4): Sair descarta o link pendente; outra conta na mesma aba não o recebe.

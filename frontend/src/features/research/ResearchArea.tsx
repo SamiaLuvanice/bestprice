@@ -1,6 +1,6 @@
 import { failureText, type ResearchProps } from './state'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRight, ChartNoAxesCombined, Columns2, Clock3, Laptop, Menu, MessageSquare, Monitor, Smartphone, Headphones, X } from 'lucide-react'
 import { api, ApiFailure, type User } from '../../api'
 import { Brand } from '../../components/Brand'
@@ -130,7 +130,9 @@ export function ResearchArea({ user, clock, onUnauthenticated, onLoggedOut }: Re
   const draft = typeof state === 'object' && state !== null && 'draftToken' in state && typeof state.draftToken === 'string' ? drafts.get(state.draftToken) ?? '' : ''
   const monitoring = /^\/app\/monitoring(?:\/[^/]+)?$/.test(location.pathname)
   let page: ReactNode
-  if (monitoring) page = <AccountArea embedded user={user} clock={clock} onUnauthenticated={onUnauthenticated} onLoggedOut={onLoggedOut} />
+  // 0063: a visão geral virou a página única; o endereço antigo é substituído, sem entrada extra no histórico.
+  if (location.pathname === '/app/monitoring/overview') page = <Navigate to="/app/monitoring" replace />
+  else if (monitoring) page = <AccountArea embedded user={user} clock={clock} onUnauthenticated={onUnauthenticated} onLoggedOut={onLoggedOut} />
   else if (location.pathname === '/app/dashboard') page = <DashboardPage onUnauthenticated={onUnauthenticated} createDraft={createDraft} />
   else if (/^\/app\/assistant(?:\/[^/]+)?$/.test(location.pathname)) page = <AssistantPage key={location.key} onUnauthenticated={onUnauthenticated} initialDraft={draft} />
   else if (/^\/app\/compare(?:\/[^/]+)?$/.test(location.pathname)) page = <ComparisonPage key={location.key} onUnauthenticated={onUnauthenticated} />

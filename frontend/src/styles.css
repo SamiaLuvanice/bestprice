@@ -358,12 +358,6 @@ h1, h2 { text-wrap: balance; }
 .hero-intro, .hero-entry { min-width: 0; }
 .hero-intro .intro { margin-bottom: 0; }
 .hero-embedded .hero-copy { gap: 0; }
-@media (min-width: 1101px) {
-  .hero:not(.hero-embedded) .hero-copy { grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: var(--space-12); align-items: center; }
-  .hero:not(.hero-embedded) .track-form { flex-direction: column; align-items: stretch; }
-  .hero:not(.hero-embedded) .track-form .primary-button { align-self: start; }
-}
-.hero-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2) var(--space-6); }
 .hero h1, .alerts-page-heading h1, .detail-page h1, .products-section h1 { font-size: clamp(32px, 3.4vw, 43px); line-height: 1.15; }
 .products-section h1 { margin-bottom: 0; }
 .hero-embedded { width: auto; margin: 0 0 var(--space-4); }
@@ -420,7 +414,6 @@ h1, h2 { text-wrap: balance; }
 .external-link { display: inline-flex; align-items: center; min-height: 44px; gap: 8px; font-weight: 700; }
 
 /* Indicadores do Início */
-.overview-title { margin-bottom: var(--space-6); font-size: 24px; }
 .indicators { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0 0 var(--space-6); border-bottom: 1px solid var(--color-border-soft); }
 .indicator { display: flex; gap: 16px; padding: 0 var(--space-6); border-inline-start: 1px solid var(--color-border-soft); }
 .indicator:first-child { padding-left: 0; border-inline-start: 0; }
@@ -431,26 +424,12 @@ h1, h2 { text-wrap: balance; }
 .indicator-note { color: var(--color-text-muted); }
 
 /* Boas oportunidades */
-.opportunities { display: grid; grid-template-columns: 1fr; list-style: none; margin: 0; padding: 0; }
-.opportunity-card { position: relative; display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 4px 20px; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--color-border); }
-.opportunity-card:hover { background: var(--color-surface-raised); }
-.opportunity-card:focus-within { outline: var(--ring-width) solid var(--color-focus); outline-offset: 2px; }
-.opportunity-media { position: relative; display: grid; place-items: center; grid-column: 1; grid-row: 1 / 5; width: 72px; height: 72px; border-radius: 10px; background: var(--color-bg); }
-.opportunity-media .product-image { width: 64px; height: 64px; }
 .product-image { width: 96px; height: 96px; flex: none; object-fit: contain; border-radius: 10px; }
 .image-placeholder { display: grid; place-items: center; color: var(--color-text-muted); background: var(--color-surface-raised); }
 .image-placeholder .icon { width: 40%; height: 40%; }
-.drop-badge { position: absolute; bottom: -8px; right: 0; display: inline-flex; align-items: center; gap: 2px; padding: 2px 8px; border-radius: 12px; background: var(--color-down-soft); color: var(--color-down); font-size: 12px; font-weight: 700; }
-.drop-badge .icon { width: 14px; height: 14px; }
-.opportunity-title { grid-column: 2; margin: 0; font-size: 16px; }
-.card-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: var(--color-text); font-weight: 700; text-align: left; overflow-wrap: anywhere; }
-.card-link::after { content: ""; position: absolute; inset: 0; border-radius: 14px; }
-.card-link:focus-visible { outline: var(--ring-width) solid var(--color-focus); outline-offset: 3px; }
-.opportunity-prices, .min-price, .observed { margin: 0; }
-.opportunity-prices { grid-column: 3; grid-row: 1 / 3; text-align: right; }
 .previous-price { color: var(--color-text-muted); font-size: 13px; }
 .current-price { display: block; font-size: 20px; letter-spacing: -.02em; }
-.opportunity-card .min-price, .opportunity-card .observed { grid-column: 2 / -1; justify-self: start; font-size: 13px; }
+.min-price, .observed { margin: 0; }
 .min-price { color: var(--color-down); }
 .min-note { font-size: 12px; }
 .observed { color: var(--color-text-muted); }
@@ -459,10 +438,8 @@ h1, h2 { text-wrap: balance; }
 /* Esqueletos */
 .skeleton { display: grid; gap: var(--space-4); }
 .skeleton-indicators { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.skeleton-cards { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 .skeleton-block { display: block; border-radius: 14px; background: linear-gradient(90deg, var(--color-skeleton-a) 0, var(--color-skeleton-b) 50%, var(--color-skeleton-a) 100%); background-size: 200% 100%; animation: shimmer 1.4s ease-in-out infinite; }
 .skeleton-indicator { height: 104px; }
-.skeleton-card { height: 260px; }
 .skeleton-row { height: 56px; }
 .skeleton-event { height: 64px; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
@@ -637,10 +614,14 @@ h1, h2 { text-wrap: balance; }
   .products-table td { display: block; padding: 0; overflow-wrap: anywhere; }
   .products-table td.cell-product { grid-column: 1 / 3; grid-row: 1; display: block; max-width: none; min-width: 0; }
   .products-table .cell-product .row-image { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 64px; height: 64px; }
-  .products-table td.cell-price { grid-column: 1; grid-row: 2; font-size: 18px; white-space: nowrap; }
-  .products-table td:nth-child(3) { grid-column: 2; grid-row: 2; justify-self: start; }
-  .products-table td:nth-child(4), .products-table td:nth-child(5), .products-table td:nth-child(6) { display: none; }
-  .products-table td.cell-actions { grid-column: 3; grid-row: 1 / 3; display: flex; justify-content: flex-end; }
+  /* Quebra só entre palavras: o valor usa espaço não separável, então só "Preço indisponível" quebra. */
+  .products-table td.cell-price { grid-column: 1 / 3; grid-row: 2; font-size: 18px; overflow-wrap: normal; }
+  .products-table td:nth-child(3) { grid-column: 1; grid-row: 3; justify-self: start; }
+  .products-table td:nth-child(4) { display: none; }
+  /* 0063: situação e última leitura fazem parte do item empilhado. */
+  .products-table td:nth-child(5) { grid-column: 2; grid-row: 3; justify-self: start; overflow-wrap: normal; }
+  .products-table td:nth-child(6) { grid-column: 1 / 3; grid-row: 4; justify-self: start; color: var(--color-text-muted); font-size: 13px; }
+  .products-table td.cell-actions { grid-column: 3; grid-row: 1 / 5; display: flex; justify-content: flex-end; }
   .products-table .row-menu { display: none; }
   .products-table .row-details-link { width: 44px; min-width: 44px; height: 44px; padding: 0; border: 0; background: transparent; color: var(--color-brand); }
   .products-table .row-details-link::after { content: ""; position: absolute; inset: 0; }
@@ -649,7 +630,8 @@ h1, h2 { text-wrap: balance; }
   .products-table .row-details-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
   .products-table .row-details-chevron { display: block; width: 24px; height: 24px; }
   .products-table .product-secondary td { padding: 0 0 0 76px; }
-  .products-table .product-secondary td:has(.row-flags:empty):has(.row-status:empty) { display: none; }
+  /* A linha inteira some quando não há aviso: uma linha sem célula visível viola aria-required-children. */
+  .products-table tr.product-secondary:has(.row-flags:empty):has(.row-status:empty) { display: none; }
   .products-table .row-details, .products-table .small-badge { display: none; }
   .products-table .row-flags:not(:has(:not(.small-badge))) { display: none; }
   .products-table .row-status:not(:empty) { margin: 0 0 var(--space-3); }
@@ -685,11 +667,6 @@ h1, h2 { text-wrap: balance; }
   .indicator-label, .indicator-note { font-size: 13px; }
   .dashboard-content { gap: 32px; }
   .section-heading h2, .detail-page h2 { font-size: 23px; }
-  .opportunity-card { grid-template-columns: 56px minmax(0, 1fr); gap: 6px 16px; }
-  .opportunity-media { width: 56px; height: 64px; }
-  .opportunity-media .product-image { width: 52px; height: 52px; }
-  .opportunity-prices { grid-column: 2; grid-row: auto; text-align: left; }
-  .opportunity-card .min-price, .opportunity-card .observed { grid-column: 2; }
   .detail-product-heading { gap: 16px; align-items: start; padding-block: 24px; }
   .detail-product-heading .product-image { width: 80px; height: 80px; }
   .detail-product-heading h1 { font-size: 26px; }
@@ -708,7 +685,6 @@ h1, h2 { text-wrap: balance; }
 @media (max-width: 600px) {
   .account-button { width: 44px; justify-content: center; padding: 0; }
   .account-button .chevron { display: none; }
-  .opportunities { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -801,3 +777,10 @@ h1, h2 { text-wrap: balance; }
   .not-found-actions { grid-row: 4; align-items: stretch; flex-direction: column; }
   .not-found-actions [data-variant="ghost"] { justify-content: start; padding-left: 0; }
 }
+
+/* 0063: situação do produto na lista; o texto carrega o estado, a cor só reforça. */
+.situation { display:inline-block; padding:2px 8px; border-radius:8px; font-size:12px; font-weight:600; }
+.situation-down { background:var(--color-down-soft); color:var(--color-down); }
+.situation-up { background:var(--color-up-soft); color:var(--color-up); }
+.situation-stable, .situation-unknown-change, .situation-no-price { background:var(--color-surface-raised); color:var(--color-text-muted); }
+.situation-unavailable { background:var(--color-amber-soft); color:var(--color-text); }

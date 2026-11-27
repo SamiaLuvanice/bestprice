@@ -10,7 +10,7 @@ const link = 'https://produto.mercadolivre.com.br/MLB-1111111111-cafeteira-_JM'
 function renderForm(props: { initialValue?: string; compact?: boolean }) {
   const onSubmit = vi.fn(() => true)
   render(<MemoryRouter><HeroTrackForm onSubmit={onSubmit} submitting={false} error={null} success={null}
-    embedded compact {...props} /></MemoryRouter>)
+    compact {...props} /></MemoryRouter>)
   return { onSubmit }
 }
 

@@ -253,7 +253,7 @@ it('falha em página adicional de alertas mantém itens e permite retomar do cur
   expect(pageTwoCalls).toBe(2)
 })
 
-it('navegação entre Início, Produtos, detalhe e Alertas acompanha o histórico', async () => {
+function historyApi() {
   const item = trackedFixture()
   fakeApi((url) => {
     if (url === '/api/tracked-products/tracking-1') return reply(200, item)
@@ -261,13 +261,18 @@ it('navegação entre Início, Produtos, detalhe e Alertas acompanha o históric
     if (url === '/api/tracked-products') return reply(200, { items: [item], next_cursor: null })
     return undefined
   }, dashboardFixture({ items: [item] }))
-  visit('/app/monitoring/overview')
+}
+
+// 0063: a Início (visão geral) virou a página única de Monitoramento; nas rotas legadas, Produtos,
+// detalhe e Alertas continuam com a navegação interna e os endereços /produtos e /alertas.
+it('navegação entre Produtos, detalhe e Alertas acompanha o histórico nas rotas legadas', async () => {
+  historyApi()
+  visit('/produtos')
   const user = userEvent.setup()
-  await screen.findByRole('heading', { name: 'Seu painel de preços' })
-  await user.click(screen.getByRole('link', { name: 'Produtos' }))
   expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
-  await user.click(screen.getByRole('link', { name: 'Ver detalhes de Fone sem fio' }))
+  await user.click(await screen.findByRole('link', { name: 'Ver detalhes de Fone sem fio' }))
   expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/produtos/tracking-1')
   await user.click(screen.getByRole('link', { name: 'Alertas' }))
   expect(await screen.findByRole('heading', { name: 'Alertas', level: 1 })).toBeInTheDocument()
   window.history.back()
@@ -275,8 +280,32 @@ it('navegação entre Início, Produtos, detalhe e Alertas acompanha o históric
   expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Produtos' })).toHaveAttribute('aria-current', 'page')
   window.history.back()
-  await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring'))
+  await waitFor(() => expect(window.location.pathname).toBe('/produtos'))
   expect(await screen.findByRole('heading', { name: 'Seus produtos', level: 1 })).toBeInTheDocument()
+})
+
+it('na área com barra lateral, página única, detalhe e alertas acompanham o histórico sem sair da área', async () => {
+  historyApi()
+  visit('/app/monitoring/overview')
+  const user = userEvent.setup()
+  expect(await screen.findByRole('heading', { name: 'Monitoramento de preços', level: 1 })).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/app/monitoring')
+  await user.click(await screen.findByRole('link', { name: 'Ver detalhes de Fone sem fio' }))
+  expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/app/monitoring/tracking-1')
+  await user.click(screen.getByRole('link', { name: 'Voltar ao monitoramento' }))
+  expect(await screen.findByRole('heading', { name: 'Monitoramento de preços', level: 1 })).toBeInTheDocument()
+  await user.click(screen.getByRole('link', { name: 'Ver alertas' }))
+  expect(await screen.findByRole('heading', { name: 'Alertas', level: 1 })).toBeInTheDocument()
+  expect(window.location.pathname).toBe('/app/monitoring/alerts')
+  window.history.back()
+  await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring'))
+  expect(await screen.findByRole('heading', { name: 'Monitoramento de preços', level: 1 })).toBeInTheDocument()
+  window.history.back()
+  await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring/tracking-1'))
+  expect(await screen.findByRole('heading', { name: 'Fone sem fio', level: 1 })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Monitoramento' })).toHaveAttribute('aria-current', 'page')
+  expect(screen.queryByRole('navigation', { name: 'Principal' })).not.toBeInTheDocument()
 })
 
 it('descarta página de histórico de A quando a pessoa já abriu B', async () => {
