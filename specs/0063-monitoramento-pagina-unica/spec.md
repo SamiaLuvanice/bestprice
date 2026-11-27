@@ -3,7 +3,7 @@ numero: 0063
 titulo: Monitoramento em página única
 tipo: melhoria
 prioridade: P2
-status: pronta
+status: implementada
 toca: [frontend]
 depende_de: [0041, 0056]
 issue: https://github.com/SamiaLuvanice/bestprice/issues/349
