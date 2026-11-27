@@ -2,7 +2,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../App'
-import { alertFixture, apiError, dashboardFixture, fakeApi, reply, trackedFixture, type Route } from '../test/fakeApi'
+import { alertFixture, apiError, dashboardFixture, fakeApi, notificationFixture, reply, trackedFixture, unreadUrl, type Route } from '../test/fakeApi'
 
 // 0063: página única de Monitoramento na área com barra lateral.
 
@@ -192,5 +192,73 @@ describe('rotas legadas (AC13)', () => {
     expect(within(nav).getAllByRole('link').map((link) => link.textContent)).toEqual(['Início', 'Produtos', 'Alertas'])
     await waitFor(() => expect(within(screen.getByRole('rowgroup', { name: 'Fone Bluetooth' })).getByRole('link', { name: /Ver detalhes/ }))
       .toHaveAttribute('href', '/produtos/tracking-2'))
+  })
+})
+
+describe('links e ações dentro da área (revisão 0063)', () => {
+  async function stopFromDetail(items: unknown[]) {
+    let current = items as { id: string }[]
+    const { user } = await visit('/app/monitoring', dashboardFixture({ items }), (url, init) => {
+      if (url === '/api/tracked-products/tracking-1' && init?.method === 'DELETE') {
+        current = current.filter((entry) => entry.id !== 'tracking-1')
+        return reply(204, null)
+      }
+      if (url === '/api/tracked-products/tracking-1') return reply(200, falling)
+      if (url === '/api/tracked-products/tracking-1/history') return reply(200, { items: [], next_cursor: null })
+      if (url === '/api/dashboard') return reply(200, dashboardFixture({ items: current }))
+      if (url === '/api/tracked-products') return reply(200, { items: current, next_cursor: null })
+      return undefined
+    })
+    await user.click(within(screen.getByRole('rowgroup', { name: 'Notebook Inspiron 15' })).getByRole('link', { name: /Ver detalhes/ }))
+    await user.click(await screen.findByRole('button', { name: 'Parar de monitorar' }))
+    await user.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Parar de monitorar' }))
+    await waitFor(() => expect(window.location.pathname).toBe('/app/monitoring'))
+  }
+  // Depois de dois quadros: o foco do título da página (agendado na troca de endereço) não pode vencer.
+  const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+  it('parar de acompanhar pelo detalhe volta à página única com foco no título da lista (AC07)', async () => {
+    await stopFromDetail([falling, rising])
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: /Produtos monitorados/ })).toHaveFocus())
+    await frames()
+    expect(screen.getByRole('heading', { level: 2, name: /Produtos monitorados/ })).toHaveFocus()
+  })
+
+  it('parar de acompanhar o único produto pelo detalhe leva o foco ao campo de link (AC07)', async () => {
+    await stopFromDetail([falling])
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).toHaveFocus())
+    await frames()
+    expect(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' })).toHaveFocus()
+  })
+
+  it('links da página de alertas abrem o detalhe dentro da área (AC07, AC08)', async () => {
+    const notice = notificationFixture('n1', { tracked_product_id: 'tracking-1', product_title: 'Notebook Inspiron 15' })
+    await visit('/app/monitoring/alerts', populated, (url) => url === '/api/notifications' ? reply(200, { items: [notice], next_cursor: null }) : undefined)
+    expect(await screen.findByRole('link', { name: 'Abrir produto' })).toHaveAttribute('href', '/app/monitoring/tracking-1')
+    expect(await screen.findByRole('link', { name: 'Configurar alerta' })).toHaveAttribute('href', '/app/monitoring/tracking-1')
+  })
+
+  it('"Abrir produto" no sino abre o detalhe dentro da área (AC07)', async () => {
+    const notice = notificationFixture('n1', { tracked_product_id: 'tracking-2' })
+    const { user } = await visit('/app/monitoring', populated, (url) => url === unreadUrl ? reply(200, { items: [notice], next_cursor: null }) : undefined)
+    await user.click(await screen.findByRole('button', { name: /^Notificações/ }))
+    expect(screen.getByRole('link', { name: 'Abrir produto' })).toHaveAttribute('href', '/app/monitoring/tracking-2')
+  })
+
+  it('"Ver produto" após adicionar abre o detalhe dentro da área (AC07)', async () => {
+    const created = item('9', 'Cafeteira elétrica')
+    const { user } = await visit('/app/monitoring', populated, (url, init) =>
+      url === '/api/tracked-products' && init?.method === 'POST' ? reply(201, created) : undefined)
+    await user.click(screen.getByRole('button', { name: /Adicionar anúncio/ }))
+    await user.type(screen.getByRole('textbox', { name: 'Link do anúncio do Mercado Livre' }), 'https://produto.mercadolivre.com.br/MLB-9-cafeteira-_JM')
+    await user.click(screen.getByRole('button', { name: /Monitorar preço/ }))
+    expect(await within(productsRegion()).findByRole('link', { name: 'Ver produto' })).toHaveAttribute('href', '/app/monitoring/tracking-9')
+  })
+
+  it('"Carregar mais" traz a página seguinte na página única (AC06)', async () => {
+    const { user } = await visit('/app/monitoring', dashboardFixture({ items: [falling], nextCursor: 'page-2', summary: { tracked_count: 2 } }), (url) =>
+      url === '/api/tracked-products?cursor=page-2' ? reply(200, { items: [rising], next_cursor: null }) : undefined)
+    await user.click(await screen.findByRole('button', { name: 'Carregar mais produtos' }))
+    expect(await screen.findByRole('rowgroup', { name: 'Fone Bluetooth' })).toBeInTheDocument()
   })
 })

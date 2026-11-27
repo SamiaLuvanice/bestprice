@@ -19,11 +19,12 @@ const tracked = [
   ['3', 'Monitor 27 polegadas', '1249.00', '0.00'],
   ['4', 'Teclado mecânico', '249.00', null, 'unavailable'],
   ['5', 'Mouse sem fio', null, null],
+  ['6', 'Cadeira gamer com encosto reclinável', '899.00', null],
 ].map(([id, title, price, percent, availability]) => ({
   id: `tracking-${id}`, active: true, active_since: '2026-10-01T12:00:00Z', product: product(id!, title!, price ?? null, percent ?? null, availability ?? 'available'),
   alert: id === '1' ? { id: 'alert-1', target_price: '12700.00', enabled: true, condition: 'at_or_below' } : null,
 }))
-const summary = { tracked_count: 5, price_drop_count: 1, active_alert_count: 1, target_reached_count: 0 }
+const summary = { tracked_count: 6, price_drop_count: 1, active_alert_count: 1, target_reached_count: 0 }
 const updates = [{ id: 'u1', tracked_product_id: 'tracking-1', type: 'price_changed', previous_value: '13139.00', current_value: '12879.00', currency: 'BRL', observed_at: '2026-10-29T17:30:00Z' }]
 
 type Mode = 'populated' | 'empty' | 'error'

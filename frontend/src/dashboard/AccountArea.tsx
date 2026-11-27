@@ -598,14 +598,14 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
 
   useEffect(() => {
     document.title = currentSection === 'alerts'
-      ? 'Alertas · BestPrice' : detailId ? 'Produto · BestPrice' : 'Produtos · BestPrice'
+      ? 'Alertas · BestPrice' : detailId ? 'Produto · BestPrice' : singlePage ? 'Monitoramento · BestPrice' : 'Produtos · BestPrice'
     const frame = window.requestAnimationFrame(() => {
       if (detailId) document.getElementById('detail-title')?.focus()
       else if (currentSection === 'alerts') document.getElementById('alerts-page-title')?.focus()
       else if (!initialLink) pageHeading.current?.focus()
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [location.pathname, currentSection, detailId, initialLink])
+  }, [location.pathname, currentSection, detailId, initialLink, singlePage])
 
   const selectedId = selected?.id
   const selectedTitle = selected?.id === detailId ? selected.product.title : null
@@ -627,8 +627,15 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
   useEffect(() => {
     if (!focusAfterStop || location.pathname !== paths.list || !list.loaded || loading) return
     setFocusAfterStop(false)
-    if (list.items.length > 0) trackedHeading.current?.focus()
-    else linkInput.current?.focus()
+    // No quadro seguinte, depois do foco no título da página agendado pela troca de endereço:
+    // na página única o h1 e o título da lista são elementos diferentes (0063). Sem cancelamento,
+    // pois desligar `focusAfterStop` re-renderiza e cancelaria o quadro.
+    const hasItems = list.items.length > 0
+    window.requestAnimationFrame(() => {
+      if (!mounted.current) return
+      if (hasItems) trackedHeading.current?.focus()
+      else linkInput.current?.focus()
+    })
   }, [focusAfterStop, location.pathname, paths.list, list.loaded, list.items.length, loading])
 
   // Campo de link abaixo do título da lista: ação compacta "Adicionar anúncio" ou, sem produtos, aberto.
@@ -637,7 +644,7 @@ export function AccountArea({ user, clock, onUnauthenticated, onLoggedOut, embed
   function trackForm(emptyText = true) {
     return <HeroTrackForm onSubmit={track} submitting={submitting}
       error={trackError} success={trackSuccess} successId={trackSuccessId}
-      inputRef={linkInput} priority={isEmpty} embedded compact={!isEmpty}
+      inputRef={linkInput} priority={isEmpty} compact={!isEmpty}
       initialValue={initialLink ?? undefined}
       onDismissFeedback={() => { setTrackError(null); setTrackSuccess(null); setTrackSuccessId(null) }}>
       {isEmpty && emptyText && <div className="empty-state">

@@ -12,7 +12,7 @@ Somente `frontend/`.
 
 | Arquivo | Mudança |
 |---|---|
-| `src/dashboard/monitoringPaths.tsx` (novo) | Contexto com os caminhos da área: legado (`/produtos`, `/produtos/:id`, `/alertas`) e embutido (`/app/monitoring`, `/app/monitoring/:id`, `/app/monitoring/alerts`). |
+| `src/dashboard/monitoringPaths.ts` (novo) | Contexto com os caminhos da área: legado (`/produtos`, `/produtos/:id`, `/alertas`) e embutido (`/app/monitoring`, `/app/monitoring/:id`, `/app/monitoring/alerts`). |
 | `src/dashboard/AccountArea.tsx` | Seção `monitoring` no modo embutido: título "Monitoramento de preços", link "Ver alertas", sino, indicadores, lista "Produtos monitorados", atualizações recentes; sem `AppHeader` no modo embutido; checagens de `pathname` e navegações usam o contexto. |
 | `src/features/research/ResearchArea.tsx` | `/app/monitoring/overview` redireciona (replace) para `/app/monitoring`. |
 | `src/dashboard/SummaryIndicators.tsx` | Variante em cartões com ícone (`variant="cards"`), mantendo rótulos e notas. |
@@ -21,7 +21,7 @@ Somente `frontend/`.
 | `HeroTrackForm`, `NotificationBell`, `AlertsSection`, `ConfiguredAlerts`, `RecentUpdatesTimeline`, `OpportunityList`, `ProductDetailDialog` | Links pelos caminhos do contexto. |
 | `src/styles.css` / `features/research/research.css` | Cartões de indicador, cabeçalho da página e rótulos de situação com tokens existentes. |
 | Testes (`src/dashboard/monitoring.test.tsx` novo; ajustes em header/overview/hero/states/timeline/App/research/routes/primaryAction) | TDD dos critérios. |
-| `tests/visual/monitoring-overflow.spec.ts` | Continua cobrindo overflow; acrescentar axe e 320/390 px na página única. |
+| `tests/visual/monitoring-single-page.spec.ts` (novo) | Overflow de 320 a 1440 px, item empilhado, alvos de 44 px e axe na página única; `monitoring-overflow.spec.ts` continua valendo. |
 
 ## Decisões
 
