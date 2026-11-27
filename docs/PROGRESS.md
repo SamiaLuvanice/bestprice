@@ -1,5 +1,31 @@
 # Progresso das specs
 
+## 0063 — Monitoramento em página única
+
+**27/11/2026 — spec `pronta`; implementação entregue; aguarda revisão no PR.**
+[Issue #349](https://github.com/SamiaLuvanice/bestprice/issues/349), branch
+`feature/0063-issue-349-monitoramento-pagina-unica`, commits `077015d` (spec e plano),
+`2c77664` (implementação) e `2a691f3` (ajustes da revisão). Só frontend; o contrato REST
+não muda. Na área com barra lateral, `/app/monitoring` vira a página única "Monitoramento
+de preços": sem a navegação Início/Produtos/Alertas, com "Ver alertas" e o sino no
+cabeçalho, quatro cartões de indicadores, lista "Produtos monitorados (N)" com coluna
+Situação e disponibilidade na linha secundária, e atualizações recentes abaixo. "Boas
+oportunidades" saiu da interface; `/app/monitoring/overview` redireciona com `replace`;
+os links de produto e alertas ficam dentro da área; `/produtos`, `/produtos/:id` e
+`/alertas` continuam funcionando. Detalhes em
+[frontend](apps/frontend.md#monitoramento-em-página-única--spec-0063).
+
+Red → Green registrado (12 testes vermelhos pelo motivo esperado; `monitoring.test.tsx`
+21/21 após a revisão). Lint e `tsc` sem erros; Vitest 928/928 em 66 arquivos sem carga
+(numa rodada com o Playwright em paralelo, 932/934; as 2 falhas passaram 20/20 isoladas);
+build ok. Playwright dos specs afetados: 146 passaram, só `brand.spec.ts › marca
+sessao-erro` falhou, e falha também em `develop`; após a correção de 320 px,
+`monitoring-single-page` + `redesign` 73/73. `gates.mjs --scope frontend` verde em
+`2a691f3` (install, lint, 934/934 em 66 arquivos, build). Revisão independente aprovada com
+ressalvas, todas tratadas; QA independente: AC01–AC13 passaram. Pendências: PR e CI, quadros Figma 0041/06 a atualizar para o híbrido
+e tarefa própria para `sessao-erro`.
+Ver [verificação](../specs/0063-monitoramento-pagina-unica/verification.md).
+
 ## 0062 — API de Stage acordada pelo navegador
 
 **26/11/2026 — implementação entregue; aguarda revisão.** [Issue #344](https://github.com/SamiaLuvanice/bestprice/issues/344),
