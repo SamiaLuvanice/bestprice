@@ -98,19 +98,19 @@ as colunas e a situação novas.
 
 ## Critérios de aceite
 
-- [ ] **AC01 — Página única:** em `/app/monitoring`, com produtos, há um único `h1` "Monitoramento de preços" seguido da frase de orientação, não há navegação Início / Produtos / Alertas, e o botão de notificações aparece uma vez.
-- [ ] **AC02 — Endereço antigo:** abrir `/app/monitoring/overview` substitui o endereço por `/app/monitoring` e mostra a página única.
-- [ ] **AC03 — Indicadores:** com produtos, quatro cartões mostram os valores do resumo com rótulos "Produtos monitorados", "Baixaram de preço" (nas últimas 24h), "Alertas ativos" e "Preço-alvo atingido" (no alvo agora); sem produtos, nenhum cartão aparece.
-- [ ] **AC04 — Lista:** o título "Produtos monitorados (N)" usa o total do resumo; as colunas são exatamente Produto, Último preço, Variação, Menor preço, Situação, Última leitura e Ações; "Adicionar anúncio" abre um único campo, o do link; o link vindo da landing aparece pré-preenchido.
-- [ ] **AC05 — Situação:** os rótulos seguem a ordem Indisponível → Sem preço → Sem variação conhecida → Em queda / Em alta / Sem alteração; a disponibilidade aparece na linha secundária.
-- [ ] **AC06 — Dados preservados:** preço desconhecido nunca aparece como zero; os avisos de último preço conhecido, preço desatualizado, anúncio não localizado, falha da última consulta e alerta configurado continuam visíveis; "Carregar mais" continua funcionando.
-- [ ] **AC07 — Detalhe na área:** os links de produto da lista, das atualizações recentes, do "Ver produto" após adicionar, do sino e da página de alertas levam a `/app/monitoring/<id>`; o detalhe oferece "Voltar ao monitoramento"; parar de acompanhar volta à página única; id inexistente mostra o erro com "Voltar ao monitoramento"; atualizar agora continua funcionando.
-- [ ] **AC08 — Alertas:** "Ver alertas" e "Ver todas as notificações" levam a `/app/monitoring/alerts`, que mostra "Voltar ao monitoramento".
-- [ ] **AC09 — Seções:** "Atualizações recentes" aparece abaixo da lista; "Boas oportunidades" não aparece na página única.
-- [ ] **AC10 — Vazio:** sem produtos, aparecem o título, o cartão "Nenhum produto acompanhado" com campo de link e "Monitorar preço", sem indicadores e sem cabeçalho de tabela.
-- [ ] **AC11 — Estados:** carregamento sem números fabricados, erro com "Tentar novamente" e falha de atualização preservando os dados continuam funcionando.
-- [ ] **AC12 — Responsivo e acessível:** sem rolagem horizontal em 320, 390, 768, 1024, 1280 e 1440 px; itens empilhados no celular com os dados listados acima; ações com alvo de pelo menos 44 × 44 px; sem violações axe WCAG 2.2 AA na página única com produtos, vazia e com erro, em 390 e 1280 px.
-- [ ] **AC13 — Rotas legadas:** `/produtos` e `/alertas` mantêm navegação interna (Início leva à página única) e links para `/produtos/<id>`; API, banco e contrato não mudam.
+- [x] **AC01 — Página única:** em `/app/monitoring`, com produtos, há um único `h1` "Monitoramento de preços" seguido da frase de orientação, não há navegação Início / Produtos / Alertas, e o botão de notificações aparece uma vez.
+- [x] **AC02 — Endereço antigo:** abrir `/app/monitoring/overview` substitui o endereço por `/app/monitoring` e mostra a página única.
+- [x] **AC03 — Indicadores:** com produtos, quatro cartões mostram os valores do resumo com rótulos "Produtos monitorados", "Baixaram de preço" (nas últimas 24h), "Alertas ativos" e "Preço-alvo atingido" (no alvo agora); sem produtos, nenhum cartão aparece.
+- [x] **AC04 — Lista:** o título "Produtos monitorados (N)" usa o total do resumo; as colunas são exatamente Produto, Último preço, Variação, Menor preço, Situação, Última leitura e Ações; "Adicionar anúncio" abre um único campo, o do link; o link vindo da landing aparece pré-preenchido.
+- [x] **AC05 — Situação:** os rótulos seguem a ordem Indisponível → Sem preço → Sem variação conhecida → Em queda / Em alta / Sem alteração; a disponibilidade aparece na linha secundária.
+- [x] **AC06 — Dados preservados:** preço desconhecido nunca aparece como zero; os avisos de último preço conhecido, preço desatualizado, anúncio não localizado, falha da última consulta e alerta configurado continuam visíveis; "Carregar mais" continua funcionando.
+- [x] **AC07 — Detalhe na área:** os links de produto da lista, das atualizações recentes, do "Ver produto" após adicionar, do sino e da página de alertas levam a `/app/monitoring/<id>`; o detalhe oferece "Voltar ao monitoramento"; parar de acompanhar volta à página única; id inexistente mostra o erro com "Voltar ao monitoramento"; atualizar agora continua funcionando.
+- [x] **AC08 — Alertas:** "Ver alertas" e "Ver todas as notificações" levam a `/app/monitoring/alerts`, que mostra "Voltar ao monitoramento".
+- [x] **AC09 — Seções:** "Atualizações recentes" aparece abaixo da lista; "Boas oportunidades" não aparece na página única.
+- [x] **AC10 — Vazio:** sem produtos, aparecem o título, o cartão "Nenhum produto acompanhado" com campo de link e "Monitorar preço", sem indicadores e sem cabeçalho de tabela.
+- [x] **AC11 — Estados:** carregamento sem números fabricados, erro com "Tentar novamente" e falha de atualização preservando os dados continuam funcionando.
+- [x] **AC12 — Responsivo e acessível:** sem rolagem horizontal em 320, 390, 768, 1024, 1280 e 1440 px; itens empilhados no celular com os dados listados acima; ações com alvo de pelo menos 44 × 44 px; sem violações axe WCAG 2.2 AA na página única com produtos, vazia e com erro, em 390 e 1280 px.
+- [x] **AC13 — Rotas legadas:** `/produtos` e `/alertas` mantêm navegação interna (Início leva à página única) e links para `/produtos/<id>`; API, banco e contrato não mudam.
 
 ## Fora de escopo
 

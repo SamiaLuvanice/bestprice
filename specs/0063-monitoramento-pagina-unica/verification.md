@@ -32,7 +32,8 @@ preenchida só com dados da API atual.
 | Playwright afetados | `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5191 npx playwright test tests/visual/{monitoring-single-page,monitoring-overflow,assistant,brand,redesign}.spec.ts` | 146 passaram; únicas falhas: `brand.spec.ts › marca sessao-erro` nos 4 viewports |
 | Pré-existente | mesmo teste `sessao-erro` no checkout `develop` (porta 5192) | também falha em `develop`; fora do escopo |
 | Página única após correção de 320 px | `npx playwright test tests/visual/monitoring-single-page.spec.ts tests/visual/redesign.spec.ts` | 73/73 |
-| `gates.mjs --scope frontend` | `node .agents/scripts/gates.mjs --scope frontend` | **não concluído**: o passo `npm ci` falhou com EPERM porque um Vite (Playwright) desta worktree estava ativo, e apagou o `node_modules`; reinstalado com `npm ci` limpo. Lint, testes e build foram rodados individualmente acima |
+| `gates.mjs --scope frontend` (1ª tentativa) | `node .agents/scripts/gates.mjs --scope frontend` | falhou no `npm ci` (EPERM: Vite do Playwright ativo travava um binário) e apagou o `node_modules`; reinstalado com `npm ci` limpo |
+| `gates.mjs --scope frontend` (HEAD `2a691f3`, sem Vite ativo) | mesmo comando | **verde**: install 47,7 s; lint; test **934/934 em 66 arquivos**; build |
 
 ## Critérios de aceite
 
@@ -75,10 +76,24 @@ partido no meio; cartões em duas colunas a 390 px; "Indisponível" quebrando po
 - Spec: `spec-reviewer` — 3 bloqueantes e 9 sugestões incorporados antes do plano.
 - Código: `arch-reviewer` — aprovado com ressalvas (P2: foco pós-parada, cobertura de links,
   registro de verificação; P3: código/CSS morto, título da aba, rótulo longo em 320 px),
-  tratados em `b0d88f4`.
+  tratados em `2a691f3`. Re-revisão: P2 resolvidos; observou 1 falha de tempo em 3 rodadas no helper `visit` de `monitoring.test.tsx` sob carga (21/21 em duas rodadas isoladas).
+
+## QA independente
+
+Papel `qa`, em `b0d88f4`/`2a691f3` (a diferença entre eles é só CSS sem uso). **AC01–AC13 passaram**, sem bug
+funcional. Vitest 932/934 sob carga (as 2 falhas de tempo passaram 45/45 isoladas); `monitoring.test.tsx`
+21/21; lint e `build:check` ok; Playwright dos 5 arquivos afetados 147 passaram e 4 falharam (só
+`brand › sessao-erro`); em `2a691f3`, `monitoring-single-page` + `monitoring-overflow` 23/23; spec
+exploratório temporário 11/11 (link da landing, painel 503 com link, `/alertas` legado, foco pós-parada
+mantido após 500 ms, "Atualizar agora" chama `POST …/refresh`, sem entrada extra no histórico).
+No celular, as ações da linha ficam no detalhe (seta ≥ 44 px), padrão anterior do quadro 11.
 
 ## Pendências
 
 - Atualizar os quadros Figma 0041/06 para o híbrido (MCP do Figma indisponível nesta sessão).
-- `brand.spec.ts › marca sessao-erro` falha também em `develop`; precisa de tarefa própria.
-- `gates.mjs` não rodou até o fim (ver tabela); CI da PR é a confirmação integrada.
+- `brand.spec.ts › marca sessao-erro` falha nos 4 viewports: com `/api/auth/me` em 503 a tela mostra o
+  aviso de status do `ServerWakingNotice` (spec 0062, já em `develop`), não um `alert`. Também falhou ao
+  rodar no checkout `develop`. Precisa de tarefa própria.
+- Testes com tempo sensível sob carga (`detail.test.tsx`, `routes.test.tsx`, helper `visit` de
+  `monitoring.test.tsx`): passam isolados e no `gates.mjs`; acompanhar no CI.
+- Sem backend, PostgreSQL ou integração reais: todos os fluxos usam dublês de API.
